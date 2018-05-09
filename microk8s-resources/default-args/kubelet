@@ -1,0 +1,11 @@
+--kubeconfig=${SNAP}/configs/kubelet.config
+--cert-dir=${SNAP_DATA}
+--network-plugin=kubenet
+--root-dir=${SNAP_DATA}
+--docker-root=${SNAP_DATA}
+--fail-swap-on=false
+--feature-gates=DevicePlugins=false
+--pod-cidr=10.1.1.0/24
+--non-masquerade-cidr=10.152.183.0/24
+--cni-bin-dir=${SNAP}/opt/cni/bin/
+--docker-endpoint unix://${SNAP_DATA}/docker.sock

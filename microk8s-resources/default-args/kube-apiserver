@@ -1,0 +1,13 @@
+--v=4
+--insecure-bind-address=0.0.0.0
+--cert-dir=${SNAP_DATA}
+--etcd-servers='http://127.0.0.1:2379'
+--service-cluster-ip-range=10.152.183.0/24
+--authorization-mode=AlwaysAllow
+--basic-auth-file=${SNAP}/basic_auth.csv
+--token-auth-file=${SNAP}/known_token.csv
+--admission-control="NamespaceLifecycle,ServiceAccount"
+--service-account-key-file=${SNAP}/certs/serviceaccount.key
+--client-ca-file=${SNAP}/certs/ca.crt
+--tls-cert-file=${SNAP}/certs/server.crt
+--tls-private-key-file=${SNAP}/certs/server.key

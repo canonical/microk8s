@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+
+app=$1
+
+# This is really the only way I could find to get the args passed in correctly. WTF
+declare -a args="($(cat $SNAP_DATA/args/$app))"
+if [ -f $SNAP/$app ]
+then
+  exec "$SNAP/$app" "${args[@]}"
+else
+  # dockerd is not in $SNAP
+  exec "$SNAP/usr/bin/$app" "${args[@]}"
+fi
