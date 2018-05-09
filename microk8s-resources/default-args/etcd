@@ -1,1 +1,3 @@
 --data-dir=${SNAP_DATA}
+--advertise-client-urls=unix://etcd.socket:2379
+--listen-client-urls=unix://etcd.socket:2379
