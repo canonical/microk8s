@@ -1,6 +1,11 @@
 name: microk8s
-architectures: ['$SNAP_ARCH']
-version: '$KUBE_VERSION'
+version-script: |
+  if [ -z "$KUBE_SNAP_BINS" ]; then
+    curl -L https://dl.k8s.io/release/stable.txt
+  else
+    cat $KUBE_SNAP_BINS/version
+  fi
+version: "latest"
 summary: Kubernetes in your box.
 description: Microk8s deploys and configures all kubernetes services in a snap.
 grade: stable
@@ -71,44 +76,36 @@ parts:
     plugin: dump
     build-attributes: [no-patchelf]
     stage-packages:
-    - ceph-common:$SNAP_ARCH
-    - conntrack:$SNAP_ARCH
-    - docker.io:$SNAP_ARCH
-    - aufs-tools:$SNAP_ARCH
+    - conntrack
+    - docker.io
+    - aufs-tools
     source: .
-    prepare: |
+    override-build: |
       set -eu
-      $KUBE_SNAP_ROOT/microk8s-resources/create-install-hook
+      . build-scripts/prepare-env.sh
+
+      if [ -z "$KUBE_SNAP_BINS" ]; then
+        echo "Downloading binaries from upstream"
+        # Also sets KUBE_SNAP_BINS
+        . build-scripts/fetch-binaries.sh
+      fi
+
+      echo "Creating hooks"
+      build-scripts/create-install-hook.sh
+
+      echo "Setting default daemon configs"
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/default-args .
-      cp $KUBE_SNAP_ROOT/microk8s-resources/run-with-config-args .
 
       echo "Building certs"
-      mkdir certs
-      openssl genrsa -out ./certs/serviceaccount.key 2048
-      openssl genrsa -out ./certs/ca.key 2048
-      openssl req -x509 -new -nodes -key ./certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ./certs/ca.crt
-      openssl genrsa -out ./certs/server.key 2048
-      openssl req -new -key ./certs/server.key -out ./certs/server.csr -config $KUBE_SNAP_ROOT/microk8s-resources/certs/csr.conf
-      openssl x509 -req -in ./certs/server.csr -CA ./certs/ca.crt -CAkey ./certs/ca.key -CAcreateserial -out ./certs/server.crt -days 100000 -extensions v3_ext -extfile $KUBE_SNAP_ROOT/microk8s-resources/certs/csr.conf
-      rm -rf .srl
+      build-scripts/build-certs.sh
 
       echo "Preparing cni"
       mkdir -p opt/cni/bin/
-      cp $KUBE_SNAP_BINS/flannel opt/cni/bin/
-      cp $KUBE_SNAP_BINS/ptp opt/cni/bin/
-      cp $KUBE_SNAP_BINS/host-local opt/cni/bin/
-      cp $KUBE_SNAP_BINS/portmap opt/cni/bin/
-      cp $KUBE_SNAP_BINS/tuning opt/cni/bin/
-      cp $KUBE_SNAP_BINS/vlan opt/cni/bin/
-      cp $KUBE_SNAP_BINS/sample opt/cni/bin/
-      cp $KUBE_SNAP_BINS/dhcp opt/cni/bin/
-      cp $KUBE_SNAP_BINS/ipvlan opt/cni/bin/
-      cp $KUBE_SNAP_BINS/macvlan opt/cni/bin/
-      cp $KUBE_SNAP_BINS/loopback opt/cni/bin/
-      cp $KUBE_SNAP_BINS/bridge opt/cni/bin/
+      cp $KUBE_SNAP_BINS/cni/* opt/cni/bin/
 
       echo "Preparing etcd"
-      cp $KUBE_SNAP_BINS/etcd .
+      cp $KUBE_SNAP_BINS/etcd/etcd .
+      cp $KUBE_SNAP_BINS/etcd/etcdctl .
 
       echo "Preparing kube-apiserver"
       cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-apiserver .
@@ -136,10 +133,9 @@ parts:
       echo "Preparing user config"
       cp $KUBE_SNAP_ROOT/microk8s-resources/client.config .
 
-      echo "Preparing capabilities"
+      echo "Creating commands and wrappers"
+      cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
+      #TODO(kjackal): yaml manifests may need to be rendered to match the $SNAP_ARCH
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/yaml .
 
-      echo "Preparing commands"
-      cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
-    snap:
-      - .
+      snapcraftctl build
