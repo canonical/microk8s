@@ -28,3 +28,8 @@ To speed-up a build you can reuse the binaries already downloaded from a previou
 ... this build will be much faster and will reuse binaries in KUBE_SNAP_BINS
 
 ```
+
+## Installing the Snap
+```
+snap install microk8s_v1.10.2_amd64.snap --devmode
+```
