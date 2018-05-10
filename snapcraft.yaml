@@ -73,7 +73,6 @@ apps:
 
 parts:
   microk8s:
-    install: |
     plugin: dump
     build-attributes: [no-patchelf]
     stage-packages:
@@ -81,7 +80,7 @@ parts:
     - docker.io
     - aufs-tools
     source: .
-    prepare: |
+    override-build: |
       set -eu
       . build-scripts/prepare-env.sh
 
@@ -138,3 +137,5 @@ parts:
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
       #TODO(kjackal): yaml manifests may need to be rendered to match the $SNAP_ARCH
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/yaml .
+
+      snapcraftctl build
