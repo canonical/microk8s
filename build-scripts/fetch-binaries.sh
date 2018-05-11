@@ -21,7 +21,8 @@ echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
   done
 
   curl -LO https://github.com/coreos/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
-  tar -zxvf etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
+  gzip -d etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
+  tar -xvf etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar
   mv etcd-${ETCD_VERSION}-linux-$KUBE_ARCH etcd
 
   mkdir -p cni
