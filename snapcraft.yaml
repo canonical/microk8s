@@ -9,7 +9,7 @@ version: "latest"
 summary: Kubernetes in your box.
 description: Microk8s deploys and configures all kubernetes services in a snap.
 grade: stable
-confinement: devmode
+confinement: classic
 
 apps:
   daemon-etcd:
