@@ -8,7 +8,7 @@ script:
   - docker run -v $(pwd):$(pwd) -w $(pwd) snapcore/snapcraft sh -c "apt update && snapcraft"
   - sudo apt update
   - sudo apt install --yes snapd
-  - sudo snap install *.snap --devmode
+  - sudo snap install *.snap --classic
   - pwd
   - ls -l
   - ./tests/smoke-test.sh
