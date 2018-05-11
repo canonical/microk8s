@@ -31,5 +31,5 @@ To speed-up a build you can reuse the binaries already downloaded from a previou
 
 ## Installing the Snap
 ```
-snap install microk8s_v1.10.2_amd64.snap --devmode
+snap install microk8s_v1.10.2_amd64.snap --classic --dangerous
 ```
