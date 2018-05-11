@@ -9,7 +9,7 @@ version: "latest"
 summary: Kubernetes in your box.
 description: Microk8s deploys and configures all kubernetes services in a snap.
 grade: stable
-confinement: devmode
+confinement: classic
 
 apps:
   daemon-etcd:
@@ -95,6 +95,7 @@ parts:
 
       echo "Creating hooks"
       build-scripts/create-install-hook.sh
+      build-scripts/create-remove-hook.sh
 
       echo "Setting default daemon configs"
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/default-args .
