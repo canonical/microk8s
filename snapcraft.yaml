@@ -78,6 +78,7 @@ parts:
     build-packages:
     - curl
     - openssl
+    - file
     stage-packages:
     - conntrack
     - docker.io
