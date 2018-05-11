@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -eux
 
 apps="kubectl kube-apiserver kube-controller-manager kube-scheduler kubelet kube-proxy"
 export KUBE_SNAP_BINS=build/kube_bins/$KUBE_VERSION
@@ -13,6 +13,7 @@ echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
       curl -LO \
         https://dl.k8s.io/${KUBE_VERSION}/bin/linux/$KUBE_ARCH/$app
       chmod +x $app
+      file ${app}
       if ! file ${app} 2>&1 | grep -q 'executable'; then
         echo "${app} is not an executable"
         exit 1
