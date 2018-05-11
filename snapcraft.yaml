@@ -75,6 +75,9 @@ parts:
   microk8s:
     plugin: dump
     build-attributes: [no-patchelf]
+    build-packages:
+    - curl
+    - openssl
     stage-packages:
     - conntrack
     - docker.io
