@@ -24,7 +24,6 @@ apps:
     plugs:
         - network
         - network-bind
-        - docker-support
 
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
