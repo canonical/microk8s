@@ -10,7 +10,7 @@ set -eu
 #TODO(kjackal): Make sure this works everywhere we want
 if [ -f /etc/apparmor.d/docker ]; then
   echo "Updating docker-default profile"
-  sed 's/\ \ signal\ (receive)\ peer=snap.microk8s.daemon-docker,\n//' -i /etc/apparmor.d/docker
+  awk -i inplace '!/^  signal \(receive\) peer=snap.microk8s.daemon-docker,$/ {print}' /etc/apparmor.d/docker
   echo "Reloading AppArmor profiles"
   service apparmor reload
   echo "AppArmor patched"
