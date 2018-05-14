@@ -2,11 +2,13 @@
 
 Kubernetes in a snap.
 
-## Building the Snap
+## Building the snap
 Building the snap is done with:
 ```
 > snapcraft
 ```
+
+### Building for specific versions
 
 You can set the following environment variables prior to building:
  - KUBE_VERSION: kubernetes release to package. Defaults to latest stable.
@@ -17,6 +19,8 @@ For example:
 ```
 > KUBE_VERSION=v1.9.6 snapcraft
 ```
+
+### Faster builds
 
 To speed-up a build you can reuse the binaries already downloaded from a previous build. Binaries are placed under `parts/microk8s/build/build/kube_bins`. All you need to do is to make a copy of this directory and have the `KUBE_SNAP_BINS` environment variable point to it. Try this for example:
 ```
@@ -29,7 +33,14 @@ To speed-up a build you can reuse the binaries already downloaded from a previou
 
 ```
 
-## Installing the Snap
+## Installing the snap
 ```
 snap install microk8s_v1.10.2_amd64.snap --classic --dangerous
 ```
+
+## Using the snap
+```
+microk8s.kubectl cluster-info
+microk8s.kubectl get all -o wide --all-namespaces
+```
+
