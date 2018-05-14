@@ -1,11 +1,11 @@
 # microk8s
 
-Kubernetes in a snap.
+Kubernetes in a [snap](https://snapcraft.io/).
 
 ## Building the snap
-Building the snap is done with:
+Build the snap with:
 ```
-> snapcraft
+snapcraft
 ```
 
 ### Building for specific versions
@@ -17,7 +17,7 @@ You can set the following environment variables prior to building:
 
 For example:
 ```
-> KUBE_VERSION=v1.9.6 snapcraft
+KUBE_VERSION=v1.9.6 snapcraft
 ```
 
 ### Faster builds
