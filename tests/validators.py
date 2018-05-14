@@ -3,7 +3,7 @@ import os
 import re
 import requests
 
-from utils import kubectl, wait_for_pod_state
+from utils import kubectl, wait_for_pod_state, kubectl_get
 
 def validate_dns():
     """
@@ -109,3 +109,27 @@ def validate_ingress():
     assert "microbot.png" in resp.content.decode("utf-8")
 
     kubectl("delete -f {}".format(manifest))
+
+
+def validate_gpu(enable_outcome=""):
+    """
+    Validate gpu by trying a cuda-add.
+    Does not fail if gpu is not enabled.
+    """
+    if "Aborting" in enable_outcome:
+        return
+
+    wait_for_pod_state("", "kube-system", "running", label="name=nvidia-device-plugin-ds")
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "cuda-add.yaml")
+
+    get_pod = kubectl_get("po")
+    if "cuda-vector-add" in str(get_pod):
+        # Cleanup
+        kubectl("delete -f {}".format(manifest))
+        time.sleep(10)
+
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("cuda-vector-add", "default", "terminated")
+    result = kubectl("logs pod/cuda-vector-add")
+    assert "PASSED" in result
