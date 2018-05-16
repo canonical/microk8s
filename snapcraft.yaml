@@ -15,56 +15,26 @@ apps:
   daemon-etcd:
     command: run-with-config-args etcd
     daemon: simple
-    plugs:
-        - network
-        - network-bind
   daemon-docker:
     command: run-with-config-args dockerd
     daemon: simple
-    plugs:
-        - network
-        - network-bind
-
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
     daemon: simple
-    plugs:
-        - network
-        - network-bind
-
   daemon-controller-manager:
     command: run-with-config-args kube-controller-manager
     daemon: simple
-    plugs:
-        - network
-        - network-bind
   daemon-scheduler:
     command: run-with-config-args kube-scheduler
     daemon: simple
-    plugs:
-        - network
-        - network-bind
-        - home
-
   daemon-kubelet:
     command: run-with-config-args kubelet
-    plugs:
-        - network
-        - network-bind
-        - home
     daemon: simple
-
   daemon-proxy:
     command: run-with-config-args kube-proxy
     daemon: simple
-    plugs:
-        - network
-        - network-bind
-        - network-control
-
   kubectl:
     command: kubectl --kubeconfig=$SNAP/client.config
-
   enable:
     command: microk8s-enable.wrapper
   disable:
