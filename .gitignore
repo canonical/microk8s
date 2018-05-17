@@ -2,5 +2,5 @@
 /parts/
 /prime/
 /stage/
-/snap/.snapcraft
+/snap/
 *.snap
