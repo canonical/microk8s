@@ -16,7 +16,7 @@ apps:
     command: run-with-config-args etcd
     daemon: simple
   daemon-docker:
-    command: run-with-config-args dockerd
+    command: run-docker-with-args
     daemon: simple
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
@@ -52,6 +52,7 @@ parts:
     - conntrack
     - docker.io
     - aufs-tools
+    - gawk
     source: .
     override-build: |
       set -eu
@@ -76,6 +77,9 @@ parts:
       echo "Preparing cni"
       mkdir -p opt/cni/bin/
       cp $KUBE_SNAP_BINS/cni/* opt/cni/bin/
+
+      echo "Preparing dockerd"
+      cp $KUBE_SNAP_ROOT/microk8s-resources/docker-profile .
 
       echo "Preparing etcd"
       cp $KUBE_SNAP_BINS/etcd/etcd .
