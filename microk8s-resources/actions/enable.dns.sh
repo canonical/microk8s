@@ -11,7 +11,7 @@ refresh_opt_in_config() {
     if $(grep -qE "^$opt=" $config_file); then
         sudo sed -i "s/^$opt=.*/$replace_line/" $config_file
     else
-        sudo echo $replace_line >> $config_file
+        sudo sed -i "$ a $replace_line" "$config_file"
     fi
 }
 
@@ -19,12 +19,12 @@ refresh_opt_in_config() {
 # We do not need to see dns pods running at this point just give some slack
 echo "Applying DNS manifest"
 "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "apply" "-f" "${SNAP}/actions/dns.yaml"
-sleep 10
+sleep 5
 
 echo "Restarting kubelet"
 #TODO(kjackal): do not hardcode the info below. Get it from the yaml
 refresh_opt_in_config "cluster-domain" "cluster.local" kubelet
 refresh_opt_in_config "cluster-dns" "10.152.183.10" kubelet
 
-sudo snapctl restart ${SNAP_NAME}.daemon-kubelet 2>&1 || true
+sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
 echo "Done"
