@@ -1,5 +1,5 @@
 -H unix://${SNAP_DATA}/docker.sock
---exec-root ${SNAP_DATA}
---graph ${SNAP_DATA}
---pidfile ${SNAP_DATA}/docker-pid
+--exec-root ${SNAP_COMMON}/var/run/docker
+--data-root ${SNAP_COMMON}/var/lib/docker
+--pidfile ${SNAP_COMMON}/docker-pid
 --debug

@@ -7,6 +7,11 @@ cat << 'EOF' > meta/hooks/remove
 #!/bin/bash
 set -eu
 
+snapctl stop ${SNAP_NAME}.daemon-kubelet 2>&1 || true
+snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
+mount | grep ${SNAP_COMMON}/pods | cut -d ' ' -f 3 | xargs umount
+mount | grep ${SNAP_COMMON}/var/*/docker | cut -d ' ' -f 3 | xargs umount
+
 #TODO(kjackal): Make sure this works everywhere we want
 if [ -f /etc/apparmor.d/docker ]; then
   echo "Updating docker-default profile"
