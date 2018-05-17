@@ -114,6 +114,6 @@ parts:
       echo "Creating commands and wrappers"
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
       #TODO(kjackal): yaml manifests may need to be rendered to match the $SNAP_ARCH
-      cp -r $KUBE_SNAP_ROOT/microk8s-resources/yaml .
+      cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
 
       snapcraftctl build

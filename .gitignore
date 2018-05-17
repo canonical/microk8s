@@ -1,6 +1,6 @@
 /build/
 /parts/
 /prime/
-/snap/
 /stage/
+/snap/
 *.snap
