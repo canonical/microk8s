@@ -7,7 +7,7 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 if [ -f "${SNAP}/actions/disable.$1.sh" ]; then
   exec "${SNAP}/actions/disable.$1.sh"
 elif [ -f "${SNAP}/actions/$1.yaml" ]; then
-  exec "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "delete" "-f" "${SNAP}/yaml/$1.yaml"
+  exec "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "delete" "-f" "${SNAP}/actions/$1.yaml"
 else
   echo "Nothing to do for $1"
 fi
