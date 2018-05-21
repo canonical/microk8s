@@ -3,11 +3,13 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
-# If there is a script to execute for the action $1 run the script and ignore any yamls
-if [ -f "${SNAP}/actions/disable.$1.sh" ]; then
-  exec "${SNAP}/actions/disable.$1.sh"
-elif [ -f "${SNAP}/actions/$1.yaml" ]; then
-  exec "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "delete" "-f" "${SNAP}/actions/$1.yaml"
-else
-  echo "Nothing to do for $1"
-fi
+for action in "$@"; do
+  # If there is a script to execute for the action $1 run the script and ignore any yamls
+  if [ -f "${SNAP}/actions/disable.$action.sh" ]; then
+    exec "${SNAP}/actions/disable.$action.sh"
+  elif [ -f "${SNAP}/actions/$action.yaml" ]; then
+    exec "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "delete" "-f" "${SNAP}/actions/$action.yaml"
+  else
+    echo "Nothing to do for $action"
+  fi
+done
