@@ -8,7 +8,9 @@ for action in "$@"; do
   if [ -f "${SNAP}/actions/disable.$action.sh" ]; then
     "${SNAP}/actions/disable.$action.sh"
   elif [ -f "${SNAP}/actions/$action.yaml" ]; then
+    echo "Disabling $action"
     "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "delete" "-f" "${SNAP}/actions/$action.yaml"
+    echo "$action disabled"
   else
     echo "Nothing to do for $action"
   fi

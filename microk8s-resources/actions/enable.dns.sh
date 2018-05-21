@@ -17,7 +17,8 @@ refresh_opt_in_config() {
 
 # Apply the dns yaml
 # We do not need to see dns pods running at this point just give some slack
-echo "Applying DNS manifest"
+echo "Enabling DNS"
+echo "Applying manifest"
 "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "apply" "-f" "${SNAP}/actions/dns.yaml"
 sleep 5
 
@@ -27,4 +28,4 @@ refresh_opt_in_config "cluster-domain" "cluster.local" kubelet
 refresh_opt_in_config "cluster-dns" "10.152.183.10" kubelet
 
 sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
-echo "Done"
+echo "DNS is enabled"
