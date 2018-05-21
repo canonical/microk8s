@@ -41,18 +41,49 @@ apps:
     command: microk8s-disable.wrapper
 
 parts:
+  libnftnl:
+    plugin: autotools
+    source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
+    build-packages:
+    - libjansson-dev
+    - libmnl-dev
+  iptables:
+    after:
+    - libnftnl
+    source: https://www.netfilter.org/projects/iptables/files/iptables-1.6.1.tar.bz2
+    plugin: autotools
+    build-packages:
+    - bison
+    - flex
+    - libmnl-dev
+    - libnfnetlink-dev
+    - libnetfilter-conntrack3
+    - libnetfilter-conntrack-dev
+    configflags:
+    - "--disable-shared"
+    - "--enable-static"
+  docker:
+    after: [iptables]
+    plugin: dump
+    stage-packages:
+    - conntrack
+    - docker.io
+    - aufs-tools
+    - gawk
+    source: .
+    stage:
+    - -sbin/xtables-multi
+    - -sbin/iptables*
+    - -lib/xtables
+    override-build: "true"
   microk8s:
+    after: [docker]
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
     - curl
     - openssl
     - file
-    stage-packages:
-    - conntrack
-    - docker.io
-    - aufs-tools
-    - gawk
     source: .
     override-build: |
       set -eu
