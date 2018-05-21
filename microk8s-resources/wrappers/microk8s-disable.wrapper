@@ -6,9 +6,9 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 for action in "$@"; do
   # If there is a script to execute for the action $1 run the script and ignore any yamls
   if [ -f "${SNAP}/actions/disable.$action.sh" ]; then
-    exec "${SNAP}/actions/disable.$action.sh"
+    "${SNAP}/actions/disable.$action.sh"
   elif [ -f "${SNAP}/actions/$action.yaml" ]; then
-    exec "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "delete" "-f" "${SNAP}/actions/$action.yaml"
+    "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "delete" "-f" "${SNAP}/actions/$action.yaml"
   else
     echo "Nothing to do for $action"
   fi
