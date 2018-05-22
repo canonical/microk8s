@@ -35,6 +35,7 @@ apps:
     daemon: simple
   kubectl:
     command: kubectl --kubeconfig=$SNAP/client.config
+    aliases: [kubectl]
   enable:
     command: microk8s-enable.wrapper
   disable:
