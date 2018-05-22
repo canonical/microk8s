@@ -64,6 +64,7 @@ parts:
     configflags:
     - "--disable-shared"
     - "--enable-static"
+    prime: [ -bin/iptables-xml ]
   docker:
     after: [iptables]
     plugin: dump
