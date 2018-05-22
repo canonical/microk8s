@@ -39,6 +39,8 @@ apps:
     command: microk8s-enable.wrapper
   disable:
     command: microk8s-disable.wrapper
+  config:
+    command: microk8s-config.wrapper
 
 parts:
   libnftnl:

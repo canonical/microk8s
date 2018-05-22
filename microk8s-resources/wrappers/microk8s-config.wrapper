@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -eu
+
+USE_LOOPBACK=false
+PARSED=$(getopt --options=lho: --longoptions=use-loopback,help,output: --name "$@" -- "$@")
+eval set -- "$PARSED"
+while true; do
+    case "$1" in
+        -l|--use-loopback)
+            USE_LOOPBACK=true
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: $0 [OPTIONS]"
+            echo
+            echo "Retrieve the client config, similar to microk8s.kubectl config view --raw"
+            echo
+            echo "Options:"
+            echo " -h, --help          Show this help"
+            echo " -l, --use-loopback  Report the cluster address using the loopback address"
+            echo "                     (127.0.0.1) rather than the default interface address"
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "$0: invalid option -- $1"
+            exit 1
+    esac
+done
+
+if [[ "$USE_LOOPBACK" == "true" ]]; then
+    cat "$SNAP/client.config"
+else
+    DEFAULT_INTERFACE="$(netstat -rn | grep '^0.0.0.0' | awk '{print $NF}')"
+    IP_ADDR="$(ifconfig "$DEFAULT_INTERFACE" | grep 'inet ' | awk '{print $2}')"
+    sed -e "s/127.0.0.1/$IP_ADDR/" "$SNAP/client.config"
+fi
