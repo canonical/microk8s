@@ -52,7 +52,7 @@ spec:
                 - DAC_READ_SEARCH
                 - SYS_RESOURCE
           args:
-            - "-provisioner=microk8s.local/nfs"
+            - "-provisioner=microk8s.io/nfs"
           env:
             - name: POD_IP
               valueFrom:
@@ -79,4 +79,4 @@ metadata:
   name: microk8s-nfs
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
-provisioner: microk8s.local/nfs
+provisioner: microk8s.io/nfs

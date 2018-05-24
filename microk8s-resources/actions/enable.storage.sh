@@ -8,4 +8,3 @@ cat "${SNAP}/actions/storage.yaml" | \
 sed 's@\$SNAP_COMMON@'"$SNAP_COMMON"'@g' | \
 "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f -
 echo "Storage will be available soon"
-echo "Check progress with: microk8s.kubectl get all -n kube-system"
