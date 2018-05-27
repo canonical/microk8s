@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -eu
+
+cp -r ${SNAP}/default-args ${SNAP_DATA}/args
+cp -r ${SNAP}/certs ${SNAP_DATA}/certs

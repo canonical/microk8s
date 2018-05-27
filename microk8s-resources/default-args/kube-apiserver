@@ -7,7 +7,7 @@
 --basic-auth-file=${SNAP}/basic_auth.csv
 --token-auth-file=${SNAP}/known_token.csv
 --enable-admission-plugins="NamespaceLifecycle,ServiceAccount,DefaultStorageClass"
---service-account-key-file=${SNAP}/certs/serviceaccount.key
---client-ca-file=${SNAP}/certs/ca.crt
---tls-cert-file=${SNAP}/certs/server.crt
---tls-private-key-file=${SNAP}/certs/server.key
+--service-account-key-file=${SNAP_DATA}/certs/serviceaccount.key
+--client-ca-file=${SNAP_DATA}/certs/ca.crt
+--tls-cert-file=${SNAP_DATA}/certs/server.crt
+--tls-private-key-file=${SNAP_DATA}/certs/server.key

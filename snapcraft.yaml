@@ -98,15 +98,12 @@ parts:
         . build-scripts/fetch-binaries.sh
       fi
 
-      echo "Creating hooks"
-      build-scripts/create-install-hook.sh
-      build-scripts/create-remove-hook.sh
-
       echo "Setting default daemon configs"
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/default-args .
 
       echo "Building certs"
       build-scripts/build-certs.sh
+      cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs-beta .
 
       echo "Preparing cni"
       mkdir -p opt/cni/bin/
