@@ -2,5 +2,6 @@
 /parts/
 /prime/
 /stage/
-/snap/
+/snap/*
+!/snap/hooks/
 *.snap

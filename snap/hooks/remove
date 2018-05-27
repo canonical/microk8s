@@ -1,10 +1,4 @@
-#!/bin/sh
-set -eu
-
-mkdir -p meta/hooks
-
-cat << 'EOF' > meta/hooks/remove
-#!/bin/bash
+#!/usr/bin/env bash
 set -eu
 
 snapctl stop ${SNAP_NAME}.daemon-kubelet 2>&1 || true
@@ -20,7 +14,3 @@ if [ -f /etc/apparmor.d/docker ]; then
   service apparmor reload
   echo "AppArmor patched"
 fi
-
-EOF
-
-chmod +x meta/hooks/remove
