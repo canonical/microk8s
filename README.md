@@ -50,6 +50,23 @@ These addons can be disabled at anytime using the `disable` command
 microk8s.disable dashboard dns
 ```
 
+### Stopping and Restarting microk8s
+
+You may wish to temporarily shutdown microk8s when not in use without un-installing it.
+
+microk8s can be shutdown using the snap command
+
+```
+snap disable microk8s
+```
+
+microk8s can be restarted later with the snap command
+
+```
+snap enable microk8s
+```
+
+
 ## Building from source
 
 Build the snap with:
