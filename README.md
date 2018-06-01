@@ -83,19 +83,19 @@ snap enable microk8s
 
 ### Configuring microk8s services
 The following systemd services will be running in your system:
-- **snap.microk8s.daemon-apiserver**, is the [kube-apiserver](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) daemon started using the arguments in ${SNAP_DATA}/args/kube-apiserver
-- **snap.microk8s.daemon-controller-manager**, is the [kube-controller-manager](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/) daemon started using the arguments in ${SNAP_DATA}/args/kube-controller-manager
-- **snap.microk8s.daemon-scheduler**, is the [kube-scheduler](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/) daemon started using the arguments in ${SNAP_DATA}/args/kube-scheduler
-- **snap.microk8s.daemon-kubelet**, is the [kubelet](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) daemon started using the arguments in ${SNAP_DATA}/args/kubelet
-- **snap.microk8s.daemon-proxy**, is the [kube-proxy](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) daemon started using the arguments in ${SNAP_DATA}/args/kube-proxy
-- **snap.microk8s.daemon-docker**, is the [docker](https://docs.docker.com/engine/reference/commandline/dockerd/) daemon started using the arguments in ${SNAP_DATA}/args/dockerd
-- **snap.microk8s.daemon-etcd**, is the [etcd](https://coreos.com/etcd/docs/latest/v2/configuration.html) daemon started using the arguments in ${SNAP_DATA}/args/etcd
+- **snap.microk8s.daemon-apiserver**, is the [kube-apiserver](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) daemon started using the arguments in `${SNAP_DATA}/args/kube-apiserver`
+- **snap.microk8s.daemon-controller-manager**, is the [kube-controller-manager](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/) daemon started using the arguments in `${SNAP_DATA}/args/kube-controller-manager`
+- **snap.microk8s.daemon-scheduler**, is the [kube-scheduler](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/) daemon started using the arguments in `${SNAP_DATA}/args/kube-scheduler`
+- **snap.microk8s.daemon-kubelet**, is the [kubelet](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) daemon started using the arguments in `${SNAP_DATA}/args/kubelet`
+- **snap.microk8s.daemon-proxy**, is the [kube-proxy](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) daemon started using the arguments in `${SNAP_DATA}/args/kube-proxy`
+- **snap.microk8s.daemon-docker**, is the [docker](https://docs.docker.com/engine/reference/commandline/dockerd/) daemon started using the arguments in `${SNAP_DATA}/args/dockerd`
+- **snap.microk8s.daemon-etcd**, is the [etcd](https://coreos.com/etcd/docs/latest/v2/configuration.html) daemon started using the arguments in `${SNAP_DATA}/args/etcd`
 
-Normally, ${SNAP_DATA} points to `/var/snap/microk8s/current`.
+Normally, `${SNAP_DATA}` points to `/var/snap/microk8s/current`.
 
 To reconfigure a service you will need to edit the corresponding file and then restart the respective daemon. For example:
 ```
-sudo sh -c "echo '--config-file=/path-to-my/daemon.json' >> /var/snap/microk8s/current/args/dockerd"
+sudo sh -c "echo '--config-file=/path-to-my/daemon.json' | tee -a /var/snap/microk8s/current/args/dockerd"
 sudo systemctl restart snap.microk8s.daemon-docker.service
 ```
 
@@ -136,5 +136,5 @@ To speed-up a build you can reuse the binaries already downloaded from a previou
 
 ### Installing the snap
 ```
-sudo snap install microk8s_v1.10.3_amd64.snap --classic --dangerous
+snap install microk8s_v1.10.3_amd64.snap --classic --dangerous
 ```
