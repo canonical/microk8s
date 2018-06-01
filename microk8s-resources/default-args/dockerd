@@ -2,3 +2,4 @@
 --exec-root ${SNAP_COMMON}/var/run/docker
 --graph ${SNAP_COMMON}/var/lib/docker
 --pidfile ${SNAP_COMMON}/docker-pid
+--config-file=${SNAP_DATA}/args/docker-daemon.json
