@@ -36,6 +36,13 @@ This measure can be safely reverted at anytime by doing
 snap unalias kubectl
 ```
 
+If you already have `kubectl` installed and you want to use it to access the microk8s deployment you can export the cluster's config with
+
+```
+microk8s.config > $HOME/.kube/config
+```
+
+
 ### Kubernetes Addons
 
 microk8s installs a barebones upstream Kubernetes. This means just the api-server, controller-manager, scheduler, kubelet, cni, kube-proxy are installed and run. Additional services like kube-dns and dashboard can be run using the `microk8s.enable` command
@@ -49,6 +56,13 @@ These addons can be disabled at anytime using the `disable` command
 ```
 microk8s.disable dashboard dns
 ```
+
+You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/currect`.
+
+#### List of available addons
+- **dns**: Deploy kube dns. This addon may be required by others thus we recommend you always enable it.
+- **dashboard**: Deploy kubernetes dashboard as well as grafana and influxdb. To access grafana point your browser to the url reported by `microk8s.kubectl cluster-info`.
+- **storage**: Create a default storage class. This storage class makes use of the nfs-provisioner pointing to a directory on the host. Persistent volumes are created under `${SNAP_COMMON}/default-storage`. Upon disabling this addon you will be asked if you want to delete the persistent volumes created.
 
 ### Stopping and Restarting microk8s
 
@@ -65,6 +79,27 @@ microk8s can be restarted later with the snap command
 ```
 snap enable microk8s
 ```
+
+
+### Configuring microk8s services
+The following systemd services will be running in your system:
+- **snap.microk8s.daemon-apiserver**, is the [kube-apiserver](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) daemon started using the arguments in `${SNAP_DATA}/args/kube-apiserver`
+- **snap.microk8s.daemon-controller-manager**, is the [kube-controller-manager](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/) daemon started using the arguments in `${SNAP_DATA}/args/kube-controller-manager`
+- **snap.microk8s.daemon-scheduler**, is the [kube-scheduler](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/) daemon started using the arguments in `${SNAP_DATA}/args/kube-scheduler`
+- **snap.microk8s.daemon-kubelet**, is the [kubelet](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) daemon started using the arguments in `${SNAP_DATA}/args/kubelet`
+- **snap.microk8s.daemon-proxy**, is the [kube-proxy](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) daemon started using the arguments in `${SNAP_DATA}/args/kube-proxy`
+- **snap.microk8s.daemon-docker**, is the [docker](https://docs.docker.com/engine/reference/commandline/dockerd/) daemon started using the arguments in `${SNAP_DATA}/args/dockerd`
+- **snap.microk8s.daemon-etcd**, is the [etcd](https://coreos.com/etcd/docs/latest/v2/configuration.html) daemon started using the arguments in `${SNAP_DATA}/args/etcd`
+
+Normally, `${SNAP_DATA}` points to `/var/snap/microk8s/current`.
+
+To reconfigure a service you will need to edit the corresponding file and then restart the respective daemon. For example:
+```
+echo '--config-file=/path-to-my/daemon.json' | sudo tee -a /var/snap/microk8s/current/args/dockerd
+sudo systemctl restart snap.microk8s.daemon-docker.service
+```
+
+To troubleshoot a non-functional microk8s deployment you would first check that all of the above services are up and running. You do that with `sudo systemctl status snap.microk8s.<daemon>`. Having spotted a stopped service you can look at its logs with `journalctl -u snap.microk8s.<daemon>.service`. We will probably ask you for those logs as soon as you open an [issue](https://github.com/juju-solutions/microk8s/issues).
 
 
 ## Building from source
@@ -93,7 +128,7 @@ To speed-up a build you can reuse the binaries already downloaded from a previou
 > snapcraft
 ... this build will take a long time and will download all binaries ...
 > cp -r parts/microk8s/build/build/kube_bins .
-> export KUBE_SNAP_BINS=$PWD/kube_bins/v1.10.2/
+> export KUBE_SNAP_BINS=$PWD/kube_bins/v1.10.3/
 > snapcraft
 ... this build will be much faster and will reuse binaries in KUBE_SNAP_BINS
 
