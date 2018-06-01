@@ -95,7 +95,7 @@ Normally, `${SNAP_DATA}` points to `/var/snap/microk8s/current`.
 
 To reconfigure a service you will need to edit the corresponding file and then restart the respective daemon. For example:
 ```
-sudo sh -c "echo '--config-file=/path-to-my/daemon.json' | tee -a /var/snap/microk8s/current/args/dockerd"
+echo '--config-file=/path-to-my/daemon.json' | sudo tee -a /var/snap/microk8s/current/args/dockerd
 sudo systemctl restart snap.microk8s.daemon-docker.service
 ```
 
