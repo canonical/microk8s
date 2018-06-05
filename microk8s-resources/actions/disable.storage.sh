@@ -4,7 +4,7 @@ set -e
 
 echo "Disabling default storage"
 cat "${SNAP}/actions/storage.yaml" | \
-sed 's@\$SNAP_COMMON@'"$SNAP_COMMON"'@g' | \
+"$SNAP/bin/sed" 's@\$SNAP_COMMON@'"$SNAP_COMMON"'@g' | \
 "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" delete -f -
 sleep 5
 echo "Storage removed"

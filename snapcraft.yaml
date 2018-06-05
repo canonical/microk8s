@@ -73,6 +73,7 @@ parts:
     - docker.io
     - aufs-tools
     - gawk
+    - sed
     source: .
     stage:
     - -sbin/xtables-multi
@@ -87,6 +88,8 @@ parts:
     - curl
     - openssl
     - file
+    stage-packages:
+    - util-linux
     source: .
     override-build: |
       set -eu

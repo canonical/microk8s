@@ -6,7 +6,8 @@ set -e
 skip_opt_in_config() {
     opt="--$1"
     config_file="$SNAP_DATA/args/$2"
-    sudo gawk -i inplace '!/^'"$opt"'/ {print $0}' "${config_file}"
+    sudo AWKLIBPATH="${SNAP}/usr/lib/x86_64-linux-gnu/gawk" AWKPATH="${SNAP}/usr/share/awk/" \
+      "${SNAP}/usr/bin/gawk" -i inplace '!/^'"$opt"'/ {print $0}' "${config_file}"
 }
 
 echo "Disabling DNS"

@@ -12,12 +12,12 @@ then
   echo "Patching certificates location"
   mkdir -p ${SNAP_DATA}/certs
   cp -r ${SNAP}/certs-beta/* ${SNAP_DATA}/certs/
-  sed -i 's@\${SNAP}/certs/ca.crt@\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
-  sed -i 's@\${SNAP}/certs/server.key@\${SNAP_DATA}/certs/server.key@g' ${SNAP_DATA}/args/kube-apiserver
-  sed -i 's@\${SNAP}/certs/server.crt@\${SNAP_DATA}/certs/server.crt@g' ${SNAP_DATA}/args/kube-apiserver
-  sed -i 's@\${SNAP}/certs/serviceaccount.key@\${SNAP_DATA}/certs/serviceaccount.key@g' ${SNAP_DATA}/args/kube-apiserver
-  sed -i 's@\${SNAP}/certs/ca.crt@\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-controller-manager
-  sed -i 's@\${SNAP}/certs/serviceaccount.key@\${SNAP_DATA}/certs/serviceaccount.key@g' ${SNAP_DATA}/args/kube-controller-manager
+  "$SNAP/bin/sed" -i 's@\${SNAP}/certs/ca.crt@\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
+  "$SNAP/bin/sed" -i 's@\${SNAP}/certs/server.key@\${SNAP_DATA}/certs/server.key@g' ${SNAP_DATA}/args/kube-apiserver
+  "$SNAP/bin/sed" -i 's@\${SNAP}/certs/server.crt@\${SNAP_DATA}/certs/server.crt@g' ${SNAP_DATA}/args/kube-apiserver
+  "$SNAP/bin/sed" -i 's@\${SNAP}/certs/serviceaccount.key@\${SNAP_DATA}/certs/serviceaccount.key@g' ${SNAP_DATA}/args/kube-apiserver
+  "$SNAP/bin/sed" -i 's@\${SNAP}/certs/ca.crt@\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-controller-manager
+  "$SNAP/bin/sed" -i 's@\${SNAP}/certs/serviceaccount.key@\${SNAP_DATA}/certs/serviceaccount.key@g' ${SNAP_DATA}/args/kube-controller-manager
   systemctl restart snap.${SNAP_NAME}.daemon-apiserver
   systemctl restart snap.${SNAP_NAME}.daemon-controller-manager
 fi
