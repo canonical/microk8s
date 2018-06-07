@@ -9,7 +9,6 @@ script:
   - sudo apt update
   - sudo apt install --yes snapd
   - sudo snap install *.snap --classic --dangerous
-  - sleep 10
   - sudo pip install -U pytest
   - pwd
   - ps -ef

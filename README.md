@@ -82,7 +82,7 @@ snap enable microk8s
 
 ### Removing microk8s
 
-To remove microk8s we recommend you first disable all addons and stop all hosted pods. microk8s.reset can assist with that.
+Before removing microk8s, use `microk8s.reset` to stop all running pods.
 
 ```
 microk8s.reset

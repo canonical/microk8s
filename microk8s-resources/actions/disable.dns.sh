@@ -2,17 +2,18 @@
 
 set -e
 
-## remove an option inside the config file.
 skip_opt_in_config() {
+    # remove an option inside the config file.
+    # argument $1 is the option to be removed
+    # argument $2 is the configuration file under $SNAP_DATA/args
     opt="--$1"
     config_file="$SNAP_DATA/args/$2"
-    sudo AWKLIBPATH="${SNAP}/usr/lib/x86_64-linux-gnu/gawk" AWKPATH="${SNAP}/usr/share/awk/" \
-      "${SNAP}/usr/bin/gawk" -i inplace '!/^'"$opt"'/ {print $0}' "${config_file}"
+    sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
 }
 
 echo "Disabling DNS"
 echo "Reconfiguring kubelet"
-#TODO(kjackal): do not hardcode the info below. Get it from the yaml
+
 skip_opt_in_config "cluster-domain" kubelet
 skip_opt_in_config "cluster-dns" kubelet
 sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet

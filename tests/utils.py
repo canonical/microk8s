@@ -88,7 +88,6 @@ def microk8s_enable(addon):
 
     """
     cmd = '/snap/bin/microk8s.enable {}'.format(addon)
-    time.sleep(10)
     return run_until_success(cmd)
 
 
@@ -101,5 +100,4 @@ def microk8s_disable(addon):
 
     """
     cmd = '/snap/bin/microk8s.disable {}'.format(addon)
-    time.sleep(10)
     return run_until_success(cmd)

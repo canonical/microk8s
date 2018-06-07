@@ -1,9 +1,9 @@
 import time
 import os
+import re
 import requests
 
 from utils import kubectl, wait_for_pod_state
-
 
 def validate_dns():
     """
@@ -24,14 +24,26 @@ def validate_dashboard():
     """
     wait_for_pod_state("", "kube-system", "running", label="k8s-app=influxGrafana")
     cluster_info = kubectl("cluster-info")
-    grafana_url = "http://127.0.0.1:8080/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy"
-    assert grafana_url in cluster_info
-    attempt = 5
+    # Cluster info output is colored so we better search for the port in the url pattern
+    # instead of trying to extract the url substring
+    regex = "http://127.0.0.1:([0-9]+)/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy"
+    grafana_pattern = re.compile(regex)
+    for url in cluster_info.split():
+        port_search = grafana_pattern.search(url)
+        if port_search:
+            break
+
+    grafana_url = "http://127.0.0.1:{}" \
+                  "/api/v1/namespaces/kube-system/services/" \
+                  "monitoring-grafana/proxy".format(port_search.group(1))
+    assert grafana_url
+
+    attempt = 50
     while attempt >= 0:
         resp = requests.get(grafana_url)
         if resp.status_code == 200:
             break
-        time.sleep(20)
+        time.sleep(2)
         attempt -= 1
     assert resp.status_code == 200
 
@@ -45,12 +57,12 @@ def validate_storage():
     manifest = os.path.join(here, "templates", "pvc.yaml")
     kubectl("apply -f {}".format(manifest))
 
-    attempt = 5
+    attempt = 50
     while attempt >= 0:
         output = kubectl("get pvc")
         if "Bound" in output:
             break
-        time.sleep(20)
+        time.sleep(2)
         attempt -= 1
 
     assert "myclaim" in output
