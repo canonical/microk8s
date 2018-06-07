@@ -3,7 +3,6 @@
 
 set -eux
 
-sleep 30
 n=0
 until [ $n -ge 10 ]
 do

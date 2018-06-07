@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -eu
+
+clean_cluster() {
+  echo "Calling clean_cluster"
+  # Clean the cluster
+  NSES=$(/snap/bin/microk8s.kubectl get ns -o=custom-columns="NAME:metadata.name" --no-headers 2>&1 | tr '\n' ' ')
+  for NS in $NSES
+  do
+    echo "Cleaning service, deployments and pods in namespace $NS"
+    # delete all services
+    /snap/bin/microk8s.kubectl delete --all services --namespace="$NS" 2>&1 > /dev/null
+    # delete all deployments
+    /snap/bin/microk8s.kubectl delete --all deployments --namespace="$NS" 2>&1 > /dev/null
+    # delete all pods
+    /snap/bin/microk8s.kubectl delete --all pods --namespace="$NS" 2>&1 > /dev/null
+  done
+
+  # Wait for 200 secs at most.
+  echo "Waiting for kubernetes resources to be released"
+  n=0
+  until [ $n -ge 10 ]
+  do
+    (/snap/bin/microk8s.kubectl get po --all-namespaces 2>&1 | grep "No resources found." 2>&1 > /dev/null) && break
+    n=$[$n+1]
+    sleep 20
+  done
+}
+
+
+clean_cluster
