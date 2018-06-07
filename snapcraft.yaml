@@ -41,6 +41,8 @@ apps:
     command: microk8s-disable.wrapper
   config:
     command: microk8s-config.wrapper
+  reset:
+    command: microk8s-reset.wrapper
 
 parts:
   libnftnl:
@@ -73,6 +75,7 @@ parts:
     - docker.io
     - aufs-tools
     - gawk
+    - sed
     source: .
     stage:
     - -sbin/xtables-multi
@@ -87,6 +90,8 @@ parts:
     - curl
     - openssl
     - file
+    stage-packages:
+    - util-linux
     source: .
     override-build: |
       set -eu

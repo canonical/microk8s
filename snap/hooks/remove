@@ -9,7 +9,7 @@ mount | grep ${SNAP_COMMON}/var/*/docker | cut -d ' ' -f 3 | xargs umount
 #TODO(kjackal): Make sure this works everywhere we want
 if [ -f /etc/apparmor.d/docker ]; then
   echo "Updating docker-default profile"
-  gawk -i inplace '!/^  signal \(receive\) peer=snap.microk8s.daemon-docker,$/ {print}' /etc/apparmor.d/docker
+  "${SNAP}/bin/sed" -i '/  signal (receive) peer=snap.microk8s.daemon-docker,/d' /etc/apparmor.d/docker
   echo "Reloading AppArmor profiles"
   service apparmor reload
   echo "AppArmor patched"

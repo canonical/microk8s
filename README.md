@@ -80,6 +80,14 @@ microk8s can be restarted later with the snap command
 snap enable microk8s
 ```
 
+### Removing microk8s
+
+Before removing microk8s, use `microk8s.reset` to stop all running pods.
+
+```
+microk8s.reset
+snap remove microk8s
+```
 
 ### Configuring microk8s services
 The following systemd services will be running in your system:
