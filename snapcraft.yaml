@@ -13,7 +13,7 @@ confinement: classic
 
 apps:
   daemon-etcd:
-    command: run-with-config-args etcd
+    command: run-etcd-with-args
     daemon: simple
   daemon-docker:
     command: run-docker-with-args
