@@ -76,3 +76,25 @@ def validate_storage():
     assert "myclaim" in output
     assert "Bound" in output
     kubectl("delete -f {}".format(manifest))
+
+
+def validate_ingress():
+    """
+    Validate ingress by creating a ingress rule.
+    """
+    wait_for_pod_state("", "default", "running", label="app=default-http-backend")
+    wait_for_pod_state("", "default", "running", label="name=nginx-ingress-microk8s")
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "ingress.yaml")
+    kubectl("apply -f {}".format(manifest))
+
+    attempt = 50
+    while attempt >= 0:
+        output = kubectl("get ing")
+        if "test-ingress" in output:
+            break
+        time.sleep(2)
+        attempt -= 1
+
+    assert "test-ingress" in output
+    kubectl("delete -f {}".format(manifest))

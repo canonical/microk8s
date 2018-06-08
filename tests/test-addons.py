@@ -47,3 +47,15 @@ class TestAddons(object):
         print("Disabling storage")
         p = Popen("/snap/bin/microk8s.disable storage".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         disable = p.communicate(input=b'Y')[0]
+
+    def test_ingress(self):
+        """
+        Sets up ingress addon and validates it works.
+
+        """
+        print("Enabling ingress")
+        microk8s_enable("ingress")
+        print("Validating ingress")
+        validate_ingress()
+        print("Disabling ingress")
+        microk8s_disable("ingress")

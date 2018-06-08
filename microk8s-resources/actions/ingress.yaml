@@ -58,7 +58,7 @@ kind: DaemonSet
 metadata:
   name: nginx-ingress-microk8s-controller
   labels:
-    juju-application: nginx-ingress-microk8s
+    microk8s-application: nginx-ingress-microk8s
 spec:
   selector:
     matchLabels:
@@ -68,8 +68,6 @@ spec:
       labels:
         name: nginx-ingress-microk8s
     spec:
-      nodeSelector:
-        juju-application: microk8s
       terminationGracePeriodSeconds: 60
       # hostPort doesn't work with CNI, so we have to use hostNetwork instead
       # see https://github.com/kubernetes/kubernetes/issues/23920

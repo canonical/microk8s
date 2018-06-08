@@ -9,6 +9,10 @@ clean_cluster() {
   for NS in $NSES
   do
     echo "Cleaning service, deployments and pods in namespace $NS"
+    # delete all replicationcontrollers
+    /snap/bin/microk8s.kubectl delete --all replicationcontrollers --namespace="$NS" 2>&1 > /dev/null
+    # delete all daemonsets
+    /snap/bin/microk8s.kubectl delete --all daemonsets --namespace="$NS" 2>&1 > /dev/null
     # delete all services
     /snap/bin/microk8s.kubectl delete --all services --namespace="$NS" 2>&1 > /dev/null
     # delete all deployments
