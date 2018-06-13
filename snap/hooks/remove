@@ -3,9 +3,9 @@ set -eu
 
 snapctl stop ${SNAP_NAME}.daemon-kubelet 2>&1 || true
 snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
-(mount | grep ${SNAP_COMMON}/pods | cut -d ' ' -f 3 | xargs umount) || true
-(mount | grep ${SNAP_COMMON}/var/lib/docker | cut -d ' ' -f 3 | xargs umount) || true
-(mount | grep ${SNAP_COMMON}/var/run/docker | cut -d ' ' -f 3 | xargs umount) || true
+(cat /proc/mounts | grep ${SNAP_COMMON}/pods | cut -d ' ' -f 2 | xargs umount) || true
+(cat /proc/mounts | grep ${SNAP_COMMON}/var/lib/docker | cut -d ' ' -f 2 | xargs umount) || true
+(cat /proc/mounts | grep ${SNAP_COMMON}/var/run/docker | cut -d ' ' -f 2 | xargs umount) || true
 
 #TODO(kjackal): Make sure this works everywhere we want
 if [ -f /etc/apparmor.d/docker ]; then
