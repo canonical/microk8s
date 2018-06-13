@@ -40,8 +40,6 @@ class TestAddons(object):
         Sets up storage addon and validates it works.
 
         """
-        print("Enabling DNS")
-        microk8s_enable("dns")
         print("Enabling storage")
         microk8s_enable("storage")
         print("Validating storage")
@@ -49,5 +47,3 @@ class TestAddons(object):
         print("Disabling storage")
         p = Popen("/snap/bin/microk8s.disable storage".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         disable = p.communicate(input=b'Y')[0]
-        print("Disabling DNS")
-        microk8s_disable("dns")

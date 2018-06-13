@@ -5,3 +5,5 @@
 /snap/*
 !/snap/hooks/
 *.snap
+microk8s_source.tar.bz2
+tests/__pycache__
