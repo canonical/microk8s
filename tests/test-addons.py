@@ -1,4 +1,4 @@
-from validators import validate_dns, validate_dashboard, validate_storage
+from validators import validate_dns, validate_dashboard, validate_storage, validate_ingress
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable
 from subprocess import Popen, PIPE, STDOUT
 
