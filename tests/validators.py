@@ -76,3 +76,36 @@ def validate_storage():
     assert "myclaim" in output
     assert "Bound" in output
     kubectl("delete -f {}".format(manifest))
+
+
+def validate_ingress():
+    """
+    Validate ingress by creating a ingress rule.
+    """
+    wait_for_pod_state("", "default", "running", label="app=default-http-backend")
+    wait_for_pod_state("", "default", "running", label="name=nginx-ingress-microk8s")
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "ingress.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=microbot")
+
+    attempt = 50
+    while attempt >= 0:
+        output = kubectl("get ing")
+        if "microbot.127.0.0.1.xip.io" in output:
+            break
+        time.sleep(2)
+        attempt -= 1
+    assert "microbot.127.0.0.1.xip.io" in output
+
+    attempt = 50
+    while attempt >= 0:
+        resp = requests.get("http://microbot.127.0.0.1.xip.io")
+        if resp.status_code == 200:
+            break
+        time.sleep(2)
+        attempt -= 1
+    assert resp.status_code == 200
+    assert "microbot.png" in resp.content.decode("utf-8")
+
+    kubectl("delete -f {}".format(manifest))

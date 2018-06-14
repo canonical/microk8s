@@ -1,0 +1,112 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: default-http-backend
+  labels:
+    app: default-http-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: default-http-backend
+  template:
+    metadata:
+      labels:
+        app: default-http-backend
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: default-http-backend
+        # Any image is permissible as long as:
+        # 1. It serves a 404 page at /
+        # 2. It serves 200 on a /healthz endpoint
+        image: gcr.io/google_containers/defaultbackend:1.4
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 10m
+            memory: 20Mi
+          requests:
+            cpu: 10m
+            memory: 20Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: default-http-backend
+#  namespace: kube-system
+  labels:
+    k8s-app: default-http-backend
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: default-http-backend
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nginx-ingress-microk8s-serviceaccount
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-load-balancer-microk8s-conf
+---
+apiVersion: apps/v1beta2
+kind: DaemonSet
+metadata:
+  name: nginx-ingress-microk8s-controller
+  labels:
+    microk8s-application: nginx-ingress-microk8s
+spec:
+  selector:
+    matchLabels:
+      name: nginx-ingress-microk8s
+  template:
+    metadata:
+      labels:
+        name: nginx-ingress-microk8s
+    spec:
+      terminationGracePeriodSeconds: 60
+      # hostPort doesn't work with CNI, so we have to use hostNetwork instead
+      # see https://github.com/kubernetes/kubernetes/issues/23920
+      hostNetwork: true
+      serviceAccountName: nginx-ingress-microk8s-serviceaccount
+      containers:
+      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.15.0
+        name: nginx-ingress-microk8s
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        # use downward API
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        args:
+        - /nginx-ingress-controller
+        - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
+        - --configmap=$(POD_NAMESPACE)/nginx-load-balancer-conf

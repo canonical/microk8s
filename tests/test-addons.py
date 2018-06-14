@@ -1,4 +1,4 @@
-from validators import validate_dns, validate_dashboard, validate_storage
+from validators import validate_dns, validate_dashboard, validate_storage, validate_ingress
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable
 from subprocess import Popen, PIPE, STDOUT
 
@@ -47,3 +47,15 @@ class TestAddons(object):
         print("Disabling storage")
         p = Popen("/snap/bin/microk8s.disable storage".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         disable = p.communicate(input=b'Y')[0]
+
+    def test_ingress(self):
+        """
+        Sets up ingress addon and validates it works.
+
+        """
+        print("Enabling ingress")
+        microk8s_enable("ingress")
+        print("Validating ingress")
+        validate_ingress()
+        print("Disabling ingress")
+        microk8s_disable("ingress")
