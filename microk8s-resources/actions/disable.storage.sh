@@ -9,5 +9,5 @@ cat "${SNAP}/actions/storage.yaml" | \
 sleep 5
 echo "Storage removed"
 read -p "Remove PVC storage at $SNAP_COMMON/default-storage ? (Y/N): " confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
-sudo rm -rf "$SNAP_COMMON/default-storage/*"
+sudo rm -rf "$SNAP_COMMON/default-storage"
 echo "Storage space reclaimed"

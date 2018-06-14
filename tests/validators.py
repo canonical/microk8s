@@ -52,10 +52,11 @@ def validate_storage():
     """
     Validate storage by creating a PVC.
     """
-    wait_for_pod_state("", "kube-system", "running", label="app=nfs-provisioner")
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=hostpath-provisioner")
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "pvc.yaml")
     kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("hostpath-test-pod", "default", "running")
 
     attempt = 50
     while attempt >= 0:
@@ -65,5 +66,13 @@ def validate_storage():
         time.sleep(2)
         attempt -= 1
 
+    # Make sure the test pod writes data sto the storage
+    found = False
+    for root, dirs, files in os.walk("/var/snap/microk8s/common/default-storage"):
+        for file in files:
+            if file == "dates":
+                found = True
+    assert found
     assert "myclaim" in output
     assert "Bound" in output
+    kubectl("delete -f {}".format(manifest))
