@@ -79,6 +79,22 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
         time.sleep(3)
 
 
+def wait_for_installation():
+    """
+    Wait for kubernetes service to appear.
+    """
+    while True:
+        cmd = 'svc kubernetes'
+        data = kubectl_get(cmd)
+        service = data['metadata']['name']
+        if 'kubernetes' in service:
+            break
+        else:
+            time.sleep(3)
+    # Allow rest of the services to come up
+    time.sleep(30)
+
+
 def microk8s_enable(addon):
     """
     Disable an addon
