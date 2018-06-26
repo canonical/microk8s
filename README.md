@@ -35,7 +35,7 @@ This measure can be safely reverted at anytime by doing
 ```
 snap unalias kubectl
 ```
-
+cuc
 If you already have `kubectl` installed and you want to use it to access the microk8s deployment you can export the cluster's config with
 
 ```
@@ -57,7 +57,7 @@ These addons can be disabled at anytime using the `disable` command
 microk8s.disable dashboard dns
 ```
 
-You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/currect`.
+You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
 
 #### List of available addons
 - **dns**: Deploy kube dns. This addon may be required by others thus we recommend you always enable it.
