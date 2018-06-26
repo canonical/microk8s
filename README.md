@@ -35,7 +35,6 @@ This measure can be safely reverted at anytime by doing
 ```
 snap unalias kubectl
 ```
-cuc
 If you already have `kubectl` installed and you want to use it to access the microk8s deployment you can export the cluster's config with
 
 ```
