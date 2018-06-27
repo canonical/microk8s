@@ -35,11 +35,14 @@ This measure can be safely reverted at anytime by doing
 ```
 snap unalias kubectl
 ```
-If you already have `kubectl` installed and you want to use it to access the microk8s deployment you can export the cluster's config with
+If you already have `kubectl` installed and you want to use it to access the microk8s deployment you can export the cluster's config with:
 
 ```
-microk8s.config > $HOME/.kube/config
+microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
+
+Note: microk8s uses the loopback address as the endpoint.  If you wish to access the cluster from another machine, you will need
+to edit the config to use the host machine's IP (or, if you're using edge, you can use the `microk8s.config` helper).
 
 
 ### Kubernetes Addons
