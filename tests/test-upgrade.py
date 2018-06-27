@@ -70,13 +70,5 @@ class TestUpgrade(object):
             print("Testing {}".format(test))
             validation()
 
-        # Cleanup
-        for test, _ in test_matrix.items():
-            microk8s_disable(test)
-
-        # Allow for addons to be removed
-        time.sleep(30)
-
         cmd = "sudo snap remove microk8s".split()
         check_call(cmd)
-
