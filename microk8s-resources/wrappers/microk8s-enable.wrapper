@@ -3,6 +3,22 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
+if echo "$*" | grep -q -- '--help'; then
+    prog=$(basename -s.wrapper "$0" | tr - .)
+    echo "Usage: $prog ADDON..."
+    echo "Enable one or more ADDON included with microk8s"
+    echo "Example: $prog dns storage"
+    echo
+    echo "Available addons:"
+    echo
+    actions="$(find "${SNAP}/actions" -name '*.yaml' -or -name 'enable.*.sh')"
+    actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
+    for action in $actions; do
+        echo "  $action"
+    done
+    exit
+fi
+
 for action in "$@"; do
   # If there is a script to execute for the $action run the script and ignore any yamls
   if [ -f "${SNAP}/actions/enable.$action.sh" ]; then
