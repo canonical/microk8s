@@ -19,6 +19,8 @@ class TestUpgrade(object):
         Deploy, probe, upgrade, validate nothing broke.
 
         """
+        print("Testing upgrade from {} to {}".format(upgrade_from, upgrade_to))
+
         cmd = "sudo snap install microk8s --classic --{}".format(upgrade_from).split()
         check_call(cmd)
         wait_for_installation()
