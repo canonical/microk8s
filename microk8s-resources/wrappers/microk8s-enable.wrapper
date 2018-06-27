@@ -4,9 +4,10 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_6
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 if echo "$*" | grep -q -- '--help'; then
-    echo "Usage: $(basename -s.wrapper "$0") ADDON..."
+    prog=$(basename -s.wrapper "$0" | tr - .)
+    echo "Usage: $prog ADDON..."
     echo "Enable one or more ADDON included with microk8s"
-    echo "Example: $(basename -s.wrapper "$0") dns storage"
+    echo "Example: $prog dns storage"
     echo
     echo "Available addons:"
     echo
