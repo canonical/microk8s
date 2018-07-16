@@ -1,6 +1,13 @@
 import os
 import time
-from validators import validate_dns, validate_dashboard, validate_storage, validate_ingress, validate_gpu
+from validators import (
+    validate_dns,
+    validate_dashboard,
+    validate_storage,
+    validate_ingress,
+    validate_gpu,
+    validate_registry
+)
 from subprocess import check_call
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, wait_for_installation
 
@@ -63,6 +70,13 @@ class TestUpgrade(object):
             test_matrix['gpu'] = validate_gpu
         except:
             print('Will not test gpu')
+
+        try:
+            microk8s_enable("registry")
+            validate_registry()
+            test_matrix['registry'] = validate_registry
+        except:
+            print('Will not test registry')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

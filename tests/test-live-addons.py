@@ -3,7 +3,8 @@ from validators import (
     validate_dashboard,
     validate_storage,
     validate_ingress,
-    validate_istio
+    validate_istio,
+    validate_registry,
 )
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable
 
@@ -39,7 +40,7 @@ class TestLiveAddons(object):
 
     def test_ingress(self):
         """
-        Validates storage works.
+        Validates ingress works.
 
         """
         validate_ingress()
@@ -50,3 +51,11 @@ class TestLiveAddons(object):
 
         """
         validate_istio()
+
+    def test_registry(self):
+        """
+        Validates the registry works.
+
+        """
+        validate_registry()
+

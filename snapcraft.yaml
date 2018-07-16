@@ -32,6 +32,8 @@ apps:
     daemon: simple
   kubectl:
     command: kubectl --kubeconfig=$SNAP/client.config
+  docker:
+    command: microk8s-docker.wrapper
   enable:
     command: microk8s-enable.wrapper
   disable:

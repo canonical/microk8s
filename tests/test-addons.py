@@ -5,7 +5,8 @@ from validators import (
     validate_storage,
     validate_ingress,
     validate_gpu,
-    validate_istio
+    validate_istio,
+    validate_registry
 )
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, microk8s_reset
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
@@ -52,15 +53,20 @@ class TestAddons(object):
         print("Disabling dashboard")
         microk8s_disable("dashboard")
 
-    def test_storage(self):
+    def test_storage_registry(self):
         """
-        Sets up storage addon and validates it works.
+        Sets up and tests the storage addon and the private registry.
 
         """
         print("Enabling storage")
         microk8s_enable("storage")
         print("Validating storage")
         validate_storage()
+        microk8s_enable("registry")
+        print("Validating registry")
+        validate_registry()
+        print("Disabling registry")
+        microk8s_disable("registry")
         print("Disabling storage")
         p = Popen("/snap/bin/microk8s.disable storage".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         p.communicate(input=b'Y\n')[0]

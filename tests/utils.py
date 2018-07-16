@@ -39,6 +39,19 @@ def kubectl(cmd):
     return run_until_success(cmd)
 
 
+def docker(cmd):
+    """
+    Do a docker <cmd>
+    Args:
+        cmd: left part of docker <left_part> command
+
+    Returns: the docker response in a string
+
+    """
+    cmd = '/snap/bin/microk8s.docker ' + cmd
+    return run_until_success(cmd)
+
+
 def kubectl_get(target):
     """
     Do a kubectl get and return the results in a yaml structure.
