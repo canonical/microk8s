@@ -1,6 +1,6 @@
 # microk8s
 
-![](https://img.shields.io/badge/Kubernetes%20Conformance-139%2F140-green.svg) ![](https://img.shields.io/badge/Kubernetes-1.10-326de6.svg)
+![](https://img.shields.io/badge/Kubernetes%20Conformance-139%2F140-green.svg) ![](https://img.shields.io/badge/Kubernetes-1.11-326de6.svg)
 
 Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
 
@@ -112,6 +112,13 @@ sudo systemctl restart snap.microk8s.daemon-docker.service
 
 To troubleshoot a non-functional microk8s deployment you would first check that all of the above services are up and running. You do that with `sudo systemctl status snap.microk8s.<daemon>`. Having spotted a stopped service you can look at its logs with `journalctl -u snap.microk8s.<daemon>.service`. We will probably ask you for those logs as soon as you open an [issue](https://github.com/juju-solutions/microk8s/issues).
 
+### Firewall configuration and network security
+[Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/), the network plugin currently in use will create a `cbr0` interface as soon as the first pod is created. Make sure your firewall is not blocking this interface. A typical indication this kind of network traffic is blocked is the dns pod crashlooping. With ufw the firewall configuration would look like this:
+```
+sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0
+```
+
+Also note that microk8s services such as for example `kubelet`, `kube-proxy`, `kube-apiserve` etc, will listen on all interfaces. If this becomes a security concern you need to either firewall the respective traffic and/or configure which interface you need each service to listen on. For example you could use `--address` to restrict [the interfaces kubelet is listening](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/).
 
 ## Building from source
 
