@@ -41,8 +41,7 @@ If you already have `kubectl` installed and you want to use it to access the mic
 microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
 
-Note: microk8s uses the loopback address as the endpoint.  If you wish to access the cluster from another machine, you will need
-to edit the config to use the host machine's IP (or, if you're using edge, you can use the `microk8s.config` helper).
+Note: microk8s uses the loopback address as the endpoint.  If you wish to access the cluster from another machine, you will need to edit the config to use the host machine's IP (or, if you're using edge, you can use the `microk8s.config` helper).
 
 
 ### Kubernetes Addons
@@ -112,13 +111,11 @@ sudo systemctl restart snap.microk8s.daemon-docker.service
 
 To troubleshoot a non-functional microk8s deployment you would first check that all of the above services are up and running. You do that with `sudo systemctl status snap.microk8s.<daemon>`. Having spotted a stopped service you can look at its logs with `journalctl -u snap.microk8s.<daemon>.service`. We will probably ask you for those logs as soon as you open an [issue](https://github.com/juju-solutions/microk8s/issues).
 
-### Firewall configuration and network security
-[Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/), the network plugin currently in use will create a `cbr0` interface as soon as the first pod is created. Make sure your firewall is not blocking this interface. A typical indication this kind of network traffic is blocked is the dns pod crashlooping. With ufw the firewall configuration would look like this:
-```
-sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0
-```
+### Troubleshooting
+#### My dns and dashboard pods are CrashLooping.
+The [Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/) network plugin used by microk8s creates a `cbr0` interface when the first pod is created. If you have `ufw` enabled, you'll need to allow traffic on this interface:
 
-Also note that microk8s services such as for example `kubelet`, `kube-proxy`, `kube-apiserve` etc, will listen on all interfaces. If this becomes a security concern you need to either firewall the respective traffic and/or configure which interface you need each service to listen on. For example you could use `--address` to restrict [the interfaces kubelet is listening](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/).
+`sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0`
 
 ## Building from source
 
