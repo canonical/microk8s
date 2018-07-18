@@ -13,7 +13,7 @@ snap install microk8s --classic --beta
 ```
 
 > At this time microk8s is an early beta, while this should be safe to install please beware.
-> In order to install microk8s, make sure any current docker daemons are stopped and port 8080 is unused.
+> In order to install microk8s make sure port 8080 is not used.
 
 ### Accessing Kubernetes
 
@@ -41,7 +41,7 @@ If you already have `kubectl` installed and you want to use it to access the mic
 microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
 
-Note: microk8s uses the loopback address as the endpoint.  If you wish to access the cluster from another machine, you will need to edit the config to use the host machine's IP (or, if you're using edge, you can use the `microk8s.config` helper).
+Note: The API server on port 8080 is listening on all network interfaces. In its kubeconfig file microk8s is using the loopback interface, as you can see with `microk8s.kubectl config view`. The `microk8s.config` command will output a kubeconfig with the host machine's IP (instead of the 127.0.0.1) as the API server endpoint.
 
 
 ### Kubernetes Addons
