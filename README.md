@@ -1,6 +1,6 @@
 # microk8s
 
-![](https://img.shields.io/badge/Kubernetes%20Conformance-139%2F140-green.svg) ![](https://img.shields.io/badge/Kubernetes-1.10-326de6.svg)
+![](https://img.shields.io/badge/Kubernetes%20Conformance-139%2F140-green.svg) ![](https://img.shields.io/badge/Kubernetes-1.11-326de6.svg)
 
 Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
 
@@ -13,7 +13,7 @@ snap install microk8s --classic --beta
 ```
 
 > At this time microk8s is an early beta, while this should be safe to install please beware.
-> In order to install microk8s, make sure any current docker daemons are stopped and port 8080 is unused.
+> In order to install microk8s make sure port 8080 is not used.
 
 ### Accessing Kubernetes
 
@@ -41,8 +41,7 @@ If you already have `kubectl` installed and you want to use it to access the mic
 microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
 
-Note: microk8s uses the loopback address as the endpoint.  If you wish to access the cluster from another machine, you will need
-to edit the config to use the host machine's IP (or, if you're using edge, you can use the `microk8s.config` helper).
+Note: The API server on port 8080 is listening on all network interfaces. In its kubeconfig file microk8s is using the loopback interface, as you can see with `microk8s.kubectl config view`. The `microk8s.config` command will output a kubeconfig with the host machine's IP (instead of the 127.0.0.1) as the API server endpoint.
 
 
 ### Kubernetes Addons
@@ -112,6 +111,11 @@ sudo systemctl restart snap.microk8s.daemon-docker.service
 
 To troubleshoot a non-functional microk8s deployment you would first check that all of the above services are up and running. You do that with `sudo systemctl status snap.microk8s.<daemon>`. Having spotted a stopped service you can look at its logs with `journalctl -u snap.microk8s.<daemon>.service`. We will probably ask you for those logs as soon as you open an [issue](https://github.com/juju-solutions/microk8s/issues).
 
+### Troubleshooting
+#### My dns and dashboard pods are CrashLooping.
+The [Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/) network plugin used by microk8s creates a `cbr0` interface when the first pod is created. If you have `ufw` enabled, you'll need to allow traffic on this interface:
+
+`sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0`
 
 ## Building from source
 
