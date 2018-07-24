@@ -1,10 +1,7 @@
 name: microk8s
 version-script: |
-  if [ -z "$KUBE_SNAP_BINS" ]; then
-    curl -L https://dl.k8s.io/release/stable.txt
-  else
-    cat $KUBE_SNAP_BINS/version
-  fi
+  . build-scripts/prepare-env.sh > /dev/null
+  echo $KUBE_VERSION
 version: "latest"
 summary: Kubernetes in your box.
 description: Microk8s deploys and configures all kubernetes services in a snap.
