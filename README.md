@@ -109,13 +109,27 @@ echo '--config-file=/path-to-my/daemon.json' | sudo tee -a /var/snap/microk8s/cu
 sudo systemctl restart snap.microk8s.daemon-docker.service
 ```
 
-To troubleshoot a non-functional microk8s deployment you would first check that all of the above services are up and running. You do that with `sudo systemctl status snap.microk8s.<daemon>`. Having spotted a stopped service you can look at its logs with `journalctl -u snap.microk8s.<daemon>.service`. We will probably ask you for those logs as soon as you open an [issue](https://github.com/juju-solutions/microk8s/issues).
+## Troubleshooting
 
-### Troubleshooting
-#### My dns and dashboard pods are CrashLooping.
+To troubleshoot a non-functional microk8s deployment, first ensure all daemons (listed above) are running. You can do that with `sudo systemctl status snap.microk8s.<daemon>`. If you see a stopped service you can examine its logs with `journalctl -u snap.microk8s.<daemon>.service`. We'll probably ask you for these logs when you open an [issue](https://github.com/ubuntu/microk8s/issues).
+
+Some common problems and solutions are listed below.
+
+### My dns and dashboard pods are CrashLooping.
 The [Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/) network plugin used by microk8s creates a `cbr0` interface when the first pod is created. If you have `ufw` enabled, you'll need to allow traffic on this interface:
 
 `sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0`
+
+### My pods can't reach the internet (but my microk8s host machine can).
+Make sure packets to/from the pod network interface can be forwarded
+to/from the default interface on the host:
+
+`sudo iptables -P FORWARD ACCEPT`
+
+or, if using `ufw`:
+
+`sudo ufw default allow routed`
+
 
 ## Building from source
 
