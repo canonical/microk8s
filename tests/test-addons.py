@@ -1,8 +1,18 @@
+import pytest
 from validators import validate_dns, validate_dashboard, validate_storage, validate_ingress
-from utils import microk8s_enable, wait_for_pod_state, microk8s_disable
+from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, microk8s_reset
 from subprocess import Popen, PIPE, STDOUT
 
+
 class TestAddons(object):
+
+    @pytest.fixture(autouse=True)
+    def clean_up(self):
+        """
+        Clean up after a test
+        """
+        yield
+        microk8s_reset()
 
     def test_dns(self):
         """
