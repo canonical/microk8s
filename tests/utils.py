@@ -117,3 +117,11 @@ def microk8s_disable(addon):
     """
     cmd = '/snap/bin/microk8s.disable {}'.format(addon)
     return run_until_success(cmd)
+
+
+def microk8s_reset():
+    """
+    Call microk8s reset
+    """
+    cmd = '/snap/bin/microk8s.reset'
+    return run_until_success(cmd)
