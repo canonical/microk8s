@@ -130,6 +130,12 @@ or, if using `ufw`:
 
 `sudo ufw default allow routed`
 
+### My host machine changed IP and now microk8s is not working properly.
+The host machine IP may change whenever you switch places with your laptop or you go through a suspend/resume cycle. The kubernetes API server advertises this IP (taken from the default interface) to all kubernetes cluster members. Services such as DNS and the dashboard will lose connectivity to API server in case the host IP changes. You will need to restart microk8s whenever this happens:
+```
+sudo snap disable microk8s
+sudo snap enable microk8s
+```
 
 ## Building from source
 
