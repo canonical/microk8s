@@ -111,14 +111,10 @@ def validate_ingress():
     kubectl("delete -f {}".format(manifest))
 
 
-def validate_gpu(enable_outcome=""):
+def validate_gpu():
     """
     Validate gpu by trying a cuda-add.
-    Does not fail if gpu is not enabled.
     """
-    if "Aborting" in enable_outcome:
-        return
-
     wait_for_pod_state("", "kube-system", "running", label="name=nvidia-device-plugin-ds")
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "cuda-add.yaml")

@@ -58,8 +58,8 @@ class TestUpgrade(object):
             print('Will not test ingress')
 
         try:
-            gpu_enabled = microk8s_enable("gpu")
-            validate_gpu(gpu_enabled)
+            microk8s_enable("gpu")
+            validate_gpu()
             test_matrix['gpu'] = validate_gpu
         except:
             print('Will not test gpu')

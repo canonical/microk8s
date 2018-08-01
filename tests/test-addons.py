@@ -7,7 +7,7 @@ from validators import (
     validate_gpu
 )
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, microk8s_reset
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 
 
 class TestAddons(object):
@@ -83,9 +83,15 @@ class TestAddons(object):
         """
         print("Enabling dns")
         microk8s_enable("dns")
-        print("Enabling gpu")
-        gpu_enable_outcome = microk8s_enable("gpu")
-        validate_gpu(gpu_enable_outcome)
+        try:
+            print("Enabling gpu")
+            gpu_enable_outcome = microk8s_enable("gpu")
+        except CalledProcessError:
+            # Failed to enable gpu. Skip the test.
+            print("Disabling DNS")
+            microk8s_disable("dns")
+            return
+        validate_gpu()
         print("Disbale gpu")
         microk8s_disable("gpu")
         print("Disabling DNS")
