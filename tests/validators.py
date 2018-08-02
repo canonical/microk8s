@@ -3,7 +3,7 @@ import os
 import re
 import requests
 
-from utils import kubectl, wait_for_pod_state, kubectl_get
+from utils import kubectl, wait_for_pod_state, kubectl_get, wait_for_installation
 
 def validate_dns():
     """
@@ -129,3 +129,26 @@ def validate_gpu():
     wait_for_pod_state("cuda-vector-add", "default", "terminated")
     result = kubectl("logs pod/cuda-vector-add")
     assert "PASSED" in result
+
+
+def validate_istio():
+    """
+    Validate istio by deploying the bookinfo app.
+    """
+    wait_for_installation()
+    istio_services = [
+        "citadel",
+        "egressgateway",
+        "galley",
+        "ingressgateway",
+        "sidecar-injector",
+        "statsd-prom-bridge",
+    ]
+    for service in istio_services:
+        wait_for_pod_state("", "istio-system", "running", label="istio={}".format(service))
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "bookinfo.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=details")
+    kubectl("delete -f {}".format(manifest))
