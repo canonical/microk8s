@@ -92,7 +92,7 @@ class TestAddons(object):
             microk8s_disable("dns")
             return
         validate_gpu()
-        print("Disbale gpu")
+        print("Disable gpu")
         microk8s_disable("gpu")
         print("Disabling DNS")
         microk8s_disable("dns")

@@ -13,6 +13,9 @@ else
   exit 1
 fi
 
+echo "Enabling DNS"
+/snap/bin/microk8s.enable dns
+
 refresh_opt_in_config "default-runtime" "nvidia" dockerd
 sudo systemctl restart snap.${SNAP_NAME}.daemon-docker
 sleep 5

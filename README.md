@@ -65,7 +65,7 @@ You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `
 - **dashboard**: Deploy kubernetes dashboard as well as grafana and influxdb. To access grafana point your browser to the url reported by `microk8s.kubectl cluster-info`.
 - **storage**: Create a default storage class. This storage class makes use of the hostpath-provisioner pointing to a directory on the host. Persistent volumes are created under `${SNAP_COMMON}/default-storage`. Upon disabling this addon you will be asked if you want to delete the persistent volumes created.
 - **ingress**: Create an ingress controller.
-- **gpu**: Deploy the NVIDIA docker as well as the daemonset plugin that would allow you to access your GPU from within kubernetes. This addon requires you to have a) NVIDIA drivers installed and loaded on your host and b) kube DNS enabled.
+- **gpu**: Expose GPU(s) to microk8s by enabling the nvidia-docker runtime and nvidia-device-plugin-daemonset. Requires NVIDIA drivers to already be installed on the host system.
 
 ### Stopping and Restarting microk8s
 
