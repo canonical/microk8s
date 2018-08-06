@@ -18,12 +18,12 @@ sudo systemctl restart snap.${SNAP_NAME}.daemon-docker
 TRY_ATTEMPT=0
 while (! (sudo systemctl is-active --quiet snap.${SNAP_NAME}.daemon-docker) ||
       ! (sudo "$SNAP/usr/bin/docker" "-H" "unix://${SNAP_DATA}/docker.sock" ps &> /dev/null)) &&
-      ! [ ${TRY_ATTEMPT} -eq 6 ]
+      ! [ ${TRY_ATTEMPT} -eq 30 ]
 do
   TRY_ATTEMPT=$((TRY_ATTEMPT+1))
-  sleep 5
+  sleep 1
 done
-if [ ${TRY_ATTEMPT} -eq 6 ]
+if [ ${TRY_ATTEMPT} -eq 30 ]
 then
   echo "Snapped docker not responding after 30 seconds. Proceeding"
 fi
