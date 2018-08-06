@@ -2,18 +2,7 @@
 
 set -e
 
-## add or replace an option inside the config file. Create the file if doesn't exist
-refresh_opt_in_config() {
-    opt="--$1"
-    value="$2"
-    config_file="$SNAP_DATA/args/$3"
-    replace_line="$opt=$value"
-    if $(grep -qE "^$opt=" $config_file); then
-        sudo "$SNAP/bin/sed" -i "s/^$opt=.*/$replace_line/" $config_file
-    else
-        sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
-    fi
-}
+source $SNAP/actions/common/utils.sh
 
 # Apply the dns yaml
 # We do not need to see dns pods running at this point just give some slack

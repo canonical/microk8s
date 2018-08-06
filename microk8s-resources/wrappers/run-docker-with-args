@@ -5,7 +5,6 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_6
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 
-
 #TODO(kjackal): Make sure this works on every distro
 # Until we get a way to properly patch the docker-default profile
 # https://github.com/moby/moby/issues/33060

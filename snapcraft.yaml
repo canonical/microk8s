@@ -148,5 +148,34 @@ parts:
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
       #TODO(kjackal): yaml manifests may need to be rendered to match the $SNAP_ARCH
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
-
       snapcraftctl build
+
+  # Unfortunately we cannot add package repositories to our snaps
+  # https://forum.snapcraft.io/t/proposal-additional-package-sources/2199
+  # We handpick the debs we need.
+  # To update these debs add the repository
+  # Follow the instructions in https://github.com/NVIDIA/nvidia-docker and
+  # install the https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list repo.
+  # Use apt-cache show <package> to make sure
+  # a) the dockerd we ship in this snap is supported by nvidia-container-runtime
+  # b) the version dependencies of each package is met.
+  nvidia-runtime:
+    plugin: dump
+    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime_2.0.0+docker17.03.2-1_amd64.deb
+    source-type: deb
+
+  nvidia-runtime-hook:
+    plugin: dump
+    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime-hook_1.4.0-1_amd64.deb
+    source-type: deb
+
+  libnvidia:
+    plugin: dump
+    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container1_1.0.0~rc.2-1_amd64.deb
+    source-type: deb
+
+  libnvidia-tools:
+    plugin: dump
+    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container-tools_1.0.0~rc.2-1_amd64.deb
+    source-type: deb
+

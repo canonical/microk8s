@@ -1,7 +1,13 @@
 import pytest
-from validators import validate_dns, validate_dashboard, validate_storage, validate_ingress
+from validators import (
+    validate_dns,
+    validate_dashboard,
+    validate_storage,
+    validate_ingress,
+    validate_gpu
+)
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, microk8s_reset
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 
 
 class TestAddons(object):
@@ -69,3 +75,24 @@ class TestAddons(object):
         validate_ingress()
         print("Disabling ingress")
         microk8s_disable("ingress")
+
+    def test_gpu(self):
+        """
+        Sets up nvidia gpu in a gpu capable system. Skip otherwise.
+
+        """
+        print("Enabling dns")
+        microk8s_enable("dns")
+        try:
+            print("Enabling gpu")
+            gpu_enable_outcome = microk8s_enable("gpu")
+        except CalledProcessError:
+            # Failed to enable gpu. Skip the test.
+            print("Disabling DNS")
+            microk8s_disable("dns")
+            return
+        validate_gpu()
+        print("Disable gpu")
+        microk8s_disable("gpu")
+        print("Disabling DNS")
+        microk8s_disable("dns")

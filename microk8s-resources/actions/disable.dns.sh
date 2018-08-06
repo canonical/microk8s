@@ -2,14 +2,7 @@
 
 set -e
 
-skip_opt_in_config() {
-    # remove an option inside the config file.
-    # argument $1 is the option to be removed
-    # argument $2 is the configuration file under $SNAP_DATA/args
-    opt="--$1"
-    config_file="$SNAP_DATA/args/$2"
-    sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
-}
+source $SNAP/actions/common/utils.sh
 
 echo "Disabling DNS"
 echo "Reconfiguring kubelet"
