@@ -77,7 +77,10 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
             cmd += ' -l {}'.format(label)
         data = kubectl_get(cmd)
         if pod == "":
-            status = data['items'][0]['status']
+            if len(data['items']) > 0:
+                status = data['items'][0]['status']
+            else:
+                status = []
         else:
             status = data['status']
         if 'containerStatuses' in status:
