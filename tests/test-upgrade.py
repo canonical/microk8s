@@ -36,43 +36,49 @@ class TestUpgrade(object):
         # select those that were valid for the original snap
         test_matrix = {}
         try:
-            microk8s_enable("dns")
+            enable = microk8s_enable("dns")
             wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
+            assert "Nothing to do for" not in enable
             validate_dns()
             test_matrix['dns'] = validate_dns
         except:
             print('Will not test dns')
 
         try:
-            microk8s_enable("dashboard")
+            enable = microk8s_enable("dashboard")
+            assert "Nothing to do for" not in enable
             validate_dashboard()
             test_matrix['dashboard'] = validate_dashboard
         except:
             print('Will not test dashboard')
 
         try:
-            microk8s_enable("storage")
+            enable = microk8s_enable("storage")
+            assert "Nothing to do for" not in enable
             validate_storage()
             test_matrix['storage'] = validate_storage
         except:
             print('Will not test storage')
 
         try:
-            microk8s_enable("ingress")
+            enable = microk8s_enable("ingress")
+            assert "Nothing to do for" not in enable
             validate_ingress()
             test_matrix['ingress'] = validate_ingress
         except:
             print('Will not test ingress')
 
         try:
-            microk8s_enable("gpu")
+            enable = microk8s_enable("gpu")
+            assert "Nothing to do for" not in enable
             validate_gpu()
             test_matrix['gpu'] = validate_gpu
         except:
             print('Will not test gpu')
 
         try:
-            microk8s_enable("registry")
+            enable = microk8s_enable("registry")
+            assert "Nothing to do for" not in enable
             validate_registry()
             test_matrix['registry'] = validate_registry
         except:
