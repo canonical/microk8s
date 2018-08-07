@@ -4,7 +4,7 @@ import yaml
 from subprocess import check_output, CalledProcessError
 
 
-def run_until_success(cmd, timeout_insec=300):
+def run_until_success(cmd, timeout_insec=60):
     """
     Run a command untill it succeeds or times out.
     Args:
