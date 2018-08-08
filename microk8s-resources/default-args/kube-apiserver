@@ -1,5 +1,5 @@
 --v=4
---insecure-bind-address=0.0.0.0
+--insecure-bind-address=127.0.0.1
 --cert-dir=${SNAP_DATA}
 --etcd-servers='unix://etcd.socket:2379'
 --service-cluster-ip-range=10.152.183.0/24
