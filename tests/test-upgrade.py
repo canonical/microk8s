@@ -74,6 +74,9 @@ class TestUpgrade(object):
         try:
             enable = microk8s_enable("external-access")
             assert "Nothing to do for" not in enable
+            wait_for_installation()
+            microk8s_disable("external-access")
+            wait_for_installation()
             validate_access()
             test_matrix['external-access'] = validate_access
         except:

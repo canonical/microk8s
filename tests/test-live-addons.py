@@ -1,4 +1,10 @@
-from validators import validate_dns, validate_dashboard, validate_storage, validate_ingress
+from validators import (
+    validate_dns,
+    validate_dashboard,
+    validate_storage,
+    validate_ingress,
+    validate_access
+)
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable
 
 
@@ -37,3 +43,11 @@ class TestLiveAddons(object):
 
         """
         validate_ingress()
+
+    def test_access(self):
+        """
+        Validates api access.
+
+        """
+        validate_access()
+
