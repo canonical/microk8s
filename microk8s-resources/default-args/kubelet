@@ -1,5 +1,7 @@
 --kubeconfig=${SNAP}/configs/kubelet.config
---cert-dir=${SNAP_DATA}
+--cert-dir=${SNAP_DATA}/certs
+--client-ca-file=${SNAP_DATA}/certs/ca.crt
+--anonymous-auth=false
 --network-plugin=kubenet
 --root-dir=${SNAP_COMMON}/var/lib/kubelet
 --docker-root=${SNAP_COMMON}/var/lib/docker

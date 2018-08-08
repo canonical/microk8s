@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
 
-set -eu
+set -eux
+
+export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 
 cp -r ${SNAP}/default-args ${SNAP_DATA}/args
-cp -r ${SNAP}/certs ${SNAP_DATA}/certs
+
+# Create the certificates
+mkdir ${SNAP_DATA}/certs
+${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/serviceaccount.key 2048
+${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/ca.key 2048
+${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/server.key 2048
+${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP}/certs/csr.conf
+${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP}/certs/csr.conf
+rm -rf .srl
+
+# Create the basic tokens
+mkdir ${SNAP_DATA}/credentials
+admin_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+echo "${admin_token},admin,admin,\"system:masters\"" > ${SNAP_DATA}/credentials/basic_auth.csv
+chmod 600 ${SNAP_DATA}/credentials/basic_auth.csv
+
+# Create the client kubeconfig
+cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
+# This is not safe. Everyone with local access can see these credentials.
+chmod 644 ${SNAP_DATA}/credentials/client.config
+$SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
+ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
+$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config

@@ -2,3 +2,4 @@
 --cluster-cidr=10.152.183.0/24
 --kubeconfig=${SNAP}/kubeproxy.config
 --proxy-mode="userspace"
+--healthz-bind-address=127.0.0.1

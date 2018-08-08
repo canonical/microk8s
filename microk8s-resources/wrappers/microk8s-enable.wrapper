@@ -18,7 +18,7 @@ if echo "$*" | grep -q -- '--help'; then
     for action in $actions; do
         echo "  $action"
     done
-    exit 0
+    exit
 fi
 
 exit_if_stopped
