@@ -27,4 +27,4 @@ sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
 
 
-echo "Istio is coming up"
+echo "Istio is starting"

@@ -46,7 +46,7 @@ class TestLiveAddons(object):
 
     def test_istio(self):
         """
-        Validates storage works.
+        Validate Istio works.
 
         """
         validate_istio()
