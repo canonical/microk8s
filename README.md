@@ -66,6 +66,7 @@ You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `
 - **storage**: Create a default storage class. This storage class makes use of the hostpath-provisioner pointing to a directory on the host. Persistent volumes are created under `${SNAP_COMMON}/default-storage`. Upon disabling this addon you will be asked if you want to delete the persistent volumes created.
 - **ingress**: Create an ingress controller.
 - **gpu**: Expose GPU(s) to microk8s by enabling the nvidia-docker runtime and nvidia-device-plugin-daemonset. Requires NVIDIA drivers to already be installed on the host system.
+- **external-access**: By default the API server will be available only on the localhost. This addon reconfigures microk8s to be available from the default network interface of the host, allowing for remote access.
 
 ### Stopping and Restarting microk8s
 
