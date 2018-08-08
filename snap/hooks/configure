@@ -47,3 +47,13 @@ fi
 # Create the locks directory
 mkdir -p ${SNAP_DATA}/var/lock/
 
+
+# This will allow us to refresh the snap to the more secure version.
+# We need to make sure the client certificate used in microk8s.kubectl is available under $SNAP_DATA
+if [ ! -f ${SNAP_DATA}/credentials/client.config ]
+then
+  echo "Patching client config location"
+  mkdir -p ${SNAP_DATA}/credentials/
+  cp ${SNAP}/client.config ${SNAP_DATA}/credentials/
+fi
+

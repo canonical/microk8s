@@ -6,6 +6,8 @@ metadata:
 spec:
   containers:
   - name: busybox
+    # nslookup on latest busybox is broken:
+    # https://github.com/docker-library/busybox/issues/48
     image: busybox:1.28.4
     command:
       - sleep

@@ -23,26 +23,27 @@ def validate_dns_dashboard():
     cluster_info = kubectl("cluster-info")
     # Cluster info output is colored so we better search for the port in the url pattern
     # instead of trying to extract the url substring
-    regex = "http://127.0.0.1:([0-9]+)/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy"
+    regex = "http(.?)://127.0.0.1:([0-9]+)/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy"
     grafana_pattern = re.compile(regex)
     for url in cluster_info.split():
         port_search = grafana_pattern.search(url)
         if port_search:
             break
 
-    grafana_url = "http://127.0.0.1:{}" \
+    grafana_url = "http{}://127.0.0.1:{}" \
                   "/api/v1/namespaces/kube-system/services/" \
-                  "monitoring-grafana/proxy".format(port_search.group(1))
+                  "monitoring-grafana/proxy".format(port_search.group(1), port_search.group(2))
     assert grafana_url
 
     attempt = 50
     while attempt >= 0:
-        resp = requests.get(grafana_url)
-        if resp.status_code == 200:
+        resp = requests.get(grafana_url, verify=False)
+        if (resp.status_code == 200 and grafana_url.startswith('http://')) or \
+            (resp.status_code == 401 and grafana_url.startswith('https://')):
             break
         time.sleep(2)
         attempt -= 1
-    assert resp.status_code == 200
+    assert resp.status_code in [200, 401]
 
 
 def validate_storage():
