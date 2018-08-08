@@ -3,7 +3,15 @@ import os
 import re
 import requests
 
-from utils import kubectl, wait_for_pod_state, kubectl_get
+from utils import (
+    kubectl,
+    wait_for_pod_state,
+    kubectl_get,
+    run_until_success,
+    wait_for_installation,
+    microk8s_enable,
+    microk8s_disable
+)
 
 def validate_dns():
     """
@@ -129,3 +137,37 @@ def validate_gpu():
     wait_for_pod_state("cuda-vector-add", "default", "terminated")
     result = kubectl("logs pod/cuda-vector-add")
     assert "PASSED" in result
+
+
+def validate_access():
+    """
+    Validate api server access.
+    """
+    wait_for_installation()
+    remote_config = run_until_success("microk8s.config")
+    f = open("remote_config", "w")
+    f.write(remote_config)
+    try:
+        # This should fail
+        run_until_success("microk8s.kubectl --kubeconfig=./remote_config get all", 15)
+        assert False
+    except:
+        assert True
+
+    microk8s_enable("external-access")
+    wait_for_installation()
+    try:
+        # This should succeed
+        run_until_success("microk8s.kubectl --kubeconfig=./remote_config get all", 15)
+        assert True
+    except:
+        assert False
+
+    microk8s_disable("external-access")
+    wait_for_installation()
+    try:
+        # This should fail
+        run_until_success("microk8s.kubectl --kubeconfig=./remote_config get all", 15)
+        assert False
+    except:
+        assert True
