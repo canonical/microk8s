@@ -1,6 +1,13 @@
 import os
 import time
-from validators import validate_dns, validate_dashboard, validate_storage, validate_ingress, validate_gpu
+from validators import (
+    validate_dns,
+    validate_dashboard,
+    validate_storage,
+    validate_ingress,
+    validate_gpu,
+    validate_access
+)
 from subprocess import check_call
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, wait_for_installation
 
@@ -63,6 +70,17 @@ class TestUpgrade(object):
             test_matrix['gpu'] = validate_gpu
         except:
             print('Will not test gpu')
+
+        try:
+            enable = microk8s_enable("external-access")
+            assert "Nothing to do for" not in enable
+            wait_for_installation()
+            microk8s_disable("external-access")
+            wait_for_installation()
+            validate_access()
+            test_matrix['external-access'] = validate_access
+        except:
+            print('Will not test external access')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

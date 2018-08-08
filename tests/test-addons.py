@@ -4,7 +4,8 @@ from validators import (
     validate_dashboard,
     validate_storage,
     validate_ingress,
-    validate_gpu
+    validate_gpu,
+    validate_access
 )
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, microk8s_reset
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
@@ -96,3 +97,10 @@ class TestAddons(object):
         microk8s_disable("gpu")
         print("Disabling DNS")
         microk8s_disable("dns")
+
+    def test_access(self):
+        """
+        Tests the API server access restrictions.
+
+        """
+        validate_access()
