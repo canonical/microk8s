@@ -9,7 +9,7 @@ echo "Enabling Istio"
 # pod/servicegraph will start failing without dns
 "$SNAP/microk8s-enable.wrapper" dns
 
-read -p "Enforce mutual TLS authentication between sidecars? (Y/N): " confirm
+read -p "Enforce mutual TLS authentication (https://bit.ly/2KB4j04) between sidecars? If unsure, choose N. (y/N): " confirm
 
 "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP}/actions/istio/crds.yaml"
 if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]
