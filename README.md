@@ -67,7 +67,7 @@ You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `
 - **ingress**: Create an ingress controller.
 - **gpu**: Expose GPU(s) to microk8s by enabling the nvidia-docker runtime and nvidia-device-plugin-daemonset. Requires NVIDIA drivers to already be installed on the host system.
 - **istio**: Deploy the core [Istio](https://istio.io/) services. You can use the `microk8s.istioctl` command to mange your deployments.
-- **registry**: Deploy a docker private registry with a cluster IP of `10.152.183.254` on port `5000`. If you intend to use this private registry we recommend you enable it as soon as posible so you do not risk a cluster IP conflict. The storage addon will be enabled as part of this addon.
+- **registry**: Deploy a docker private registry and expose it on `localhost:32000`. The storage addon will be enabled as part of this addon.
 
 ### Stopping and Restarting microk8s
 
@@ -154,7 +154,6 @@ You can set the following environment variables prior to building:
  - ETCD_VERSION: version of etcd. Defaults to v3.3.4.
  - CNI_VERSION: version of CNI tools. Defaults to v0.6.0.
  - KUBE_TRACK: kubernetes release series (e.g., 1.10) to package. Defaults to latest stable.
- - ISTIO_VERSION: istio release. Defaults to v1.0.0.
 
 For example:
 ```

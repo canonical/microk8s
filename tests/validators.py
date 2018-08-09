@@ -160,13 +160,13 @@ def validate_registry():
     """
     wait_for_pod_state("", "container-registry", "running", label="app=registry")
     docker("pull busybox")
-    docker("tag busybox 10.152.183.254:5000/my-busybox")
-    docker("push 10.152.183.254:5000/my-busybox")
+    docker("tag busybox localhost:32000/my-busybox")
+    docker("push localhost:32000/my-busybox")
 
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "bbox-local.yaml")
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("busybox", "default", "running")
     output = kubectl("describe po busybox")
-    assert "10.152.183.254:5000/my-busybox" in output
+    assert "localhost:32000/my-busybox" in output
     kubectl("delete -f {}".format(manifest))
