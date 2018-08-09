@@ -67,7 +67,7 @@ You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `
 - **ingress**: Create an ingress controller.
 - **gpu**: Expose GPU(s) to microk8s by enabling the nvidia-docker runtime and nvidia-device-plugin-daemonset. Requires NVIDIA drivers to already be installed on the host system.
 - **istio**: Deploy the core [Istio](https://istio.io/) services. You can use the `microk8s.istioctl` command to mange your deployments.
-- **registry**: Deploy a docker private registry and expose it on `localhost:32000`. The storage addon will be enabled as part of this addon.
+- **registry**: Deploy a docker private registry and expose it on `localhost:32000`. The storage addon will be enabled as part of this addon. To [use the registry](docs/registry.md) you can use the `microk8s.docker` command.
 
 ### Stopping and Restarting microk8s
 
