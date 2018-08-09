@@ -6,7 +6,7 @@ metadata:
 spec:
   containers:
   - name: busybox
-    image: 10.152.183.254:5000/my-busybox
+    image: localhost:32000/my-busybox
     command:
       - sleep
       - "3600"
