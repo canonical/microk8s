@@ -66,6 +66,7 @@ You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `
 - **storage**: Create a default storage class. This storage class makes use of the hostpath-provisioner pointing to a directory on the host. Persistent volumes are created under `${SNAP_COMMON}/default-storage`. Upon disabling this addon you will be asked if you want to delete the persistent volumes created.
 - **ingress**: Create an ingress controller.
 - **gpu**: Expose GPU(s) to microk8s by enabling the nvidia-docker runtime and nvidia-device-plugin-daemonset. Requires NVIDIA drivers to already be installed on the host system.
+- **istio**: Deploy the core [Istio](https://istio.io/) services. You can use the `microk8s.istioctl` command to mange your deployments.
 
 ### Stopping and Restarting microk8s
 
@@ -152,6 +153,7 @@ You can set the following environment variables prior to building:
  - ETCD_VERSION: version of etcd. Defaults to v3.3.4.
  - CNI_VERSION: version of CNI tools. Defaults to v0.6.0.
  - KUBE_TRACK: kubernetes release series (e.g., 1.10) to package. Defaults to latest stable.
+ - ISTIO_VERSION: istio release. Defaults to v1.0.0.
 
 For example:
 ```

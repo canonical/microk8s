@@ -40,6 +40,8 @@ apps:
     command: microk8s-config.wrapper
   reset:
     command: microk8s-reset.wrapper
+  istioctl:
+    command: istioctl --kubeconfig=$SNAP/client.config
 
 parts:
   libnftnl:
@@ -144,10 +146,15 @@ parts:
       echo "Preparing user config"
       cp $KUBE_SNAP_ROOT/microk8s-resources/client.config .
 
+      echo "Preparing istio"
+      cp $KUBE_SNAP_BINS/istioctl .
+
       echo "Creating commands and wrappers"
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
       #TODO(kjackal): yaml manifests may need to be rendered to match the $SNAP_ARCH
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
+      # Istio addon
+      mv $KUBE_SNAP_BINS/istio-yaml ./actions/istio
       snapcraftctl build
 
   # Unfortunately we cannot add package repositories to our snaps
