@@ -1,1 +1,3 @@
-{}
+{
+  "insecure-registries" : ["localhost:32000"]
+}

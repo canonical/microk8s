@@ -3,7 +3,7 @@ import os
 import re
 import requests
 
-from utils import kubectl, wait_for_pod_state, kubectl_get, wait_for_installation
+from utils import kubectl, wait_for_pod_state, kubectl_get, wait_for_installation, docker
 
 def validate_dns():
     """
@@ -151,4 +151,22 @@ def validate_istio():
     manifest = os.path.join(here, "templates", "bookinfo.yaml")
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "default", "running", label="app=details")
+    kubectl("delete -f {}".format(manifest))
+
+
+def validate_registry():
+    """
+    Validate the private registry.
+    """
+    wait_for_pod_state("", "container-registry", "running", label="app=registry")
+    docker("pull busybox")
+    docker("tag busybox localhost:32000/my-busybox")
+    docker("push localhost:32000/my-busybox")
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "bbox-local.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("busybox", "default", "running")
+    output = kubectl("describe po busybox")
+    assert "localhost:32000/my-busybox" in output
     kubectl("delete -f {}".format(manifest))

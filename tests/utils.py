@@ -4,7 +4,7 @@ import yaml
 from subprocess import check_output, CalledProcessError
 
 
-def run_until_success(cmd, timeout_insec=300):
+def run_until_success(cmd, timeout_insec=60):
     """
     Run a command untill it succeeds or times out.
     Args:
@@ -39,6 +39,19 @@ def kubectl(cmd):
     return run_until_success(cmd)
 
 
+def docker(cmd):
+    """
+    Do a docker <cmd>
+    Args:
+        cmd: left part of docker <left_part> command
+
+    Returns: the docker response in a string
+
+    """
+    cmd = '/snap/bin/microk8s.docker ' + cmd
+    return run_until_success(cmd)
+
+
 def kubectl_get(target):
     """
     Do a kubectl get and return the results in a yaml structure.
@@ -64,7 +77,10 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
             cmd += ' -l {}'.format(label)
         data = kubectl_get(cmd)
         if pod == "":
-            status = data['items'][0]['status']
+            if len(data['items']) > 0:
+                status = data['items'][0]['status']
+            else:
+                status = []
         else:
             status = data['status']
         if 'containerStatuses' in status:
