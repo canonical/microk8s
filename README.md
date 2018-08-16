@@ -152,7 +152,7 @@ snapcraft
 You can set the following environment variables prior to building:
  - KUBE_VERSION: kubernetes release to package. Defaults to latest stable.
  - ETCD_VERSION: version of etcd. Defaults to v3.3.4.
- - CNI_VERSION: version of CNI tools. Defaults to v0.6.0.
+ - CNI_VERSION: version of CNI tools. Defaults to v0.7.1.
  - KUBE_TRACK: kubernetes release series (e.g., 1.10) to package. Defaults to latest stable.
  - ISTIO_VERSION: istio release. Defaults to v1.0.0.
 
