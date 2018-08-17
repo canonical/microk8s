@@ -93,6 +93,7 @@ parts:
     - file
     stage-packages:
     - util-linux
+    - socat
     source: .
     override-build: |
       set -eu
