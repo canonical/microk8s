@@ -6,7 +6,8 @@ from validators import (
     validate_storage,
     validate_ingress,
     validate_gpu,
-    validate_registry
+    validate_registry,
+    validate_forward
 )
 from subprocess import check_call
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, wait_for_installation
@@ -83,6 +84,12 @@ class TestUpgrade(object):
             test_matrix['registry'] = validate_registry
         except:
             print('Will not test registry')
+
+        try:
+            validate_forward()
+            test_matrix['forward'] = validate_forward
+        except:
+            print('Will not test port forward')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):
