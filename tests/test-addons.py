@@ -6,7 +6,8 @@ from validators import (
     validate_ingress,
     validate_gpu,
     validate_istio,
-    validate_registry
+    validate_registry,
+    validate_forward,
 )
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, microk8s_reset
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
@@ -118,4 +119,12 @@ class TestAddons(object):
         microk8s_disable("istio")
         print("Disabling DNS")
         microk8s_disable("dns")
+
+    def test_forward(self):
+        """
+        Test port forward.
+
+        """
+        print("Validating Port Forward")
+        validate_forward()
 

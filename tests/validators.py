@@ -3,7 +3,13 @@ import os
 import re
 import requests
 
-from utils import kubectl, wait_for_pod_state, kubectl_get, wait_for_installation, docker
+from utils import (
+    kubectl,
+    wait_for_pod_state,
+    kubectl_get,
+    wait_for_installation,
+    docker,
+)
 
 def validate_dns():
     """
@@ -170,3 +176,28 @@ def validate_registry():
     output = kubectl("describe po busybox")
     assert "localhost:32000/my-busybox" in output
     kubectl("delete -f {}".format(manifest))
+
+
+def validate_forward():
+    """
+    Validate ports are forwarded
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "nginx-pod.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=nginx")
+    os.system('killall kubectl')
+    os.system('/snap/bin/microk8s.kubectl port-forward pod/nginx 5000:80 &')
+    attempt = 10
+    while attempt >= 0:
+        try:
+            resp = requests.get("http://localhost:5000")
+            if resp.status_code == 200:
+                break
+        except:
+            pass
+        attempt -= 1
+        time.sleep(2)
+
+    assert resp.status_code == 200
+

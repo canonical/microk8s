@@ -5,6 +5,7 @@ from validators import (
     validate_ingress,
     validate_istio,
     validate_registry,
+    validate_forward,
 )
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable
 
@@ -58,4 +59,11 @@ class TestLiveAddons(object):
 
         """
         validate_registry()
+
+    def test_forward(self):
+        """
+        Validates port forward works.
+
+        """
+        validate_forward()
 
