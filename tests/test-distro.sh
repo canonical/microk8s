@@ -36,5 +36,4 @@ lxc exec $NAME -- /bin/bash "/tmp/tests/lxc/install-deps/$DISTRO"
 lxc exec $NAME -- snap install microk8s --${TO_CHANNEL} --classic
 lxc exec $NAME -- pytest -s /tmp/tests/test-addons.py
 lxc exec $NAME -- microk8s.reset
-lxc exec $NAME -- snap remove microk8s
 lxc exec $NAME -- /bin/bash -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /tmp/tests/test-upgrade.py"
