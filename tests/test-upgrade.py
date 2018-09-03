@@ -7,7 +7,8 @@ from validators import (
     validate_ingress,
     validate_gpu,
     validate_registry,
-    validate_forward
+    validate_forward,
+    validate_metrics_server
 )
 from subprocess import check_call
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, wait_for_installation
@@ -90,6 +91,14 @@ class TestUpgrade(object):
             test_matrix['forward'] = validate_forward
         except:
             print('Will not test port forward')
+
+        try:
+            enable = microk8s_enable("metrics-server")
+            assert "Nothing to do for" not in enable
+            validate_metrics_server()
+            test_matrix['metrics_server'] = validate_metrics_server
+        except:
+            print('Will not the metrics server')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

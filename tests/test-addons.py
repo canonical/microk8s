@@ -8,6 +8,7 @@ from validators import (
     validate_istio,
     validate_registry,
     validate_forward,
+    validate_metrics_server,
 )
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, microk8s_reset
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
@@ -127,4 +128,16 @@ class TestAddons(object):
         """
         print("Validating Port Forward")
         validate_forward()
+
+    def test_metrics_server(self):
+        """
+        Test the metrics server.
+
+        """
+        print("Enabling metrics-server")
+        microk8s_enable("metrics-server")
+        print("Validating the Metrics Server")
+        validate_metrics_server()
+        print("Disabling metrics-server")
+        microk8s_disable("metrics-server")
 

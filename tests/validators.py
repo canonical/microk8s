@@ -201,3 +201,19 @@ def validate_forward():
 
     assert resp.status_code == 200
 
+
+def validate_metrics_server():
+    """
+    Validate the metrics server works
+    """
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=metrics-server")
+    attempt = 5
+    while attempt > 0:
+        try:
+            output = kubectl("get --raw /apis/metrics.k8s.io/v1beta1/pods")
+            if "PodMetricsList" in output:
+                break
+        except:
+            pass
+        time.sleep(10)
+        attempt -= 1
