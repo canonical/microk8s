@@ -114,7 +114,7 @@ sudo systemctl restart snap.microk8s.daemon-docker.service
 
 ## Troubleshooting
 
-To troubleshoot a non-functional microk8s deployment, first ensure all daemons (listed above) are running. You can do that with `sudo systemctl status snap.microk8s.<daemon>`. If you see a stopped service you can examine its logs with `journalctl -u snap.microk8s.<daemon>.service`. We'll probably ask you for these logs when you open an [issue](https://github.com/ubuntu/microk8s/issues).
+To troubleshoot a non-functional microk8s deployment, start by running the `microk8s.inspect` command. This command performs a set of tests against microk8s and collects traces and logs in a report tarball. In case any of the aforementioned daemons are failing you will be urged to look at the respective logs with `journalctl -u snap.microk8s.<daemon>.service`. `microk8s.inspect` may also make suggestions on potential issues it may find. If you do not manage to resolve the issue you are facing please file a [bug](https://github.com/ubuntu/microk8s/issues) attaching the inspection report tarball.
 
 Some common problems and solutions are listed below.
 

@@ -34,6 +34,8 @@ apps:
     command: kubectl --kubeconfig=$SNAP/client.config
   docker:
     command: microk8s-docker.wrapper
+  inspect:
+    command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
   enable:
     command: microk8s-enable.wrapper
   disable:
@@ -158,6 +160,10 @@ parts:
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
       # Istio addon
       mv $KUBE_SNAP_BINS/istio-yaml ./actions/istio
+
+      echo "Creating inspect hook"
+      cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
+
       snapcraftctl build
 
   # Unfortunately we cannot add package repositories to our snaps
