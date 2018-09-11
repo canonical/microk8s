@@ -15,19 +15,16 @@ if [ -d "/etc/apparmor.d" ]; then
     if ! $(grep -qE "snap.microk8s.daemon-docker" /etc/apparmor.d/docker); then
       echo "Patching docker-default profile"
       "$SNAP/bin/sed" 's/^}$/\ \ signal\ (receive)\ peer=snap.microk8s.daemon-docker,\n}/' -i /etc/apparmor.d/docker
-      echo "Reloading AppArmor profiles"
-      service apparmor reload
-      echo "AppArmor patched"
     else
       echo "Docker default profile already patched"
     fi
   else
     echo "Using a docker-default template"
     cp ${SNAP}/docker-profile /etc/apparmor.d/docker
-    echo "Reloading AppArmor profiles"
-    service apparmor reload
-    echo "AppArmor patched"
   fi
+  echo "Reloading AppArmor profiles"
+  service apparmor reload
+  echo "AppArmor patched"
 fi
 
 app=dockerd
