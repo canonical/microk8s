@@ -13,20 +13,16 @@ else
   exit 1
 fi
 
-refresh_opt_in_config "default-runtime" "nvidia" dockerd
-sudo systemctl restart snap.${SNAP_NAME}.daemon-docker
-TRY_ATTEMPT=0
-while (! (sudo systemctl is-active --quiet snap.${SNAP_NAME}.daemon-docker) ||
-      ! (sudo "$SNAP/usr/bin/docker" "-H" "unix://${SNAP_DATA}/docker.sock" ps &> /dev/null)) &&
-      ! [ ${TRY_ATTEMPT} -eq 30 ]
-do
-  TRY_ATTEMPT=$((TRY_ATTEMPT+1))
-  sleep 1
-done
-if [ ${TRY_ATTEMPT} -eq 30 ]
+sudo sh -c "sed 's@\${SNAP}@'"${SNAP}"'@g;s@\${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@\${RUNTIME}@nvidia-container-runtime@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml"
+
+sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
+containerd_up=$(wait_for_service containerd)
+if [[ $containerd_up == fail ]]
 then
-  echo "Snapped docker not responding after 30 seconds. Proceeding"
+  echo "Containerd did not start on time. Proceeding."
 fi
+# Allow for some seconds for containerd processes to start
+sleep 10
 
 "$SNAP/microk8s-enable.wrapper" dns
 
