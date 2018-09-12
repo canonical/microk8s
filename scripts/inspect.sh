@@ -5,8 +5,8 @@ RETURN_CODE=0
 
 function print_help {
   # Print the help message
-  printf -- 'This script will inspect your microk8s installation. It will report any issue it may find,\n';
-  printf -- 'and prepare tarball with logs and traces you can attach on issues you open against\n';
+  printf -- 'This script will inspect your microk8s installation. It will report any issue it finds,\n';
+  printf -- 'and create a tarball of logs and traces which can be attached to an issue filed against\n';
   printf -- 'the microk8s project.\n';
 }
 
@@ -99,7 +99,7 @@ function suggest_fixes {
   ufw=$(ufw status)
   if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
   then
-      printf -- '\033[0;33m WARNING: \033[0m Firewall is enebled. Consider allowing pod traffic '
+      printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
       printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
   fi
 }
@@ -132,10 +132,10 @@ check_service "snap.microk8s.daemon-controller-manager"
 check_service "snap.microk8s.daemon-etcd"
 store_args
 
-printf -- 'Inspect AppArmor configuration\n'
+printf -- 'Inspecting AppArmor configuration\n'
 check_apparmor
 
-printf -- 'Gather system info\n'
+printf -- 'Gathering system info\n'
 store_network
 store_processes
 store_kubernetes_info
