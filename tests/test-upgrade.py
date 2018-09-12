@@ -9,7 +9,7 @@ from validators import (
     validate_registry,
     validate_forward
 )
-from subprocess import check_call
+from subprocess import check_call, CalledProcessError
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, wait_for_installation
 
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
@@ -106,5 +106,8 @@ class TestUpgrade(object):
             print("Testing {}".format(test))
             validation()
 
-        cmd = "sudo snap remove microk8s".split()
-        check_call(cmd)
+        # On lxc umount docker overlay is not permitted.
+        try:
+            check_call("sudo grep lxc /proc/1/environ".split())
+        except CalledProcessError:
+            check_call("sudo snap remove microk8s".split())
