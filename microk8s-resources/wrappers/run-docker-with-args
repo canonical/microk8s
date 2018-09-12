@@ -23,8 +23,10 @@ if [ -d "/etc/apparmor.d" ]; then
     cp ${SNAP}/docker-profile /etc/apparmor.d/docker
   fi
   echo "Reloading AppArmor profiles"
-  service apparmor reload
-  echo "AppArmor patched"
+  if ! service apparmor reload
+  then
+    echo "AppArmor profiles loading failed. AppArmor may be unavailable on this host."
+  fi
 fi
 
 app=dockerd

@@ -6,7 +6,7 @@ sudo snap alias microk8s.docker docker
 docker ps
 ```
 
-When AppArmor is enabled all docker daemons running in a system will apply the same `docker-default` profile on running containers. Each daemon makes sure that it is the only process manging the docker containers (eg send start stop signals). Effectively this allowes only one dockerd running on any host. Therefore, you have to make sure no other dockerd is running on your sytem along with microk8s.
+When AppArmor is enabled all docker daemons running in a system will apply the same `docker-default` profile on running containers. Each daemon makes sure that it is the only process managing the docker containers (e.g., sending start stop signals). Effectively this allowes only one dockerd running on any host. Therefore, you have to make sure no other dockerd is running on your sytem along with microk8s.
 
 Restarting microk8s' dockerd (`sudo systemctl restart snap.microk8s.daemon-docker`) or calling the `microk8s.reset` command will ensure the correct AppArmor profile is loaded.
 
