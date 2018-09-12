@@ -18,8 +18,8 @@ apps:
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
-  daemon-docker:
-    command: run-docker-with-args
+  daemon-containerd:
+    command: run-containerd-with-args
     daemon: simple
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
@@ -42,9 +42,8 @@ apps:
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
-  docker:
-    command: microk8s-docker.wrapper
-    completer: docker.bash
+  ctr:
+    command: microk8s-ctr.wrapper
   inspect:
     command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
   enable:
@@ -88,27 +87,59 @@ parts:
     - "--disable-shared"
     - "--enable-static"
     prime: [ -bin/iptables-xml ]
-  docker:
-    after: [iptables]
-    plugin: dump
-    stage-packages:
-    - conntrack
-    - docker.io
-    - aufs-tools
-    - gawk
-    - sed
+  go:
+    source-tag: go1.10.4
+  containerd:
+    after: [go, iptables]
     source: .
+    plugin: go
+    go-importpath: github.com/containerd/containerd
+    build-packages:
+    - btrfs-tools
+    - libseccomp-dev
+    override-build: |
+      set -eu
+      . build-scripts/prepare-env.sh
+
+      go version
+      export GOPATH=$(realpath ../go)
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      # Build containerd
+      go get github.com/containerd/containerd
+      (
+        cd $GOPATH/src/github.com/containerd/containerd
+        git checkout ${CONTAINERD_COMMIT}
+        # building the btrfs driver can be disabled via the
+        # build tag no_btrfs, removing this dependency
+        make
+      )
+      cp $GOPATH/src/github.com/containerd/containerd/bin/* $SNAPCRAFT_PART_INSTALL/bin/
+      rm $SNAPCRAFT_PART_INSTALL/bin/containerd-stress
+
+      # Build runc
+      go get github.com/opencontainers/runc
+      (
+        cd $GOPATH/src/github.com/opencontainers/runc
+        git checkout ${RUNC_COMMIT}
+        make BUILDTAGS='seccomp apparmor'
+      )
+      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
+
+      # Assemble the snap
+      # snapcraftctl build
+    organize:
+      containerd/install/bin/*: bin/
     stage:
     - -sbin/xtables-multi
     - -sbin/iptables*
     - -lib/xtables
-    override-build: "true"
   microk8s:
-    after: [docker]
+    after: [containerd]
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
     - curl
+    - openssl
     - file
     stage-packages:
     - net-tools
@@ -117,6 +148,10 @@ parts:
     - socat
     - iproute2
     - dpkg
+    - conntrack
+    - aufs-tools
+    - gawk
+    - sed
     - libssl1.0.0
     - coreutils
     source: .
@@ -134,15 +169,15 @@ parts:
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/default-args .
 
       echo "Building certs"
-      cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs .
+      build-scripts/build-certs.sh
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs-beta .
 
       echo "Preparing cni"
       mkdir -p opt/cni/bin/
       cp $KUBE_SNAP_BINS/cni/* opt/cni/bin/
 
-      echo "Preparing dockerd"
-      cp $KUBE_SNAP_ROOT/microk8s-resources/docker-profile .
+      echo "Preparing containerd"
+      cp $KUBE_SNAP_ROOT/microk8s-resources/containerd-profile .
 
       echo "Preparing etcd"
       cp $KUBE_SNAP_BINS/etcd/etcd .
@@ -150,9 +185,7 @@ parts:
 
       echo "Preparing kube-apiserver"
       cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-apiserver .
-      # Old versions will be pointing to these .csv files from inside their kube-apiserver config
-      # Keep them around for a couple of releases.
-      touch known_token.csv
+      cp $KUBE_SNAP_ROOT/microk8s-resources/known_token.csv .
       cp $KUBE_SNAP_ROOT/microk8s-resources/basic_auth.csv .
 
       echo "Preparing kube-controller-manager"
@@ -175,7 +208,6 @@ parts:
 
       echo "Preparing user config"
       cp $KUBE_SNAP_ROOT/microk8s-resources/client.config .
-      cp $KUBE_SNAP_ROOT/microk8s-resources/client.config.template .
 
       echo "Creating commands and wrappers"
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
@@ -218,10 +250,6 @@ parts:
 
       echo "Creating inspect hook"
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
-
-      # Add bash completion for microk8s.docker
-      cp $SNAPCRAFT_STAGE/usr/share/bash-completion/completions/docker docker.bash
-      sed  -i "s/complete -F _docker docker docker.exe dockerd dockerd.exe/complete -F _docker microk8s.docker/g" docker.bash
 
       # Add bash completion for microk8s.kubectl. 
       ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash

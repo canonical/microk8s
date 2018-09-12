@@ -33,6 +33,13 @@ clean_cluster() {
 }
 
 exit_if_stopped
-sudo systemctl restart snap.${SNAP_NAME}.daemon-docker
+
+if systemctl status snap.${SNAP_NAME}.daemon-docker >& /dev/null
+then
+  sudo systemctl restart snap.${SNAP_NAME}.daemon-docker
+elif systemctl status snap.${SNAP_NAME}.daemon-containerd >& /dev/null
+then
+  sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
+fi
 clean_cluster
 sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver

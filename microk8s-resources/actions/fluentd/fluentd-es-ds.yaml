@@ -91,7 +91,7 @@ spec:
         - name: varlog
           mountPath: /var/log
         - name: varlibdockercontainers
-          mountPath: /var/snap/microk8s/common/var/lib/docker/containers
+          mountPath: /var/lib/docker/containers
           readOnly: true
         - name: config-volume
           mountPath: /etc/fluent/config.d
@@ -104,7 +104,7 @@ spec:
           path: /var/log
       - name: varlibdockercontainers
         hostPath:
-          path: /var/snap/microk8s/common/var/lib/docker/containers
+          path: /var/snap/microk8s/common/var/lib/containerd
       - name: config-volume
         configMap:
           name: fluentd-es-config-v0.1.5

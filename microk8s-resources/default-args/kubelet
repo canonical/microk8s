@@ -4,13 +4,12 @@
 --anonymous-auth=false
 --network-plugin=kubenet
 --root-dir=${SNAP_COMMON}/var/lib/kubelet
---docker-root=${SNAP_COMMON}/var/lib/docker
 --fail-swap-on=false
 --pod-cidr=10.1.1.0/24
 --non-masquerade-cidr=10.152.183.0/24
 --cni-bin-dir=${SNAP}/opt/cni/bin/
---docker unix://${SNAP_DATA}/docker.sock
---docker-endpoint unix://${SNAP_DATA}/docker.sock
 --feature-gates=DevicePlugins=true
 --eviction-hard="memory.available<100Mi,nodefs.available<1Gi,imagefs.available<1Gi"
+--container-runtime=remote
+--container-runtime-endpoint=${SNAP_COMMON}/run/containerd.sock
 --node-labels="microk8s.io/cluster=true"

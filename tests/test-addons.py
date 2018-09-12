@@ -14,7 +14,12 @@ from validators import (
     validate_fluentd,
     validate_jaeger,
 )
-from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, microk8s_reset
+from utils import (
+    microk8s_enable,
+    wait_for_pod_state,
+    microk8s_disable,
+    microk8s_reset
+)
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 
 
@@ -83,6 +88,7 @@ class TestAddons(object):
             gpu_enable_outcome = microk8s_enable("gpu")
         except CalledProcessError:
             # Failed to enable gpu. Skip the test.
+            print("Could not enable GPU support")
             return
         validate_gpu()
         print("Disable gpu")
