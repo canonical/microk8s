@@ -5,7 +5,7 @@ if echo "$*" | grep -q -- 'help'; then
     echo "Usage: $prog LXC-IMAGE ORIGINAL-CHANNEL UPGRADE-WITH-CHANNEL"
     echo ""
     echo "Example: $prog ubuntu:18.04 beta edge"
-    echo "Use Ubuntu 18.04 for running our tests on."
+    echo "Use Ubuntu 18.04 for running our tests."
     echo "We test that microk8s from edge (UPGRADE-WITH-CHANNEL) runs fine."
     echo "We test that microk8s from beta (ORIGINAL-CHANNEL) can be upgraded"
     echo "to the revision that is currently on edge (UPGRADE-WITH-CHANNEL)."
