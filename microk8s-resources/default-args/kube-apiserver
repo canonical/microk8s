@@ -11,3 +11,4 @@
 --client-ca-file=${SNAP_DATA}/certs/ca.crt
 --tls-cert-file=${SNAP_DATA}/certs/server.crt
 --tls-private-key-file=${SNAP_DATA}/certs/server.key
+--requestheader-client-ca-file=${SNAP_DATA}/certs/ca.crt
