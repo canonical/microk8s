@@ -98,7 +98,7 @@ class TestUpgrade(object):
             validate_metrics_server()
             test_matrix['metrics_server'] = validate_metrics_server
         except:
-            print('Will not the metrics server')
+            print('Will not test the metrics server')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

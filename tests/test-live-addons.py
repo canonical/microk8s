@@ -70,7 +70,7 @@ class TestLiveAddons(object):
 
     def test_metrics_server(self):
         """
-        Validates port forward works.
+        Validates metrics server works.
 
         """
         validate_metrics_server()
