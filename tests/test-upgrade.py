@@ -30,7 +30,7 @@ class TestUpgrade(object):
         """
         print("Testing upgrade from {} to {}".format(upgrade_from, upgrade_to))
 
-        cmd = "sudo snap install microk8s --classic --{}".format(upgrade_from).split()
+        cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from).split()
         check_call(cmd)
         wait_for_installation()
 
@@ -104,7 +104,7 @@ class TestUpgrade(object):
         if upgrade_to.endswith('.snap'):
             cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to).split()
         else:
-            cmd = "sudo snap refresh microk8s --{}".format(upgrade_to).split()
+            cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to).split()
         check_call(cmd)
         # Allow for the refresh to be processed
         time.sleep(10)
