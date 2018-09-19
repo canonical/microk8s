@@ -1,7 +1,7 @@
 --kubeconfig=${SNAP}/configs/kubelet.config
 --cert-dir=${SNAP_DATA}
 --network-plugin=kubenet
---root-dir=${SNAP_COMMON}
+--root-dir=${SNAP_COMMON}/var/lib/kubelet
 --docker-root=${SNAP_COMMON}/var/lib/docker
 --fail-swap-on=false
 --pod-cidr=10.1.1.0/24
