@@ -117,6 +117,6 @@ class TestUpgrade(object):
 
         # On lxc umount docker overlay is not permitted.
         try:
-            check_call("sudo grep lxc /proc/1/environ".split())
+            check_call("sudo grep -E (lxc|hypervisor) /proc/1/environ /proc/cpuinfo".split())
         except CalledProcessError:
             check_call("sudo snap remove microk8s".split())
