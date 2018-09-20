@@ -23,8 +23,8 @@ TO_CHANNEL=$3
 if ! lxc profile show microk8s
 then
   lxc profile copy default microk8s
-  cat tests/lxc/microk8s.profile | lxc profile edit microk8s
 fi
+cat tests/lxc/microk8s.profile | lxc profile edit microk8s
 
 lxc launch -p default -p microk8s $DISTRO $NAME
 trap "lxc delete ${NAME} --force || true" EXIT
@@ -33,7 +33,7 @@ sleep 20
 
 tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /tmp
 lxc exec $NAME -- /bin/bash "/tmp/tests/lxc/install-deps/$DISTRO"
-lxc exec $NAME -- snap install microk8s --${TO_CHANNEL} --classic
+lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL} --classic
 lxc exec $NAME -- pytest -s /tmp/tests/test-addons.py
 lxc exec $NAME -- microk8s.reset
 lxc exec $NAME -- /bin/bash -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /tmp/tests/test-upgrade.py"
