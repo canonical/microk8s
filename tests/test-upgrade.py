@@ -1,7 +1,7 @@
 import os
 import time
 from validators import validate_dns, validate_dashboard, validate_storage, validate_ingress
-from subprocess import check_call
+from subprocess import check_call, CalledProcessError
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, wait_for_installation
 
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
@@ -21,7 +21,7 @@ class TestUpgrade(object):
         """
         print("Testing upgrade from {} to {}".format(upgrade_from, upgrade_to))
 
-        cmd = "sudo snap install microk8s --classic --{}".format(upgrade_from).split()
+        cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from).split()
         check_call(cmd)
         wait_for_installation()
 
@@ -61,7 +61,7 @@ class TestUpgrade(object):
         if upgrade_to.endswith('.snap'):
             cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to).split()
         else:
-            cmd = "sudo snap refresh microk8s --{}".format(upgrade_to).split()
+            cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to).split()
         check_call(cmd)
         # Allow for the refresh to be processed
         time.sleep(10)
@@ -72,5 +72,7 @@ class TestUpgrade(object):
             print("Testing {}".format(test))
             validation()
 
-        cmd = "sudo snap remove microk8s".split()
-        check_call(cmd)
+        try:
+            check_call("sudo grep -E (lxc|hypervisor) /proc/1/environ /proc/cpuinfo".split())
+        except CalledProcessError:
+            check_call("sudo snap remove microk8s".split())
