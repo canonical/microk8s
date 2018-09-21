@@ -14,6 +14,7 @@ script:
   - ps -ef
   - ls -l
   - ./tests/smoke-test.sh
+  - (cd tests; pytest -s verify-branches.py)
   - (cd tests; pytest -s test-addons.py)
   - sudo microk8s.reset
   - sudo snap remove microk8s
