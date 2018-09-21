@@ -19,7 +19,12 @@ class TestMicrok8sBranches(object):
         assert upstream_version
         version_parts = upstream_version.split('.')
         major_minor_upstream_version = "{}.{}".format(version_parts[0][1:], version_parts[1])
-        prev_major_minor_version = "{}.{}".format(version_parts[0][1:], int(version_parts[1])-1)
+        if version_parts[1] != "0":
+            prev_major_minor_version = "{}.{}".format(version_parts[0][1:], int(version_parts[1]) - 1)
+        else:
+            major = int(version_parts[0][1:]) - 1
+            minor = self._get_max_minor(major)
+            prev_major_minor_version = "{}.{}".format(major, minor)
         print("Current stable is {}. Making sure we have a branch for {}".format(
             major_minor_upstream_version, prev_major_minor_version))
         cmd = "git ls-remote --heads http://github.com/ubuntu/microk8s.git {}".format(prev_major_minor_version)
@@ -34,3 +39,19 @@ class TestMicrok8sBranches(object):
             return r.content.decode().strip()
         else:
             None
+
+    def _get_max_minor(self, major):
+        """Get the latest minor release with of the provided minor"""
+        minor = 0
+        while self._upstream_release_exists(major, minor):
+            minor += 1
+        return minor - 1
+
+    def _upstream_release_exists(self, major, minor):
+        """Return true if the major.minor release exists"""
+        release_url = "https://dl.k8s.io/release/stable-{}.{}.txt".format(major, minor)
+        r = requests.get(release_url)
+        if r.status_code == 200:
+            return True
+        else:
+            return False
