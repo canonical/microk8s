@@ -41,7 +41,8 @@ class TestMicrok8sBranches(object):
             None
 
     def _get_max_minor(self, major):
-        """Get the latest minor release with of the provided minor"""
+        """Get the latest minor release of the provided major.
+        For example if you use 1 as major you will get back X where X gives you latest 1.X release."""
         minor = 0
         while self._upstream_release_exists(major, minor):
             minor += 1
