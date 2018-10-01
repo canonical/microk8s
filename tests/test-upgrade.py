@@ -133,7 +133,7 @@ def in_virtual_env():
 
     '''
     try:
-        check_call("sudo grep -E (lxc|hypervisor) /proc/1/environ /proc/cpuinfo".split())
+        check_call("systemd-detect-virt --container".split())
         return True
     except CalledProcessError:
         return False
