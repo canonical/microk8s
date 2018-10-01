@@ -27,6 +27,12 @@ then
   echo "Patching requestheader-client-ca-file argument"
   # Add a new line at the end
   echo "" >> ${SNAP_DATA}/args/kube-apiserver
-  echo "--requestheader-client-ca-file=${SNAP_DATA}/certs/ca.crt" >> ${SNAP_DATA}/args/kube-apiserver
+  echo "--requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt" >> ${SNAP_DATA}/args/kube-apiserver
   systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+fi
+
+# Patch for issue: https://github.com/ubuntu/microk8s/issues/121
+if grep -e  "requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt"  ${SNAP_DATA}/args/kube-apiserver
+then
+  "$SNAP/bin/sed" -i 's@requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt@requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
 fi
