@@ -27,7 +27,7 @@ class TestUpgrade(object):
         if is_container():
             # In some setups (eg LXC on GCE) the hashsize nf_conntrack file under
             # sys is marked as rw but any update on it is failing causing kube-proxy
-            # to fail.
+            # to fail. So we call path-kube-proxy, which will tell kube-proxy to not use conntrack.
             here = os.path.dirname(os.path.abspath(__file__))
             apply_patch = os.path.join(here, "patch-kube-proxy.sh")
             check_call("sudo {}".format(apply_patch).split())
