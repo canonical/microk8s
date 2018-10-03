@@ -1,7 +1,7 @@
 import os
 import time
 from validators import validate_dns, validate_dashboard, validate_storage, validate_ingress
-from subprocess import check_call, CalledProcessError
+from subprocess import check_call, CalledProcessError, call
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, wait_for_installation
 
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
@@ -24,6 +24,13 @@ class TestUpgrade(object):
         cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from).split()
         check_call(cmd)
         wait_for_installation()
+        if is_container():
+            # In some setups (eg LXC on GCE) the hashsize nf_conntrack file under
+            # sys is marked as rw but any update on it is failing causing kube-proxy
+            # to fail.
+            here = os.path.dirname(os.path.abspath(__file__))
+            apply_patch = os.path.join(here, "patch-kube-proxy.sh")
+            check_call("sudo {}".format(apply_patch).split())
 
         # Run through the validators and
         # select those that were valid for the original snap
@@ -72,7 +79,20 @@ class TestUpgrade(object):
             print("Testing {}".format(test))
             validation()
 
-        try:
-            check_call("sudo grep -E (lxc|hypervisor) /proc/1/environ /proc/cpuinfo".split())
-        except CalledProcessError:
+        if not is_container():
+            # On lxc umount docker overlay is not permitted.
             check_call("sudo snap remove microk8s".split())
+
+
+def is_container():
+    '''
+    Returns: True if the deployment is in a VM/container.
+
+    '''
+    try:
+        if os.path.isdir('/run/systemd/system'):
+            return (call(['sudo', 'systemd-detect-virt', '--container']) == 0)
+        else:
+            return os.path.exists('/run/container_type')
+    except CalledProcessError:
+        return False
