@@ -18,11 +18,7 @@ export ISTIO_VERSION="${ISTIO_VERSION:-v1.0.0}"
 export KUBE_TRACK="${KUBE_TRACK:-1.11}"
 export KUBE_SNAP_BINS="${KUBE_SNAP_BINS:-}"
 if [ -z "$KUBE_SNAP_BINS" ]; then
-  if [ -z "$KUBE_TRACK" ]; then
-    export KUBE_VERSION="${KUBE_VERSION:-`curl -L https://dl.k8s.io/release/stable.txt`}"
-  else
-    export KUBE_VERSION="${KUBE_VERSION:-`curl -L https://dl.k8s.io/release/stable-${KUBE_TRACK}.txt`}"
-  fi
+  export KUBE_VERSION="${KUBE_VERSION:-`curl -L https://dl.k8s.io/release/stable-${KUBE_TRACK}.txt`}"
 else
   export KUBE_VERSION=`cat $KUBE_SNAP_BINS/version`
 fi
