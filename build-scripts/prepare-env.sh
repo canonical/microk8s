@@ -15,7 +15,7 @@ export ETCD_VERSION="${ETCD_VERSION:-v3.3.4}"
 export CNI_VERSION="${CNI_VERSION:-v0.7.1}"
 export ISTIO_VERSION="${ISTIO_VERSION:-v1.0.0}"
 
-export KUBE_TRACK="${KUBE_TRACK:-}"
+export KUBE_TRACK="${KUBE_TRACK:-1.11}"
 export KUBE_SNAP_BINS="${KUBE_SNAP_BINS:-}"
 if [ -z "$KUBE_SNAP_BINS" ]; then
   if [ -z "$KUBE_TRACK" ]; then
