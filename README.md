@@ -1,18 +1,25 @@
 # microk8s
 
-![](https://img.shields.io/badge/Kubernetes%20Conformance-139%2F140-green.svg) ![](https://img.shields.io/badge/Kubernetes-1.11-326de6.svg)
+![](https://img.shields.io/badge/Kubernetes%20Conformance-139%2F140-green.svg) ![](https://img.shields.io/badge/Kubernetes-1.12-326de6.svg)
 
 Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
 
 ## User Guide
 
-Snaps are frequently updated to match each release of Kubernetes. The quickest way to get started is to install directly from the snap store
+Snaps are frequently updated to match each release of Kubernetes. The quickest way to get started is to install directly from the snap store. You can install microk8s and let it update to the latest stable upstream Kubernetes release with:
 
 ```
-snap install microk8s --classic --beta
+snap install microk8s --classic
 ```
 
-> At this time microk8s is an early beta, while this should be safe to install please beware.
+Alternatively, you can select a microk8s channel that will follow a specific Kubernetes release series. For example, you install microk8s and let it follow the `v1.12` series with:
+
+```
+snap install microk8s --classic --channel=1.12/stable
+```
+
+You can read more on the microk8s release channels in the [Release Channels and Upgrades](docs/release-channels.md) doc.
+
 > In order to install microk8s make sure
 > - port 8080 is not used and
 > - if you have AppArmor enabled (check with `sudo apparmor_status`) you do not have any other [dockerd installed](docs/dockerd.md). You can use the dockerd coming with microk8s.
