@@ -1,6 +1,6 @@
 # Release Channels and Upgrades
 
-Microk8s is a snap deploying Kubernetes. Upstream Kubernetes ships a new releases about every three months, while old releases get periodic updates. At the time of this writing the latest release series is `v1.12` with `v1.12.0` being the latest release. On the `v1.11` series, `v1.11.3` is the latest release. It is important to remember that upstream Kubernetes is committed to maintain backwards compatibility only within a release series. That means that your Kubernetes will not break due to API changes when you upgrade from `v1.11.x` to `v1.11.y` but may break if you upgrade from `v1.11.x` to `v1.12.z`.
+Microk8s is a snap deploying Kubernetes. Upstream Kubernetes ships a new release about every three months, while old releases get periodic updates. At the time of this writing the latest release series is `v1.12` with `v1.12.0` being the latest release. On the `v1.11` series, `v1.11.3` is the latest release. It is important to remember that upstream Kubernetes is committed to maintain backwards compatibility only within a release series. That means that your Kubernetes will not break due to API changes when you upgrade from `v1.11.x` to `v1.11.y` but may break if you upgrade from `v1.11.x` to `v1.12.z`.
 
 
 ## Choosing the Right Channel
@@ -36,19 +36,19 @@ The `*/candidate` and `*/beta` channels get updated within hours of an upstream 
 snap install microk8s --classic --channel=1.12/beta
 ```
 
-The `*/edge` channels get updated on each change microk8s patch or a Kubernetes upstream release.
+The `*/edge` channels get updated for each microk8s patch or upstream Kubernetes release.
 
 Keep in mind that edge and beta are snap constructs and do not relate to Kubernetes release names.
 
-## Confused? Keep Only This
+## Summary
 
-To always stay on the latest stable with the risk of breaking your deployment when upstream moves to a new release:
+To always track the latest stable Kubernetes versions:
 
 ```
 snap install microk8s --classic
 ```
 
-To stay on the latest stable within a release series thus maintaining backwards compatibility:
+To track the latest version in a specific release series:
 
 ```
 snap install microk8s --classic --channel=<track>/stable
