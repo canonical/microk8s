@@ -10,7 +10,7 @@ from validators import (
     validate_forward,
     validate_metrics_server
 )
-from subprocess import check_call, CalledProcessError, call
+from subprocess import check_call, CalledProcessError, check_output
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, wait_for_installation
 
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
@@ -134,8 +134,20 @@ def is_container():
     '''
     try:
         if os.path.isdir('/run/systemd/system'):
-            return (call(['sudo', 'systemd-detect-virt', '--container']) == 0)
-        else:
-            return os.path.exists('/run/container_type')
+            container = check_output('sudo systemd-detect-virt --container'.split())
+            print("Tests are running in {}".format(container))
+            return True
     except CalledProcessError:
-        return False
+        print("systemd-detect-virt did not detect a container")
+
+    if os.path.exists('/run/container_type'):
+        return True
+
+    try:
+        check_call("sudo grep -E (lxc|hypervisor) /proc/1/environ /proc/cpuinfo".split())
+        print("Tests are running in an undetectable container")
+        return True
+    except CalledProcessError:
+        print("no indication of a container in /proc")
+
+    return False
