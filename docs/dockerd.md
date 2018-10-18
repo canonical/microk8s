@@ -6,7 +6,7 @@ sudo snap alias microk8s.docker docker
 docker ps
 ```
 
-Export `DOCKER_HOST` for other tools using docker deamon:
+Export `DOCKER_HOST` for other tools using docker daemon:
 
 ```
 export DOCKER_HOST="unix:///var/snap/microk8s/current/docker.sock"
