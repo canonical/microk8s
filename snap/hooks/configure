@@ -48,11 +48,10 @@ then
     in_container=true
   fi
 fi
-if [ -e '/run/container_type' ] || sudo grep -E (lxc|hypervisor) /proc/1/environ /proc/cpuinfo
+if [ -e '/run/container_type' ] || sudo grep -E "(lxc|hypervisor)" /proc/1/environ /proc/cpuinfo
 then
   in_container=true
 fi
-
 if [ "${in_container}" = true ]
 then
   echo "--conntrack-max-per-core=0" >> ${SNAP_DATA}/args/kube-proxy
