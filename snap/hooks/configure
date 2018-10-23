@@ -36,3 +36,25 @@ if grep -e  "requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt"  
 then
   "$SNAP/bin/sed" -i 's@requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt@requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
 fi
+
+
+# If we are in a container we should not set the conntrack and
+# kube-proxy's proxymode better be userspace
+in_container=false
+if [ -e '/run/systemd/system' ]
+then
+  if sudo systemd-detect-virt --container
+  then
+    in_container=true
+  fi
+fi
+if [ -e '/run/container_type' ] || 'sudo grep -E (lxc|hypervisor) /proc/1/environ /proc/cpuinfo'
+then
+  in_container=true
+fi
+
+if [ "${in_container}" = true ]
+then
+  echo "--conntrack-max-per-core=0" >> ${SNAP_DATA}/args/kube-proxy
+  echo "--proxy-mode=userspace" >> ${SNAP_DATA}/args/kube-proxy
+fi

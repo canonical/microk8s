@@ -33,6 +33,10 @@ class TestUpgrade(object):
         cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from).split()
         check_call(cmd)
         wait_for_installation()
+
+        # Detection of containerised environment and application of the patch below
+        # has gone into the configuration hook. As soon as this change has propagated
+        # to all channels we can remove the following
         if is_container():
             # In some setups (eg LXC on GCE) the hashsize nf_conntrack file under
             # sys is marked as rw but any update on it is failing causing kube-proxy

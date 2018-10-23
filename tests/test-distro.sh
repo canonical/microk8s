@@ -38,6 +38,9 @@ TO_CHANNEL=$3
 
 create_machine $NAME
 lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL} --classic
+# Detection of containerised environment and application of the patch below
+# has gone into the configuration hook. As soon as this change has propagated
+# to all channels we can remove the following
 lxc exec $NAME -- /tmp/tests/patch-kube-proxy.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
 lxc exec $NAME -- script -e -c "pytest -s /tmp/tests/test-addons.py"
