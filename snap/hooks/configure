@@ -56,5 +56,5 @@ fi
 if [ "${in_container}" = true ]
 then
   echo "--conntrack-max-per-core=0" >> ${SNAP_DATA}/args/kube-proxy
-  echo "--proxy-mode=userspace" >> ${SNAP_DATA}/args/kube-proxy
+  echo "--proxy-mode=\"userspace\"" >> ${SNAP_DATA}/args/kube-proxy
 fi
