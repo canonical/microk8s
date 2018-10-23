@@ -217,3 +217,5 @@ def validate_metrics_server():
             pass
         time.sleep(10)
         attempt -= 1
+
+    assert attempt > 0
