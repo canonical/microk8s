@@ -25,7 +25,7 @@ apps:
     command: run-with-config-args kube-scheduler
     daemon: simple
   daemon-kubelet:
-    command: run-kubelet-with-config-args
+    command: run-with-config-args kubelet
     daemon: simple
   daemon-proxy:
     command: run-with-config-args kube-proxy
