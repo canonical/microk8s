@@ -108,7 +108,7 @@ def wait_for_installation():
         else:
             time.sleep(3)
     # Allow rest of the services to come up
-    time.sleep(30)
+    time.sleep(10)
 
 
 def microk8s_enable(addon):
@@ -140,4 +140,5 @@ def microk8s_reset():
     Call microk8s reset
     """
     cmd = '/snap/bin/microk8s.reset'
-    return run_until_success(cmd)
+    run_until_success(cmd)
+    wait_for_installation()
