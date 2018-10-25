@@ -8,7 +8,7 @@ app=$1
 
 if [ "${app}" = "kubelet" ]
 then
-  # wait for docker socker
+  # wait for docker socket
   if grep -e "-H " $SNAP_DATA/args/dockerd &> /dev/null
   then
     socket=$(grep -e "-H " $SNAP_DATA/args/dockerd | awk '{print $2}')
