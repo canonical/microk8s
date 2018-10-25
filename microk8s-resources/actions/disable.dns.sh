@@ -15,6 +15,10 @@ sleep 5
 # Apply the dns yaml
 # We do not need to see dns pods running at this point just give some slack
 echo "Removing DNS manifest"
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "delete" "-f" "${SNAP}/actions/dns.yaml"
+
+ARCH=$(arch)
+cat "${SNAP}/actions/dns.yaml" | \
+"$SNAP/bin/sed" 's@\$ARCH@'"$ARCH"'@g' | \
+"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" delete -f -
 
 echo "DNS is disabled"

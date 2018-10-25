@@ -25,3 +25,14 @@ skip_opt_in_config() {
     sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
 }
 
+
+arch() {
+    # Return the architecture we are on
+    ARCH="${KUBE_ARCH:-`dpkg --print-architecture`}"
+    if [ "$ARCH" = "ppc64el" ]; then
+        ARCH="ppc64le"
+    elif [ "$ARCH" = "armhf" ]; then
+        ARCH="arm"
+    fi
+    echo $ARCH
+}
