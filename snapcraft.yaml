@@ -97,6 +97,7 @@ parts:
     - util-linux
     - zfsutils-linux
     - socat
+    - iproute2
     source: .
     override-build: |
       set -eu
