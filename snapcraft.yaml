@@ -94,6 +94,7 @@ parts:
     - openssl
     - file
     stage-packages:
+    - net-tools
     - util-linux
     - zfsutils-linux
     - socat
