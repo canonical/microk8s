@@ -2,6 +2,8 @@
 
 set -eu
 
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+
 USE_LOOPBACK=false
 PARSED=$(getopt --options=lho: --longoptions=use-loopback,help,output: --name "$@" -- "$@")
 eval set -- "$PARSED"
