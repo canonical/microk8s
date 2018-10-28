@@ -157,7 +157,14 @@ parts:
 
       echo "Creating commands and wrappers"
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
-      #TODO(kjackal): yaml manifests may need to be rendered to match the $SNAP_ARCH
+
+      if [ "${ARCH}" = "arm64" ]
+      then
+        # Some actions are not available on arm64
+        rm "$KUBE_SNAP_ROOT/microk8s-resources/actions/enable.gpu.sh"
+        rm "$KUBE_SNAP_ROOT/microk8s-resources/actions/disable.gpu.sh"
+        rm "$KUBE_SNAP_ROOT/microk8s-resources/actions/gpu.yaml"
+      fi
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
       # Istio addon
       mv $KUBE_SNAP_BINS/istio-yaml ./actions/istio
@@ -180,19 +187,55 @@ parts:
     plugin: dump
     source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime_2.0.0+docker17.03.2-1_amd64.deb
     source-type: deb
+    override-build: |
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 
   nvidia-runtime-hook:
     plugin: dump
     source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime-hook_1.4.0-1_amd64.deb
     source-type: deb
+    override-build: |
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 
   libnvidia:
     plugin: dump
     source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container1_1.0.0~rc.2-1_amd64.deb
     source-type: deb
+    override-build: |
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 
   libnvidia-tools:
     plugin: dump
     source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container-tools_1.0.0~rc.2-1_amd64.deb
     source-type: deb
+    override-build: |
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 
