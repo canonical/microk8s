@@ -36,3 +36,13 @@ arch() {
     fi
     echo $ARCH
 }
+
+
+use_manifest() {
+    manifest="$1.yaml"
+    action="$2"
+    ARCH=$(arch)
+    cat "${SNAP}/actions/${manifest}" | \
+    "$SNAP/bin/sed" 's@\$ARCH@'"$ARCH"'@g' | \
+    "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "$action" -f -
+}
