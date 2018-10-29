@@ -2,11 +2,13 @@
 
 set -e
 
+source $SNAP/actions/common/utils.sh
+
 echo "Enabling the private registry"
 
 "$SNAP/microk8s-enable.wrapper" storage
 
 echo "Applying registry manifest"
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "apply" "-f" "${SNAP}/actions/registry.yaml"
+use_manifest registry apply
 
 echo "The registry is enabled"
