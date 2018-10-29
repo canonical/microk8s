@@ -1,8 +1,14 @@
 import datetime
 import time
 import yaml
+import platform
 from subprocess import check_output, CalledProcessError
 
+
+arch_translate = {
+    'aarch64': 'arm64',
+    'x86_64': 'amd64'
+}
 
 def run_until_success(cmd, timeout_insec=60):
     """
@@ -142,3 +148,17 @@ def microk8s_reset():
     cmd = '/snap/bin/microk8s.reset'
     run_until_success(cmd)
     wait_for_installation()
+
+
+def update_yaml_with_arch(manifest_file):
+    """
+    Updates any $ARCH entry with the architecture in the manifest
+
+    """
+    arch = arch_translate[platform.machine()]
+    with open(manifest_file) as f:
+        s = f.read()
+
+    with open(manifest_file, 'w') as f:
+        s = s.replace('$ARCH', arch)
+        f.write(s)

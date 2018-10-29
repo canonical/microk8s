@@ -27,7 +27,7 @@ for action in "$@"; do
     "${SNAP}/actions/disable.$action.sh"
   elif [ -f "${SNAP}/actions/$action.yaml" ]; then
     echo "Disabling $action"
-    use_manifest $action apply
+    use_manifest $action delete
     echo "$action disabled"
   else
     echo "Nothing to do for $action"

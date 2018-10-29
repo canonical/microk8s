@@ -1,4 +1,6 @@
 import pytest
+import platform
+
 from validators import (
     validate_dns,
     validate_dashboard,
@@ -90,6 +92,10 @@ class TestAddons(object):
         Sets up nvidia gpu in a gpu capable system. Skip otherwise.
 
         """
+        if platform.machine() != 'x86_64':
+            print("GPU tests are only relevant in x86 architectures")
+            return
+
         print("Enabling dns")
         microk8s_enable("dns")
         try:
@@ -111,6 +117,10 @@ class TestAddons(object):
         Sets up and validate istio.
 
         """
+        if platform.machine() != 'x86_64':
+            print("Istio tests are only relevant in x86 architectures")
+            return
+
         print("Enabling Istio")
         p = Popen("/snap/bin/microk8s.enable istio".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         p.communicate(input=b'N\n')[0]

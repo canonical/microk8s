@@ -2,6 +2,7 @@ import time
 import os
 import re
 import requests
+import platform
 
 from utils import (
     kubectl,
@@ -9,6 +10,7 @@ from utils import (
     kubectl_get,
     wait_for_installation,
     docker,
+    update_yaml_with_arch,
 )
 
 def validate_dns():
@@ -92,6 +94,7 @@ def validate_ingress():
     wait_for_pod_state("", "default", "running", label="name=nginx-ingress-microk8s")
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "ingress.yaml")
+    update_yaml_with_arch(manifest)
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "default", "running", label="app=microbot")
 
@@ -121,6 +124,10 @@ def validate_gpu():
     """
     Validate gpu by trying a cuda-add.
     """
+    if platform.machine() != 'x86_64':
+        print("GPU tests are only relevant in x86 architectures")
+        return
+
     wait_for_pod_state("", "kube-system", "running", label="name=nvidia-device-plugin-ds")
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "cuda-add.yaml")
@@ -141,6 +148,10 @@ def validate_istio():
     """
     Validate istio by deploying the bookinfo app.
     """
+    if platform.machine() != 'x86_64':
+        print("GPU tests are only relevant in x86 architectures")
+        return
+
     wait_for_installation()
     istio_services = [
         "citadel",
@@ -207,7 +218,7 @@ def validate_metrics_server():
     Validate the metrics server works
     """
     wait_for_pod_state("", "kube-system", "running", label="k8s-app=metrics-server")
-    attempt = 5
+    attempt = 30
     while attempt > 0:
         try:
             output = kubectl("get --raw /apis/metrics.k8s.io/v1beta1/pods")
