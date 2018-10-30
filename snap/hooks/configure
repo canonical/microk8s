@@ -36,3 +36,22 @@ if grep -e  "requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt"  
 then
   "$SNAP/bin/sed" -i 's@requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt@requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
 fi
+
+
+if [ ! -e ${SNAP_DATA}/args/dockerd-env ]
+then
+  echo "Making sure we have dockerd-env file"
+  echo "# To start dockerd behind a proxy you need to add an HTTPS_PROXY
+# environment variable in this file. HTTPS_PROXY is of the following form:
+# HTTPS_PROXY=http://username:password@proxy:port/ dockerd.
+# where username: and password@ are optional. eg:
+#
+# HTTPS_PROXY=https://squid.internal:3128
+#
+#
+# Remember to restart the docker daemon after editing this file:
+#
+# sudo systemctl restart snap.microk8s.daemon-docker.service
+" > ${SNAP_DATA}/args/dockerd-env
+  systemctl restart snap.${SNAP_NAME}.daemon-docker
+fi
