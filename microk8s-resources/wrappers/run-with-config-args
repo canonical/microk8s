@@ -26,6 +26,22 @@ then
       sleep 2
     done
   fi
+elif [ "${app}" = "kube-apiserver" ] || [ "${app}" = "kube-proxy" ]
+then
+  # Check if we advertise an address. If we do we do not need to wait for a default network interface.
+  if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null
+  then
+    # wait up to a minute for the default network interface to appear.
+    n=0
+    until [ $n -ge 20 ]
+    do
+      ip route | grep default &> /dev/null && break
+      ip -6 route | grep default &> /dev/null && break
+      echo "Waiting for default route to appear. (attempt $n)"
+      n=$[$n+1]
+      sleep 6
+    done
+  fi
 else
   # ensure docker dirs
   mkdir -p $SNAP_COMMON/var/run/docker
