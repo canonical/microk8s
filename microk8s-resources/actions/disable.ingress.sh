@@ -12,9 +12,9 @@ if [ "${ARCH}" = arm64 ]
 then
   TAG="0.11.0"
 fi
-cat "${SNAP}/actions/ingress.yaml" | \
-"$SNAP/bin/sed" 's@\$ARCH@'"$ARCH"'@g' | \
-"$SNAP/bin/sed" 's@\$TAG@'"$TAG"'@g' | \
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" delete -f -
+
+declare -A map
+map[\$TAG]="$TAG"
+use_manifest ingress delete "$(declare -p map)"
 
 echo "Ingress is disabled"

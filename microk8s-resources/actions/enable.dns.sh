@@ -8,10 +8,7 @@ source $SNAP/actions/common/utils.sh
 # We do not need to see dns pods running at this point just give some slack
 echo "Enabling DNS"
 echo "Applying manifest"
-ARCH=$(arch)
-cat "${SNAP}/actions/dns.yaml" | \
-"$SNAP/bin/sed" 's@\$ARCH@'"$ARCH"'@g' | \
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f -
+use_manifest dns apply
 sleep 5
 
 echo "Restarting kubelet"
