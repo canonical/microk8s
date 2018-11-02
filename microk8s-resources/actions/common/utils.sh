@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
 
 refresh_opt_in_config() {
     # add or replace an option inside the config file.
