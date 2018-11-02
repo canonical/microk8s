@@ -2,6 +2,7 @@
 
 INSPECT_DUMP=${SNAP_DATA}/inspection-report
 RETURN_CODE=0
+JOURNALCTL_LIMIT=100000
 
 function print_help {
   # Print the help message
@@ -15,7 +16,7 @@ function check_service {
   # Chec the service passed as the firsr argument is up and running and collect its logs.
   local service=$1
   mkdir -p $INSPECT_DUMP/$service
-  journalctl -u $service &> $INSPECT_DUMP/$service/journal.log
+  journalctl -n $JOURNALCTL_LIMIT -u $service &> $INSPECT_DUMP/$service/journal.log
   systemctl status $service &> $INSPECT_DUMP/$service/systemctl.log
   if systemctl status $service &> /dev/null
   then
