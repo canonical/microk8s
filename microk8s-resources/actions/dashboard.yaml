@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
       - name: kubernetes-dashboard
-        image: k8s.gcr.io/kubernetes-dashboard-amd64:v1.8.3
+        image: k8s.gcr.io/kubernetes-dashboard-$ARCH:v1.8.3
         ports:
         - containerPort: 8443
           protocol: TCP
@@ -178,7 +178,7 @@ spec:
         operator: "Exists"
       containers:
         - name: influxdb
-          image: k8s.gcr.io/heapster-influxdb-amd64:v1.3.3
+          image: k8s.gcr.io/heapster-influxdb-$ARCH:v1.3.3
           resources:
             limits:
               cpu: 100m
@@ -195,7 +195,7 @@ spec:
           - name: influxdb-persistent-storage
             mountPath: /data
         - name: grafana
-          image: k8s.gcr.io/heapster-grafana-amd64:v4.4.3
+          image: k8s.gcr.io/heapster-grafana-$ARCH:v4.4.3
           env:
           resources:
             # keep request = limit to keep this container in guaranteed class
@@ -294,7 +294,7 @@ spec:
     spec:
       priorityClassName: system-cluster-critical
       containers:
-        - image: k8s.gcr.io/heapster-amd64:v1.5.2
+        - image: k8s.gcr.io/heapster-$ARCH:v1.5.2
           name: heapster
           livenessProbe:
             httpGet:
@@ -307,13 +307,13 @@ spec:
             - /heapster
             - --source=kubernetes.summary_api:''
             - --sink=influxdb:http://monitoring-influxdb:8086
-        - image: k8s.gcr.io/heapster-amd64:v1.5.2
+        - image: k8s.gcr.io/heapster-$ARCH:v1.5.2
           name: eventer
           command:
             - /eventer
             - --source=kubernetes:''
             - --sink=influxdb:http://monitoring-influxdb:8086
-        - image: k8s.gcr.io/addon-resizer:1.8.1
+        - image: cdkbot/addon-resizer-$ARCH:1.8.1
           name: heapster-nanny
           resources:
             limits:
@@ -346,7 +346,7 @@ spec:
             - --container=heapster
             - --poll-period=300000
             - --estimator=exponential
-        - image: k8s.gcr.io/addon-resizer:1.8.1
+        - image: cdkbot/addon-resizer-$ARCH:1.8.1
           name: eventer-nanny
           resources:
             limits:

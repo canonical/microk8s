@@ -69,7 +69,7 @@ microk8s.disable dashboard dns
 
 You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
 
-#### List of available addons
+#### List of Available Addons
 - **dns**: Deploy kube dns. This addon may be required by others thus we recommend you always enable it.
 - **dashboard**: Deploy kubernetes dashboard as well as grafana and influxdb. To access grafana point your browser to the url reported by `microk8s.kubectl cluster-info`.
 - **storage**: Create a default storage class. This storage class makes use of the hostpath-provisioner pointing to a directory on the host. Persistent volumes are created under `${SNAP_COMMON}/default-storage`. Upon disabling this addon you will be asked if you want to delete the persistent volumes created.
@@ -104,7 +104,7 @@ microk8s.reset
 snap remove microk8s
 ```
 
-### Configuring microk8s services
+### Configuring microk8s Services
 The following systemd services will be running in your system:
 - **snap.microk8s.daemon-apiserver**, is the [kube-apiserver](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) daemon started using the arguments in `${SNAP_DATA}/args/kube-apiserver`
 - **snap.microk8s.daemon-controller-manager**, is the [kube-controller-manager](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/) daemon started using the arguments in `${SNAP_DATA}/args/kube-controller-manager`
@@ -121,6 +121,14 @@ To reconfigure a service you will need to edit the corresponding file and then r
 echo '--config-file=/path-to-my/daemon.json' | sudo tee -a /var/snap/microk8s/current/args/dockerd
 sudo systemctl restart snap.microk8s.daemon-docker.service
 ```
+
+### Deploy Behind a Proxy
+
+To let microk8s use a proxy enter the proxy details in `${SNAP_DATA}/args/dockerd-env` and restart the docker daemon service with:
+```
+sudo systemctl restart snap.microk8s.daemon-docker.service
+```
+
 
 ## Troubleshooting
 

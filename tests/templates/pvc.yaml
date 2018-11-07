@@ -17,7 +17,7 @@ metadata:
 spec:
   containers:
   - name: hostpath-test-container
-    image: gcr.io/google_containers/busybox:1.24
+    image: busybox
     command: ["/bin/sh", "-c", "while true; do date >> /mnt/dates; sleep 2; done"]
     volumeMounts:
       - name: hostpath-volume

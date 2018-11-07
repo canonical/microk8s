@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: hostpath-provisioner
-          image: cdkbot/hostpath-provisioner:latest
+          image: cdkbot/hostpath-provisioner-$ARCH:latest
           env:
             - name: NODE_NAME
               valueFrom:

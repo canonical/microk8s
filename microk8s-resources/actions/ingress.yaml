@@ -20,7 +20,7 @@ spec:
         # Any image is permissible as long as:
         # 1. It serves a 404 page at /
         # 2. It serves 200 on a /healthz endpoint
-        image: gcr.io/google_containers/defaultbackend:1.4
+        image: gcr.io/google_containers/defaultbackend-$ARCH:1.4
         livenessProbe:
           httpGet:
             path: /healthz
@@ -84,7 +84,7 @@ spec:
       hostNetwork: true
       serviceAccountName: nginx-ingress-microk8s-serviceaccount
       containers:
-      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.15.0
+      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller-$ARCH:$TAG
         name: nginx-ingress-microk8s
         livenessProbe:
           httpGet:

@@ -45,7 +45,7 @@ apps:
   reset:
     command: microk8s-reset.wrapper
   istioctl:
-    command: istioctl --kubeconfig=$SNAP/client.config
+    command: microk8s-istioctl.wrapper
 
 parts:
   libnftnl:
@@ -154,15 +154,27 @@ parts:
       echo "Preparing user config"
       cp $KUBE_SNAP_ROOT/microk8s-resources/client.config .
 
-      echo "Preparing istio"
-      cp $KUBE_SNAP_BINS/istioctl .
-
       echo "Creating commands and wrappers"
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
-      #TODO(kjackal): yaml manifests may need to be rendered to match the $SNAP_ARCH
+
+
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
-      # Istio addon
-      mv $KUBE_SNAP_BINS/istio-yaml ./actions/istio
+      if [ "${ARCH}" = "arm64" ]
+      then
+        # Some actions are not available on arm64
+        # Nvidia support
+        rm "actions/enable.gpu.sh"
+        rm "actions/disable.gpu.sh"
+        rm "actions/gpu.yaml"
+        # Istio support
+        rm "actions/enable.istio.sh"
+        rm "actions/disable.istio.sh"
+      else
+        # Istio addon
+        echo "Preparing istio"
+        cp $KUBE_SNAP_BINS/istioctl .
+        mv $KUBE_SNAP_BINS/istio-yaml ./actions/istio
+      fi
 
       echo "Creating inspect hook"
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
@@ -182,19 +194,55 @@ parts:
     plugin: dump
     source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime_2.0.0+docker17.03.2-1_amd64.deb
     source-type: deb
+    override-build: |
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 
   nvidia-runtime-hook:
     plugin: dump
     source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime-hook_1.4.0-1_amd64.deb
     source-type: deb
+    override-build: |
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 
   libnvidia:
     plugin: dump
     source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container1_1.0.0~rc.2-1_amd64.deb
     source-type: deb
+    override-build: |
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 
   libnvidia-tools:
     plugin: dump
     source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container-tools_1.0.0~rc.2-1_amd64.deb
     source-type: deb
+    override-build: |
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 

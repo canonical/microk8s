@@ -1,12 +1,20 @@
 #!/bin/bash
-set -e
+set -ex
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
+source $SNAP/actions/common/utils.sh
+
 # etcd will not start if the socket already exists.
 if [ -S "/var/snap/microk8s/current/etcd.socket:2379" ]; then
   rm "/var/snap/microk8s/current/etcd.socket:2379"
+fi
+
+ARCH=$(arch)
+
+if ! [ "$ARCH" = "amd64" ]; then
+  export ETCD_UNSUPPORTED_ARCH="$ARCH"
 fi
 
 # This is really the only way I could find to get the args passed in correctly. WTF
