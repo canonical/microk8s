@@ -31,7 +31,7 @@ apps:
     command: run-with-config-args kube-proxy
     daemon: simple
   kubectl:
-    command: kubectl --kubeconfig=$SNAP/client.config
+    command: microk8s-kubectl.wrapper
   docker:
     command: microk8s-docker.wrapper
   inspect:
@@ -40,6 +40,10 @@ apps:
     command: microk8s-enable.wrapper
   disable:
     command: microk8s-disable.wrapper
+  start:
+    command: microk8s-start.wrapper
+  stop:
+    command: microk8s-stop.wrapper
   config:
     command: microk8s-config.wrapper
   reset:

@@ -43,3 +43,7 @@ then
   cp ${SNAP}/default-args/dockerd-env ${SNAP_DATA}/args/dockerd-env
   systemctl restart snap.${SNAP_NAME}.daemon-docker
 fi
+
+# Create the locks directory
+mkdir -p ${SNAP_DATA}/var/lock/
+

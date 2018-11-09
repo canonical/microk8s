@@ -21,6 +21,7 @@ if echo "$*" | grep -q -- '--help'; then
     exit
 fi
 
+exit_if_stopped
 for action in "$@"; do
   # If there is a script to execute for the action $1 run the script and ignore any yamls
   if [ -f "${SNAP}/actions/disable.$action.sh" ]; then
@@ -31,5 +32,6 @@ for action in "$@"; do
     echo "$action disabled"
   else
     echo "Nothing to do for $action"
+    exit 1
   fi
 done

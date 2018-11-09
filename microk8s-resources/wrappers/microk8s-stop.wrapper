@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+
+sudo snap stop ${SNAP_NAME} --disable
+sudo touch ${SNAP_DATA}/var/lock/stopped.lock

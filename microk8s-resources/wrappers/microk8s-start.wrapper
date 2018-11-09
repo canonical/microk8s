@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+
+sudo snap start ${SNAP_NAME} --enable
+if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
+then
+  # Mark the api server as starting
+  sudo rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+fi

@@ -5,10 +5,12 @@ set -eu
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 
+source $SNAP/actions/common/utils.sh
 ARCH=$(dpkg --print-architecture)
 if ! [ "${ARCH}" = "amd64" ]
 then
   echo "Istio is not available for ${ARCH}"
 else
+  exit_if_stopped
   "${SNAP}/istioctl" --kubeconfig=$SNAP/client.config "$@"
 fi
