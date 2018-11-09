@@ -2,6 +2,7 @@
 
 set -eu
 
+source $SNAP/actions/common/utils.sh
 KUBECTL=/snap/bin/microk8s.kubectl
 
 clean_cluster() {
