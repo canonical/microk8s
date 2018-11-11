@@ -46,7 +46,7 @@ then
   then
     # Mark the api server as starting. This is needed incase you
     # microk8s.stop and then snap start microk8s
-    rm -rf ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+    rm -f ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
   fi
 else
   # ensure docker dirs
