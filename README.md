@@ -83,16 +83,16 @@ You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `
 
 You may wish to temporarily shutdown microk8s when not in use without un-installing it.
 
-microk8s can be shutdown using the snap command
+microk8s can be shutdown with:
 
 ```
-snap disable microk8s
+microk8s.stop
 ```
 
-microk8s can be restarted later with the snap command
+microk8s can be restarted later with:
 
 ```
-snap enable microk8s
+microk8s.start
 ```
 
 ### Removing microk8s
@@ -154,8 +154,8 @@ or, if using `ufw`:
 ### My host machine changed IP and now microk8s is not working properly.
 The host machine IP may change whenever you switch places with your laptop or you go through a suspend/resume cycle. The kubernetes API server advertises this IP (taken from the default interface) to all kubernetes cluster members. Services such as DNS and the dashboard will lose connectivity to API server in case the host IP changes. You will need to restart microk8s whenever this happens:
 ```
-sudo snap disable microk8s
-sudo snap enable microk8s
+microk8s.stop
+microk8s.start
 ```
 
 ## Building from source
