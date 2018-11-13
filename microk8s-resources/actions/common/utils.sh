@@ -76,5 +76,6 @@ use_manifest() {
         "$SNAP/bin/sed" -i 's@'$i'@'"${items[$i]}"'@g' "${tmp_manifest}"
     done
     "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "$action" -f "${tmp_manifest}"
+    use_manifest_result="$?"
     rm "${tmp_manifest}"
 }
