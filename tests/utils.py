@@ -26,17 +26,18 @@ def run_until_success(cmd, timeout_insec=60):
             time.sleep(3)
 
 
-def kubectl(cmd):
+def kubectl(cmd, timeout_insec=300):
     """
     Do a kubectl <cmd>
     Args:
         cmd: left part of kubectl <left_part> command
+        timeout_insec: timeout for this job
 
     Returns: the kubectl response in a string
 
     """
     cmd = '/snap/bin/microk8s.kubectl ' + cmd
-    return run_until_success(cmd)
+    return run_until_success(cmd, timeout_insec)
 
 
 def docker(cmd):
@@ -52,17 +53,18 @@ def docker(cmd):
     return run_until_success(cmd)
 
 
-def kubectl_get(target):
+def kubectl_get(target, timeout_insec=300):
     """
     Do a kubectl get and return the results in a yaml structure.
     Args:
         target: which resource we are getting
+        timeout_insec: timeout for this job
 
     Returns: YAML structured response
 
     """
     cmd = 'get -o yaml ' + target
-    output = kubectl(cmd)
+    output = kubectl(cmd, timeout_insec)
     return yaml.load(output)
 
 
@@ -75,7 +77,7 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
         cmd = 'po {} -n {}'.format(pod, namespace)
         if label:
             cmd += ' -l {}'.format(label)
-        data = kubectl_get(cmd)
+        data = kubectl_get(cmd, 300)
         if pod == "":
             if len(data['items']) > 0:
                 status = data['items'][0]['status']
@@ -101,12 +103,21 @@ def wait_for_installation():
     """
     while True:
         cmd = 'svc kubernetes'
-        data = kubectl_get(cmd)
+        data = kubectl_get(cmd, 300)
         service = data['metadata']['name']
         if 'kubernetes' in service:
             break
         else:
             time.sleep(3)
+
+    while True:
+        cmd = 'get no'
+        nodes = kubectl(cmd, 300)
+        if ' Ready' in nodes:
+            break
+        else:
+            time.sleep(3)
+
     # Allow rest of the services to come up
     time.sleep(30)
 
