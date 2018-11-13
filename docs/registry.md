@@ -22,7 +22,7 @@ microk8s.docker push localhost:32000/my-busybox
 
 If you prefer to use an external docker client you should point it to the socket dockerd is listening on:
 ```
-docker -H unix:///var/snap/microk8s/docker.sock ps
+docker -H unix:///var/snap/microk8s/current/docker.sock ps
 ```
 
 To consume an image from the local registry we need to reference it in our yaml manifests:
