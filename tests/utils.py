@@ -137,7 +137,7 @@ def microk8s_enable(addon):
 
     """
     cmd = '/snap/bin/microk8s.enable {}'.format(addon)
-    return run_until_success(cmd)
+    return run_until_success(cmd, timeout_insec=300)
 
 
 def microk8s_disable(addon):
@@ -149,7 +149,7 @@ def microk8s_disable(addon):
 
     """
     cmd = '/snap/bin/microk8s.disable {}'.format(addon)
-    return run_until_success(cmd)
+    return run_until_success(cmd, timeout_insec=300)
 
 
 def microk8s_reset():
@@ -157,7 +157,7 @@ def microk8s_reset():
     Call microk8s reset
     """
     cmd = '/snap/bin/microk8s.reset'
-    run_until_success(cmd)
+    run_until_success(cmd, timeout_insec=300)
     wait_for_installation()
 
 
