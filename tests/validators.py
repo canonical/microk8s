@@ -100,9 +100,12 @@ def validate_ingress():
 
     attempt = 50
     while attempt >= 0:
-        resp = requests.get("http://microbot.127.0.0.1.xip.io")
-        if resp.status_code == 200:
-            break
+        try:
+            resp = requests.get("http://microbot.127.0.0.1.xip.io")
+            if resp.status_code == 200:
+                break
+        except:
+            pass
         time.sleep(2)
         attempt -= 1
     assert resp.status_code == 200
