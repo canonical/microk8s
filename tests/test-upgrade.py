@@ -11,7 +11,13 @@ from validators import (
     validate_metrics_server
 )
 from subprocess import check_call, CalledProcessError, check_output
-from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, wait_for_installation
+from utils import (
+    microk8s_enable,
+    wait_for_pod_state,
+    microk8s_disable,
+    wait_for_installation,
+    run_until_success
+)
 
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
 # Have UPGRADE_MICROK8S_TO point to a file to upgrade to that file
@@ -30,8 +36,8 @@ class TestUpgrade(object):
         """
         print("Testing upgrade from {} to {}".format(upgrade_from, upgrade_to))
 
-        cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from).split()
-        check_call(cmd)
+        cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from)
+        run_until_success(cmd)
         wait_for_installation()
         if is_container():
             # In some setups (eg LXC on GCE) the hashsize nf_conntrack file under
@@ -109,10 +115,10 @@ class TestUpgrade(object):
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):
-            cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to).split()
+            cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to)
         else:
-            cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to).split()
-        check_call(cmd)
+            cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to)
+        run_until_success(cmd)
         # Allow for the refresh to be processed
         time.sleep(10)
         wait_for_installation()
