@@ -2,8 +2,7 @@ import pytest
 import platform
 
 from validators import (
-    validate_dns,
-    validate_dashboard,
+    validate_dns_dashboard,
     validate_storage,
     validate_ingress,
     validate_gpu,
@@ -26,21 +25,7 @@ class TestAddons(object):
         yield
         microk8s_reset()
 
-    def test_dns(self):
-        """
-        Sets up DNS addon and validates it works.
-
-        """
-        print("Enabling DNS")
-        microk8s_enable("dns")
-        wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
-        # Create a bbox
-        print("Validating dns")
-        validate_dns()
-        print("Disabling DNS")
-        microk8s_disable("dns")
-
-    def test_dashboard(self):
+    def test_dns_dashboard(self):
         """
         Sets up dashboard and validates it works.
 
@@ -51,7 +36,7 @@ class TestAddons(object):
         print("Enabling dashboard")
         microk8s_enable("dashboard")
         print("Validating dashboard")
-        validate_dashboard()
+        validate_dns_dashboard()
         print("Disabling DNS")
         microk8s_disable("dns")
         print("Disabling dashboard")
