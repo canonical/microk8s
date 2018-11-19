@@ -6,7 +6,7 @@ Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
 
 ## User Guide
 
-Snaps are frequently updated to match each release of Kubernetes. The quickest way to get started is to install directly from the snap store. You can install microk8s and let it update to the latest stable upstream Kubernetes release with:
+<img src="https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/certified-kubernetes/versionless/color/certified-kubernetes-color.png" align="right" width="200px">Snaps are frequently updated to match each release of Kubernetes. The quickest way to get started is to install directly from the snap store. You can install microk8s and let it update to the latest stable upstream Kubernetes release with:
 
 ```
 snap install microk8s --classic
