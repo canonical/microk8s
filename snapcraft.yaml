@@ -18,6 +18,9 @@ apps:
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
     daemon: simple
+  daemon-apiserver-kicker:
+    command: apiservice-kicker
+    daemon: simple
   daemon-controller-manager:
     command: run-with-config-args kube-controller-manager
     daemon: simple

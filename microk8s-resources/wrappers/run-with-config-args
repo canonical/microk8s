@@ -31,6 +31,7 @@ then
   # Check if we advertise an address. If we do we do not need to wait for a default network interface.
   if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null
   then
+    rm -f ${SNAP_DATA}/external_ip.txt
     # wait up to a minute for the default network interface to appear.
     n=0
     until [ $n -ge 20 ]
@@ -41,6 +42,14 @@ then
       n=$[$n+1]
       sleep 6
     done
+
+    if ip route | grep default &> /dev/null
+    then
+        DEFAULT_INTERFACE="$(ip route | gawk '/default/ { print $5 }' | head -1)"
+        IP_ADDR="$(ifconfig "$DEFAULT_INTERFACE" | grep 'inet ' | gawk '{print $2}' | sed -e 's/addr://')"
+        mkdir -p ${SNAP_DATA}/var
+        echo ${IP_ADDR} > ${SNAP_DATA}/external_ip.txt
+    fi
   fi
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
   then

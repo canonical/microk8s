@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+
+
+restart_attempt=0
+while true
+do
+    if [ $restart_attempt -ge 5 ]
+    then
+        echo "Service kicker restarted the apiserver too quickly. Exiting."
+        exit 1
+    fi
+
+    # every 3 seconds
+    sleep 3
+    if [ -f "${SNAP_DATA}/external_ip.txt" ] &&
+       ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
+       ip route | grep default &> /dev/null &&
+       systemctl is-active --quiet snap.microk8s.daemon-apiserver.service
+    then
+        # Get current IP
+        DEFAULT_INTERFACE="$(ip route | gawk '/default/ { print $5 }' | head -1)"
+        IP_ADDR="$(ifconfig "$DEFAULT_INTERFACE" | grep 'inet ' | gawk '{print $2}' | sed -e 's/addr://')"
+        USED_IP_ADDR=$(cat "${SNAP_DATA}"/external_ip.txt)
+        if ! [ "$IP_ADDR" == "$USED_IP_ADDR" ]
+        then
+            echo "IP change detected. Restarting kube-apiserver"
+            systemctl restart snap.microk8s.daemon-apiserver.service
+            systemctl restart snap.microk8s.daemon-proxy.service
+            restart_attempt=$[$restart_attempt+1]
+        else
+            restart_attempt=0
+        fi
+    fi
+done
