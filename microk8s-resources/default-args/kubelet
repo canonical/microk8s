@@ -10,4 +10,4 @@
 --docker unix://${SNAP_DATA}/docker.sock
 --docker-endpoint unix://${SNAP_DATA}/docker.sock
 --feature-gates=DevicePlugins=true
---eviction-hard="memory.available<500Mi,nodefs.available<1Gi,imagefs.available<1Gi"
+--eviction-hard="memory.available<100Mi,nodefs.available<1Gi,imagefs.available<1Gi"
