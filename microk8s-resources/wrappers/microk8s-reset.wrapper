@@ -2,6 +2,7 @@
 
 set -eu
 
+source $SNAP/actions/common/utils.sh
 KUBECTL=/snap/bin/microk8s.kubectl
 
 clean_cluster() {
@@ -31,6 +32,7 @@ clean_cluster() {
   done
 }
 
+exit_if_stopped
 sudo systemctl restart snap.${SNAP_NAME}.daemon-docker
 clean_cluster
 sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
