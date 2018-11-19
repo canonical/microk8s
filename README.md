@@ -1,8 +1,8 @@
 # microk8s
 
-![](https://img.shields.io/badge/Kubernetes%20Conformance-186%2F186-green.svg) ![](https://img.shields.io/badge/Kubernetes-1.12-326de6.svg)
+![](https://img.shields.io/badge/Kubernetes-1.12-326de6.svg)
 
-Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
+<img src="https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/certified-kubernetes/versionless/color/certified-kubernetes-color.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
 
 ## User Guide
 
