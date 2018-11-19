@@ -20,6 +20,18 @@ snap install microk8s --classic --channel=1.12/stable
 
 You can read more on the microk8s release channels in the [Release Channels and Upgrades](docs/release-channels.md) doc.
 
+At any point you can check microk8s' availability with:
+
+```
+microk8s.status
+```
+
+During installation you can use the `--wait-ready` flag to wait for the kubernetes services to initialise:
+
+```
+microk8s.status --wait-ready
+```
+
 > In order to install microk8s make sure
 > - port 8080 is not used and
 > - if you have AppArmor enabled (check with `sudo apparmor_status`) you do not have any other [dockerd installed](docs/dockerd.md). You can use the dockerd coming with microk8s.
@@ -67,7 +79,7 @@ These addons can be disabled at anytime using the `disable` command
 microk8s.disable dashboard dns
 ```
 
-You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
+With `microk8s.status` you can see the list of available addons and which ones are currently enabled. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
 
 #### List of Available Addons
 - **dns**: Deploy kube dns. This addon may be required by others thus we recommend you always enable it.

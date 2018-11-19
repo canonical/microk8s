@@ -47,6 +47,8 @@ apps:
     command: microk8s-start.wrapper
   stop:
     command: microk8s-stop.wrapper
+  status:
+    command: microk8s-status.wrapper
   config:
     command: microk8s-config.wrapper
   reset:
