@@ -141,7 +141,7 @@ def microk8s_enable(addon):
         nv_out = run_until_success("lsmod", timeout_insec=10)
         if "nvidia" not in nv_out:
             print("Not a cuda capable system. Will not test gpu addon")
-            raise CalledProcessError("Nothing to do for gpu")
+            raise CalledProcessError(1, "Nothing to do for gpu")
 
     cmd = '/snap/bin/microk8s.enable {}'.format(addon)
     return run_until_success(cmd, timeout_insec=300)
