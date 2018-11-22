@@ -3,14 +3,8 @@ version-script: |
   . build-scripts/prepare-env.sh > /dev/null
   echo $KUBE_VERSION
 version: "latest"
-summary: Kubernetes for workstations and appliances
-description: |-
- MicroK8s is a small, fast, secure, single node Kubernetes that installs on
- just about any Linux box. Use it for offline development, prototyping, 
- testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's 
- also a great k8s for appliances - develop your IoT apps for k8s and deploy 
- them to MicroK8s on your boxes.
- 
+summary: Kubernetes in your box.
+description: Microk8s deploys and configures all kubernetes services in a snap.
 grade: stable
 confinement: classic
 
@@ -190,6 +184,10 @@ parts:
         rm "actions/disable.istio.sh"
         # added because the completer is still defined
         touch istioctl.bash
+        # Prometheus support
+        rm "actions/enable.prometheus.sh"
+        rm "actions/disable.prometheus.sh"
+        rm -rf "actions/prometheus"
       else
         # Istio addon
         echo "Preparing istio"
@@ -277,3 +275,4 @@ parts:
       else
         echo "Skipped"
       fi
+
