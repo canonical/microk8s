@@ -5,7 +5,7 @@ Microk8s is a snap deploying Kubernetes. Upstream Kubernetes ships a new release
 
 ## Choosing the Right Channel
 
-When installing MicroK8s you can select your desired upstream Kubernetes series with the corresponding snap channel. For example, to install KicroK8s and let it follow the `v1.12` release series you:
+When installing MicroK8s you can select your desired upstream Kubernetes series with the corresponding snap channel. For example, to install MicroK8s and let it follow the `v1.12` release series you:
 
 ```
 snap install microk8s --classic --channel=1.12/stable
