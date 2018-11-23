@@ -1,26 +1,26 @@
-# microk8s
+# MicroK8s
 
-![](https://img.shields.io/badge/Kubernetes-1.12-326de6.svg)
+![](https://img.shields.io/badge/Kubernetes-1.12-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg)
 
 <img src="https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/certified-kubernetes/versionless/color/certified-kubernetes-color.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
 
 ## User Guide
 
-Snaps are frequently updated to match each release of Kubernetes. The quickest way to get started is to install directly from the snap store. You can install microk8s and let it update to the latest stable upstream Kubernetes release with:
+Snaps are frequently updated to match each release of Kubernetes. The quickest way to get started is to install directly from the snap store. You can install MicroK8s and let it update to the latest stable upstream Kubernetes release with:
 
 ```
 snap install microk8s --classic
 ```
 
-Alternatively, you can select a microk8s channel that will follow a specific Kubernetes release series. For example, you install microk8s and let it follow the `v1.12` series with:
+Alternatively, you can select a MicroK8s channel that will follow a specific Kubernetes release series. For example, you install MicroK8s and let it follow the `v1.12` series with:
 
 ```
 snap install microk8s --classic --channel=1.12/stable
 ```
 
-You can read more on the microk8s release channels in the [Release Channels and Upgrades](docs/release-channels.md) doc.
+You can read more on the MicroK8s release channels in the [Release Channels and Upgrades](docs/release-channels.md) doc.
 
-At any point you can check microk8s' availability with:
+At any point you can check MicroK8s' availability with:
 
 ```
 microk8s.status
@@ -32,13 +32,13 @@ During installation you can use the `--wait-ready` flag to wait for the kubernet
 microk8s.status --wait-ready
 ```
 
-> In order to install microk8s make sure
+> In order to install MicroK8s make sure
 > - port 8080 is not used and
-> - if you have AppArmor enabled (check with `sudo apparmor_status`) you do not have any other [dockerd installed](docs/dockerd.md). You can use the dockerd coming with microk8s.
+> - if you have AppArmor enabled (check with `sudo apparmor_status`) you do not have any other [dockerd installed](docs/dockerd.md). You can use the dockerd coming with MicroK8s.
 
 ### Accessing Kubernetes
 
-To avoid colliding with a `kubectl` already installed and to avoid overwriting any existing Kubernetes configuration file, microk8s adds a `microk8s.kubectl` command, configured to exclusively access the new microk8s install. When following instructions online, make sure to prefix `kubectl` with `microk8s.`.
+To avoid colliding with a `kubectl` already installed and to avoid overwriting any existing Kubernetes configuration file, MicroK8s adds a `microk8s.kubectl` command, configured to exclusively access the new MicroK8s install. When following instructions online, make sure to prefix `kubectl` with `microk8s.`.
 
 ```
 microk8s.kubectl get nodes
@@ -56,18 +56,18 @@ This measure can be safely reverted at anytime by doing
 ```
 snap unalias kubectl
 ```
-If you already have `kubectl` installed and you want to use it to access the microk8s deployment you can export the cluster's config with:
+If you already have `kubectl` installed and you want to use it to access the MicroK8s deployment you can export the cluster's config with:
 
 ```
 microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
 
-Note: The API server on port 8080 is listening on all network interfaces. In its kubeconfig file microk8s is using the loopback interface, as you can see with `microk8s.kubectl config view`. The `microk8s.config` command will output a kubeconfig with the host machine's IP (instead of the 127.0.0.1) as the API server endpoint.
+Note: The API server on port 8080 is listening on all network interfaces. In its kubeconfig file MicroK8s is using the loopback interface, as you can see with `microk8s.kubectl config view`. The `microk8s.config` command will output a kubeconfig with the host machine's IP (instead of the 127.0.0.1) as the API server endpoint.
 
 
 ### Kubernetes Addons
 
-microk8s installs a barebones upstream Kubernetes. This means just the api-server, controller-manager, scheduler, kubelet, cni, kube-proxy are installed and run. Additional services like kube-dns and dashboard can be run using the `microk8s.enable` command
+MicroK8s installs a barebones upstream Kubernetes. This means just the api-server, controller-manager, scheduler, kubelet, cni, kube-proxy are installed and run. Additional services like kube-dns and dashboard can be run using the `microk8s.enable` command
 
 ```
 microk8s.enable dns dashboard
@@ -86,37 +86,37 @@ With `microk8s.status` you can see the list of available addons and which ones a
 - **dashboard**: Deploy kubernetes dashboard as well as grafana and influxdb. To access grafana point your browser to the url reported by `microk8s.kubectl cluster-info`.
 - **storage**: Create a default storage class. This storage class makes use of the hostpath-provisioner pointing to a directory on the host. Persistent volumes are created under `${SNAP_COMMON}/default-storage`. Upon disabling this addon you will be asked if you want to delete the persistent volumes created.
 - **ingress**: Create an ingress controller.
-- **gpu**: Expose GPU(s) to microk8s by enabling the nvidia-docker runtime and nvidia-device-plugin-daemonset. Requires NVIDIA drivers to already be installed on the host system.
+- **gpu**: Expose GPU(s) to MicroK8s by enabling the nvidia-docker runtime and nvidia-device-plugin-daemonset. Requires NVIDIA drivers to already be installed on the host system.
 - **istio**: Deploy the core [Istio](https://istio.io/) services. You can use the `microk8s.istioctl` command to manage your deployments.
 - **registry**: Deploy a docker private registry and expose it on `localhost:32000`. The storage addon will be enabled as part of this addon. To [use the registry](docs/registry.md) you can use the `microk8s.docker` command.
 - **metrics-server**: Deploy the [Metrics Server](https://kubernetes.io/docs/tasks/debug-application-cluster/core-metrics-pipeline/#metrics-server).
 
-### Stopping and Restarting microk8s
+### Stopping and Restarting MicroK8s
 
-You may wish to temporarily shutdown microk8s when not in use without un-installing it.
+You may wish to temporarily shutdown MicroK8s when not in use without un-installing it.
 
-microk8s can be shutdown with:
+MicroK8s can be shutdown with:
 
 ```
 microk8s.stop
 ```
 
-microk8s can be restarted later with:
+MicroK8s can be restarted later with:
 
 ```
 microk8s.start
 ```
 
-### Removing microk8s
+### Removing MicroK8s
 
-Before removing microk8s, use `microk8s.reset` to stop all running pods.
+Before removing MicroK8s, use `microk8s.reset` to stop all running pods.
 
 ```
 microk8s.reset
 snap remove microk8s
 ```
 
-### Configuring microk8s Services
+### Configuring MicroK8s Services
 The following systemd services will be running in your system:
 - **snap.microk8s.daemon-apiserver**, is the [kube-apiserver](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/) daemon started using the arguments in `${SNAP_DATA}/args/kube-apiserver`
 - **snap.microk8s.daemon-controller-manager**, is the [kube-controller-manager](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/) daemon started using the arguments in `${SNAP_DATA}/args/kube-controller-manager`
@@ -136,7 +136,7 @@ sudo systemctl restart snap.microk8s.daemon-docker.service
 
 ### Deploy Behind a Proxy
 
-To let microk8s use a proxy enter the proxy details in `${SNAP_DATA}/args/dockerd-env` and restart the docker daemon service with:
+To let MicroK8s use a proxy enter the proxy details in `${SNAP_DATA}/args/dockerd-env` and restart the docker daemon service with:
 ```
 sudo systemctl restart snap.microk8s.daemon-docker.service
 ```
@@ -144,16 +144,16 @@ sudo systemctl restart snap.microk8s.daemon-docker.service
 
 ## Troubleshooting
 
-To troubleshoot a non-functional microk8s deployment, start by running the `microk8s.inspect` command. This command performs a set of tests against microk8s and collects traces and logs in a report tarball. In case any of the aforementioned daemons are failing you will be urged to look at the respective logs with `journalctl -u snap.microk8s.<daemon>.service`. `microk8s.inspect` may also make suggestions on potential issues it may find. If you do not manage to resolve the issue you are facing please file a [bug](https://github.com/ubuntu/microk8s/issues) attaching the inspection report tarball.
+To troubleshoot a non-functional MicroK8s deployment, start by running the `microk8s.inspect` command. This command performs a set of tests against MicroK8s and collects traces and logs in a report tarball. In case any of the aforementioned daemons are failing you will be urged to look at the respective logs with `journalctl -u snap.microk8s.<daemon>.service`. `microk8s.inspect` may also make suggestions on potential issues it may find. If you do not manage to resolve the issue you are facing please file a [bug](https://github.com/ubuntu/microk8s/issues) attaching the inspection report tarball.
 
 Some common problems and solutions are listed below.
 
 ### My dns and dashboard pods are CrashLooping.
-The [Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/) network plugin used by microk8s creates a `cbr0` interface when the first pod is created. If you have `ufw` enabled, you'll need to allow traffic on this interface:
+The [Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/) network plugin used by MicroK8s creates a `cbr0` interface when the first pod is created. If you have `ufw` enabled, you'll need to allow traffic on this interface:
 
 `sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0`
 
-### My pods can't reach the internet (but my microk8s host machine can).
+### My pods can't reach the internet (but my MicroK8s host machine can).
 Make sure packets to/from the pod network interface can be forwarded
 to/from the default interface on the host:
 
@@ -163,8 +163,8 @@ or, if using `ufw`:
 
 `sudo ufw default allow routed`
 
-### My host machine changed IP and now microk8s is not working properly.
-The host machine IP may change whenever you switch places with your laptop or you go through a suspend/resume cycle. The kubernetes API server advertises this IP (taken from the default interface) to all kubernetes cluster members. Services such as DNS and the dashboard will lose connectivity to API server in case the host IP changes. You will need to restart microk8s whenever this happens:
+### My host machine changed IP and now MicroK8s is not working properly.
+The host machine IP may change whenever you switch places with your laptop or you go through a suspend/resume cycle. The kubernetes API server advertises this IP (taken from the default interface) to all kubernetes cluster members. Services such as DNS and the dashboard will lose connectivity to API server in case the host IP changes. You will need to restart MicroK8s whenever this happens:
 ```
 microk8s.stop
 microk8s.start
@@ -208,3 +208,7 @@ To speed-up a build you can reuse the binaries already downloaded from a previou
 ```
 snap install microk8s_v1.10.3_amd64.snap --classic --dangerous
 ```
+
+<p align="center">
+  <img src="https://assets.ubuntu.com/v1/9309d097-MicroK8s_SnapStore_icon.svg" width="150px">
+</p>
