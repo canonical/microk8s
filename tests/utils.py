@@ -75,12 +75,17 @@ def kubectl_get(target, timeout_insec=300):
     return yaml.load(output)
 
 
-def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label=None):
+def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label=None, timeout_insec=600):
     """
     Wait for a a pod state. If you do not specify a pod name and you set instead a label
     only the first pod will be checked.
     """
+    deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
+        if datetime.datetime.now() > deadline:
+            raise TimeoutError("Pod {} not in {} after {] seconds.".format(pod,
+                                                                           desired_state,
+                                                                           timeout_insec))
         cmd = 'po {} -n {}'.format(pod, namespace)
         if label:
             cmd += ' -l {}'.format(label)

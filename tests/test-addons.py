@@ -10,6 +10,7 @@ from validators import (
     validate_registry,
     validate_forward,
     validate_metrics_server,
+    validate_prometheus,
 )
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, microk8s_reset
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
@@ -135,4 +136,16 @@ class TestAddons(object):
         validate_metrics_server()
         print("Disabling metrics-server")
         microk8s_disable("metrics-server")
+
+    def test_prometheus(self):
+        """
+        Test the Prometheus operator.
+
+        """
+        print("Enabling Prometheus")
+        microk8s_enable("prometheus")
+        print("Validating the Prometheus")
+        validate_prometheus()
+        print("Disabling Prometheus")
+        microk8s_disable("prometheus")
 

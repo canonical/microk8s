@@ -219,3 +219,11 @@ def validate_metrics_server():
         attempt -= 1
 
     assert attempt > 0
+
+
+def validate_prometheus():
+    """
+    Validate the prometheus operator
+    """
+    wait_for_pod_state("prometheus-k8s-0", "monitoring", "running")
+    wait_for_pod_state("alertmanager-main-0", "monitoring", "running")
