@@ -107,7 +107,7 @@ class TestUpgrade(object):
             print('Will not test the metrics server')
 
         try:
-            enable = microk8s_enable("prometheus")
+            enable = microk8s_enable("prometheus", timeout_insec=30)
             assert "Nothing to do for" not in enable
             validate_prometheus()
             test_matrix['prometheus'] = validate_prometheus

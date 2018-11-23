@@ -134,12 +134,13 @@ def wait_for_installation():
     time.sleep(30)
 
 
-def microk8s_enable(addon):
+def microk8s_enable(addon, timeout_insec=300):
     """
     Disable an addon
 
     Args:
         addon: name of the addon
+        timeout_insec: seconds to keep retrying
 
     """
     # NVidia pre-check so as to not wait for a timeout.
@@ -150,7 +151,7 @@ def microk8s_enable(addon):
             raise CalledProcessError(1, "Nothing to do for gpu")
 
     cmd = '/snap/bin/microk8s.enable {}'.format(addon)
-    return run_until_success(cmd, timeout_insec=300)
+    return run_until_success(cmd, timeout_insec)
 
 
 def microk8s_disable(addon):
