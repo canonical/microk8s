@@ -225,5 +225,9 @@ def validate_prometheus():
     """
     Validate the prometheus operator
     """
+    if platform.machine() != 'x86_64':
+        print("Prometheus tests are only relevant in x86 architectures")
+        return
+
     wait_for_pod_state("prometheus-k8s-0", "monitoring", "running")
     wait_for_pod_state("alertmanager-main-0", "monitoring", "running")

@@ -10,6 +10,8 @@ mkdir $MICROK8S_HOME/microk8s-resources/prometheus/resources/
 mv $MICROK8S_HOME/microk8s-resources/prometheus/*CustomResourceDefinitions.yaml $MICROK8S_HOME/microk8s-resources/prometheus/resources/
 ```
 
+Then update the deployments of prometheus and alertmanager to have one replica only.
+
 There is no reason to automate this because this may not work in the future. This is not the recommended way of installing Prometheus Operator.
 
 
