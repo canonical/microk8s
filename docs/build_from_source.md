@@ -58,7 +58,7 @@ After a standard build, run the following:
 ```bash
 cp -r parts/microk8s/build/build/kube_bins .
 export KUBE_SNAP_BINS=$PWD/kube_bins/v1.12.2/
- snapcraft
+snapcraft
  ```
 
 ...this build will be much faster and will reuse binaries in `KUBE_SNAP_BINS`
