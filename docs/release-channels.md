@@ -5,13 +5,13 @@ Microk8s is a snap deploying Kubernetes. Upstream Kubernetes ships a new release
 
 ## Choosing the Right Channel
 
-When installing microk8s you can select your desired upstream Kubernetes series with the corresponding snap channel. For example, to install microk8s and let it follow the `v1.12` release series you:
+When installing MicroK8s you can select your desired upstream Kubernetes series with the corresponding snap channel. For example, to install MicroK8s and let it follow the `v1.12` release series you:
 
 ```
 snap install microk8s --classic --channel=1.12/stable
 ```
 
-If you omit the `--channel` argument microk8s will follow the latest stable upstream Kubernetes. This means that your deployment will eventually upgrade to a new release series. At the time of this writing you will get `v1.12.0` with:
+If you omit the `--channel` argument MicroK8s will follow the latest stable upstream Kubernetes. This means that your deployment will eventually upgrade to a new release series. At the time of this writing you will get `v1.12.0` with:
 
 ```
 snap install microk8s --classic
@@ -20,7 +20,7 @@ snap install microk8s --classic
 Since no `--channel` is specified such deployment will eventually upgrade to `v1.13.0`.
 
 
-Switching from one channel to another is done with [`snap refresh --channel=<new_channel>`](https://docs.snapcraft.io/reference/snap-command#refresh). For example, switch microk8s to the v1.11 release series with:
+Switching from one channel to another is done with [`snap refresh --channel=<new_channel>`](https://docs.snapcraft.io/reference/snap-command#refresh). For example, switch MicroK8s to the v1.11 release series with:
 
 ```
 snap install microk8s --channel=1.11/stable
@@ -28,15 +28,15 @@ snap install microk8s --channel=1.11/stable
 
 ## Availability of Releases and Channels
 
-The `*/stable` channels serve the latest stable upstream Kubernetes release of the respective release series. Upstream releases are propagated to the microk8s snap in about a week. This means your microk8s will upgrade to the latest upstream release in your selected channel roughly one week after the upstream release.
+The `*/stable` channels serve the latest stable upstream Kubernetes release of the respective release series. Upstream releases are propagated to the MicroK8s snap in about a week. This means your MicroK8s will upgrade to the latest upstream release in your selected channel roughly one week after the upstream release.
 
-The `*/candidate` and `*/beta` channels get updated within hours of an upstream release. Getting a microk8s deployment pointing to `1.12/beta` is as simple as:
+The `*/candidate` and `*/beta` channels get updated within hours of an upstream release. Getting a MicroK8s deployment pointing to `1.12/beta` is as simple as:
 
 ```
 snap install microk8s --classic --channel=1.12/beta
 ```
 
-The `*/edge` channels get updated for each microk8s patch or upstream Kubernetes release.
+The `*/edge` channels get updated for each MicroK8s patch or upstream Kubernetes release.
 
 Keep in mind that edge and beta are snap constructs and do not relate to Kubernetes release names.
 
