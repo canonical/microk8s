@@ -7,3 +7,4 @@
 *.snap
 microk8s_source.tar.bz2
 tests/__pycache__
+.idea/

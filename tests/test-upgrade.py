@@ -14,7 +14,6 @@ from subprocess import check_call, CalledProcessError, check_output
 from utils import (
     microk8s_enable,
     wait_for_pod_state,
-    microk8s_disable,
     wait_for_installation,
     run_until_success
 )
