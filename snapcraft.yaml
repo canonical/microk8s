@@ -108,6 +108,7 @@ parts:
     - zfsutils-linux
     - socat
     - iproute2
+    - dpkg
     source: .
     override-build: |
       set -eu
