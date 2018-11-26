@@ -3,8 +3,14 @@ version-script: |
   . build-scripts/prepare-env.sh > /dev/null
   echo $KUBE_VERSION
 version: "latest"
-summary: Kubernetes in your box.
-description: Microk8s deploys and configures all kubernetes services in a snap.
+summary: Kubernetes for workstations and appliances
+description: |-
+ MicroK8s is a small, fast, secure, single node Kubernetes that installs on
+ just about any Linux box. Use it for offline development, prototyping, 
+ testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's 
+ also a great k8s for appliances - develop your IoT apps for k8s and deploy 
+ them to MicroK8s on your boxes.
+ 
 grade: stable
 confinement: classic
 
