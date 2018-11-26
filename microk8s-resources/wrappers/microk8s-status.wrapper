@@ -115,7 +115,7 @@ function format_output() {
             done
             exit 0
         else
-            echo "microk8s is not running. Use microk8s.ispect for a deeper inspection."
+            echo "microk8s is not running. Use microk8s.inspect for a deeper inspection."
             exit 1
         fi
     fi
