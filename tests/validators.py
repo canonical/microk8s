@@ -13,6 +13,7 @@ from utils import (
     update_yaml_with_arch,
 )
 
+
 def validate_dns():
     """
     Validate DNS by starting a busy box and nslookuping the kubernetes default service.
