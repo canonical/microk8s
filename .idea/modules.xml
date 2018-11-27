@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../kubernetes-jenkins/.idea/kubernetes-jenkins.iml" filepath="$PROJECT_DIR$/../kubernetes-jenkins/.idea/kubernetes-jenkins.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/microk8s.iml" filepath="$PROJECT_DIR$/.idea/microk8s.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../microk8s-addons/.idea/microk8s-addons.iml" filepath="$PROJECT_DIR$/../microk8s-addons/.idea/microk8s-addons.iml" />
+    </modules>
+  </component>
+</project>

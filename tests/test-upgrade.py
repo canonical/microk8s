@@ -1,8 +1,7 @@
 import os
 import time
 from validators import (
-    validate_dns,
-    validate_dashboard,
+    validate_dns_dashboard,
     validate_storage,
     validate_ingress,
     validate_gpu,
@@ -53,18 +52,12 @@ class TestUpgrade(object):
             enable = microk8s_enable("dns")
             wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
             assert "Nothing to do for" not in enable
-            validate_dns()
-            test_matrix['dns'] = validate_dns
-        except:
-            print('Will not test dns')
-
-        try:
             enable = microk8s_enable("dashboard")
             assert "Nothing to do for" not in enable
-            validate_dashboard()
-            test_matrix['dashboard'] = validate_dashboard
+            validate_dns_dashboard()
+            test_matrix['dns_dashboard'] = validate_dns_dashboard
         except:
-            print('Will not test dashboard')
+            print('Will not test dns-dashboard')
 
         try:
             enable = microk8s_enable("storage")

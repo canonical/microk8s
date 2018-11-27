@@ -14,22 +14,10 @@ from utils import (
 )
 
 
-def validate_dns():
-    """
-    Validate DNS by starting a busy box and nslookuping the kubernetes default service.
-    """
-    here = os.path.dirname(os.path.abspath(__file__))
-    manifest = os.path.join(here, "templates", "bbox.yaml")
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("busybox", "default", "running")
-    output = kubectl("exec -ti busybox -- nslookup kubernetes.default.svc.cluster.local")
-    assert "10.152.183.1" in output
-    kubectl("delete -f {}".format(manifest))
-
-
-def validate_dashboard():
+def validate_dns_dashboard():
     """
     Validate the dashboard addon by looking at the grafana URL.
+    Validate DNS by starting a busy box and nslookuping the kubernetes default service.
     """
     wait_for_pod_state("", "kube-system", "running", label="k8s-app=influxGrafana")
     cluster_info = kubectl("cluster-info")
@@ -110,12 +98,9 @@ def validate_ingress():
 
     attempt = 50
     while attempt >= 0:
-        try:
-            resp = requests.get("http://microbot.127.0.0.1.xip.io")
-            if resp.status_code == 200:
-                break
-        except:
-            pass
+        resp = requests.get("http://microbot.127.0.0.1.xip.io")
+        if resp.status_code == 200:
+            break
         time.sleep(2)
         attempt -= 1
     assert resp.status_code == 200

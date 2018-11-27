@@ -1,6 +1,5 @@
 from validators import (
-    validate_dns,
-    validate_dashboard,
+    validate_dns_dashboard,
     validate_storage,
     validate_ingress,
     validate_istio,
@@ -16,22 +15,13 @@ class TestLiveAddons(object):
     Validates a microk8s with all the addons enabled
     """
 
-    def test_dns(self):
+    def test_dns_dashboard(self):
         """
-        Validates DNS works.
+        Validates dns and dashboards work.
 
         """
         wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
-        # Create a bbox
-        validate_dns()
-
-    def test_dashboard(self):
-        """
-        Validates dashboards works.
-
-        """
-        wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
-        validate_dashboard()
+        validate_dns_dashboard()
 
     def test_storage(self):
         """
