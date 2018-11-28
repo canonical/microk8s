@@ -8,7 +8,8 @@ from validators import (
     validate_registry,
     validate_forward,
     validate_metrics_server,
-    validate_prometheus
+    validate_prometheus,
+    validate_fluentd,
 )
 from subprocess import check_call, CalledProcessError, check_output
 from utils import (
@@ -112,7 +113,15 @@ class TestUpgrade(object):
             validate_prometheus()
             test_matrix['prometheus'] = validate_prometheus
         except:
-            print('Will not test the metrics server')
+            print('Will not test the prometheus')
+
+        try:
+            enable = microk8s_enable("fluentd", timeout_insec=30)
+            assert "Nothing to do for" not in enable
+            validate_fluentd()
+            test_matrix['fluentd'] = validate_fluentd
+        except:
+            print('Will not test the fluentd')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

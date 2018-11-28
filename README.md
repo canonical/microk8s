@@ -91,6 +91,7 @@ With `microk8s.status` you can see the list of available addons and which ones a
 - **registry**: Deploy a docker private registry and expose it on `localhost:32000`. The storage addon will be enabled as part of this addon. To [use the registry](docs/registry.md) you can use the `microk8s.docker` command.
 - **metrics-server**: Deploy the [Metrics Server](https://kubernetes.io/docs/tasks/debug-application-cluster/core-metrics-pipeline/#metrics-server).
 - **prometheus**: Deploy the [Prometheus Operator](https://github.com/coreos/prometheus-operator) v0.25.
+- **fluentd**: Deploy [Elasticsearch-Kibana-Fluentd](https://kubernetes.io/docs/tasks/debug-application-cluster/logging-elasticsearch-kibana/) logging and monitoring solution.
 
 ### Stopping and Restarting MicroK8s
 

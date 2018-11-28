@@ -7,6 +7,7 @@ from validators import (
     validate_forward,
     validate_metrics_server,
     validate_prometheus,
+    validate_fluentd,
 )
 from utils import wait_for_pod_state
 
@@ -65,10 +66,3 @@ class TestLiveAddons(object):
 
         """
         validate_metrics_server()
-
-    def test_prometheus(self):
-        """
-        Validates prometheus addon.
-
-        """
-        validate_prometheus()
