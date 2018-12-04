@@ -82,7 +82,7 @@ microk8s.disable dashboard dns
 With `microk8s.status` you can see the list of available addons and which ones are currently enabled. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
 
 #### List of Available Addons
-- **dns**: Deploy kube dns. This addon may be required by others thus we recommend you always enable it.
+- **dns**: Deploy kube dns. This addon may be required by others thus we recommend you always enable it. In environments where the external dns servers `8.8.8.8` and `8.8.4.4` are blocked you will need to update the upstream dns servers in `microk8s.kubectl -n kube-system edit configmap/kube-dns` after enabling the addon.
 - **dashboard**: Deploy kubernetes dashboard as well as grafana and influxdb. To access grafana point your browser to the url reported by `microk8s.kubectl cluster-info`.
 - **storage**: Create a default storage class. This storage class makes use of the hostpath-provisioner pointing to a directory on the host. Persistent volumes are created under `${SNAP_COMMON}/default-storage`. Upon disabling this addon you will be asked if you want to delete the persistent volumes created.
 - **ingress**: Create an ingress controller.
