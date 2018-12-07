@@ -92,6 +92,7 @@ With `microk8s.status` you can see the list of available addons and which ones a
 - **metrics-server**: Deploy the [Metrics Server](https://kubernetes.io/docs/tasks/debug-application-cluster/core-metrics-pipeline/#metrics-server).
 - **prometheus**: Deploy the [Prometheus Operator](https://github.com/coreos/prometheus-operator) v0.25.
 - **fluentd**: Deploy [Elasticsearch-Kibana-Fluentd](https://kubernetes.io/docs/tasks/debug-application-cluster/logging-elasticsearch-kibana/) logging and monitoring solution.
+- **jaeger**: Deploy the [Jaeger Operator](https://github.com/jaegertracing/jaeger-operator) v1.8.2 in the "simplest" configuration.
 
 ### Stopping and Restarting MicroK8s
 

@@ -10,6 +10,7 @@ from validators import (
     validate_metrics_server,
     validate_prometheus,
     validate_fluentd,
+    validate_jaeger,
 )
 from subprocess import check_call, CalledProcessError, check_output
 from utils import (
@@ -122,6 +123,14 @@ class TestUpgrade(object):
             test_matrix['fluentd'] = validate_fluentd
         except:
             print('Will not test the fluentd')
+
+        try:
+            enable = microk8s_enable("jaeger")
+            assert "Nothing to do for" not in enable
+            validate_jaeger()
+            test_matrix['jaeger'] = validate_jaeger
+        except:
+            print('Will not test the jaeger addon')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

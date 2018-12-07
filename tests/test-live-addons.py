@@ -8,6 +8,7 @@ from validators import (
     validate_metrics_server,
     validate_prometheus,
     validate_fluentd,
+    validate_jaeger,
 )
 from utils import wait_for_pod_state
 
@@ -66,3 +67,10 @@ class TestLiveAddons(object):
 
         """
         validate_metrics_server()
+
+    def test_jaeger(self):
+        """
+        Validates jaeger operator.
+
+        """
+        validate_jaeger()
