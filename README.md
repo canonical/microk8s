@@ -199,6 +199,7 @@ To speed-up a build you can reuse the binaries already downloaded from a previou
 ... this build will take a long time and will download all binaries ...
 > cp -r parts/microk8s/build/build/kube_bins .
 > export KUBE_SNAP_BINS=$PWD/kube_bins/v1.10.3/
+> snapcraft clean
 > snapcraft
 ... this build will be much faster and will reuse binaries in KUBE_SNAP_BINS
 
