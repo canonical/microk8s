@@ -189,7 +189,7 @@ parts:
         # Istio addon
         echo "Preparing istio"
         cp $KUBE_SNAP_BINS/istioctl .
-        mv $KUBE_SNAP_BINS/istio-yaml ./actions/istio
+        cp -r $KUBE_SNAP_BINS/istio-yaml ./actions/istio
       fi
 
       echo "Creating inspect hook"
