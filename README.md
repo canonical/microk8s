@@ -153,7 +153,7 @@ The [Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-stor
 
 `sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0`
 
-### My pods can't reach the internet (but my MicroK8s host machine can).
+### My pods can't reach the internet or each other (but my MicroK8s host machine can).
 Make sure packets to/from the pod network interface can be forwarded
 to/from the default interface on the host:
 
@@ -162,6 +162,12 @@ to/from the default interface on the host:
 or, if using `ufw`:
 
 `sudo ufw default allow routed`
+
+The microk8s inspect command can be used to check the firewall configuration:
+
+`microk8s.inspect`
+
+A warning will be shown if the firewall is not forwarding traffic.
 
 ### My host machine changed IP and now MicroK8s is not working properly.
 The host machine IP may change whenever you switch places with your laptop or you go through a suspend/resume cycle. The kubernetes API server advertises this IP (taken from the default interface) to all kubernetes cluster members. Services such as DNS and the dashboard will lose connectivity to API server in case the host IP changes. You will need to restart MicroK8s whenever this happens:
