@@ -41,8 +41,10 @@ apps:
     daemon: simple
   kubectl:
     command: microk8s-kubectl.wrapper
+    completer: kubectl.bash
   docker:
     command: microk8s-docker.wrapper
+    completer: docker.bash
   inspect:
     command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
   enable:
@@ -61,6 +63,7 @@ apps:
     command: microk8s-reset.wrapper
   istioctl:
     command: microk8s-istioctl.wrapper
+    completer: istioctl.bash
 
 parts:
   libnftnl:
@@ -195,6 +198,31 @@ parts:
       echo "Creating inspect hook"
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
+      # create bash completion script for microk8s.docker, microk8s.kubectl and microk8s.istio
+      # create docker completion. At this stage, the latest from the docker repository is used as a basis, it should
+      # probably be replaced with something else which would bring the completion matching the specific version inside
+      # microk8s
+
+      curl -L https://raw.githubusercontent.com/docker/cli/master/contrib/completion/bash/docker | sed "s/complete -F _docker docker docker.exe dockerd dockerd.exe/complete -F _docker microk8s.docker/g" > docker.bash
+
+      # Assume kubectl and istioctl are already copied to the current directory
+      if [ -f kubectl ]; then
+        ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
+      else
+         echo "NO kubectl FOUND!!!!!!!!!!!!!!! ABORTING kubectl bash completion!!!!!!!!!!!!"
+         touch kubectl.bash
+      fi
+
+      if [ -f istioctl ]; then
+        ./istioctl collateral completion --bash -o .
+        sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -F __start_istioctl microk8s.istioctl/g" istioctl.bash
+        sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -o nospace -F __start_istioctl microk8s.istioctl/g" istioctl.bash
+      else
+         echo "NO istioctl FOUND!!!!!!!!!!!!!!! ABORTING istioctl bash completion!!!!!!!!!!!!"
+         touch istioctl.bash
+      fi
+
+      # end completion scripts
       snapcraftctl build
 
   # Unfortunately we cannot add package repositories to our snaps
