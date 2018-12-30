@@ -81,13 +81,19 @@ function store_kubernetes_info {
 
 
 function suggest_fixes {
+  # Get Kubernetes API port
+  api_port="$(snap get microk8s k8s.api-port)"
+  if [ -z "$api_port" ]; then
+    api_port="8080"
+ 	fi
+
   # Propose fixes
   printf '\n'
   if ! systemctl status snap.microk8s.daemon-apiserver &> /dev/null
   then
-    if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
+    if lsof -Pi :${api_port} -sTCP:LISTEN -t &> /dev/null
     then
-      printf -- '\033[0;33m WARNING: \033[0m Port 8080 seems to be in use by another application.\n'
+      printf -- '\033[0;33m WARNING: \033[0m Port %s seems to be in use by another application.\n' "${api_port}"
     fi
   fi
 

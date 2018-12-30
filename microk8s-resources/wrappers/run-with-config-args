@@ -6,6 +6,12 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 app=$1
 
+export K8S_API_PORT="$(snapctl get k8s.api-port)"
+if [ -z "$K8S_API_PORT" ]; then
+  export K8S_API_PORT="8080"
+  snapctl set k8s.api-port="$K8S_API_PORT"
+fi
+
 if [ "${app}" = "kubelet" ]
 then
   # wait for docker socket

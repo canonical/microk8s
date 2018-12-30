@@ -33,7 +33,7 @@ microk8s.status --wait-ready
 ```
 
 > In order to install MicroK8s make sure
-> - port 8080 is not used and
+> - port 8080 is not used (or set a different port via `snap set microk8s k8s.api-port=<port number>`) and
 > - if you have AppArmor enabled (check with `sudo apparmor_status`) you do not have any other [dockerd installed](docs/dockerd.md). You can use the dockerd coming with MicroK8s.
 
 ### Accessing Kubernetes
@@ -62,7 +62,7 @@ If you already have `kubectl` installed and you want to use it to access the Mic
 microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
 
-Note: The API server on port 8080 is listening on all network interfaces. In its kubeconfig file MicroK8s is using the loopback interface, as you can see with `microk8s.kubectl config view`. The `microk8s.config` command will output a kubeconfig with the host machine's IP (instead of the 127.0.0.1) as the API server endpoint.
+Note: The API server by default on port 8080 is listening on all network interfaces. In its kubeconfig file MicroK8s is using the loopback interface, as you can see with `microk8s.kubectl config view`. The `microk8s.config` command will output a kubeconfig with the host machine's IP (instead of the 127.0.0.1) as the API server endpoint.
 
 
 ### Kubernetes Addons
