@@ -188,6 +188,8 @@ parts:
         # Istio support
         rm "actions/enable.istio.sh"
         rm "actions/disable.istio.sh"
+        # added because the completer is still defined
+        touch istioctl.bash
       else
         # Istio addon
         echo "Preparing istio"
