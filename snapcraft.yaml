@@ -194,14 +194,9 @@ parts:
         cp $KUBE_SNAP_BINS/istioctl .
         cp -r $KUBE_SNAP_BINS/istio-yaml ./actions/istio
         # Add bash completion for istioctl. This is located here to make sure it is only added when istio is added.
-        if [ -f istioctl ]; then
-          ./istioctl collateral completion --bash -o .
-          sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -F __start_istioctl microk8s.istioctl/g" istioctl.bash
-          sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -o nospace -F __start_istioctl microk8s.istioctl/g" istioctl.bash
-        else
-           echo "NO istioctl FOUND!!!!!!!!!!!!!!! ABORTING istioctl bash completion!!!!!!!!!!!!"
-           exit -1
-        fi
+        ./istioctl collateral completion --bash -o .
+        sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -F __start_istioctl microk8s.istioctl/g" istioctl.bash
+        sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -o nospace -F __start_istioctl microk8s.istioctl/g" istioctl.bash
       fi
 
       echo "Creating inspect hook"
@@ -212,12 +207,7 @@ parts:
       sed  -i "s/complete -F _docker docker docker.exe dockerd dockerd.exe/complete -F _docker microk8s.docker/g" docker.bash
 
       # Add bash completion for microk8s.kubectl. 
-      if [ -f kubectl ]; then
-        ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
-      else
-         echo "NO kubectl FOUND!!!!!!!!!!!!!!! ABORTING kubectl bash completion!!!!!!!!!!!!"
-         exit -1
-      fi
+      ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
 
       snapcraftctl build
 
