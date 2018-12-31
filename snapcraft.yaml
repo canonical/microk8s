@@ -41,8 +41,10 @@ apps:
     daemon: simple
   kubectl:
     command: microk8s-kubectl.wrapper
+    completer: kubectl.bash
   docker:
     command: microk8s-docker.wrapper
+    completer: docker.bash
   inspect:
     command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
   enable:
@@ -61,6 +63,7 @@ apps:
     command: microk8s-reset.wrapper
   istioctl:
     command: microk8s-istioctl.wrapper
+    completer: istioctl.bash
 
 parts:
   libnftnl:
@@ -185,15 +188,28 @@ parts:
         # Istio support
         rm "actions/enable.istio.sh"
         rm "actions/disable.istio.sh"
+        # added because the completer is still defined
+        touch istioctl.bash
       else
         # Istio addon
         echo "Preparing istio"
         cp $KUBE_SNAP_BINS/istioctl .
         cp -r $KUBE_SNAP_BINS/istio-yaml ./actions/istio
+        # Add bash completion for istioctl. This is located here to make sure it is only added when istio is added.
+        ./istioctl collateral completion --bash -o .
+        sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -F __start_istioctl microk8s.istioctl/g" istioctl.bash
+        sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -o nospace -F __start_istioctl microk8s.istioctl/g" istioctl.bash
       fi
 
       echo "Creating inspect hook"
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
+
+      # Add bash completion for microk8s.docker
+      cp $SNAPCRAFT_STAGE/usr/share/bash-completion/completions/docker docker.bash
+      sed  -i "s/complete -F _docker docker docker.exe dockerd dockerd.exe/complete -F _docker microk8s.docker/g" docker.bash
+
+      # Add bash completion for microk8s.kubectl. 
+      ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
 
       snapcraftctl build
 
