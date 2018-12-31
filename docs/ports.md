@@ -8,7 +8,7 @@ Services can be placed in two groups based on the network interface they are bin
 
 Port | Service | Access Restrictions
 --- | --- | ---
-6443 | API server | SSL encrypted. Clients need to present a valid password from a [Static Password File](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#authentication-strategies).
+16443 | API server | SSL encrypted. Clients need to present a valid password from a [Static Password File](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#authentication-strategies).
 10250 | kubelet | Anonymous authentication is disabled. [X509 client certificate](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet-authentication-authorization/) is required.
 10255 | kubelet | Read only port for the Kubelet.
 random | kube-proxy | One random port per hosted service is opened as we use `--proxy-mode=userspace` for compatibility reasons.
@@ -20,7 +20,7 @@ If you remove `--proxy-mode` from `/var/snap/microk8s/current/args/kube-proxy` a
 
 Port | Service | Description
 --- | --- | ---
-8080 | API server | Port for insecure communication to the API server
+18080 | API server | Port for insecure communication to the API server
 10248 | kubelet | Localhost healthz endpoint.
 10249 | kube-proxy | Port for the metrics server to serve on.
 10251 | kube-schedule | Port on which to serve HTTP insecurely.

@@ -11,3 +11,5 @@
 --tls-private-key-file=${SNAP_DATA}/certs/server.key
 --kubelet-client-certificate=${SNAP_DATA}/certs/server.crt
 --kubelet-client-key=${SNAP_DATA}/certs/server.key
+--secure-port=16443
+--insecure-port=10080
