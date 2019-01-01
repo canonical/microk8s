@@ -33,7 +33,7 @@ microk8s.status --wait-ready
 ```
 
 > In order to install MicroK8s make sure
-> - port 8080 is not used and
+> - you go though the [list of ports](docs/ports.md) that need to be available
 > - if you have AppArmor enabled (check with `sudo apparmor_status`) you do not have any other [dockerd installed](docs/dockerd.md). You can use the dockerd coming with MicroK8s.
 
 ### Accessing Kubernetes

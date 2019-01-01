@@ -1,10 +1,10 @@
 # Services Exposed and Ports Used
 
-For now microk8s is meant to be used for local development thus certain security issues are not addressed at this point. Here we present the ports and sockets each service uses as well as the default authorisation and authentication configuration.
+For now MicroK8s is meant to be used for local development thus certain security issues are not addressed at this point. Here we present the ports and sockets each service uses as well as the default authorisation and authentication configuration.
 
-Services can be placed in two groups based on the network interface they are bind to. Services binding to the localhost interface are only available from within the host and we take no action to protect them. Services binding to the default host interface are available from outside the host and thus we enforce some form of access restrictions. The ports used by both types of services need to be free so that microk8s starts successfully.
+Services can be placed in two groups based on the network interface they bind to. Services binding to the localhost interface are only available from within the host and we take no action to protect them. Services binding to the default host interface are available from outside the host and thus we enforce some form of access restrictions. The ports used by both types of services need to be free so that MicroK8s starts successfully.
 
-### Services Binging to the Default Host Interface
+### Services Binding to the Default Host Interface
 
 Port | Service | Access Restrictions
 --- | --- | ---
@@ -16,7 +16,7 @@ random | kube-proxy | One random port per hosted service is opened as we use `--
 If you remove `--proxy-mode` from `/var/snap/microk8s/current/args/kube-proxy` and `sudo systemctl restart snap.microk8s.daemon-proxy` kube-proxy will stop exposing the cluster hosted services.
 
 
-### Services Binging to the localhost Interface
+### Services Binding to the localhost Interface
 
 Port | Service | Description
 --- | --- | ---
@@ -41,9 +41,9 @@ etcd | unix://etcd.socket:2379
 
 ## Authentication and Authorization
 
-Upon a new deployment microk8s creates a new CA, a signed server certificate and a service account key file. These files are stored under `/var/microk8s/current/certs`. Kubelet an the API server are aware of the same CA and so the signed server certificate is used by the API server to authenticate with kubelet (`--kubelet-client-certificate`). Clients talking to the secure port of the API server (`6443`) have to also be aware of the CA (`certificate-authority-data` in user kubeconfig).
+Upon a new deployment MicroK8s creates a new CA, a signed server certificate and a service account key file. These files are stored under `/var/microk8s/current/certs`. Kubelet and the API server are aware of the same CA and so the signed server certificate is used by the API server to authenticate with kubelet (`--kubelet-client-certificate`). Clients talking to the secure port of the API server (`6443`) have to also be aware of the CA (`certificate-authority-data` in user kubeconfig).
 
-Authentication of users is done with a [Static Password File](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#authentication-strategies) also generated at first microk8s deployment. Password tokens and usernames are stored in the `basic_token.csv` file available under `/var/snap/microk8s/current/credentials/`. Also under `/var/snap/microk8s/current/credentials/` you can find the `client.config` kubeconfig file used by `microk8s.kubectl`.
+Authentication of users is done with a [Static Password File](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#authentication-strategies) also generated at first MicroK8s deployment. Password tokens and usernames are stored in the `basic_token.csv` file available under `/var/snap/microk8s/current/credentials/`. Also under `/var/snap/microk8s/current/credentials/` you can find the `client.config` kubeconfig file used by `microk8s.kubectl`.
 
 Currently all requests coming from authenticated sources are authorized as we have configured the api-server with `--authorization-mode=AlwaysAllow`.
 
