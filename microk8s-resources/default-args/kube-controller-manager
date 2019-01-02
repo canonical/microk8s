@@ -1,4 +1,4 @@
---master='http://127.0.0.1:10080'
+--master='http://127.0.0.1:8080'
 --service-account-private-key-file=${SNAP_DATA}/certs/serviceaccount.key
 --root-ca-file=${SNAP_DATA}/certs/ca.crt
 --address=127.0.0.1
