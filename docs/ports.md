@@ -20,7 +20,7 @@ If you remove `--proxy-mode` from `/var/snap/microk8s/current/args/kube-proxy` a
 
 Port | Service | Description
 --- | --- | ---
-18080 | API server | Port for insecure communication to the API server
+8080 | API server | Port for insecure communication to the API server
 10248 | kubelet | Localhost healthz endpoint.
 10249 | kube-proxy | Port for the metrics server to serve on.
 10251 | kube-schedule | Port on which to serve HTTP insecurely.

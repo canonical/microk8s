@@ -1,4 +1,4 @@
---master='http://127.0.0.1:10080'
+--master='http://127.0.0.1:8080'
 --cluster-cidr=10.152.183.0/24
 --kubeconfig=${SNAP}/kubeproxy.config
 --proxy-mode="userspace"
