@@ -109,7 +109,6 @@ parts:
     build-attributes: [no-patchelf]
     build-packages:
     - curl
-    - openssl
     - file
     stage-packages:
     - net-tools
@@ -119,7 +118,6 @@ parts:
     - iproute2
     - dpkg
     - libssl1.0.0
-    - openssl
     - coreutils
     source: .
     override-build: |

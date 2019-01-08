@@ -3,17 +3,19 @@
 set -eux
 
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
+export PATH="$PATH:/usr/bin:/usr/local/bin"
+
 
 cp -r ${SNAP}/default-args ${SNAP_DATA}/args
 
 # Create the certificates
 mkdir ${SNAP_DATA}/certs
-${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/serviceaccount.key 2048
-${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/ca.key 2048
-${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
-${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/server.key 2048
-${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP}/certs/csr.conf
-${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP}/certs/csr.conf
+openssl genrsa -out ${SNAP_DATA}/certs/serviceaccount.key 2048
+openssl genrsa -out ${SNAP_DATA}/certs/ca.key 2048
+openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+openssl genrsa -out ${SNAP_DATA}/certs/server.key 2048
+openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP}/certs/csr.conf
+openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP}/certs/csr.conf
 rm -rf .srl
 
 # Create the basic tokens
