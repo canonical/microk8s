@@ -110,3 +110,4 @@ spec:
         - /nginx-ingress-controller
         - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
         - --configmap=$(POD_NAMESPACE)/nginx-load-balancer-conf
+        - --publish-status-address=127.0.0.1
