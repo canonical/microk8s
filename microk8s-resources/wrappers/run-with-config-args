@@ -45,7 +45,7 @@ then
 
     if ip route | grep default &> /dev/null
     then
-        DEFAULT_INTERFACE="$(ip route | gawk '/default/ { print $5 }' | head -1)"
+        DEFAULT_INTERFACE="$(netstat -rn | grep '^0.0.0.0' | awk '{print $NF}' | head -1)"
         IP_ADDR="$(ifconfig "$DEFAULT_INTERFACE" | grep 'inet ' | gawk '{print $2}' | sed -e 's/addr://')"
         mkdir -p ${SNAP_DATA}/var
         echo ${IP_ADDR} > ${SNAP_DATA}/external_ip.txt
