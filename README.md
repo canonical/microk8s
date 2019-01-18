@@ -9,6 +9,7 @@
 Snaps are frequently updated to match each release of Kubernetes. The quickest way to get started is to install directly from the snap store. You can install MicroK8s and let it update to the latest stable upstream Kubernetes release with:
 
 ```
+snap install core
 snap install microk8s --classic
 ```
 
@@ -35,6 +36,8 @@ microk8s.status --wait-ready
 > In order to install MicroK8s make sure
 > - port 8080 is not used and
 > - if you have AppArmor enabled (check with `sudo apparmor_status`) you do not have any other [dockerd installed](docs/dockerd.md). You can use the dockerd coming with MicroK8s.
+
+> If you are on Debian or other distros, make sure `/snap/bin` is added to `$PATH`.
 
 ### Accessing Kubernetes
 
