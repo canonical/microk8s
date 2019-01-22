@@ -176,7 +176,7 @@ microk8s.stop
 microk8s.start
 ```
 
-### My log collector not collecting any logs.
+### My log collector is not collecting any logs.
 By default docker container logs are located in `/var/lib/docker/containers/{id}/{id}-json.log` but microk8s is packaged with snap and it uses it's own docker. So the logs are located in `/var/snap/microk8s/common/var/lib/docker/containers/{id}/{id}-json.log`. You have to mount this location in your log collector for that to work. Following is an example diff for [fluent-bit](https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/output/elasticsearch/fluent-bit-ds.yaml):
 
 ```diff
