@@ -9,6 +9,13 @@ snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
 (cat /proc/mounts | grep ${SNAP_COMMON}/var/lib/docker | cut -d ' ' -f 2 | xargs umount) || true
 (cat /proc/mounts | grep ${SNAP_COMMON}/var/run/docker | cut -d ' ' -f 2 | xargs umount) || true
 
+BTRFS_SUBVOL_DIR=${SNAP_COMMON}/var/lib/docker/btrfs/subvolumes/
+if [ -d ${BTRFS_SUBVOL_DIR} ] ; then
+  for snap in $(ls ${BTRFS_SUBVOL_DIR}) ; do
+    btrfs sub del ${BTRFS_SUBVOL_DIR}/${snap} 2>&1 || true
+  done
+fi
+
 #TODO(kjackal): Make sure this works everywhere we want
 if [ -f /etc/apparmor.d/docker ]; then
   echo "Updating docker-default profile"
