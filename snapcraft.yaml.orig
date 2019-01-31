@@ -10,7 +10,7 @@ description: |-
  testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's 
  also a great k8s for appliances - develop your IoT apps for k8s and deploy 
  them to MicroK8s on your boxes.
-
+ 
 grade: stable
 confinement: classic
 
@@ -188,12 +188,15 @@ parts:
         # Istio support
         rm "actions/enable.istio.sh"
         rm "actions/disable.istio.sh"
+<<<<<<< HEAD
         # added because the completer is still defined
         touch istioctl.bash
+=======
         # Prometheus support
         rm "actions/enable.prometheus.sh"
         rm "actions/disable.prometheus.sh"
         rm -rf "actions/prometheus"
+>>>>>>> Add prometheus
       else
         # Istio addon
         echo "Preparing istio"
@@ -281,4 +284,3 @@ parts:
       else
         echo "Skipped"
       fi
-
