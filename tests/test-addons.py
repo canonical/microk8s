@@ -26,9 +26,9 @@ class TestAddons(object):
         yield
         microk8s_reset()
 
-    def test_dns_dashboard(self):
+    def test_basic(self):
         """
-        Sets up dashboard and validates it works.
+        Sets up and tests dashboard, dns, storage, registry, ingress.
 
         """
         print("Enabling DNS")
@@ -38,16 +38,6 @@ class TestAddons(object):
         microk8s_enable("dashboard")
         print("Validating dashboard")
         validate_dns_dashboard()
-        print("Disabling DNS")
-        microk8s_disable("dns")
-        print("Disabling dashboard")
-        microk8s_disable("dashboard")
-
-    def test_storage_registry(self):
-        """
-        Sets up and tests the storage addon and the private registry.
-
-        """
         print("Enabling storage")
         microk8s_enable("storage")
         print("Validating storage")
@@ -55,23 +45,23 @@ class TestAddons(object):
         microk8s_enable("registry")
         print("Validating registry")
         validate_registry()
-        print("Disabling registry")
-        microk8s_disable("registry")
-        print("Disabling storage")
-        p = Popen("/snap/bin/microk8s.disable storage".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        p.communicate(input=b'Y\n')[0]
-
-    def test_ingress(self):
-        """
-        Sets up ingress addon and validates it works.
-
-        """
         print("Enabling ingress")
         microk8s_enable("ingress")
         print("Validating ingress")
         validate_ingress()
+        print("Validating Port Forward")
+        validate_forward()
+        print("Disabling registry")
+        microk8s_disable("registry")
         print("Disabling ingress")
         microk8s_disable("ingress")
+        print("Disabling storage")
+        p = Popen("/snap/bin/microk8s.disable storage".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        p.communicate(input=b'Y\n')[0]
+        print("Disabling dashboard")
+        microk8s_disable("dashboard")
+        print("Disabling DNS")
+        microk8s_disable("dns")
 
     def test_gpu(self):
         """
@@ -116,14 +106,6 @@ class TestAddons(object):
         microk8s_disable("istio")
         print("Disabling DNS")
         microk8s_disable("dns")
-
-    def test_forward(self):
-        """
-        Test port forward.
-
-        """
-        print("Validating Port Forward")
-        validate_forward()
 
     def test_metrics_server(self):
         """
