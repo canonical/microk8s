@@ -220,7 +220,6 @@ def validate_metrics_server():
 
     assert attempt > 0
 
-
 def validate_prometheus():
     """
     Validate the prometheus operator
@@ -244,3 +243,21 @@ def validate_fluentd():
     wait_for_pod_state("elasticsearch-logging-0", "kube-system", "running")
     wait_for_pod_state("", "kube-system", "running", label="k8s-app=fluentd-es")
     wait_for_pod_state("", "kube-system", "running", label="k8s-app=kibana-logging")
+
+def validate_jaeger():
+    """
+    Validate the jaeger operator
+    """
+    wait_for_pod_state("", "default", "running", label="name=jaeger-operator")
+    attempt = 30
+    while attempt > 0:
+        try:
+            output = kubectl("get ingress")
+            if "simplest-query" in output:
+                break
+        except:
+            pass
+        time.sleep(2)
+        attempt -= 1
+
+    assert attempt > 0
