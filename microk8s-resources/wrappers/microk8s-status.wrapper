@@ -13,13 +13,13 @@ KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
 declare -A addon
 addon[dns]="pod/kube-dns"
 addon[dashboard]="pod/kubernetes-dashboard"
-addon[dashboard]="pod/kubernetes-dashboard"
 addon[ingress]="pod/nginx-ingress-microk8s-controller"
 addon[storage]="pod/hostpath-provisioner"
 addon[registry]="pod/registry"
 addon[metrics-server]="pod/metrics-server"
 addon[istio]="pod/istio"
 addon[gpu]="daemonset.apps/nvidia-device-plugin-daemonset"
+addon[prometheus]="pod/prometheus-k8s-0"
 
 
 function show_help() {

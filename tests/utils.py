@@ -75,12 +75,17 @@ def kubectl_get(target, timeout_insec=300):
     return yaml.load(output)
 
 
-def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label=None):
+def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label=None, timeout_insec=600):
     """
     Wait for a a pod state. If you do not specify a pod name and you set instead a label
     only the first pod will be checked.
     """
+    deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
+        if datetime.datetime.now() > deadline:
+            raise TimeoutError("Pod {} not in {} after {] seconds.".format(pod,
+                                                                           desired_state,
+                                                                           timeout_insec))
         cmd = 'po {} -n {}'.format(pod, namespace)
         if label:
             cmd += ' -l {}'.format(label)
@@ -129,12 +134,13 @@ def wait_for_installation():
     time.sleep(30)
 
 
-def microk8s_enable(addon):
+def microk8s_enable(addon, timeout_insec=300):
     """
     Disable an addon
 
     Args:
         addon: name of the addon
+        timeout_insec: seconds to keep retrying
 
     """
     # NVidia pre-check so as to not wait for a timeout.
@@ -145,7 +151,7 @@ def microk8s_enable(addon):
             raise CalledProcessError(1, "Nothing to do for gpu")
 
     cmd = '/snap/bin/microk8s.enable {}'.format(addon)
-    return run_until_success(cmd, timeout_insec=300)
+    return run_until_success(cmd, timeout_insec)
 
 
 def microk8s_disable(addon):

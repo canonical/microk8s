@@ -7,7 +7,8 @@ from validators import (
     validate_gpu,
     validate_registry,
     validate_forward,
-    validate_metrics_server
+    validate_metrics_server,
+    validate_prometheus
 )
 from subprocess import check_call, CalledProcessError, check_output
 from utils import (
@@ -102,6 +103,14 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_metrics_server()
             test_matrix['metrics_server'] = validate_metrics_server
+        except:
+            print('Will not test the metrics server')
+
+        try:
+            enable = microk8s_enable("prometheus", timeout_insec=30)
+            assert "Nothing to do for" not in enable
+            validate_prometheus()
+            test_matrix['prometheus'] = validate_prometheus
         except:
             print('Will not test the metrics server')
 
