@@ -125,7 +125,7 @@ class TestUpgrade(object):
             print('Will not test the fluentd')
 
         try:
-            enable = microk8s_enable("jaeger")
+            enable = microk8s_enable("jaeger", timeout_insec=30)
             assert "Nothing to do for" not in enable
             validate_jaeger()
             test_matrix['jaeger'] = validate_jaeger

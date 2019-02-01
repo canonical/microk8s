@@ -121,15 +121,27 @@ class TestAddons(object):
         print("Disabling metrics-server")
         microk8s_disable("metrics-server")
 
-    def test_jaeger(self):
+    def test_monitorin_addons(self):
         """
-        Test the jaeger operator.
+        Test jaeger, prometheus and fluentd.
 
         """
+        print("Enabling fluentd")
+        microk8s_enable("fluentd")
+        print("Enabling prometheus")
+        microk8s_enable("prometheus")
         print("Enabling jaeger")
         microk8s_enable("jaeger")
         print("Validating the Jaeger operator")
         validate_jaeger()
+        print("Validating Prometheus")
+        validate_prometheus()
+        print("Validating the Fluentd")
+        validate_fluentd()
         print("Disabling jaeger")
         microk8s_disable("jaeger")
+        print("Disabling fluentd")
+        microk8s_disable("fluentd")
+        print("Disabling prometheus")
+        microk8s_disable("prometheus")
 
