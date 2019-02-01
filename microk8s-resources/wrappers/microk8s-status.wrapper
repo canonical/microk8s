@@ -20,6 +20,7 @@ addon[metrics-server]="pod/metrics-server"
 addon[istio]="pod/istio"
 addon[gpu]="daemonset.apps/nvidia-device-plugin-daemonset"
 addon[prometheus]="pod/prometheus-k8s-0"
+addon[fluentd]="daemonset.apps/fluentd-es-v2.2.0"
 
 
 function show_help() {
