@@ -1,4 +1,5 @@
 import pytest
+import os
 import platform
 
 from validators import (
@@ -21,6 +22,8 @@ from utils import (
     microk8s_reset
 )
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
+
+under_time_pressure = os.environ.get('UNDER_TIME_PRESURE', 'False')
 
 
 class TestAddons(object):
@@ -132,22 +135,26 @@ class TestAddons(object):
             print("Fluentd, prometheus, jaeger tests are only relevant in x86 architectures")
             return
 
-        # Prometheus operator on our lxc is chashlooping disabling the test for now.
-        #print("Enabling prometheus")
-        #microk8s_enable("prometheus")
-        #print("Validating Prometheus")
-        #validate_prometheus()
-        #print("Disabling prometheus")
-        #microk8s_disable("prometheus")
-        print("Enabling fluentd")
-        microk8s_enable("fluentd")
-        print("Validating the Fluentd")
-        validate_fluentd()
-        print("Disabling fluentd")
-        microk8s_disable("fluentd")
-        print("Enabling jaeger")
-        microk8s_enable("jaeger")
-        print("Validating the Jaeger operator")
-        validate_jaeger()
-        print("Disabling jaeger")
-        microk8s_disable("jaeger")
+        if under_time_pressure == 'False':
+            # Prometheus operator on our lxc is chashlooping disabling the test for now.
+            #print("Enabling prometheus")
+            #microk8s_enable("prometheus")
+            #print("Validating Prometheus")
+            #validate_prometheus()
+            #print("Disabling prometheus")
+            #microk8s_disable("prometheus")
+            print("Enabling fluentd")
+            microk8s_enable("fluentd")
+            print("Enabling jaeger")
+            microk8s_enable("jaeger")
+            print("Validating the Jaeger operator")
+            validate_jaeger()
+            print("Validating the Fluentd")
+            validate_fluentd()
+            print("Disabling jaeger")
+            microk8s_disable("jaeger")
+            print("Disabling fluentd")
+            microk8s_disable("fluentd")
+        else:
+            print('Skipping jaeger, prometheus and fluentd tests')
+
