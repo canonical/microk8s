@@ -121,11 +121,15 @@ class TestAddons(object):
         print("Disabling metrics-server")
         microk8s_disable("metrics-server")
 
-    def test_monitorin_addons(self):
+    def test_monitoring_addons(self):
         """
         Test jaeger, prometheus and fluentd.
 
         """
+        if platform.machine() != 'x86_64':
+            print("Fluentd, prometheus, jaeger tests are only relevant in x86 architectures")
+            return
+
         print("Enabling fluentd")
         microk8s_enable("fluentd")
         print("Enabling prometheus")

@@ -1,4 +1,5 @@
 import os
+import platform
 import time
 from validators import (
     validate_dns_dashboard,
@@ -108,29 +109,31 @@ class TestUpgrade(object):
         except:
             print('Will not test the metrics server')
 
-        try:
-            enable = microk8s_enable("prometheus", timeout_insec=30)
-            assert "Nothing to do for" not in enable
-            validate_prometheus()
-            test_matrix['prometheus'] = validate_prometheus
-        except:
-            print('Will not test the prometheus')
+        # AMD64 only tests
+        if platform.machine() == 'x86_64':
+            try:
+                enable = microk8s_enable("prometheus", timeout_insec=30)
+                assert "Nothing to do for" not in enable
+                validate_prometheus()
+                test_matrix['prometheus'] = validate_prometheus
+            except:
+                print('Will not test the prometheus')
 
-        try:
-            enable = microk8s_enable("fluentd", timeout_insec=30)
-            assert "Nothing to do for" not in enable
-            validate_fluentd()
-            test_matrix['fluentd'] = validate_fluentd
-        except:
-            print('Will not test the fluentd')
+            try:
+                enable = microk8s_enable("fluentd", timeout_insec=30)
+                assert "Nothing to do for" not in enable
+                validate_fluentd()
+                test_matrix['fluentd'] = validate_fluentd
+            except:
+                print('Will not test the fluentd')
 
-        try:
-            enable = microk8s_enable("jaeger", timeout_insec=30)
-            assert "Nothing to do for" not in enable
-            validate_jaeger()
-            test_matrix['jaeger'] = validate_jaeger
-        except:
-            print('Will not test the jaeger addon')
+            try:
+                enable = microk8s_enable("jaeger", timeout_insec=30)
+                assert "Nothing to do for" not in enable
+                validate_jaeger()
+                test_matrix['jaeger'] = validate_jaeger
+            except:
+                print('Will not test the jaeger addon')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

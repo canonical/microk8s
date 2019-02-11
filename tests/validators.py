@@ -138,7 +138,7 @@ def validate_istio():
     Validate istio by deploying the bookinfo app.
     """
     if platform.machine() != 'x86_64':
-        print("GPU tests are only relevant in x86 architectures")
+        print("Istio tests are only relevant in x86 architectures")
         return
 
     wait_for_installation()
@@ -248,6 +248,10 @@ def validate_jaeger():
     """
     Validate the jaeger operator
     """
+    if platform.machine() != 'x86_64':
+        print("Jaeger tests are only relevant in x86 architectures")
+        return
+
     wait_for_pod_state("", "default", "running", label="name=jaeger-operator")
     attempt = 30
     while attempt > 0:
