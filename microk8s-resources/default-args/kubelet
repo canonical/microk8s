@@ -11,3 +11,4 @@
 --docker-endpoint unix://${SNAP_DATA}/docker.sock
 --feature-gates=DevicePlugins=true
 --eviction-hard="memory.available<100Mi,nodefs.available<1Gi,imagefs.available<1Gi"
+--node-labels="microk8s.io/cluster=true"
