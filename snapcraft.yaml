@@ -194,6 +194,14 @@ parts:
         rm "actions/enable.prometheus.sh"
         rm "actions/disable.prometheus.sh"
         rm -rf "actions/prometheus"
+        # Fluentd support
+        rm "actions/enable.fluentd.sh"
+        rm "actions/disable.fluentd.sh"
+        rm -rf "actions/fluentd"
+        # Jeager support
+        rm "actions/enable.jaeger.sh"
+        rm "actions/disable.jaeger.sh"
+        rm -rf "actions/jaeger"
       else
         # Istio addon
         echo "Preparing istio"
