@@ -138,7 +138,7 @@ def validate_istio():
     Validate istio by deploying the bookinfo app.
     """
     if platform.machine() != 'x86_64':
-        print("GPU tests are only relevant in x86 architectures")
+        print("Istio tests are only relevant in x86 architectures")
         return
 
     wait_for_installation()
