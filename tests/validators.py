@@ -228,8 +228,8 @@ def validate_prometheus():
         print("Prometheus tests are only relevant in x86 architectures")
         return
 
-    wait_for_pod_state("prometheus-k8s-0", "monitoring", "running")
-    wait_for_pod_state("alertmanager-main-0", "monitoring", "running")
+    wait_for_pod_state("prometheus-k8s-0", "monitoring", "running", timeout_insec=1200)
+    wait_for_pod_state("alertmanager-main-0", "monitoring", "running", timeout_insec=1200)
 
 
 def validate_fluentd():
