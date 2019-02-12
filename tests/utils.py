@@ -90,7 +90,6 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
         if label:
             cmd += ' -l {}'.format(label)
         data = kubectl_get(cmd, timeout_insec)
-        print(data)
         if pod == "":
             if len(data['items']) > 0:
                 status = data['items'][0]['status']
@@ -103,7 +102,6 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
             state, details = list(container_status['state'].items())[0]
             if desired_reason:
                 reason = details.get('reason')
-                print(reason)
                 if state == desired_state and reason == desired_reason:
                     break
             elif state == desired_state:
