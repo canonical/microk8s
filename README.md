@@ -244,6 +244,10 @@ To speed-up a build you can reuse the binaries already downloaded from a previou
 snap install microk8s_v1.10.3_amd64.snap --classic --dangerous
 ```
 
+## How to Use MicroK8s
+
+Check out the "[MicroK8s In The Wild](docs/community.md)" page to see some interesting use cases.
+
 <p align="center">
   <img src="https://assets.ubuntu.com/v1/9309d097-MicroK8s_SnapStore_icon.svg" width="150px">
 </p>
