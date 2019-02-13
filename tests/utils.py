@@ -89,7 +89,7 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
         cmd = 'po {} -n {}'.format(pod, namespace)
         if label:
             cmd += ' -l {}'.format(label)
-        data = kubectl_get(cmd, 300)
+        data = kubectl_get(cmd, timeout_insec)
         if pod == "":
             if len(data['items']) > 0:
                 status = data['items'][0]['status']

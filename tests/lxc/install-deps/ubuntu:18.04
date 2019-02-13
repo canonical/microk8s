@@ -3,5 +3,5 @@
 export $(grep -v '^#' /etc/environment | xargs)
 
 apt-get update
-apt-get install python-pip -y
-pip install -U pytest requests pyyaml
+apt-get install python3-pip -y
+pip3 install -U pytest requests pyyaml
