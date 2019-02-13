@@ -32,14 +32,14 @@ echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
   # Istio is released only on amd64
   if [ "$KUBE_ARCH" = "amd64" ]
   then
-    ISTIO_ERSION=$(echo $ISTIO_VERSION | sed 's/v//g')
-    curl -LO https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux.tar.gz
-    gzip -d istio-${ISTIO_ERSION}-linux.tar.gz
-    tar -xvf istio-${ISTIO_ERSION}-linux.tar
-    mv istio-${ISTIO_ERSION}/bin/istioctl .
+    ISTIO_VERSION=${ISTIO_VERSION:1}
+    curl -LO https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istio-${ISTIO_VERSION}-linux.tar.gz
+    gzip -d istio-${ISTIO_VERSION}-linux.tar.gz
+    tar -xvf istio-${ISTIO_VERSION}-linux.tar
+    mv istio-${ISTIO_VERSION}/bin/istioctl .
     mkdir istio-yaml
-    mv istio-${ISTIO_ERSION}/install/kubernetes/helm/istio/templates/crds.yaml ./istio-yaml/
-    mv istio-${ISTIO_ERSION}/install/kubernetes/istio-demo-auth.yaml ./istio-yaml/
-    mv istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml ./istio-yaml/
+    mv istio-${ISTIO_VERSION}/install/kubernetes/helm/istio/templates/crds.yaml ./istio-yaml/
+    mv istio-${ISTIO_VERSION}/install/kubernetes/istio-demo-auth.yaml ./istio-yaml/
+    mv istio-${ISTIO_VERSION}/install/kubernetes/istio-demo.yaml ./istio-yaml/
   fi
 )
