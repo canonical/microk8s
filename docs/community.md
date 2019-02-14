@@ -1,6 +1,6 @@
 # MicroK8s In The Wild
 
-Welcome to the spot MicroK8s In The Wild page. Here you can find, events, tutorials, blog posts and talks on MicroK8s.
+Welcome to the MicroK8s In The Wild page. Here you can find events, tutorials, blog posts and talks on MicroK8s.
 
 Feel free to update the table below by submitting a Pull Request.
 
