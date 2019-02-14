@@ -13,7 +13,8 @@ else
   exit 1
 fi
 
-sudo sh -c "sed 's@\${SNAP}@'"${SNAP}"'@g;s@\${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@\${RUNTIME}@nvidia-container-runtime@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml"
+sudo mkdir -p ${SNAP_DATA}/var/lock
+sudo touch ${SNAP_DATA}/var/lock/gpu
 
 sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
 containerd_up=$(wait_for_service containerd)
