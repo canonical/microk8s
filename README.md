@@ -33,7 +33,7 @@ microk8s.status --wait-ready
 ```
 
 > In order to install MicroK8s make sure
-> - port 8080 is not used
+> - you go though the [list of ports](docs/ports.md) that need to be available
 
 ### Accessing Kubernetes
 
@@ -190,7 +190,7 @@ By default container logs are located in `/var/log/pods/{id}`. You have to mount
        - name: varlibdockercontainers
          hostPath:
 -          path: /var/lib/docker/containers
-+          path: /var/log/pods/
++          mountPath: /var/snap/microk8s/common/var/lib/containerd/
        - name: fluent-bit-config
          configMap:
            name: fluent-bit-config
