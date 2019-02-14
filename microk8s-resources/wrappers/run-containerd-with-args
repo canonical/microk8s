@@ -20,7 +20,12 @@ fi
 
 app=containerd
 
-sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${RUNTIME}@runc@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml
+if [ -e "${SNAP_DATA}/var/lock/gpu" ]; then
+  RUNTIME="nvidia-container-runtime"
+else
+  RUNTIME="runc"
+fi
+sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${RUNTIME}@'"${RUNTIME}"'@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml
 
 # This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/$app))"
