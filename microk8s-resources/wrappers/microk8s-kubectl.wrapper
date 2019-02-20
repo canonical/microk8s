@@ -6,4 +6,6 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 source $SNAP/actions/common/utils.sh
 
 exit_if_stopped
-${SNAP}/kubectl --kubeconfig=${SNAP}/client.config "$@"
+
+declare -a args="($(cat $SNAP_DATA/args/kubectl))"
+"${SNAP}/kubectl" "${args[@]}" "$@"
