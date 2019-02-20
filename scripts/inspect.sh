@@ -32,9 +32,9 @@ function check_service {
 function check_apparmor {
   # Collect apparmor info.
   mkdir -p $INSPECT_DUMP/apparmor
-  if [ -f /etc/apparmor.d/docker ]
+  if [ -f /etc/apparmor.d/containerd ]
   then
-    cp /etc/apparmor.d/docker $INSPECT_DUMP/apparmor/
+    cp /etc/apparmor.d/containerd $INSPECT_DUMP/apparmor/
   fi
   dmesg &> $INSPECT_DUMP/apparmor/dmesg
   aa-status &> $INSPECT_DUMP/apparmor/aa-status
@@ -73,10 +73,10 @@ function store_kubernetes_info {
   # Collect some in-k8s details
   printf -- '  Inspect kubernetes cluster\n'
   mkdir -p $INSPECT_DUMP/k8s
-  /snap/bin/microk8s.kubectl version &> $INSPECT_DUMP/k8s/version
-  /snap/bin/microk8s.kubectl cluster-info &> $INSPECT_DUMP/k8s/cluster-info
-  /snap/bin/microk8s.kubectl cluster-info dump &> $INSPECT_DUMP/k8s/cluster-info-dump
-  /snap/bin/microk8s.kubectl get all --all-namespaces &> $INSPECT_DUMP/k8s/get-all
+  /snap/bin/microk8s.kubectl version | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
+  /snap/bin/microk8s.kubectl cluster-info | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
+  /snap/bin/microk8s.kubectl cluster-info dump | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+  /snap/bin/microk8s.kubectl get all --all-namespaces | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
 }
 
 
@@ -124,7 +124,7 @@ rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
 
 printf -- 'Inspecting services\n'
-check_service "snap.microk8s.daemon-docker"
+check_service "snap.microk8s.daemon-containerd"
 check_service "snap.microk8s.daemon-apiserver"
 check_service "snap.microk8s.daemon-proxy"
 check_service "snap.microk8s.daemon-kubelet"
