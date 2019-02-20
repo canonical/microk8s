@@ -149,7 +149,6 @@ def validate_istio():
         "galley",
         "ingressgateway",
         "sidecar-injector",
-        "statsd-prom-bridge",
     ]
     for service in istio_services:
         wait_for_pod_state("", "istio-system", "running", label="istio={}".format(service))
