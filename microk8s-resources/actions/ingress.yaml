@@ -109,5 +109,5 @@ spec:
         args:
         - /nginx-ingress-controller
         - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
-        - --configmap=$(POD_NAMESPACE)/nginx-load-balancer-conf
+        - --configmap=$(POD_NAMESPACE)/nginx-load-balancer-microk8s-conf
         $EXTRA_ARGS
