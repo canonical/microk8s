@@ -81,6 +81,7 @@ spec:
       terminationGracePeriodSeconds: 60
       # hostPort doesn't work with CNI, so we have to use hostNetwork instead
       # see https://github.com/kubernetes/kubernetes/issues/23920
+      dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       serviceAccountName: nginx-ingress-microk8s-serviceaccount
       containers:
