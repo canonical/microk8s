@@ -22,7 +22,7 @@ mkdir -p "${SNAP_USER_DATA}/tmp"
 touch "${tmp_manifest}"
 for type in rolebindings roles clusterrolebindings clusterroles; do
     echo -e "---\n" >> "${tmp_manifest}"
-    "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get ${type} --all-namespaces -o yaml >> "${tmp_manifest}"
+    "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get ${type} --all-namespaces --selector kubernetes.io/bootstrapping=rbac-defaults -o yaml >> "${tmp_manifest}"
 done
 "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" delete -f "${tmp_manifest}"
 rm "${tmp_manifest}"
