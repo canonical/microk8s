@@ -283,3 +283,12 @@ def validate_linkerd():
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "emojivoto", "running", label="app=emoji-svc")
     kubectl("delete -f {}".format(manifest))
+    
+def validate_rbac():
+    """
+    Validate RBAC is actually on
+    """
+    output = kubectl("auth can-i --as=system:serviceaccount:default:default view pod")
+    assert "no" in output
+    output = kubectl("auth can-i --as=admin --as-group=system:masters view pod")
+    assert "yes" in output
