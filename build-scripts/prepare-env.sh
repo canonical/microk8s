@@ -15,10 +15,10 @@ export ETCD_VERSION="${ETCD_VERSION:-v3.3.4}"
 export CNI_VERSION="${CNI_VERSION:-v0.7.1}"
 export ISTIO_VERSION="${ISTIO_VERSION:-v1.0.5}"
 # RUNC commit matching the containerd release commit
-# Tag 1.2.2
-export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-9754871865f7fe2f4e74d43e2fc7ccd237edcbce}"
-# Release v1.0.0~rc6
-export RUNC_COMMIT="${RUNC_COMMIT:-ccb5efd37fb7c86364786e9137e22948751de7ed}"
+# Tag 1.2.4
+export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-e6b3f5632f50dbc4e9cb6288d911bf4f5e95b18e}"
+# Release v1.0.0~rc6 with CVE-2019-5736 fix
+export RUNC_COMMIT="${RUNC_COMMIT:-6635b4f0c6af3810594d2770f662f34ddc15b40d}"
 
 export KUBE_TRACK="${KUBE_TRACK:-}"
 export KUBE_SNAP_BINS="${KUBE_SNAP_BINS:-}"
