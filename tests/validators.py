@@ -274,12 +274,8 @@ def validate_linkerd():
         return
 
     wait_for_installation()
-    linkerd_services = [
-        "linkerd-controller",
-        "linkerd-web",
-    ]
-    for service in linkerd_services:
-        wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-ns={}".format(service))
+
+    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-ns")
 
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "emojivoto.yaml")
