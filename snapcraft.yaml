@@ -64,6 +64,8 @@ apps:
   istioctl:
     command: microk8s-istioctl.wrapper
     completer: istioctl.bash
+  linkerd:
+    command: microk8s-linkerd.wrapper
 
 parts:
   libnftnl:
@@ -211,6 +213,9 @@ parts:
         ./istioctl collateral completion --bash -o .
         sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -F __start_istioctl microk8s.istioctl/g" istioctl.bash
         sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -o nospace -F __start_istioctl microk8s.istioctl/g" istioctl.bash
+
+        echo "Preparing Linkerd"
+        cp $KUBE_SNAP_BINS/linkerd .
       fi
 
       echo "Creating inspect hook"

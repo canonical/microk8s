@@ -13,6 +13,7 @@ from validators import (
     validate_prometheus,
     validate_fluentd,
     validate_jaeger,
+    validate_linkerd,
 )
 from utils import microk8s_enable, wait_for_pod_state, microk8s_disable, microk8s_reset
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError

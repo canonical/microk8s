@@ -22,6 +22,7 @@ addon[gpu]="daemonset.apps/nvidia-device-plugin-daemonset"
 addon[prometheus]="pod/prometheus-k8s-0"
 addon[fluentd]="daemonset.apps/fluentd-es-v2.2.0"
 addon[jaeger]="pod/jaeger-operator"
+addon[linkerd]="pod/linkerd-controller"
 
 
 function show_help() {
