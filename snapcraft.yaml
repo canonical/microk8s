@@ -204,6 +204,9 @@ parts:
         rm "actions/enable.jaeger.sh"
         rm "actions/disable.jaeger.sh"
         rm -rf "actions/jaeger"
+        # Linkerd support
+        rm "actions/enable.linkerd.sh"
+        rm "actions/disable.linkerd.sh"
       else
         # Istio addon
         echo "Preparing istio"

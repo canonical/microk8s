@@ -146,3 +146,19 @@ class TestAddons(object):
         validate_jaeger()
         print("Disabling jaeger")
         microk8s_disable("jaeger")
+
+    def test_linkerd(self):
+        """
+        Sets up and validate linkerd
+
+        """
+        if platform.machine() != 'x86_64':
+            print("Linkerd tests are only relevant in x86 architectures")
+            return
+
+        print("Enabling Linkerd")
+        microk8s_enable("linkerd")
+        print("Validating Linkerd")
+        validate_linkerd()
+        print("Disabling Linkerd")
+        microk8s_disable("linkerd")
