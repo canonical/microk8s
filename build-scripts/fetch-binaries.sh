@@ -44,10 +44,10 @@ echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
     
     #Linkerd on Linux    
     echo "Fetching linkerd binary."
-    LINKERD_VERSION="2.2.1"
     
-    curl -LO https://github.com/linkerd/linkerd2/releases/download/stable-$LINKERD_VERSION/linkerd2-cli-stable-$LINKERD_VERSION-linux
-    mv linkerd2-cli-stable-$LINKERD_VERSION-linux linkerd
+    LINKERD_VERSION=$(echo $LINKERD_VERSION | sed 's/v//g')
+    curl -LO https://github.com/linkerd/linkerd2/releases/download/stable-${LINKERD_VERSION}/linkerd2-cli-stable-${LINKERD_VERSION}-linux
+    mv linkerd2-cli-stable-${LINKERD_VERSION}-linux linkerd
     chmod +x linkerd
   fi
 
