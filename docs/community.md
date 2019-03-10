@@ -15,9 +15,9 @@ Feel free to update the table below by submitting a Pull Request.
 | [Get into Kubernetes with MicroK8s](https://medium.com/devopslinks/get-into-kubernetes-with-microk8s-85f0e0231c4a) | Milindu S. Kumarage | medium.com | 06-Jan-2019 |
 | [Serverless MicroK8s Kubernetes](https://medium.com/@bluszcz/serverless-microk8s-kubernetes-fcd6b875cd33) | Rafał bluszcz Zawadzki | medium.com | 06-Jan-2019 |
 | [Deploy OpenFaaS with MicroK8s](https://johnmccabe.net/technology/projects/openfaas-on-microk8s/) | John McCabe | johnmccabe.net | 01-Jan-2019 |
-| [Docker desktop, microk8s and the battle for the k8s laptop](https://blog.linnovate.net/docker-desktop-microk8s-and-the-battle-for-the-k8s-laptop-8d3fb50dd543) | liorkesos | blog.linnovate.net | 18-Dec-2019 |
-| [Canonical Launches MicroK8s](http://www.linux-magazine.com/Online/News/Canonical-Launches-MicroK8s) | Swapnil Bhartiya | linux-magazine.com | 12-Dec-2019 |
-| [Kubernetes single node cluster using microk8s](https://www.youtube.com/watch?v=FEELm-o__gU) | Just me and Opensource | youtube.com | 02-Dec-2019 |
+| [Docker desktop, microk8s and the battle for the k8s laptop](https://blog.linnovate.net/docker-desktop-microk8s-and-the-battle-for-the-k8s-laptop-8d3fb50dd543) | liorkesos | blog.linnovate.net | 18-Dec-2018 |
+| [Canonical Launches MicroK8s](http://www.linux-magazine.com/Online/News/Canonical-Launches-MicroK8s) | Swapnil Bhartiya | linux-magazine.com | 12-Dec-2018 |
+| [Kubernetes single node cluster using microk8s](https://www.youtube.com/watch?v=FEELm-o__gU) | Just me and Opensource | youtube.com | 02-Dec-2018 |
 | [Getting started with Kubeflow (machine learning toolkit for Kubernetes) via Microk8s and Multipass](https://github.com/leigh-johnson/kubeflow-microk8s-demo) | Leigh Johnson | github.com | 20-Nov-2018 |
 | [Kubernetes CICD Hacks with MicroK8s and Kubeflow](https://www.youtube.com/watch?v=1SSvS2w5OMQ), KubeCon China 2018 | Land Lu, Zhang Lei Mao from Canonical | KubeCon 2018 | 14-Nov-2018 |
 | [Kubernetes On A Laptop](https://kubedex.com/local-kubernetes/) | Steven Acreman | kubedex.com | 03-Nov-2018 |
