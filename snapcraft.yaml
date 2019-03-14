@@ -139,7 +139,6 @@ parts:
     build-attributes: [no-patchelf]
     build-packages:
     - curl
-    - openssl
     - file
     stage-packages:
     - net-tools
@@ -148,6 +147,7 @@ parts:
     - socat
     - iproute2
     - dpkg
+    - openssl
     - conntrack
     - aufs-tools
     - gawk
@@ -169,7 +169,7 @@ parts:
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/default-args .
 
       echo "Building certs"
-      build-scripts/build-certs.sh
+      cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs .
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs-beta .
 
       echo "Preparing cni"
@@ -185,7 +185,9 @@ parts:
 
       echo "Preparing kube-apiserver"
       cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-apiserver .
-      cp $KUBE_SNAP_ROOT/microk8s-resources/known_token.csv .
+      # Old versions will be pointing to these .csv files from inside their kube-apiserver config
+      # Keep them around for a couple of releases.
+      touch known_token.csv
       cp $KUBE_SNAP_ROOT/microk8s-resources/basic_auth.csv .
 
       echo "Preparing kube-controller-manager"
@@ -208,6 +210,7 @@ parts:
 
       echo "Preparing user config"
       cp $KUBE_SNAP_ROOT/microk8s-resources/client.config .
+      cp $KUBE_SNAP_ROOT/microk8s-resources/client.config.template .
 
       echo "Creating commands and wrappers"
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .

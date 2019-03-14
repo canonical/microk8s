@@ -34,7 +34,6 @@ microk8s.status --wait-ready
 
 > In order to install MicroK8s make sure
 > - you go though the [list of ports](docs/ports.md) that need to be available
-> - if you have AppArmor enabled (check with `sudo apparmor_status`) you do not have any other [dockerd installed](docs/dockerd.md). You can use the dockerd coming with MicroK8s.
 
 ### Accessing Kubernetes
 
@@ -171,13 +170,6 @@ The MicroK8s inspect command can be used to check the firewall configuration:
 `microk8s.inspect`
 
 A warning will be shown if the firewall is not forwarding traffic.
-
-### My host machine changed IP and now MicroK8s is not working properly.
-The host machine IP may change whenever you switch places with your laptop or you go through a suspend/resume cycle. The kubernetes API server advertises this IP (taken from the default interface) to all kubernetes cluster members. Services such as DNS and the dashboard will lose connectivity to API server in case the host IP changes. You will need to restart MicroK8s whenever this happens:
-```
-microk8s.stop
-microk8s.start
-```
 
 ### My log collector is not collecting any logs.
 By default container logs are located in `/var/log/pods/{id}`. You have to mount this location in your log collector for that to work. Following is an example diff for [fluent-bit](https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/output/elasticsearch/fluent-bit-ds.yaml):
