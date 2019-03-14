@@ -147,7 +147,6 @@ parts:
     - socat
     - iproute2
     - dpkg
-    - openssl
     - conntrack
     - aufs-tools
     - gawk
