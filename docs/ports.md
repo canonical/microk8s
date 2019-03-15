@@ -41,7 +41,7 @@ etcd | unix://etcd.socket:2379
 
 ## Authentication and Authorization
 
-Upon a new deployment MicroK8s creates a new CA, a signed server certificate and a service account key file. These files are stored under `/var/microk8s/current/certs`. Kubelet and the API server are aware of the same CA and so the signed server certificate is used by the API server to authenticate with kubelet (`--kubelet-client-certificate`). Clients talking to the secure port of the API server (`6443`) have to also be aware of the CA (`certificate-authority-data` in user kubeconfig).
+Upon a new deployment MicroK8s creates a new CA, a signed server certificate and a service account key file. These files are stored under `/var/microk8s/current/certs`. Kubelet and the API server are aware of the same CA and so the signed server certificate is used by the API server to authenticate with kubelet (`--kubelet-client-certificate`). Clients talking to the secure port of the API server (`16443`) have to also be aware of the CA (`certificate-authority-data` in user kubeconfig).
 
 Authentication of users is done with a [Static Password File](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#authentication-strategies) also generated at first MicroK8s deployment. Password tokens and usernames are stored in the `basic_token.csv` file available under `/var/snap/microk8s/current/credentials/`. Also under `/var/snap/microk8s/current/credentials/` you can find the `client.config` kubeconfig file used by `microk8s.kubectl`.
 
