@@ -35,6 +35,8 @@ function create_machine() {
   sleep 20
   tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /tmp
   lxc exec $NAME -- /bin/bash "/tmp/tests/lxc/install-deps/$DISTRO"
+  lxc exec $NAME -- reboot
+  sleep 20
 }
 
 set -uex

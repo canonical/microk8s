@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+pacman -S --noconfirm --needed base-devel
+pacman -S --noconfirm --needed git
+useradd user
+echo "user ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+mkdir /home/user
+chown user:user /home/user
+cd /tmp
+su user -c "git clone https://aur.archlinux.org/snapd.git"
+su user -c "cd snapd; makepkg -si --noconfirm"
+sudo systemctl enable --now snapd.socket
+sudo ln -s /var/lib/snapd/snap /snap
+su user -c "git clone https://aur.archlinux.org/squashfuse-git.git"
+su user -c "cd squashfuse-git; makepkg -si --noconfirm"
+pacman -S --noconfirm --needed fuse3
+echo "PATH=$PATH:/snap/bin" >> /etc/profile
+
