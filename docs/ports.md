@@ -29,13 +29,13 @@ Port | Service | Description
 
 Note that this is not an exhaustive list of ports used.
 
-### Docker and etcd
+### Containerd and etcd
 
 Both these services are exposed through unix sockets.
 
 Service | Socket
 --- | ---
-docker | unix:///var/snap/microk8s/current/docker.sock
+containerd | unix:///var/snap/microk8s/common/run/containerd.sock
 etcd | unix://etcd.socket:2379
 
 
