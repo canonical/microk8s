@@ -15,4 +15,15 @@ su user -c "git clone https://aur.archlinux.org/squashfuse-git.git"
 su user -c "cd squashfuse-git; makepkg -si --noconfirm"
 pacman -S --noconfirm --needed fuse3
 echo "PATH=$PATH:/snap/bin" >> /etc/profile
+pacman -S --noconfirm python-pip
+pacman -S --noconfirm python
+pip3 install -U pytest requests pyyaml
 
+# wait for the snapd seeding to take place!
+n=0
+until [ $n -ge 7 ]
+do
+  sudo snap install core && break  # substitute your command here
+  n=$[$n+1]
+  sleep 10
+done

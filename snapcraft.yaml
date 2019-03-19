@@ -111,13 +111,13 @@ parts:
     - curl
     - openssl
     - file
+    - dpkg
     stage-packages:
     - net-tools
     - util-linux
     - zfsutils-linux
     - socat
     - iproute2
-    - dpkg
     source: .
     override-build: |
       set -eu
