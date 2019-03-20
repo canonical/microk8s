@@ -230,7 +230,7 @@ snapcraft cleanbuild
 To produce a custome build with specific component versions we need to prepare an LXC container with Ubuntu 16:04 and snapcraft:
 ```
 lxc launch ubuntu:16.04 --ephemeral test-build
-lxc exec test-build -- snap install snapcraft --channel candidate --classic
+lxc exec test-build -- snap install snapcraft --classic
 lxc exec test-build -- apt update
 lxc exec test-build -- git clone https://github.com/ubuntu/microk8s
 ```
