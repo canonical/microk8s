@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
+export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+export XDG_RUNTIME_DIR="${SNAP_COMMON}/run"
+mkdir -p "${XDG_RUNTIME_DIR}"
+
+if [ -d "/etc/apparmor.d" ]; then
+  echo "Using a default profile template"
+  cp ${SNAP}/containerd-profile /etc/apparmor.d/cri-containerd.apparmor.d
+  echo "Reloading AppArmor profiles"
+  if ! service apparmor reload
+  then
+    echo "AppArmor profiles loading failed. AppArmor may be unavailable on this host."
+  fi
+fi
+
+app=containerd
+
+if [ -e "${SNAP_DATA}/var/lock/gpu" ]; then
+  RUNTIME="nvidia-container-runtime"
+else
+  RUNTIME="runc"
+fi
+sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${RUNTIME}@'"${RUNTIME}"'@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml
+
+# This is really the only way I could find to get the args passed in correctly. WTF
+declare -a args="($(cat $SNAP_DATA/args/$app))"
+set -a
+. "${SNAP_DATA}/args/${app}-env"
+set +a
+exec "$SNAP/bin/$app" "${args[@]}"

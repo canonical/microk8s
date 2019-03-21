@@ -8,20 +8,19 @@ app=$1
 
 if [ "${app}" = "kubelet" ]
 then
-  # wait for docker socket
-  if grep -e "-H " $SNAP_DATA/args/dockerd &> /dev/null
+  # wait for containerd socket
+  if grep -e "--address " $SNAP_DATA/args/containerd &> /dev/null
   then
-    socket=$(grep -e "-H " $SNAP_DATA/args/dockerd | awk '{print $2}')
-    socket_file=${socket#"unix://"}
-    # socket_file may be of the form ${SNAP_DATA}/docker.sock
+    socket=$(grep -e "--address " $SNAP_DATA/args/containerd | awk '{print $2}')
+    # socket_file may be of the form ${SNAP_DATA}/containerd.sock
     # we need to replace any variables
-    socket_file_expand=$(eval echo ${socket_file})
+    socket_file_expand=$(eval echo ${socket})
     # wait up until 20 seconds for the docker socket to appear
     n=0
     until [ $n -ge 10 ]
     do
       test -S "${socket_file_expand}" && break
-      echo "Waiting for docker socket ${socket_file_expand} to appear. (attempt $n)"
+      echo "Waiting for containerd socket ${socket_file_expand} to appear. (attempt $n)"
       n=$[$n+1]
       sleep 2
     done
@@ -57,10 +56,6 @@ then
     # microk8s.stop and then snap start microk8s
     rm -f ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
   fi
-else
-  # ensure docker dirs
-  mkdir -p $SNAP_COMMON/var/run/docker
-  mkdir -p $SNAP_COMMON/var/lib/docker
 fi
 
 # This is really the only way I could find to get the args passed in correctly. WTF
