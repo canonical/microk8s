@@ -129,6 +129,13 @@ parts:
       # snapcraftctl build
     organize:
       containerd/install/bin/*: bin/
+    stage-packages:
+    - conntrack
+    - aufs-tools
+    - gawk
+    - sed
+    - libssl1.0.0
+    - coreutils
     stage:
     - -sbin/xtables-multi
     - -sbin/iptables*
@@ -148,12 +155,6 @@ parts:
     - socat
     - iproute2
     - dpkg
-    - conntrack
-    - aufs-tools
-    - gawk
-    - sed
-    - libssl1.0.0
-    - coreutils
     source: .
     override-build: |
       set -eu
