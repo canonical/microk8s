@@ -79,3 +79,31 @@ use_manifest() {
     use_manifest_result="$?"
     rm "${tmp_manifest}"
 }
+
+addon_name() {
+    # Extracts the addon from the argument.
+    # addons can have arguments in the form of <addon-name>:<arg1>=<value1>;<arg2>=<value2>
+    # Example: enable linkerd:proxy-auto-inject=on;other-args=xyz
+    # Parameter:
+    #   $1 the full addon command
+    # Returns:
+    #   <addon-name>
+
+    local IFS=':'
+    read -ra ADD_ON <<< "$1"
+    echo "${ADD_ON[0]}"
+}
+
+addon_arguments() {
+    # Extracts the addon arguments.
+    # Example: enable linkerd:proxy-auto-inject=on;other-args=xyz
+    # Parameter:
+    #   $1 the addon arguments in array
+    # Returns:
+    #   add-on arguments array
+    local IFS=':'
+    read -ra ADD_ON <<< "$1"
+    local IFS=';'
+    read -ra ARGUMENTS <<< "${ADD_ON[1]}"
+    echo "${ARGUMENTS[@]}"
+}

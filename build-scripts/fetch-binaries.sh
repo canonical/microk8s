@@ -42,13 +42,6 @@ echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
     mv istio-${ISTIO_ERSION}/install/kubernetes/istio-demo-auth.yaml ./istio-yaml/
     mv istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml ./istio-yaml/
     
-    #Linkerd on Linux    
-    echo "Fetching linkerd binary."
-    
-    LINKERD_VERSION=$(echo $LINKERD_VERSION | sed 's/v//g')
-    curl -LO https://github.com/linkerd/linkerd2/releases/download/stable-${LINKERD_VERSION}/linkerd2-cli-stable-${LINKERD_VERSION}-linux
-    mv linkerd2-cli-stable-${LINKERD_VERSION}-linux linkerd
-    chmod +x linkerd
   fi
 
 )

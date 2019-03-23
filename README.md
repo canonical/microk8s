@@ -93,6 +93,7 @@ With `microk8s.status` you can see the list of available addons and which ones a
 - **prometheus**: Deploy the [Prometheus Operator](https://github.com/coreos/prometheus-operator) v0.25.
 - **fluentd**: Deploy [Elasticsearch-Kibana-Fluentd](https://kubernetes.io/docs/tasks/debug-application-cluster/logging-elasticsearch-kibana/) logging and monitoring solution.
 - **jaeger**: Deploy the [Jaeger Operator](https://github.com/jaegertracing/jaeger-operator) v1.8.2 in the "simplest" configuration.
+- **linkerd**: Deploy linkerd2 [Linkerd](https://linkerd.io/2/overview/) service mesh.  By default proxy auto inject is not enabled. , To enable auto proxy injection, simply use `microk8s.enable linkerd:--proxy-auto-inject`.
 
 ### Stopping and Restarting MicroK8s
 

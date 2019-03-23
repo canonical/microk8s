@@ -8,7 +8,7 @@ echo "Disabling Linkerd"
 
 echo "Removing linkerd control plane"
 
-"$SNAP/linkerd" install | "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" delete -f -
+"$SNAP_DATA/linkerd" install | "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" delete -f -
 
 echo "Linkerd is terminating"
 echo "Please remove all services injected with Linkerd data plane."

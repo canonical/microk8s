@@ -30,6 +30,9 @@ clean_cluster() {
     n=$[$n+1]
     sleep 20
   done
+
+  echo "Cleaning up addons client binaries.."
+  rm -r $SNAP_DATA/bin/*
 }
 
 exit_if_stopped
