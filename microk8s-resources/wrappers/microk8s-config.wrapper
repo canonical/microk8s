@@ -35,9 +35,9 @@ while true; do
 done
 
 if [[ "$USE_LOOPBACK" == "true" ]]; then
-    cat "$SNAP/client.config"
+    cat "$SNAP_DATA/credentials/client.config"
 else
     DEFAULT_INTERFACE="$(netstat -rn | grep '^0.0.0.0' | awk '{print $NF}' | head -1)"
     IP_ADDR="$(ifconfig "$DEFAULT_INTERFACE" | grep 'inet ' | "$SNAP/usr/bin/gawk" '{print $2}' | "$SNAP/bin/sed" -e 's/addr://')"
-    "$SNAP/bin/sed" -e "s/127.0.0.1/$IP_ADDR/" "$SNAP/client.config"
+    "$SNAP/bin/sed" -e "s/127.0.0.1/$IP_ADDR/" "$SNAP_DATA/credentials/client.config"
 fi

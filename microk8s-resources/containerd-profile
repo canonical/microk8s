@@ -3,7 +3,7 @@
 #include <tunables/global>
 
 
-profile docker-default flags=(attach_disconnected,mediate_deleted) {
+profile cri-containerd.apparmor.d flags=(attach_disconnected,mediate_deleted) {
 
   #include <abstractions/base>
 
@@ -35,7 +35,8 @@ profile docker-default flags=(attach_disconnected,mediate_deleted) {
 
 
   # suppress ptrace denials when using 'docker ps' or using 'ps' inside a container
-  ptrace (trace,read) peer=docker-default,
+  ptrace (trace,read) peer=cri-containerd.apparmod.d,
 
-  signal (receive) peer=snap.microk8s.daemon-docker,
+  signal (receive) peer=snap.microk8s.daemon-kubelet,
+  signal (receive) peer=snap.microk8s.daemon-containerd,
 }
