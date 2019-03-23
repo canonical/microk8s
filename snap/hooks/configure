@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-set -eux
+set -eu
+
+source $SNAP/actions/common/utils.sh
 
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
@@ -37,13 +39,53 @@ then
   "$SNAP/bin/sed" -i 's@requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt@requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
 fi
 
-if [ ! -e ${SNAP_DATA}/args/dockerd-env ]
-then
-  echo "Making sure we have dockerd-env file"
-  cp ${SNAP}/default-args/dockerd-env ${SNAP_DATA}/args/dockerd-env
-  systemctl restart snap.${SNAP_NAME}.daemon-docker
-fi
-
 # Create the locks directory
 mkdir -p ${SNAP_DATA}/var/lock/
 
+# This will allow us to refresh the snap to the more secure version.
+# We need to make sure the client certificate used in microk8s.kubectl is available under $SNAP_DATA
+if [ ! -f ${SNAP_DATA}/credentials/client.config ]
+then
+  echo "Patching client config location"
+  mkdir -p ${SNAP_DATA}/credentials/
+  cp ${SNAP}/client.config ${SNAP_DATA}/credentials/
+fi
+
+# Upgrading to containerd
+if [ ! -e ${SNAP_DATA}/args/kubectl ]
+then
+  echo "Making sure we have kubectl arguments file"
+  cp ${SNAP}/default-args/kubectl ${SNAP_DATA}/args/kubectl
+fi
+
+# Upgrading to containerd
+if [ ! -e ${SNAP_DATA}/args/containerd ]
+then
+  echo "Making sure we have containerd file"
+  cp ${SNAP}/default-args/containerd ${SNAP_DATA}/args/containerd
+  cp ${SNAP}/default-args/containerd-template.toml ${SNAP_DATA}/args/containerd-template.toml
+  cp ${SNAP}/default-args/containerd-env ${SNAP_DATA}/args/containerd-env
+
+  cp -r ${SNAP}/default-args/cni-network ${SNAP_DATA}/args/
+
+  cp ${SNAP}/default-args/ctr ${SNAP_DATA}/args/ctr
+
+  refresh_opt_in_config container-runtime remote kubelet
+  refresh_opt_in_config container-runtime-endpoint \${SNAP_COMMON}/run/containerd.sock kubelet
+
+  skip_opt_in_config docker-root kubelet
+  skip_opt_in_config docker kubelet
+  skip_opt_in_config docker-endpoint kubelet
+
+  systemctl restart snap.${SNAP_NAME}.daemon-containerd
+  systemctl restart snap.${SNAP_NAME}.daemon-kubelet
+
+  if [ -e ${SNAP_DATA}/args/dockerd ] && grep -e "default-runtime=nvidia" ${SNAP_DATA}/args/dockerd
+  then
+    # Deployment used to run docker with nvidia enabled we need to enable nvidia on containerd
+    # Allow for kubelet and containerd to restart
+    sleep 10
+    ${SNAP}/microk8s-enable.wrapper gpu
+  fi
+
+fi

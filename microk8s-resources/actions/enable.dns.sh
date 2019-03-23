@@ -17,4 +17,5 @@ refresh_opt_in_config "cluster-domain" "cluster.local" kubelet
 refresh_opt_in_config "cluster-dns" "10.152.183.10" kubelet
 
 sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
+
 echo "DNS is enabled"

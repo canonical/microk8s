@@ -21,6 +21,9 @@ clean_cluster() {
     $KUBECTL delete $REMOVEABLE_NSES
   fi
 
+  echo "Removing CRDs"
+  $KUBECTL delete --all customresourcedefinitions.apiextensions.k8s.io
+
   # Wait for 200 secs at most.
   echo "Waiting for kubernetes resources to be released"
   n=0
@@ -36,6 +39,13 @@ clean_cluster() {
 }
 
 exit_if_stopped
-sudo systemctl restart snap.${SNAP_NAME}.daemon-docker
+
+if systemctl status snap.${SNAP_NAME}.daemon-docker >& /dev/null
+then
+  sudo systemctl restart snap.${SNAP_NAME}.daemon-docker
+elif systemctl status snap.${SNAP_NAME}.daemon-containerd >& /dev/null
+then
+  sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
+fi
 clean_cluster
 sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver

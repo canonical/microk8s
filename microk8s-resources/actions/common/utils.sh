@@ -75,7 +75,7 @@ use_manifest() {
     do
         "$SNAP/bin/sed" -i 's@'$i'@'"${items[$i]}"'@g' "${tmp_manifest}"
     done
-    "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" "$action" -f "${tmp_manifest}"
+    "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" "$action" -f "${tmp_manifest}"
     use_manifest_result="$?"
     rm "${tmp_manifest}"
 }
@@ -106,4 +106,21 @@ addon_arguments() {
     local IFS=';'
     read -ra ARGUMENTS <<< "${ADD_ON[1]}"
     echo "${ARGUMENTS[@]}"
+}
+
+wait_for_service() {
+    # Wait for a service to start
+    # Return fail if the service did not start in 30 seconds
+    local service_name="$1"
+    local TRY_ATTEMPT=0
+    while ! (sudo systemctl is-active --quiet snap.${SNAP_NAME}.daemon-${service_name}) &&
+          ! [ ${TRY_ATTEMPT} -eq 30 ]
+    do
+        TRY_ATTEMPT=$((TRY_ATTEMPT+1))
+        sleep 1
+    done
+    if [ ${TRY_ATTEMPT} -eq 30 ]
+    then
+        echo "fail"
+    fi
 }

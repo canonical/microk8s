@@ -24,6 +24,7 @@ from utils import (
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
 # Have UPGRADE_MICROK8S_TO point to a file to upgrade to that file
 upgrade_to = os.environ.get('UPGRADE_MICROK8S_TO', 'edge')
+under_time_pressure = os.environ.get('UNDER_TIME_PRESURE', 'False')
 
 
 class TestUpgrade(object):
@@ -110,7 +111,7 @@ class TestUpgrade(object):
             print('Will not test the metrics server')
 
         # AMD64 only tests
-        if platform.machine() == 'x86_64':
+        if platform.machine() == 'x86_64' and under_time_pressure == 'False':
             '''
             Prometheus operator on our lxc is chashlooping disabling the test for now.
             try:
