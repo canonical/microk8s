@@ -135,6 +135,7 @@ parts:
     - gawk
     - sed
     - libssl1.0.0
+    - openssl
     - coreutils
     stage:
     - -sbin/xtables-multi
@@ -146,7 +147,6 @@ parts:
     build-attributes: [no-patchelf]
     build-packages:
     - curl
-    - openssl
     - file
     stage-packages:
     - net-tools
