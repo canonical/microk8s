@@ -20,7 +20,7 @@ rm -rf .srl
 
 # Create the basic tokens
 mkdir ${SNAP_DATA}/credentials
-admin_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+admin_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
 echo "${admin_token},admin,admin,\"system:masters\"" > ${SNAP_DATA}/credentials/basic_auth.csv
 chmod 600 ${SNAP_DATA}/credentials/basic_auth.csv
 
