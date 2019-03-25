@@ -36,14 +36,7 @@ skip_opt_in_config() {
 
 
 arch() {
-    # Return the architecture we are on
-    local ARCH="${KUBE_ARCH:-`$SNAP/usr/bin/dpkg --print-architecture`}"
-    if [ "$ARCH" = "ppc64el" ]; then
-        ARCH="ppc64le"
-    elif [ "$ARCH" = "armhf" ]; then
-        ARCH="arm"
-    fi
-    echo $ARCH
+    echo $SNAP_ARCH
 }
 
 
