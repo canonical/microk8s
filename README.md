@@ -1,6 +1,6 @@
 # MicroK8s
 
-![](https://img.shields.io/badge/Kubernetes-1.13-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg)
+![](https://img.shields.io/badge/Kubernetes-1.14-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg)
 
 <img src="https://raw.githubusercontent.com/cncf/artwork/master/kubernetes/certified-kubernetes/versionless/color/certified-kubernetes-color.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
 
@@ -33,8 +33,7 @@ microk8s.status --wait-ready
 ```
 
 > In order to install MicroK8s make sure
-> - port 8080 is not used and
-> - if you have AppArmor enabled (check with `sudo apparmor_status`) you do not have any other [dockerd installed](docs/dockerd.md). You can use the dockerd coming with MicroK8s.
+> - you go though the [list of ports](docs/ports.md) that need to be available
 
 ### Accessing Kubernetes
 
@@ -86,9 +85,9 @@ With `microk8s.status` you can see the list of available addons and which ones a
 - **dashboard**: Deploy kubernetes dashboard as well as grafana and influxdb. To access grafana point your browser to the url reported by `microk8s.kubectl cluster-info`.
 - **storage**: Create a default storage class. This storage class makes use of the hostpath-provisioner pointing to a directory on the host. Persistent volumes are created under `${SNAP_COMMON}/default-storage`. Upon disabling this addon you will be asked if you want to delete the persistent volumes created.
 - **ingress**: Create an ingress controller.
-- **gpu**: Expose GPU(s) to MicroK8s by enabling the nvidia-docker runtime and nvidia-device-plugin-daemonset. Requires NVIDIA drivers to already be installed on the host system.
+- **gpu**: Expose GPU(s) to MicroK8s by enabling the nvidia runtime and nvidia-device-plugin-daemonset. Requires NVIDIA drivers to already be installed on the host system.
 - **istio**: Deploy the core [Istio](https://istio.io/) services. You can use the `microk8s.istioctl` command to manage your deployments.
-- **registry**: Deploy a docker private registry and expose it on `localhost:32000`. The storage addon will be enabled as part of this addon. To [use the registry](docs/registry.md) you can use the `microk8s.docker` command.
+- **registry**: Deploy an image private registry and expose it on `localhost:32000`. The storage addon will be enabled as part of this addon. See [the registry documentation](docs/registry.md) for more details.
 - **metrics-server**: Deploy the [Metrics Server](https://kubernetes.io/docs/tasks/debug-application-cluster/core-metrics-pipeline/#metrics-server).
 - **prometheus**: Deploy the [Prometheus Operator](https://github.com/coreos/prometheus-operator) v0.25.
 - **fluentd**: Deploy [Elasticsearch-Kibana-Fluentd](https://kubernetes.io/docs/tasks/debug-application-cluster/logging-elasticsearch-kibana/) logging and monitoring solution.
@@ -126,22 +125,22 @@ The following systemd services will be running in your system:
 - **snap.microk8s.daemon-scheduler**, is the [kube-scheduler](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/) daemon started using the arguments in `${SNAP_DATA}/args/kube-scheduler`
 - **snap.microk8s.daemon-kubelet**, is the [kubelet](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet/) daemon started using the arguments in `${SNAP_DATA}/args/kubelet`
 - **snap.microk8s.daemon-proxy**, is the [kube-proxy](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/) daemon started using the arguments in `${SNAP_DATA}/args/kube-proxy`
-- **snap.microk8s.daemon-docker**, is the [docker](https://docs.docker.com/engine/reference/commandline/dockerd/) daemon started using the arguments in `${SNAP_DATA}/args/dockerd`
+- **snap.microk8s.daemon-containerd**, is the [containerd](https://containerd.io/) daemon started using the configuration in `${SNAP_DATA}/args/containerd` and `${SNAP_DATA}/args/containerd-template.toml`.
 - **snap.microk8s.daemon-etcd**, is the [etcd](https://coreos.com/etcd/docs/latest/v2/configuration.html) daemon started using the arguments in `${SNAP_DATA}/args/etcd`
 
 Normally, `${SNAP_DATA}` points to `/var/snap/microk8s/current`.
 
 To reconfigure a service you will need to edit the corresponding file and then restart the respective daemon. For example:
 ```
-echo '--config-file=/path-to-my/daemon.json' | sudo tee -a /var/snap/microk8s/current/args/dockerd
-sudo systemctl restart snap.microk8s.daemon-docker.service
+echo '-l=debug' | sudo tee -a /var/snap/microk8s/current/args/containerd
+sudo systemctl restart snap.microk8s.daemon-containerd.service
 ```
 
 ### Deploy Behind a Proxy
 
-To let MicroK8s use a proxy enter the proxy details in `${SNAP_DATA}/args/dockerd-env` and restart the docker daemon service with:
+To let MicroK8s use a proxy enter the proxy details in `${SNAP_DATA}/args/containerd-env` and restart the containerd daemon service with:
 ```
-sudo systemctl restart snap.microk8s.daemon-docker.service
+sudo systemctl restart snap.microk8s.daemon-containerd.service
 ```
 
 
@@ -166,21 +165,14 @@ or, if using `ufw`:
 
 `sudo ufw default allow routed`
 
-The microk8s inspect command can be used to check the firewall configuration:
+The MicroK8s inspect command can be used to check the firewall configuration:
 
 `microk8s.inspect`
 
 A warning will be shown if the firewall is not forwarding traffic.
 
-### My host machine changed IP and now MicroK8s is not working properly.
-The host machine IP may change whenever you switch places with your laptop or you go through a suspend/resume cycle. The kubernetes API server advertises this IP (taken from the default interface) to all kubernetes cluster members. Services such as DNS and the dashboard will lose connectivity to API server in case the host IP changes. You will need to restart MicroK8s whenever this happens:
-```
-microk8s.stop
-microk8s.start
-```
-
 ### My log collector is not collecting any logs.
-By default docker container logs are located in `/var/lib/docker/containers/{id}/{id}-json.log` but microk8s is packaged with snap and it uses it's own docker. So the logs are located in `/var/snap/microk8s/common/var/lib/docker/containers/{id}/{id}-json.log`. You have to mount this location in your log collector for that to work. Following is an example diff for [fluent-bit](https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/output/elasticsearch/fluent-bit-ds.yaml):
+By default container logs are located in `/var/log/pods/{id}`. You have to mount this location in your log collector for that to work. Following is an example diff for [fluent-bit](https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/output/elasticsearch/fluent-bit-ds.yaml):
 
 ```diff
 @@ -36,6 +36,9 @@
@@ -188,7 +180,7 @@ By default docker container logs are located in `/var/lib/docker/containers/{id}
            mountPath: /var/lib/docker/containers
            readOnly: true
 +        - name: varlibdockercontainers
-+          mountPath: /var/snap/microk8s/common/var/lib/docker/containers/
++          mountPath: /var/snap/microk8s/common/var/lib/containerd/
 +          readOnly: true
          - name: fluent-bit-config
            mountPath: /fluent-bit/etc/
@@ -198,7 +190,7 @@ By default docker container logs are located in `/var/lib/docker/containers/{id}
        - name: varlibdockercontainers
          hostPath:
 -          path: /var/lib/docker/containers
-+          path: /var/snap/microk8s/common/var/lib/docker/containers/
++          mountPath: /var/snap/microk8s/common/var/lib/containerd/
        - name: fluent-bit-config
          configMap:
            name: fluent-bit-config
@@ -206,42 +198,57 @@ By default docker container logs are located in `/var/lib/docker/containers/{id}
 
 ## Building from source
 
-Build the snap with:
+To build the snap you need a [working LXD](https://linuxcontainers.org/lxd/getting-started-cli/#snap-package-archlinux-debian-fedora-opensuse-and-ubuntu). To install LXD on Ubuntu first remove any old packages:
 ```
-snapcraft
+sudo apt-get purge lxc*
+sudo apt-get purge lxd*
+```
+
+Get the latest LXD and configure it with:
+```
+sudo snap install lxd
+lxd init --auto
+```
+
+Build MicroK8s with:
+```
+git clone https://github.com/ubuntu/microk8s
+cd microk8s
+snapcraft cleanbuild
 ```
 
 ### Building for specific versions
 
-You can set the following environment variables prior to building:
+To produce a custome build with specific component versions we need to prepare an LXC container with Ubuntu 16:04 and snapcraft:
+```
+lxc launch ubuntu:16.04 --ephemeral test-build
+lxc exec test-build -- snap install snapcraft --classic
+lxc exec test-build -- apt update
+lxc exec test-build -- git clone https://github.com/ubuntu/microk8s
+```
+
+We can then set the following environment variables prior to building:
  - KUBE_VERSION: kubernetes release to package. Defaults to latest stable.
  - ETCD_VERSION: version of etcd. Defaults to v3.3.4.
  - CNI_VERSION: version of CNI tools. Defaults to v0.7.1.
  - KUBE_TRACK: kubernetes release series (e.g., 1.10) to package. Defaults to latest stable.
- - ISTIO_VERSION: istio release. Defaults to v1.0.0.
+ - ISTIO_VERSION: istio release. Defaults to v1.0.5.
+ - RUNC_COMMIT: the commit hash from which to build runc
+ - CONTAINERD_COMMIT: the commit hash from which to build containerd
 
-For example:
+For building we use `snapcraft` (not `snapcraft cleanbuild`) and we prepend and variables we need. For example to build the MicroK8s snap for Kubernetes v1.9.6 we:
 ```
-KUBE_VERSION=v1.9.6 snapcraft
+lxc exec test-build -- sh -c "cd microk8s && KUBE_VERSION=v1.9.6 snapcraft"
 ```
 
-### Faster builds
-
-To speed-up a build you can reuse the binaries already downloaded from a previous build. Binaries are placed under `parts/microk8s/build/build/kube_bins`. All you need to do is to make a copy of this directory and have the `KUBE_SNAP_BINS` environment variable point to it. Try this for example:
+The produced snap is inside the ephemeral LXC container, we need to copy it to the host:
 ```
-> snapcraft
-... this build will take a long time and will download all binaries ...
-> cp -r parts/microk8s/build/build/kube_bins .
-> export KUBE_SNAP_BINS=$PWD/kube_bins/v1.10.3/
-> snapcraft clean
-> snapcraft
-... this build will be much faster and will reuse binaries in KUBE_SNAP_BINS
-
+lxc file pull test-build/root/microk8s/microk8s_v1.9.6_amd64.snap .
 ```
 
 ### Installing the snap
 ```
-snap install microk8s_v1.10.3_amd64.snap --classic --dangerous
+snap install microk8s_latest_amd64.snap --classic --dangerous
 ```
 
 ## Who's Using MicroK8s

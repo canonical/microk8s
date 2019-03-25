@@ -20,10 +20,10 @@ snap install microk8s --classic
 Since no `--channel` is specified such deployment will eventually upgrade to `v1.13.0`.
 
 
-Switching from one channel to another is done with [`snap refresh --channel=<new_channel>`](https://docs.snapcraft.io/reference/snap-command#refresh). For example, switch MicroK8s to the v1.11 release series with:
+Switching from one channel to another is done with [`snap refresh --channel=<new_channel>`](https://docs.snapcraft.io/channels/551). For example, switch MicroK8s to the v1.11 release series with:
 
 ```
-snap install microk8s --channel=1.11/stable
+snap refresh --channel=1.11/stable microk8s
 ```
 
 ## Availability of Releases and Channels

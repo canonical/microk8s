@@ -1,3 +1,4 @@
+import os.path
 import datetime
 import time
 import yaml
@@ -56,7 +57,10 @@ def docker(cmd):
     Returns: the docker response in a string
 
     """
-    cmd = '/snap/bin/microk8s.docker ' + cmd
+    docker_bin='/usr/bin/docker'
+    if os.path.isfile('/snap/bin/microk8s.docker'):
+        docker_bin='/snap/bin/microk8s.docker'
+    cmd = docker_bin + ' ' + cmd
     return run_until_success(cmd)
 
 
