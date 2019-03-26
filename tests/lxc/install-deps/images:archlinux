@@ -17,6 +17,9 @@ pacman -S --noconfirm --needed fuse3
 echo "PATH=$PATH:/snap/bin" >> /etc/profile
 pacman -S --noconfirm python-pip
 pacman -S --noconfirm python
+pacman -S --noconfirm docker
+sudo systemctl enable --now docker.service
+echo "127.0.0.1       localhost" | sudo tee -a /etc/hosts
 pip3 install -U pytest requests pyyaml
 
 # wait for the snapd seeding to take place!
