@@ -89,3 +89,13 @@ then
   fi
 
 fi
+
+# Make sure the server certificate includes the IP we are using
+if ! [ -f ${SNAP_DATA}/certs/csr.conf ]
+then
+    IP_ADDR="$(get_default_ip)"
+    produce_server_cert $IP_ADDR
+    rm -rf .srl
+    systemctl restart snap.${SNAP_NAME}.daemon-apiserver.service
+    systemctl restart snap.${SNAP_NAME}.daemon-proxy.service
+fi

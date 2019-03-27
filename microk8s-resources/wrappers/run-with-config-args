@@ -4,6 +4,8 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
+source $SNAP/actions/common/utils.sh
+
 app=$1
 
 if [ "${app}" = "kubelet" ]
@@ -31,7 +33,7 @@ then
   if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null
   then
     rm -f ${SNAP_DATA}/external_ip.txt
-    # wait up to a minute for the default network interface to appear.
+    # wait up to two minutes for the default network interface to appear.
     n=0
     until [ $n -ge 20 ]
     do
@@ -44,7 +46,8 @@ then
 
     if ip route | grep default &> /dev/null
     then
-        DEFAULT_INTERFACE="$(netstat -rn | grep '^0.0.0.0' | awk '{print $NF}' | head -1)"
+
+        DEFAULT_INTERFACE="$(netstat -rn | grep '^0.0.0.0' | gawk '{print $NF}' | head -1)"
         IP_ADDR="$(ifconfig "$DEFAULT_INTERFACE" | grep 'inet ' | gawk '{print $2}' | sed -e 's/addr://')"
         mkdir -p ${SNAP_DATA}/var
         echo ${IP_ADDR} > ${SNAP_DATA}/external_ip.txt

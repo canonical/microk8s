@@ -3,8 +3,9 @@
 set -eux
 
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
-export PATH="$PATH:/usr/bin:/usr/local/bin"
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
 
+source $SNAP/actions/common/utils.sh
 
 cp -r ${SNAP}/default-args ${SNAP_DATA}/args
 
@@ -14,8 +15,8 @@ openssl genrsa -out ${SNAP_DATA}/certs/serviceaccount.key 2048
 openssl genrsa -out ${SNAP_DATA}/certs/ca.key 2048
 openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
 openssl genrsa -out ${SNAP_DATA}/certs/server.key 2048
-openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP}/certs/csr.conf
-openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP}/certs/csr.conf
+IP_ADDR="$(get_default_ip)"
+produce_server_cert $IP_ADDR
 rm -rf .srl
 
 # Create the basic tokens

@@ -6,6 +6,7 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
+source $SNAP/actions/common/utils.sh
 
 restart_attempt=0
 while true
@@ -23,13 +24,14 @@ do
        ip route | grep default &> /dev/null &&
        systemctl is-active --quiet snap.microk8s.daemon-apiserver.service
     then
-        # Get current IP
-        DEFAULT_INTERFACE="$(netstat -rn | grep '^0.0.0.0' | awk '{print $NF}' | head -1)"
-        IP_ADDR="$(ifconfig "$DEFAULT_INTERFACE" | grep 'inet ' | gawk '{print $2}' | sed -e 's/addr://')"
+        IP_ADDR="$(get_default_ip)"
         USED_IP_ADDR=$(cat "${SNAP_DATA}"/external_ip.txt)
         if ! [ "$IP_ADDR" == "$USED_IP_ADDR" ]
         then
-            echo "IP change detected. Restarting kube-apiserver"
+            echo "IP change detected. Reconfiguring the kube-apiserver"
+            produce_server_cert $IP_ADDR
+            rm -rf .srl
+
             systemctl restart snap.microk8s.daemon-apiserver.service
             systemctl restart snap.microk8s.daemon-proxy.service
             restart_attempt=$[$restart_attempt+1]
