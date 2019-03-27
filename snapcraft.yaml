@@ -134,6 +134,7 @@ parts:
     - aufs-tools
     - gawk
     - sed
+    - grep
     - libssl1.0.0
     - coreutils
     stage:

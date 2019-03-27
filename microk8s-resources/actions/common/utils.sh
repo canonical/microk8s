@@ -90,3 +90,30 @@ wait_for_service() {
         echo "fail"
     fi
 }
+
+
+get_default_ip() {
+    # Get the IP of the default interface
+    local DEFAULT_INTERFACE="$($SNAP/bin/netstat -rn | $SNAP/bin/grep '^0.0.0.0' | $SNAP/usr/bin/gawk '{print $NF}' | head -1)"
+    local IP_ADDR="$($SNAP/sbin/ifconfig "$DEFAULT_INTERFACE" | $SNAP/bin/grep 'inet ' | $SNAP/usr/bin/gawk '{print $2}' | $SNAP/bin/sed -e 's/addr://')"
+    echo ${IP_ADDR}
+}
+
+
+produce_server_cert() {
+    # Produce the server certificate adding the IP passed as a parameter
+    # Parameters:
+    # $1 IP we want in the certificate
+
+    local IP_ADDR="$1"
+
+    cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf
+    if ! [ "$IP_ADDR" == "127.0.0.1" ] && ! [ "$IP_ADDR" == "" ]
+    then
+        "$SNAP/bin/sed" -i 's/#MOREIPS/IP.3 = '"${IP_ADDR}"'/g' ${SNAP_DATA}/certs/csr.conf
+    else
+        "$SNAP/bin/sed" -i 's/#MOREIPS//g' ${SNAP_DATA}/certs/csr.conf
+    fi
+    openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+    openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+}
