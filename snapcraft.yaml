@@ -136,6 +136,7 @@ parts:
     - aufs-tools
     - gawk
     - sed
+    - grep
     - libssl1.0.0
     - coreutils
     stage:
@@ -149,6 +150,7 @@ parts:
     build-packages:
     - openssl
     - file
+    - dpkg
     stage-packages:
     - curl      
     - net-tools
@@ -156,7 +158,6 @@ parts:
     - zfsutils-linux
     - socat
     - iproute2
-    - dpkg
     source: .
     override-build: |
       set -eu

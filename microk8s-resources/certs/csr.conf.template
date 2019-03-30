@@ -24,6 +24,7 @@ DNS.4 = kubernetes.default.svc.cluster
 DNS.5 = kubernetes.default.svc.cluster.local
 IP.1 = 127.0.0.1
 IP.2 = 10.152.183.1
+#MOREIPS
 
 [ v3_ext ]
 authorityKeyIdentifier=keyid,issuer:always
