@@ -8,8 +8,13 @@ echo "Disabling Linkerd"
 
 echo "Removing linkerd control plane"
 
-"$SNAP_DATA/bin/linkerd" install | "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" delete -f -
+"$SNAP_DATA/bin/linkerd" install | "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" delete -f -
 
 echo "Linkerd is terminating"
-echo "Please remove all services injected with Linkerd data plane."
-echo "Example: kubectl -n kube-system get deployments.apps -o yaml | microk8s.linkerd uninject - | kubectl apply -f - "
+echo "Removing all linkerd proxy."
+
+"$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get deployment --all-namespaces -o yaml | "$SNAP_DATA/bin/linkerd" uninject - | "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" apply -f - 
+
+echo "Deleting linkerd binary."
+
+sudo rm -f "$SNAP_DATA/bin/linkerd"

@@ -174,19 +174,3 @@ class TestAddons(object):
         validate_linkerd()
         print("Disabling Linkerd")
         microk8s_disable("linkerd")
-
-    def test_linkerd_proxy_auto_inject(self):
-        """
-        Sets up and validate linkerd
-
-        """
-        if platform.machine() != 'x86_64':
-            print("Linkerd tests are only relevant in x86 architectures")
-            return
-
-        print("Enabling Linkerd with proxy auto inject")
-        microk8s_enable("linkerd:--proxy-auto-inject")
-        print("Validating Linkerd")
-        validate_linkerd()
-        print("Disabling Linkerd")
-        microk8s_disable("linkerd")
