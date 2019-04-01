@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -eux
+
+# Ensure juju images get cached if needed on refresh
+rm -fr ${SNAP_DATA}/.cache-juju-image
