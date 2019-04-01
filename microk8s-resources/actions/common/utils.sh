@@ -117,3 +117,11 @@ produce_server_cert() {
     openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
     openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 }
+
+maybe_cache_juju_operator_images() {
+    if [ ! -f /snap/bin/juju.cache-images ]; then
+        echo "No supported version of Juju installed."
+        exit 0
+    fi
+    /snap/bin/juju.cache-images
+}

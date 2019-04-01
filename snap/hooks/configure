@@ -99,3 +99,10 @@ then
     systemctl restart snap.${SNAP_NAME}.daemon-apiserver.service
     systemctl restart snap.${SNAP_NAME}.daemon-proxy.service
 fi
+
+# Cache Juju image if juju is present and this is an install/refresh
+if [ ! -e ${SNAP_DATA}/.cache-juju-image ]
+then
+   maybe_cache_juju_operator_images >> /tmp/mk8s.log
+   touch ${SNAP_DATA}/.cache-juju-image
+fi
