@@ -95,8 +95,13 @@ wait_for_service() {
 get_default_ip() {
     # Get the IP of the default interface
     local DEFAULT_INTERFACE="$($SNAP/bin/netstat -rn | $SNAP/bin/grep '^0.0.0.0' | $SNAP/usr/bin/gawk '{print $NF}' | head -1)"
-    local IP_ADDR="$($SNAP/sbin/ifconfig "$DEFAULT_INTERFACE" | $SNAP/bin/grep 'inet ' | $SNAP/usr/bin/gawk '{print $2}' | $SNAP/bin/sed -e 's/addr://')"
-    echo ${IP_ADDR}
+    local IP_ADDR="$($SNAP/sbin/ip -o -4 addr list "$DEFAULT_INTERFACE" | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1)"
+    if [[ -z "$IP_ADDR" ]]
+    then
+        echo "none"
+    else
+        echo "${IP_ADDR}"
+    fi
 }
 
 
@@ -108,7 +113,7 @@ produce_server_cert() {
     local IP_ADDR="$1"
 
     cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf
-    if ! [ "$IP_ADDR" == "127.0.0.1" ] && ! [ "$IP_ADDR" == "" ]
+    if ! [ "$IP_ADDR" == "127.0.0.1" ] && ! [ "$IP_ADDR" == "none" ]
     then
         "$SNAP/bin/sed" -i 's/#MOREIPS/IP.3 = '"${IP_ADDR}"'/g' ${SNAP_DATA}/certs/csr.conf
     else
