@@ -15,6 +15,8 @@ def validate_dns():
     """
     Validate DNS by starting a busy box and nslookuping the kubernetes default service.
     """
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
+    time.sleep(20)
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "bbox.yaml")
     kubectl("apply -f {}".format(manifest))
