@@ -196,16 +196,18 @@ def validate_forward():
     wait_for_pod_state("", "default", "running", label="app=nginx")
     os.system('killall kubectl')
     os.system('/snap/bin/microk8s.kubectl port-forward pod/nginx 5000:80 &')
+    time.sleep(10)
     attempt = 10
+    resp = requests.get("http://localhost:5000")
     while attempt >= 0:
-        try:
-            resp = requests.get("http://localhost:5000")
-            if resp.status_code == 200:
-                break
-        except:
-            pass
+        if resp.status_code == 200:
+            break
         attempt -= 1
         time.sleep(2)
+        try:
+            resp = requests.get("http://localhost:5000")
+        except:
+            pass
 
     assert resp.status_code == 200
 
