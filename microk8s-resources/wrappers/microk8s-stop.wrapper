@@ -4,6 +4,11 @@ set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 
+source $SNAP/actions/common/utils.sh
+
+echo "Disabling pod scheduling"
+drain_node
+
 if ! sudo snap stop ${SNAP_NAME} --disable
 then
   echo 'Failed to stop microk8s services. Check snapd logs with "journalctl -u snapd.service"'

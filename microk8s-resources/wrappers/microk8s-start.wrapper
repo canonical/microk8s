@@ -3,6 +3,8 @@
 set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+source $SNAP/actions/common/utils.sh
+
 
 if ! sudo snap start ${SNAP_NAME} --enable
 then
@@ -15,3 +17,6 @@ else
     sudo rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
   fi
 fi
+
+echo "Enabling pod scheduling"
+uncordon_node
