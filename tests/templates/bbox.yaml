@@ -6,7 +6,7 @@ metadata:
 spec:
   containers:
   - name: busybox
-    image: busybox
+    image: busybox:1.28.4
     command:
       - sleep
       - "3600"
