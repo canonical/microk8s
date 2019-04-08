@@ -122,3 +122,54 @@ produce_server_cert() {
     openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
     openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 }
+
+
+get_node() {
+    # Returns the node name or no_node_found in case no node is present
+
+    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+
+    timeout=60
+    start_timer="$(date +%s)"
+    node_found="yes"
+    while ! ($KUBECTL get no | grep -z " Ready") &> /dev/null
+    do
+      now="$(date +%s)"
+      if ! [ -z $timeout ] && [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
+        node_found="no"
+        echo "no_node_found"
+        break
+      fi
+      sleep 2
+    done
+
+    if [ "${node_found}" == "yes" ]
+    then
+        node="$($KUBECTL get no | $SNAP/bin/grep ' Ready' | $SNAP/usr/bin/gawk '{print $1}')"
+        echo $node
+    fi
+}
+
+
+drain_node() {
+    # Drain node
+
+    node="$(get_node)"
+    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+    if ! [ "${node}" == "no_node_found" ]
+    then
+        $KUBECTL drain $node --timeout=120s --grace-period=60 --delete-local-data=true || true
+    fi
+}
+
+
+uncordon_node() {
+    # Un-drain node
+
+    node="$(get_node)"
+    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+    if ! [ "${node}" == "no_node_found" ]
+    then
+        $KUBECTL uncordon $node || true
+    fi
+}
