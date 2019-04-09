@@ -46,9 +46,9 @@ then
 
     if ip route | grep default &> /dev/null
     then
-        IP_ADDR="$(get_default_ip)"
+        IP_ADDR="$(get_ips)"
         mkdir -p ${SNAP_DATA}/var
-        echo ${IP_ADDR} > ${SNAP_DATA}/external_ip.txt
+        echo "${IP_ADDR}" > "${SNAP_DATA}"/external_ip.txt
     fi
   fi
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
