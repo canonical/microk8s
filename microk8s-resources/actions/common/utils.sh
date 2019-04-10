@@ -104,6 +104,16 @@ get_default_ip() {
     fi
 }
 
+get_ips() {
+    local IP_ADDR="$($SNAP/bin/hostname -I)"
+    if [[ -z "$IP_ADDR" ]]
+    then
+        echo "none"
+    else
+        echo "${IP_ADDR}"
+    fi
+}
+
 
 produce_server_cert() {
     # Produce the server certificate adding the IP passed as a parameter
@@ -115,7 +125,13 @@ produce_server_cert() {
     cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf
     if ! [ "$IP_ADDR" == "127.0.0.1" ] && ! [ "$IP_ADDR" == "none" ]
     then
-        "$SNAP/bin/sed" -i 's/#MOREIPS/IP.3 = '"${IP_ADDR}"'/g' ${SNAP_DATA}/certs/csr.conf
+        local ips='' sep=''
+        local -i i=3
+        for IP_ADDR in "$@"; do
+            ips+="${sep}IP.$((i++)) = ${IP_ADDR}"
+            sep='\n'
+        done
+        "$SNAP/bin/sed" -i "s/#MOREIPS/${ips}/g" ${SNAP_DATA}/certs/csr.conf
     else
         "$SNAP/bin/sed" -i 's/#MOREIPS//g' ${SNAP_DATA}/certs/csr.conf
     fi
