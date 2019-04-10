@@ -137,6 +137,7 @@ parts:
     - grep
     - libssl1.0.0
     - coreutils
+    - hostname
     stage:
     - -sbin/xtables-multi
     - -sbin/iptables*
