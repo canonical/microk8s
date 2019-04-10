@@ -70,6 +70,13 @@ function store_args {
 }
 
 
+function store_uptime {
+    # Store server's uptime.
+    printf -- 'Copy server uptime to the final report tarball\n'
+    mkdir -p $INSPECT_DUMP/uptime
+    uptime &> $INSPECT_DUMP/uptime/uptime
+}
+
 function store_network {
     # Collect network setup.
     printf -- 'Copy network configuration to the final report tarball\n'
@@ -178,6 +185,7 @@ printf -- '\n(4) Inspecting AppArmor configuration\n'
 store_apparmor
 
 printf -- '\n(5) Gathering System Information\n'
+store_uptime
 store_distribution
 store_openssl
 store_network
