@@ -82,7 +82,7 @@ With `microk8s.status` you can see the list of available addons and which ones a
 
 #### List of Available Addons
 - **dns**: Deploy kube dns. This addon may be required by others thus we recommend you always enable it. In environments where the external dns servers `8.8.8.8` and `8.8.4.4` are blocked you will need to update the upstream dns servers in `microk8s.kubectl -n kube-system edit configmap/kube-dns` after enabling the addon.
-- **rbac**: Enable RBAC (role-based access control) authorization mode.
+- **rbac**: Enable RBAC (role-based access control) authorization mode. **NOTE**: Most of the other addons will not work with the RBAC addon, since they are not RBAC enabled.
 - **dashboard**: Deploy kubernetes dashboard as well as grafana and influxdb. To access grafana point your browser to the url reported by `microk8s.kubectl cluster-info`.
 - **storage**: Create a default storage class. This storage class makes use of the hostpath-provisioner pointing to a directory on the host. Persistent volumes are created under `${SNAP_COMMON}/default-storage`. Upon disabling this addon you will be asked if you want to delete the persistent volumes created.
 - **ingress**: Create an ingress controller.
