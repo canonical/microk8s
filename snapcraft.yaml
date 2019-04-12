@@ -11,37 +11,84 @@ description: |-
  also a great k8s for appliances - develop your IoT apps for k8s and deploy 
  them to MicroK8s on your boxes.
 
-grade: stable
-confinement: classic
+grade: devel
+confinement: strict
+
+plugs:
+  docker-privileged:
+    interface: docker-support
+    privileged-containers: true
+  k8s-kubelet:
+    interface: kubernetes-support
+    flavor: kubelet
+  k8s-kubeproxy:
+    interface: kubernetes-support
+    flavor: kubeproxy
 
 apps:
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
+    plugs:
+    - network-bind
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
+    plugs:
+    - network-bind
+    - docker-support
+    - docker-privileged
+    - firewall-control
+    - kernel-module-control
+    - network-control
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
     daemon: simple
+    plugs:
+    - network-bind
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
+    plugs:
+    - network-bind
   daemon-controller-manager:
     command: run-with-config-args kube-controller-manager
     daemon: simple
+    plugs:
+    - network-bind
   daemon-scheduler:
     command: run-with-config-args kube-scheduler
     daemon: simple
+    plugs:
+    - network-bind
   daemon-kubelet:
     command: run-with-config-args kubelet
     daemon: simple
+    plugs:
+    - firewall-control
+    - network-bind
+    - k8s-kubelet
+    - hardware-observe
+    - mount-observe
+    - network-control
+    - process-control
+    - system-observe
   daemon-proxy:
     command: run-with-config-args kube-proxy
     daemon: simple
+    plugs:
+    - network-bind
+    - firewall-control
+    - k8s-kubeproxy
+    - kernel-module-observe
+    - mount-observe
+    - system-observe
+    - kernel-module-control
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
+    plugs:
+    - network
   ctr:
     command: microk8s-ctr.wrapper
   inspect:

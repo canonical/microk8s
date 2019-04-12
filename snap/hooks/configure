@@ -30,7 +30,7 @@ then
   # Add a new line at the end
   echo "" >> ${SNAP_DATA}/args/kube-apiserver
   echo "--requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt" >> ${SNAP_DATA}/args/kube-apiserver
-  systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+  #systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 fi
 
 # Patch for issue: https://github.com/ubuntu/microk8s/issues/121
