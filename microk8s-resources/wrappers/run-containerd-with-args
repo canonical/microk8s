@@ -32,4 +32,16 @@ declare -a args="($(cat $SNAP_DATA/args/$app))"
 set -a
 . "${SNAP_DATA}/args/${app}-env"
 set +a
+
+# wait up to two minutes for the default network interface to appear.
+n=0
+until [ $n -ge 20 ]
+do
+  ip route | grep default &> /dev/null && break
+  ip -6 route | grep default &> /dev/null && break
+  echo "Waiting for default route to appear. (attempt $n)"
+  n=$[$n+1]
+  sleep 6
+done
+
 exec "$SNAP/bin/$app" "${args[@]}"
