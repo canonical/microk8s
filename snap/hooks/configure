@@ -24,6 +24,12 @@ then
   systemctl restart snap.${SNAP_NAME}.daemon-controller-manager
 fi
 
+#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to $SNAP_DATA 
+if [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
+then
+   cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
+fi
+
 if ! grep "requestheader-client-ca-file" ${SNAP_DATA}/args/kube-apiserver
 then
   echo "Patching requestheader-client-ca-file argument"
