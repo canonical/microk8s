@@ -24,8 +24,8 @@ do
        ip route | grep default &> /dev/null &&
        systemctl is-active --quiet snap.microk8s.daemon-apiserver.service
     then
-        IP_ADDR="$(get_default_ip)"
-        USED_IP_ADDR=$(cat "${SNAP_DATA}"/external_ip.txt)
+        IP_ADDR="$(get_ips)"
+        USED_IP_ADDR="$(cat "${SNAP_DATA}"/external_ip.txt)"
         if ! [ "$IP_ADDR" == "$USED_IP_ADDR" ]
         then
             echo "IP change detected. Reconfiguring the kube-apiserver"

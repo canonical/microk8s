@@ -9,3 +9,10 @@
 # Remember to restart the containerd daemon after editing this file:
 #
 # sudo systemctl restart snap.microk8s.daemon-containerd.service
+#
+#
+
+# Attempt to change the maximum number of open file descriptors
+# this get inherited to the running containers
+#
+ulimit -n 65536 || true
