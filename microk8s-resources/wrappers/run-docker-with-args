@@ -5,7 +5,6 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_6
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 
-
 #TODO(kjackal): Make sure this works on every distro
 # Until we get a way to properly patch the docker-default profile
 # https://github.com/moby/moby/issues/33060
@@ -13,21 +12,23 @@ if [ -d "/etc/apparmor.d" ]; then
   # we have AppArmor
   if [ -f /etc/apparmor.d/docker ]; then
     # docker default profile exists
+    if ! $(grep -qE "snap.microk8s.daemon-kubelet" /etc/apparmor.d/docker); then
+      "$SNAP/bin/sed" 's/^}$/\ \ signal\ (receive)\ peer=snap.microk8s.daemon-kubelet,\n}/' -i /etc/apparmor.d/docker
+    fi
     if ! $(grep -qE "snap.microk8s.daemon-docker" /etc/apparmor.d/docker); then
-      echo "Patching docker-default profile"
       "$SNAP/bin/sed" 's/^}$/\ \ signal\ (receive)\ peer=snap.microk8s.daemon-docker,\n}/' -i /etc/apparmor.d/docker
-      echo "Reloading AppArmor profiles"
-      service apparmor reload
-      echo "AppArmor patched"
-    else
-      echo "Docker default profile already patched"
+    fi
+    if ! $(grep -qE "snap.microk8s.daemon-containerd" /etc/apparmor.d/docker); then
+      "$SNAP/bin/sed" 's/^}$/\ \ signal\ (receive)\ peer=snap.microk8s.daemon-containerd,\n}/' -i /etc/apparmor.d/docker
     fi
   else
     echo "Using a docker-default template"
     cp ${SNAP}/docker-profile /etc/apparmor.d/docker
-    echo "Reloading AppArmor profiles"
-    service apparmor reload
-    echo "AppArmor patched"
+  fi
+  echo "Reloading AppArmor profiles"
+  if ! service apparmor reload
+  then
+    echo "AppArmor profiles loading failed. AppArmor may be unavailable on this host."
   fi
 fi
 
@@ -35,4 +36,7 @@ app=dockerd
 
 # This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/$app))"
+set -a
+. "${SNAP_DATA}/args/${app}-env"
+set +a
 exec "$SNAP/usr/bin/$app" "${args[@]}"
