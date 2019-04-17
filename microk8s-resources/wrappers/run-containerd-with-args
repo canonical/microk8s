@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
+export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+
+sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${SNAP_COMMON}@'"${SNAP_COMMON}"'@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml
+app=docker-containerd
+
+# wait up to two minutes for the default network interface to appear.
+n=0
+until [ $n -ge 20 ]
+do
+  ip route | grep default &> /dev/null && break
+  ip -6 route | grep default &> /dev/null && break
+  echo "Waiting for default route to appear. (attempt $n)"
+  n=$[$n+1]
+  sleep 6
+done
+
+# This is really the only way I could find to get the args passed in correctly. WTF
+declare -a args="($(cat $SNAP_DATA/args/$app))"
+set -a
+. "${SNAP_DATA}/args/${app}-env"
+set +a
+exec "$SNAP/usr/bin/$app" "${args[@]}"
