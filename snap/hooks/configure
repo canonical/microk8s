@@ -36,3 +36,29 @@ if grep -e  "requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt"  
 then
   "$SNAP/bin/sed" -i 's@requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt@requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
 fi
+
+if [ ! -e ${SNAP_DATA}/args/dockerd-env ]
+then
+  echo "Making sure we have dockerd-env file"
+  cp ${SNAP}/default-args/dockerd-env ${SNAP_DATA}/args/dockerd-env
+  systemctl restart snap.${SNAP_NAME}.daemon-docker
+fi
+
+if [ ! -e ${SNAP_DATA}/args/docker-containerd ]
+then
+  echo "Making sure we have containerd files"
+  cp ${SNAP}/default-args/docker-containerd ${SNAP_DATA}/args/
+  cp ${SNAP}/default-args/docker-containerd-env ${SNAP_DATA}/args/
+  cp ${SNAP}/default-args/containerd-template.toml ${SNAP_DATA}/args/
+  systemctl restart snap.${SNAP_NAME}.daemon-containerd
+  sleep 10
+  if ! grep "--containerd" ${SNAP_DATA}/args/dockerd
+  then
+    echo "--containerd \${SNAP_COMMON}/var/run/docker/containerd/docker-containerd.sock" >> ${SNAP_DATA}/args/dockerd
+  fi
+  systemctl restart snap.${SNAP_NAME}.daemon-docker
+fi
+
+# Create the locks directory
+mkdir -p ${SNAP_DATA}/var/lock/
+
