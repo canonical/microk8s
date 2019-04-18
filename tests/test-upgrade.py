@@ -54,6 +54,7 @@ class TestUpgrade(object):
         # select those that were valid for the original snap
         test_matrix = {}
         try:
+            print("Testing dns_dashboard")
             enable = microk8s_enable("dns")
             wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
             assert "Nothing to do for" not in enable
@@ -65,6 +66,7 @@ class TestUpgrade(object):
             print('Will not test dns-dashboard')
 
         try:
+            print("Testing storage")
             enable = microk8s_enable("storage")
             assert "Nothing to do for" not in enable
             validate_storage()
@@ -73,6 +75,7 @@ class TestUpgrade(object):
             print('Will not test storage')
 
         try:
+            print("Testing ingress")
             enable = microk8s_enable("ingress")
             assert "Nothing to do for" not in enable
             validate_ingress()
@@ -81,6 +84,7 @@ class TestUpgrade(object):
             print('Will not test ingress')
 
         try:
+            print("Testing gpu")
             enable = microk8s_enable("gpu")
             assert "Nothing to do for" not in enable
             validate_gpu()
@@ -89,6 +93,7 @@ class TestUpgrade(object):
             print('Will not test gpu')
 
         try:
+            print("Testing registry")
             enable = microk8s_enable("registry")
             assert "Nothing to do for" not in enable
             validate_registry()
@@ -97,12 +102,14 @@ class TestUpgrade(object):
             print('Will not test registry')
 
         try:
+            print("Testing forward")
             validate_forward()
             test_matrix['forward'] = validate_forward
         except:
             print('Will not test port forward')
 
         try:
+            print("Testing metrics-server")
             enable = microk8s_enable("metrics-server")
             assert "Nothing to do for" not in enable
             validate_metrics_server()
@@ -124,6 +131,7 @@ class TestUpgrade(object):
             '''
 
             try:
+                print("Testing fluentd")
                 enable = microk8s_enable("fluentd", timeout_insec=30)
                 assert "Nothing to do for" not in enable
                 validate_fluentd()
@@ -132,6 +140,7 @@ class TestUpgrade(object):
                 print('Will not test the fluentd')
 
             try:
+                print("Testing jaeger")
                 enable = microk8s_enable("jaeger", timeout_insec=30)
                 assert "Nothing to do for" not in enable
                 validate_jaeger()
@@ -151,7 +160,7 @@ class TestUpgrade(object):
 
         # Test any validations that were valid for the original snap
         for test, validation in test_matrix.items():
-            print("Testing {}".format(test))
+            print("Re-testing {}".format(test))
             validation()
 
         if not is_container():

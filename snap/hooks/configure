@@ -47,18 +47,20 @@ fi
 if [ ! -e ${SNAP_DATA}/args/containerd ]
 then
   echo "Making sure we have containerd files"
+  systemctl stop snap.${SNAP_NAME}.daemon-kubelet
+  systemctl stop snap.${SNAP_NAME}.daemon-docker
+  systemctl stop snap.${SNAP_NAME}.daemon-containerd
   cp ${SNAP}/default-args/containerd ${SNAP_DATA}/args/
   cp ${SNAP}/default-args/containerd-env ${SNAP_DATA}/args/
   cp ${SNAP}/default-args/containerd-template.toml ${SNAP_DATA}/args/
-  systemctl restart snap.${SNAP_NAME}.daemon-containerd
-  sleep 10
-  if ! grep "--containerd" ${SNAP_DATA}/args/dockerd
+  if ! grep "\-\-containerd" ${SNAP_DATA}/args/dockerd
   then
     echo "--containerd \${SNAP_COMMON}/var/run/docker/containerd/docker-containerd.sock" >> ${SNAP_DATA}/args/dockerd
   fi
-  systemctl restart snap.${SNAP_NAME}.daemon-docker
+  systemctl start snap.${SNAP_NAME}.daemon-containerd
+  systemctl start snap.${SNAP_NAME}.daemon-docker
+  systemctl start snap.${SNAP_NAME}.daemon-kubelet
 fi
 
 # Create the locks directory
 mkdir -p ${SNAP_DATA}/var/lock/
-
