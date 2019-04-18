@@ -1,4 +1,5 @@
 import os
+import platform
 import time
 from validators import (
     validate_dns,
