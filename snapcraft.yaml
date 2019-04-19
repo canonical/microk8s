@@ -77,11 +77,21 @@ parts:
     after: [iptables]
     plugin: dump
     stage-packages:
-    - conntrack
-    - docker.io
     - aufs-tools
+    - conntrack
+    - coreutils
+    - docker.io
     - gawk
+    - grep
+    - dpkg
+    - libssl1.0.0
     - sed
+    - hostname
+    - net-tools
+    - util-linux
+    - zfsutils-linux
+    - socat
+    - iproute2
     source: .
     stage:
     - -sbin/xtables-multi
@@ -96,10 +106,6 @@ parts:
     - curl
     - openssl
     - file
-    stage-packages:
-    - util-linux
-    - zfsutils-linux
-    - socat
     source: .
     override-build: |
       set -eu
