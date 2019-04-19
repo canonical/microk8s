@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
+
+if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
+  echo "Linkerd not available, try enabling Linkerd. 'microk8s.enable linkerd' or 'microk8s.enable linkerd:--proxy-auto-inject' "
+  exit 0
+fi
+
+source $SNAP/actions/common/utils.sh
+ARCH=$(arch)
+if ! [ "${ARCH}" = "amd64" ]
+then
+  echo "Linkerd is not available for ${ARCH}"
+else
+  exit_if_stopped
+  "${SNAP_DATA}/bin/linkerd" --kubeconfig=$SNAP/client.config "$@"
+fi

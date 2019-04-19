@@ -14,6 +14,7 @@ from validators import (
     validate_prometheus,
     validate_fluentd,
     validate_jaeger,
+    validate_linkerd,
 )
 from utils import (
     microk8s_enable,
@@ -158,3 +159,18 @@ class TestAddons(object):
         else:
             print('Skipping jaeger, prometheus and fluentd tests')
 
+    def test_linkerd(self):
+        """
+        Sets up and validate linkerd
+
+        """
+        if platform.machine() != 'x86_64':
+            print("Linkerd tests are only relevant in x86 architectures")
+            return
+
+        print("Enabling Linkerd")
+        microk8s_enable("linkerd")
+        print("Validating Linkerd")
+        validate_linkerd()
+        print("Disabling Linkerd")
+        microk8s_disable("linkerd")

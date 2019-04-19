@@ -63,6 +63,8 @@ apps:
   istioctl:
     command: microk8s-istioctl.wrapper
     completer: istioctl.bash
+  linkerd:
+    command: microk8s-linkerd.wrapper
 
 parts:
   libnftnl:
@@ -147,11 +149,11 @@ parts:
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
-    - curl
     - openssl
     - file
     - dpkg
     stage-packages:
+    - curl      
     - net-tools
     - util-linux
     - zfsutils-linux
@@ -243,6 +245,9 @@ parts:
         rm "actions/enable.jaeger.sh"
         rm "actions/disable.jaeger.sh"
         rm -rf "actions/jaeger"
+        # Linkerd support
+        rm "actions/enable.linkerd.sh"
+        rm "actions/disable.linkerd.sh"
       else
         # Istio addon
         echo "Preparing istio"

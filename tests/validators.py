@@ -265,3 +265,21 @@ def validate_jaeger():
         attempt -= 1
 
     assert attempt > 0
+
+def validate_linkerd():
+    """
+    Validate Linkerd by deploying emojivoto.
+    """
+    if platform.machine() != 'x86_64':
+        print("Linkerd tests are only relevant in x86 architectures")
+        return
+
+    wait_for_installation()
+
+    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-ns")
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "emojivoto.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "emojivoto", "running", label="app=emoji-svc")
+    kubectl("delete -f {}".format(manifest))
