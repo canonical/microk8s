@@ -1,0 +1,2 @@
+--config ${SNAP_DATA}/args/containerd.toml
+--log-level info
