@@ -1,0 +1,33 @@
+root = "${SNAP_COMMON}/var/lib/docker/containerd/daemon"
+state = "${SNAP_COMMON}/var/run/docker/containerd/daemon"
+disabled_plugins = ["cri"]
+oom_score = -500
+
+[grpc]
+  address = "${SNAP_COMMON}/var/run/docker/containerd/docker-containerd.sock"
+  uid = 0
+  gid = 0
+  max_recv_message_size = 16777216
+  max_send_message_size = 16777216
+
+[debug]
+  address = "${SNAP_COMMON}/var/run/docker/containerd/docker-containerd-debug.sock"
+  uid = 0
+  gid = 0
+  level = "info"
+
+[metrics]
+  address = ""
+  grpc_histogram = false
+
+[cgroup]
+  path = ""
+
+[plugins]
+  [plugins.linux]
+    shim = "docker-containerd-shim"
+    runtime = "docker-runc"
+    runtime_root = "${SNAP_COMMON}/var/lib/docker/runc"
+    no_shim = false
+    shim_debug = false
+
