@@ -36,7 +36,4 @@ app=dockerd
 
 # This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/$app))"
-set -a
-. "${SNAP_DATA}/args/${app}-env"
-set +a
 exec "$SNAP/usr/bin/$app" "${args[@]}"
