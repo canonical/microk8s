@@ -33,7 +33,7 @@ microk8s.status --wait-ready
 ```
 
 > In order to install MicroK8s make sure
-> - you go though the [list of ports](docs/ports.md) that need to be available
+> - you go through the [list of ports](docs/ports.md) that need to be available
 
 ### Accessing Kubernetes
 
@@ -61,12 +61,12 @@ If you already have `kubectl` installed and you want to use it to access the Mic
 microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
 
-Note: The API server on port 8080 is listening on all network interfaces. In its kubeconfig file MicroK8s is using the loopback interface, as you can see with `microk8s.kubectl config view`. The `microk8s.config` command will output a kubeconfig with the host machine's IP (instead of the 127.0.0.1) as the API server endpoint.
+Note: The API server on port 8080 is listening on all network interfaces. In its kubeconfig file, MicroK8s is using the loopback interface, as you can see with `microk8s.kubectl config view`. The `microk8s.config` command will output a kubeconfig with the host machine's IP (instead of the 127.0.0.1) as the API server endpoint.
 
 
 ### Kubernetes Addons
 
-MicroK8s installs a barebones upstream Kubernetes. This means just the api-server, controller-manager, scheduler, kubelet, cni, kube-proxy are installed and run. Additional services like kube-dns and dashboard can be run using the `microk8s.enable` command
+MicroK8s installs a barebones upstream Kubernetes. This means just the `api-server`, `controller-manager`, `scheduler`, `kubelet`, `cni`, `kube-proxy` are installed and run. Additional services like `kube-dns` and `dashboard` can be run using the `microk8s.enable` command
 
 ```
 microk8s.enable dns dashboard
@@ -198,7 +198,7 @@ By default container logs are located in `/var/log/pods/{id}`. You have to mount
 
 ## Building from source
 
-To build the snap you need a [working LXD](https://linuxcontainers.org/lxd/getting-started-cli/#snap-package-archlinux-debian-fedora-opensuse-and-ubuntu). To install LXD on Ubuntu first remove any old packages:
+To build the snap you need a [working LXD](https://linuxcontainers.org/lxd/getting-started-cli/#snap-package-archlinux-debian-fedora-opensuse-and-ubuntu) installation. To install LXD on Ubuntu first remove any old packages:
 ```
 sudo apt-get purge lxc*
 sudo apt-get purge lxd*
