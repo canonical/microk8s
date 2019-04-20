@@ -30,7 +30,6 @@ then
    cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
 fi
 
-
 if ! grep "requestheader-client-ca-file" ${SNAP_DATA}/args/kube-apiserver
 then
   echo "Patching requestheader-client-ca-file argument"
