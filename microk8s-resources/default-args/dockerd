@@ -3,3 +3,4 @@
 --graph ${SNAP_COMMON}/var/lib/docker
 --pidfile ${SNAP_COMMON}/docker-pid
 --config-file=${SNAP_DATA}/args/docker-daemon.json
+--containerd ${SNAP_COMMON}/var/run/docker/containerd/docker-containerd.sock

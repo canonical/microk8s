@@ -21,3 +21,39 @@ then
   systemctl restart snap.${SNAP_NAME}.daemon-apiserver
   systemctl restart snap.${SNAP_NAME}.daemon-controller-manager
 fi
+
+if ! grep "requestheader-client-ca-file" ${SNAP_DATA}/args/kube-apiserver
+then
+  echo "Patching requestheader-client-ca-file argument"
+  # Add a new line at the end
+  echo "" >> ${SNAP_DATA}/args/kube-apiserver
+  echo "--requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt" >> ${SNAP_DATA}/args/kube-apiserver
+  systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+fi
+
+# Patch for issue: https://github.com/ubuntu/microk8s/issues/121
+if grep -e  "requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt"  ${SNAP_DATA}/args/kube-apiserver
+then
+  "$SNAP/bin/sed" -i 's@requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt@requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
+fi
+
+if [ ! -e ${SNAP_DATA}/args/containerd ]
+then
+  echo "Making sure we have containerd files"
+  systemctl stop snap.${SNAP_NAME}.daemon-kubelet
+  systemctl stop snap.${SNAP_NAME}.daemon-docker
+  systemctl stop snap.${SNAP_NAME}.daemon-containerd
+  cp ${SNAP}/default-args/containerd ${SNAP_DATA}/args/
+  cp ${SNAP}/default-args/containerd-env ${SNAP_DATA}/args/
+  cp ${SNAP}/default-args/containerd-template.toml ${SNAP_DATA}/args/
+  if ! grep "\-\-containerd" ${SNAP_DATA}/args/dockerd
+  then
+    echo "--containerd \${SNAP_COMMON}/var/run/docker/containerd/docker-containerd.sock" >> ${SNAP_DATA}/args/dockerd
+  fi
+  systemctl start snap.${SNAP_NAME}.daemon-containerd
+  systemctl start snap.${SNAP_NAME}.daemon-docker
+  systemctl start snap.${SNAP_NAME}.daemon-kubelet
+fi
+
+# Create the locks directory
+mkdir -p ${SNAP_DATA}/var/lock/
