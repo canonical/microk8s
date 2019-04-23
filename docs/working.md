@@ -200,7 +200,7 @@ spec:
         - containerPort: 80
 ```
 
-### MicroK8s runs inside a VM
+### what if MicroK8s runs inside a VM?
 
 Often MicroK8s is placed in a VM while the development process takes place on the host machine. Is this setup pushing container images to the in-VM registry requires some extra configuration.
 
@@ -340,6 +340,6 @@ There are a lot of ways to setup a private secure registry that may slightly cha
 
 # References
 
-[Test an insecure registry](https://docs.docker.com/registry/insecure/)
-[Configuring containerd](https://github.com/containerd/cri/blob/master/docs/registry.md)
-[Upstream Kubernetes documentation on pulling images from a private registry](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)
+- [Test an insecure registry](https://docs.docker.com/registry/insecure/)
+- [Configuring containerd](https://github.com/containerd/cri/blob/master/docs/registry.md)
+- [Upstream Kubernetes documentation on pulling images from a private registry](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)
