@@ -149,7 +149,7 @@ produce_server_cert() {
 
     local IP_ADDR="$1"
 
-    cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf
+    cp ${SNAP_DATA}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf
     if ! [ "$IP_ADDR" == "127.0.0.1" ] && ! [ "$IP_ADDR" == "none" ]
     then
         local ips='' sep=''
