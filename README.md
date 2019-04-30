@@ -87,7 +87,7 @@ With `microk8s.status` you can see the list of available addons and which ones a
 - **ingress**: Create an ingress controller.
 - **gpu**: Expose GPU(s) to MicroK8s by enabling the nvidia runtime and nvidia-device-plugin-daemonset. Requires NVIDIA drivers to already be installed on the host system.
 - **istio**: Deploy the core [Istio](https://istio.io/) services. You can use the `microk8s.istioctl` command to manage your deployments.
-- **registry**: Deploy an image private registry and expose it on `localhost:32000`. The storage addon will be enabled as part of this addon. See [the registry documentation](docs/registry.md) for more details.
+- **registry**: Deploy an image private registry and expose it on `localhost:32000`. The storage addon will be enabled as part of this addon. See [the registry documentation](docs/working.md) for more details.
 - **metrics-server**: Deploy the [Metrics Server](https://kubernetes.io/docs/tasks/debug-application-cluster/core-metrics-pipeline/#metrics-server).
 - **prometheus**: Deploy the [Prometheus Operator](https://github.com/coreos/prometheus-operator) v0.25.
 - **fluentd**: Deploy [Elasticsearch-Kibana-Fluentd](https://kubernetes.io/docs/tasks/debug-application-cluster/logging-elasticsearch-kibana/) logging and monitoring solution.
