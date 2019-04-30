@@ -414,7 +414,7 @@ the following under `[plugins] -> [plugins.cri.registry] -> [plugins.cri.registr
           endpoint = ["http://10.141.241.175:32000"]
 ```
 
-See the full file [here][containerd-template]
+See the full file [here][docs/containerd-template]
 
 Restart MicroK8s to have the new configuration loaded:
 
