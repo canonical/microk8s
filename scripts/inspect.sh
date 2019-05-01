@@ -113,17 +113,18 @@ function store_processes {
 
 function store_kubernetes_info {
     # Collect some in-k8s details
-    printf -- 'Inspect kubernetes cluster\n'
     mkdir -p $INSPECT_DUMP/k8s
     /snap/bin/microk8s.kubectl version | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
     /snap/bin/microk8s.kubectl cluster-info | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
     /snap/bin/microk8s.kubectl cluster-info dump | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
     /snap/bin/microk8s.kubectl get all --all-namespaces | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
+    /snap/bin/microk8s.kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+    /snap/bin/microk8s.kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
 
 function suggest_fixes {
     # Propose fixes
-    #printf '\n'
+    printf -- '\n'
     if ! systemctl status snap.microk8s.daemon-apiserver &> /dev/null
     then
         if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
@@ -143,6 +144,12 @@ function suggest_fixes {
     then
         printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
         printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+    fi
+
+    # check for selinux. if enabled, print warning.
+    if getenforce | grep -q 'Enabled'
+    then
+    	printf -- '\033[0;33m WARNING: \033[0m SElinux is enabled. Consider disabling it.\n'
     fi
 }
 
@@ -190,6 +197,8 @@ store_distribution
 store_openssl
 store_network
 store_processes
+
+printf -- '\n(6) Inspecting Kubernetes Cluster\n'
 store_kubernetes_info
 
 suggest_fixes
