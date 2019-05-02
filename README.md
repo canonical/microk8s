@@ -2,7 +2,6 @@
 
 ![](https://img.shields.io/badge/Kubernetes-1.14-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg)
 
-![Certification](/docs/images/certified_kubernetes_color-222x300.png)
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
 
 ## User Guide
