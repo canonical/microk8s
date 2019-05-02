@@ -39,6 +39,8 @@ spec:
           value: :5000
         - name: REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY
           value: /var/lib/registry
+        - name: REGISTRY_STORAGE_DELETE_ENABLED
+          value: "yes"
         ports:
         - containerPort: 5000
           name: registry
