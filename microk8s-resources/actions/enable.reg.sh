@@ -17,6 +17,3 @@ if [ ! -f "${SNAP_DATA}/bin/reg" ]; then
 fi
 
 echo "REG is installed"
-# pod/servicegraph will start failing without dns
-"$SNAP/microk8s-enable.wrapper" dns
-"$SNAP_DATA/bin/reg" "--kubeconfig=$SNAP/client.config" install "${argz[@]}" | "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f -
