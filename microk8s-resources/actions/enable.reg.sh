@@ -7,7 +7,7 @@ source $SNAP/actions/common/utils.sh
 read -ra ARGUMENTS <<< "$1"
 argz=("${ARGUMENTS[@]/#/--}")
 
-# check if linkerd cli is already in the system.  Download if it doesn't exist.
+# check if reg cli is already in the system.  Download if it doesn't exist.
 if [ ! -f "${SNAP_DATA}/bin/reg" ]; then
   REG_VERSION="${REG_VERSION:-v0.16.0}"
   echo "Fetching reg version $REG_VERSION."
