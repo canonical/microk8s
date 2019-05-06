@@ -34,6 +34,7 @@ do
 
             systemctl restart snap.microk8s.daemon-apiserver.service
             systemctl restart snap.microk8s.daemon-proxy.service
+            systemctl restart snap.microk8s.daemon-kubelet.service
             restart_attempt=$[$restart_attempt+1]
         else
             restart_attempt=0
