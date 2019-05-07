@@ -105,3 +105,15 @@ then
     systemctl restart snap.${SNAP_NAME}.daemon-apiserver.service
     systemctl restart snap.${SNAP_NAME}.daemon-proxy.service
 fi
+
+# Make containerd stream server listen to localhost
+if [ -e ${SNAP_DATA}/args/containerd-template.toml ] && grep -e "stream_server_address = \"\"" ${SNAP_DATA}/args/containerd-template.toml
+then
+    "$SNAP/bin/sed" -i 's@stream_server_address = ""@stream_server_address = "127.0.0.1"@g' ${SNAP_DATA}/args/containerd-template.toml
+    if grep -e "stream_server_port = \"10010\"" ${SNAP_DATA}/args/containerd-template.toml
+    then
+        "$SNAP/bin/sed" -i 's@stream_server_port = "10010"@stream_server_port = "0"@g' ${SNAP_DATA}/args/containerd-template.toml
+    fi
+    systemctl restart snap.${SNAP_NAME}.daemon-containerd
+    systemctl restart snap.${SNAP_NAME}.daemon-kubelet
+fi
