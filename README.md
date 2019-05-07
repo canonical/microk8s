@@ -160,7 +160,10 @@ The [Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-stor
 Make sure packets to/from the pod network interface can be forwarded
 to/from the default interface on the host:
 
-`sudo iptables -P FORWARD ACCEPT`
+```
+sudo iptables -P FORWARD ACCEPT
+sudo apt-get install iptables-persistent # this package allows you to persist this iptable rule across reboot
+```
 
 or, if using `ufw`:
 
