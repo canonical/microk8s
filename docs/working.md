@@ -33,19 +33,19 @@ The Dockerfile we will be using is:
 FROM nginx:alpine
 ```
 
-To build the image tagged with `mynginx:latest`, navigate to the directory where
+To build the image tagged with `mynginx:local`, navigate to the directory where
 `Dockerfile` is and run:
 
 ```bash
-docker build . -t mynginx:latest
+docker build . -t mynginx:local
 ```
 
-This will generate a new local image tagged `mynginx:latest`.
+This will generate a new local image tagged `mynginx:local`.
 
 ## Working with locally built images without a registry
 
 When an image is built it is cached on the Docker daemon used during the build.
-Having run the `docker build .` command, you can see the newly built image by
+Having run the `docker build . -t mynginx:local` command, you can see the newly built image by
 running:
 
 ```bash
@@ -56,8 +56,7 @@ This will list the images currently known to Docker, for example:
 
 ```no-highlight
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-mynginx             latest              1fe3d8f47868        30 minutes ago      16.1MB
-nginx               alpine              0be75340bd9b        6 days ago          16.1MB
+mynginx             local               1fe3d8f47868        30 minutes ago      16.1MB
 ```
 
 The image we created is known to Docker. However, Kubernetes is not aware of
@@ -99,19 +98,20 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: mynginx:latest
+        image: mynginx:local
         ports:
         - containerPort: 80
 ```
 
-We reference the image with `image: mynginx:latest`. Kubernetes will behave as though
+We reference the image with `image: mynginx:local`. Kubernetes will behave as though
 there is an image in docker.io (the Dockerhub registry) for which it already has a cached
-copy. This process can be repeated any time changes are made to the image.
+copy. This process can be repeated any time changes are made to the image. Note that
+containerd will not cache images with the `latest` tag so make sure you avoid it.
 
 
 ## Working with public registries
 
-After building an image with `docker build . -t mynginx:latest`, it can be pushed to one of
+After building an image with `docker build . -t mynginx:local`, it can be pushed to one of
 the mainstream public registries. You will need to create an account and register a
 username. For this example we created an account with [https://hub.docker.com/]()  and
 we log in as `kjackal`.
@@ -147,7 +147,7 @@ The ID is listed in the output:
 
 ```no-highlight
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-mynginx             latest              1fe3d8f47868        2 hours ago         16.1MB
+mynginx             local              1fe3d8f47868        2 hours ago         16.1MB
 ....
 ```
 
@@ -229,7 +229,7 @@ The ID is listed in the output:
 
 ```no-highlight
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-mynginx             latest              1fe3d8f47868        2 hours ago         16.1MB
+mynginx             local              1fe3d8f47868        2 hours ago         16.1MB
 ....
 ```
 
