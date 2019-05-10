@@ -158,11 +158,11 @@ The [Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-stor
 
 ### My pods can't reach the internet or each other (but my MicroK8s host machine can).
 Make sure packets to/from the pod network interface can be forwarded
-to/from the default interface on the host:
+to/from the default interface on the host via the iptables tool.  As shown below such changes can be made persistent via installation of the iptables-persistent package:
 
 ```
 sudo iptables -P FORWARD ACCEPT
-sudo apt-get install iptables-persistent # this package allows you to persist this iptable rule across reboot
+sudo apt-get install iptables-persistent
 ```
 
 or, if using `ufw`:
