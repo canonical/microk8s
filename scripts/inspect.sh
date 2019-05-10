@@ -95,6 +95,7 @@ function suggest_fixes {
   then
       printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
       printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
+      printf -- 'You can make this change persistent with sudo apt-get install iptables-persistent \n'
   fi
 
   ufw=$(ufw status)
