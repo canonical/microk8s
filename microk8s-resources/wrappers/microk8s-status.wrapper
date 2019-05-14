@@ -80,7 +80,7 @@ function format_output() {
     if [ "$status" = "Running" ]
     then
       get_all="$($KUBECTL get all --all-namespaces 2>&1)"
-      get_all="$get_all\n$(kubectl get clusterroles --show-kind --no-headers 2>&1)"
+      get_all="$get_all\n$($KUBECTL get clusterroles --show-kind --no-headers 2>&1)"
       for a in "${!addon[@]}"
       do
         if echo "$get_all" | grep "${addon[$a]}" &> /dev/null
