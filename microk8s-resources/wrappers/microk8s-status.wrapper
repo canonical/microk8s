@@ -12,6 +12,7 @@ KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
 # Arrray of what we query per addon
 declare -A addon
 addon[dns]="pod/kube-dns"
+addon[rbac]="clusterrole.rbac.authorization.k8s.io/cluster-admin"
 addon[dashboard]="pod/kubernetes-dashboard"
 addon[ingress]="pod/nginx-ingress-microk8s-controller"
 addon[storage]="pod/hostpath-provisioner"
@@ -79,6 +80,7 @@ function format_output() {
     if [ "$status" = "Running" ]
     then
       get_all="$($KUBECTL get all --all-namespaces 2>&1)"
+      get_all="$get_all\n$($KUBECTL get clusterroles --show-kind --no-headers 2>&1)"
       for a in "${!addon[@]}"
       do
         if echo "$get_all" | grep "${addon[$a]}" &> /dev/null

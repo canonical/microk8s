@@ -15,6 +15,7 @@ from validators import (
     validate_fluentd,
     validate_jaeger,
     validate_linkerd,
+    validate_rbac,
 )
 from utils import (
     microk8s_enable,
@@ -174,3 +175,15 @@ class TestAddons(object):
         validate_linkerd()
         print("Disabling Linkerd")
         microk8s_disable("linkerd")
+
+    def test_rbac_addon(self):
+        """
+        Test RBAC.
+
+        """
+        print("Enabling RBAC")
+        microk8s_enable("rbac")
+        print("Validating RBAC")
+        validate_rbac()
+        print("Disabling RBAC")
+        microk8s_disable("rbac")
