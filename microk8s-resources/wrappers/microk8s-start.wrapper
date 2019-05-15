@@ -41,6 +41,3 @@ else
     sudo rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
   fi
 fi
-
-echo "Enabling pod scheduling"
-uncordon_node
