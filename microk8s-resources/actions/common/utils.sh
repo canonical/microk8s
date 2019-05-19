@@ -144,12 +144,35 @@ get_ips() {
 
 produce_server_cert() {
     # Produce the server certificate adding the IP passed as a parameter
-    # Parameters:
-    # $1 IP we want in the certificate
+    # Returns 
+    #  0 if no change
+    #  1 otherwise. 
 
-    local IP_ADDR="$1"
+    render_csr_conf
+    if ! [ -f "${SNAP_DATA}/certs/csr.conf" ];
+    then
+        echo "changeme" >  "${SNAP_DATA}/certs/csr.conf" 
+    fi
 
-    cp ${SNAP_DATA}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf
+    if ! cmp -s "${SNAP_DATA}/certs/csr.conf.rendered" "${SNAP_DATA}/certs/csr.conf"; then
+      echo "CSR modified."
+      cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
+      openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+      openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+      return 1
+    else
+      echo "No changes"
+      return 0
+    fi
+
+}
+
+render_csr_conf() {
+    # Render csr.conf.template to be used to compare if there is difference between the rendered csr.conf.rendered and csr.conf
+
+    local IP_ADDR="$(get_ips)"
+
+    cp ${SNAP_DATA}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.rendered
     if ! [ "$IP_ADDR" == "127.0.0.1" ] && ! [ "$IP_ADDR" == "none" ]
     then
         local ips='' sep=''
@@ -158,14 +181,11 @@ produce_server_cert() {
             ips+="${sep}IP.$((i++)) = ${IP_ADDR}"
             sep='\n'
         done
-        "$SNAP/bin/sed" -i "s/#MOREIPS/${ips}/g" ${SNAP_DATA}/certs/csr.conf
+        "$SNAP/bin/sed" -i "s/#MOREIPS/${ips}/g" ${SNAP_DATA}/certs/csr.conf.rendered
     else
-        "$SNAP/bin/sed" -i 's/#MOREIPS//g' ${SNAP_DATA}/certs/csr.conf
+        "$SNAP/bin/sed" -i 's/#MOREIPS//g' ${SNAP_DATA}/certs/csr.conf.rendered
     fi
-    openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-    openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 }
-
 
 get_node() {
     # Returns the node name or no_node_found in case no node is present

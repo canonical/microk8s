@@ -159,6 +159,7 @@ parts:
     - util-linux
     - zfsutils-linux
     - iproute2
+    - diffutils
     source: .
     override-build: |
       set -eu
