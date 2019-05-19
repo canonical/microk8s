@@ -143,7 +143,9 @@ get_ips() {
 
 
 produce_server_cert() {
-    # Produce the server certificate adding the IP passed as a parameter
+    # Produce the server certificates based on the rendered csr.conf.rendered.
+    # The file csr.conf.rendered is compared with csr.conf to determine if a regeneration of server certs must be done.
+    #
     # Returns 
     #  0 if no change
     #  1 otherwise. 
@@ -155,20 +157,18 @@ produce_server_cert() {
     fi
 
     if ! cmp -s "${SNAP_DATA}/certs/csr.conf.rendered" "${SNAP_DATA}/certs/csr.conf"; then
-      echo "CSR modified."
       cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
       openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
       openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
-      return 1
+      echo "1"
     else
-      echo "No changes"
-      return 0
+      echo "0"
     fi
 
 }
 
 render_csr_conf() {
-    # Render csr.conf.template to be used to compare if there is difference between the rendered csr.conf.rendered and csr.conf
+    # Render csr.conf.template to csr.conf.rendered
 
     local IP_ADDR="$(get_ips)"
 
