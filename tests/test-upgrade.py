@@ -7,6 +7,7 @@ from validators import (
     validate_ingress,
     validate_gpu,
     validate_registry,
+    validate_reg,
     validate_forward,
     validate_metrics_server,
     validate_prometheus,
@@ -95,6 +96,15 @@ class TestUpgrade(object):
             test_matrix['registry'] = validate_registry
         except:
             print('Will not test registry')
+
+
+        try:
+            enable = microk8s_enable("reg")
+            assert "Nothing to do for" not in enable
+            validate_reg()
+            test_matrix['reg'] = validate_reg
+        except:
+            print('Will not test reg')
 
         try:
             validate_forward()

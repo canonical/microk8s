@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
+
+if [ ! -f "${SNAP_DATA}/bin/reg" ]; then
+  REG_VERSION="${REG_VERSION:-v0.16.0}"
+  echo "Fetching reg version $REG_VERSION."
+  sudo mkdir -p "$SNAP_DATA/bin"
+  sudo "${SNAP}/usr/bin/curl" -L https://github.com/genuinetools/reg/releases/download/${REG_VERSION}/reg-linux-${SNAP_ARCH} -o "$SNAP_DATA/bin/reg"
+  sudo chmod uo+x "$SNAP_DATA/bin/reg"
+fi
+
+source $SNAP/actions/common/utils.sh
+ARCH=$(arch)
+if ! [ "${ARCH}" = "amd64" ]
+then
+  echo "reg is not available for ${ARCH}"
+else
+  exit_if_stopped
+  "${SNAP_DATA}/bin/reg" --kubeconfig=$SNAP/client.config "$@"
+fi

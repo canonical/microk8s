@@ -3,6 +3,7 @@ import os
 import re
 import requests
 import platform
+import subprocess
 
 from utils import (
     kubectl,
@@ -177,6 +178,23 @@ def validate_registry():
     assert "localhost:32000/my-busybox" in output
     kubectl("delete -f {}".format(manifest))
 
+def validate_reg():
+    """
+    Validate reg by pulling image, printing image and removing image
+    """
+
+    wait_for_pod_state("", "container-registry", "running", label="app=registry")
+    docker("pull busybox")
+    docker("tag busybox localhost:32000/my-busybox:reg_version")
+    docker("push localhost:32000/my-busybox:reg_version")
+    output = (subprocess
+              .run(['reg', 'ls', '-f', 'localhost:32000'], stdout=subprocess.PIPE)
+              .stdout
+              .decode('utf-8')
+              .split("\n"))
+    assert "my-busybox          reg_version" in output
+    subprocess.run(['reg', 'rm', '-f', 'localhost:32000/my-busybox:reg_version'])
+
 
 def validate_forward():
     """
@@ -283,3 +301,4 @@ def validate_linkerd():
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "emojivoto", "running", label="app=emoji-svc")
     kubectl("delete -f {}".format(manifest))
+
