@@ -82,6 +82,7 @@ With `microk8s.status` you can see the list of available addons and which ones a
 
 #### List of Available Addons
 - **dns**: Deploy kube dns. This addon may be required by others thus we recommend you always enable it. In environments where the external dns servers `8.8.8.8` and `8.8.4.4` are blocked you will need to update the upstream dns servers in `microk8s.kubectl -n kube-system edit configmap/kube-dns` after enabling the addon.
+- **rbac**: Enable RBAC (role-based access control) authorization mode. **NOTE**: Most of the other addons will not work with the RBAC addon, since they are not RBAC enabled.
 - **dashboard**: Deploy kubernetes dashboard as well as grafana and influxdb. To access grafana point your browser to the url reported by `microk8s.kubectl cluster-info`.
 - **storage**: Create a default storage class. This storage class makes use of the hostpath-provisioner pointing to a directory on the host. Persistent volumes are created under `${SNAP_COMMON}/default-storage`. Upon disabling this addon you will be asked if you want to delete the persistent volumes created.
 - **ingress**: Create an ingress controller.
@@ -158,9 +159,12 @@ The [Kubenet](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-stor
 
 ### My pods can't reach the internet or each other (but my MicroK8s host machine can).
 Make sure packets to/from the pod network interface can be forwarded
-to/from the default interface on the host:
+to/from the default interface on the host via the iptables tool.  As shown below such changes can be made persistent via installation of the iptables-persistent package:
 
-`sudo iptables -P FORWARD ACCEPT`
+```
+sudo iptables -P FORWARD ACCEPT
+sudo apt-get install iptables-persistent
+```
 
 or, if using `ufw`:
 

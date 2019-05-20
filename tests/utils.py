@@ -12,12 +12,13 @@ arch_translate = {
 }
 
 
-def run_until_success(cmd, timeout_insec=60):
+def run_until_success(cmd, timeout_insec=60, err_out=None):
     """
     Run a command untill it succeeds or times out.
     Args:
         cmd: Command to run
         timeout_insec: Time out in seconds
+        err_out: If command fails and this is the output, return.
 
     Returns: The string output of the command
 
@@ -27,25 +28,29 @@ def run_until_success(cmd, timeout_insec=60):
         try:
             output = check_output(cmd.split()).strip().decode('utf8')
             return output.replace('\\n', '\n')
-        except CalledProcessError:
+        except CalledProcessError as err:
+            output = err.output.strip().decode('utf8').replace('\\n', '\n')
+            if output == err_out:
+                return output
             if datetime.datetime.now() > deadline:
                 raise
             print("Retrying {}".format(cmd))
             time.sleep(3)
 
 
-def kubectl(cmd, timeout_insec=300):
+def kubectl(cmd, timeout_insec=300, err_out=None):
     """
     Do a kubectl <cmd>
     Args:
         cmd: left part of kubectl <left_part> command
         timeout_insec: timeout for this job
+        err_out: If command fails and this is the output, return.
 
     Returns: the kubectl response in a string
 
     """
     cmd = '/snap/bin/microk8s.kubectl ' + cmd
-    return run_until_success(cmd, timeout_insec)
+    return run_until_success(cmd, timeout_insec, err_out)
 
 
 def docker(cmd):

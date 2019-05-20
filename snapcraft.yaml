@@ -138,6 +138,7 @@ parts:
     - aufs-tools
     - gawk
     - sed
+    - socat
     - grep
     - libssl1.0.0
     - coreutils
@@ -159,7 +160,6 @@ parts:
     - net-tools
     - util-linux
     - zfsutils-linux
-    - socat
     - iproute2
     source: .
     override-build: |
