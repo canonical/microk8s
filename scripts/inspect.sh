@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-SNAP_DATA=/var/snap/microk8s/current # TODO: remove before PR
 INSPECT_DUMP=${SNAP_DATA}/inspection-report
 RETURN_CODE=0
 JOURNALCTL_LIMIT=100000
@@ -204,6 +203,6 @@ store_kubernetes_info
 suggest_fixes
 
 printf -- '\n*** Building the report tarball ***\n'
-# build_report_tarball TODO: uncomment before PR
+build_report_tarball
 
 exit $RETURN_CODE
