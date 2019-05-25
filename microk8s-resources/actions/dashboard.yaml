@@ -19,6 +19,20 @@ metadata:
   namespace: kube-system
 
 ---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: kubernetes-dashboard
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: kubernetes-dashboard
+  namespace: kube-system
+
+---  
 kind: Deployment
 apiVersion: apps/v1beta2
 metadata:
@@ -145,6 +159,7 @@ spec:
       targetPort: 8082
   selector:
     k8s-app: heapster
+
 ---
 kind: Deployment
 apiVersion: extensions/v1beta1
@@ -241,6 +256,23 @@ metadata:
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: heapster
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:heapster
+subjects:
+- kind: ServiceAccount
+  name: heapster
+  namespace: kube-system    
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -254,6 +286,7 @@ data:
   NannyConfiguration: |-
     apiVersion: nannyconfig/v1alpha1
     kind: NannyConfiguration
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -267,6 +300,7 @@ data:
   NannyConfiguration: |-
     apiVersion: nannyconfig/v1alpha1
     kind: NannyConfiguration
+
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
