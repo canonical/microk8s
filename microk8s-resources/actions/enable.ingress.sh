@@ -7,7 +7,7 @@ source $SNAP/actions/common/utils.sh
 echo "Enabling Ingress"
 
 ARCH=$(arch)
-TAG="0.22.0"
+TAG="0.24.1"
 EXTRA_ARGS="- --publish-status-address=127.0.0.1"
 if [ "${ARCH}" = arm64 ]
 then
