@@ -9,6 +9,7 @@ from validators import (
     validate_gpu,
     validate_istio,
     validate_registry,
+    validate_reg,
     validate_forward,
     validate_metrics_server,
     validate_prometheus,
