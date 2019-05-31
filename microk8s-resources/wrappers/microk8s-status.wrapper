@@ -11,7 +11,7 @@ KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
 
 # Arrray of what we query per addon
 declare -A addon
-addon[dns]="pod/kube-dns"
+addon[dns]="pod/coredns"
 addon[rbac]="clusterrole.rbac.authorization.k8s.io/cluster-admin"
 addon[dashboard]="pod/kubernetes-dashboard"
 addon[ingress]="pod/nginx-ingress-microk8s-controller"
