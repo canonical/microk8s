@@ -156,7 +156,7 @@ produce_server_cert() {
         echo "changeme" >  "${SNAP_DATA}/certs/csr.conf" 
     fi
 
-    if ! cmp -s "${SNAP_DATA}/certs/csr.conf.rendered" "${SNAP_DATA}/certs/csr.conf"; then
+    if ! "${SNAP}/usr/bin/cmp" -s "${SNAP_DATA}/certs/csr.conf.rendered" "${SNAP_DATA}/certs/csr.conf"; then
       cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
       openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
       openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
@@ -170,14 +170,14 @@ produce_server_cert() {
 render_csr_conf() {
     # Render csr.conf.template to csr.conf.rendered
 
-    local IP_ADDR="$(get_ips)"
+    local IP_ADDRESSES="$(get_ips)"
 
     cp ${SNAP_DATA}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.rendered
-    if ! [ "$IP_ADDR" == "127.0.0.1" ] && ! [ "$IP_ADDR" == "none" ]
+    if ! [ "$IP_ADDRESSES" == "127.0.0.1" ] && ! [ "$IP_ADDRESSES" == "none" ]
     then
         local ips='' sep=''
         local -i i=3
-        for IP_ADDR in "$@"; do
+        for IP_ADDR in $(echo "$IP_ADDRESSES"); do
             ips+="${sep}IP.$((i++)) = ${IP_ADDR}"
             sep='\n'
         done
