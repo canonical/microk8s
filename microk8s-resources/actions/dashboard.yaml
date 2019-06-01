@@ -1,5 +1,5 @@
+# ------------------- Dashboard Secret ------------------- #
 
-# ------------------- Dashboard ------------------- #
 apiVersion: v1
 kind: Secret
 metadata:
@@ -10,6 +10,8 @@ metadata:
 type: Opaque
 
 ---
+# ------------------- Dashboard Service Account ------------------- #
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -19,22 +21,62 @@ metadata:
   namespace: kube-system
 
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
+# ------------------- Dashboard Role & Role Binding ------------------- #
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: kubernetes-dashboard
+  name: kubernetes-dashboard-minimal
+  namespace: kube-system
+rules:
+  # Allow Dashboard to create 'kubernetes-dashboard-key-holder' secret.
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create"]
+  # Allow Dashboard to create 'kubernetes-dashboard-settings' config map.
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create"]
+  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs"]
+  verbs: ["get", "update", "delete"]
+  # Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["kubernetes-dashboard-settings"]
+  verbs: ["get", "update"]
+  # Allow Dashboard to get metrics from heapster.
+- apiGroups: [""]
+  resources: ["services"]
+  resourceNames: ["heapster"]
+  verbs: ["proxy"]
+- apiGroups: [""]
+  resources: ["services/proxy"]
+  resourceNames: ["heapster", "http:heapster:", "https:heapster:"]
+  verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubernetes-dashboard-minimal
+  namespace: kube-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
+  kind: Role
+  name: kubernetes-dashboard-minimal
 subjects:
 - kind: ServiceAccount
   name: kubernetes-dashboard
   namespace: kube-system
 
----  
+---
+# ------------------- Dashboard Deployment ------------------- #
+
 kind: Deployment
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 metadata:
   labels:
     k8s-app: kubernetes-dashboard
@@ -53,7 +95,7 @@ spec:
     spec:
       containers:
       - name: kubernetes-dashboard
-        image: k8s.gcr.io/kubernetes-dashboard-$ARCH:v1.8.3
+        image: k8s.gcr.io/kubernetes-dashboard-$ARCH:v1.10.1
         ports:
         - containerPort: 8443
           protocol: TCP
@@ -89,6 +131,8 @@ spec:
         effect: NoSchedule
 
 ---
+# ------------------- Dashboard Service ------------------- #
+
 kind: Service
 apiVersion: v1
 metadata:
@@ -102,7 +146,8 @@ spec:
       targetPort: 8443
   selector:
     k8s-app: kubernetes-dashboard
----
+
+---    
 # ------------------ Monitoring (heapster,influxdb, grafana) ----------- #
 apiVersion: v1
 kind: Service
