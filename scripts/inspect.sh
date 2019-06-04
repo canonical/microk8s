@@ -150,6 +150,16 @@ function suggest_fixes {
     then
     	printf -- '\033[0;33m WARNING: \033[0m SElinux is enabled. Consider disabling it.\n'
     fi
+
+    # check for docker
+    if [ -d "/etc/docker/" ]; then 
+        printf -- '\033[0;33m WARNING: \033[0m Docker is installed. You should mark the registry as insecure. '
+        printf -- 'Add the following to /etc/docker/deamon.json : \n'
+        printf -- ' {\n'
+        printf -- ' \t "insecure-registries" : ["localhost:32000"] \n'
+        printf -- ' }\n'
+        printf -- ' and then restart docker with: sudo systemctl restart docker\n'
+    fi
 }
 
 
