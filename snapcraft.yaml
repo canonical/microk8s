@@ -141,6 +141,7 @@ parts:
     - libssl1.0.0
     - coreutils
     - hostname
+    - diffutils    
     stage:
     - -sbin/xtables-multi
     - -sbin/iptables*

@@ -17,8 +17,7 @@ openssl genrsa -out ${SNAP_DATA}/certs/serviceaccount.key 2048
 openssl genrsa -out ${SNAP_DATA}/certs/ca.key 2048
 openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
 openssl genrsa -out ${SNAP_DATA}/certs/server.key 2048
-IP_ADDR="$(get_ips)"
-produce_server_cert $IP_ADDR
+produce_server_cert
 rm -rf .srl
 
 # Create the basic tokens
