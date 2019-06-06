@@ -43,7 +43,7 @@ n=0
 until [ $n -ge 10 ]
 do
   sleep 3
-  ($KUBECTL apply  \
+  ("$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply  \
     -f ${SNAP}/actions/knative/serving.yaml \
     -f ${SNAP}/actions/knative/build.yaml \
     -f ${SNAP}/actions/knative/release.yaml \

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
+
+source $SNAP/actions/common/utils.sh
+
+if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.add-node on the master."
+  exit 1
+fi
+
+if echo "$*" | grep -q -- 'help'; then
+  echo "Usage: microk8s.add-node"
+  echo ""
+  echo "Produce a connection string for a node to join the cluster"
+  exit 0
+fi
+
+subject=$(openssl x509 -noout -subject -in "$SNAP_DATA/certs/ca.crt")
+if [[ $subject == *"127.0.0.1"* ]]; then
+  echo "Clustering requires a fresh MicroK8s installation. Reinstall with:"
+  echo "sudo snap remove microk8s"
+  echo "sudo snap install microk8s --classic"
+  exit 1
+fi
+
+if [ "$(id -u)" != "0" ]; then
+  echo "This command must be run as root (or with sudo)"
+  exit 1
+fi
+
+exit_if_stopped
+
+
+token=$(< /dev/urandom tr -dc A-Za-z | head -c32;echo;)
+echo ${token} | tee -a $SNAP_DATA/credentials/cluster-tokens.txt > /dev/null
+
+port="25000"
+if grep -e port "${SNAP_DATA}"/args/cluster-agent &> /dev/null
+then
+  port=$(cat "${SNAP_DATA}"/args/cluster-agent | "$SNAP"/usr/bin/gawk '{print $2}')
+fi
+
+default_ip="$(get_default_ip)"
+all_ips="$(get_ips)"
+
+echo "Join node with: microk8s.join ${default_ip}:$port/${token}"
+echo ""
+echo "If the node you are adding is not reachable through the default interface you can use one of the following:"
+for addr in $(echo "${all_ips}"); do
+  if ! [[ $addr == *":"* ]]; then
+    echo " microk8s.join ${addr}:$port/${token}"
+  fi
+done
+

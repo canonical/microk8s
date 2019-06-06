@@ -183,6 +183,7 @@ def validate_istio():
     wait_for_pod_state("", "default", "running", label="app=details")
     kubectl("delete -f {}".format(manifest))
 
+
 def validate_knative():
     """
     Validate Knative by deploying the helloworld-go app.
@@ -205,6 +206,7 @@ def validate_knative():
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "default", "running", label="serving.knative.dev/service=helloworld-go")
     kubectl("delete -f {}".format(manifest))
+
 
 def validate_registry():
     """
@@ -233,11 +235,11 @@ def validate_forward():
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "default", "running", label="app=nginx")
     os.system('killall kubectl')
-    os.system('/snap/bin/microk8s.kubectl port-forward pod/nginx 5000:80 &')
+    os.system('/snap/bin/microk8s.kubectl port-forward pod/nginx 5123:80 &')
     attempt = 10
     while attempt >= 0:
         try:
-            resp = requests.get("http://localhost:5000")
+            resp = requests.get("http://localhost:5123")
             if resp.status_code == 200:
                 break
         except:
@@ -266,6 +268,7 @@ def validate_metrics_server():
 
     assert attempt > 0
 
+
 def validate_prometheus():
     """
     Validate the prometheus operator
@@ -290,6 +293,7 @@ def validate_fluentd():
     wait_for_pod_state("", "kube-system", "running", label="k8s-app=fluentd-es")
     wait_for_pod_state("", "kube-system", "running", label="k8s-app=kibana-logging")
 
+
 def validate_jaeger():
     """
     Validate the jaeger operator
@@ -312,6 +316,7 @@ def validate_jaeger():
 
     assert attempt > 0
 
+
 def validate_linkerd():
     """
     Validate Linkerd by deploying emojivoto.
@@ -330,6 +335,7 @@ def validate_linkerd():
     wait_for_pod_state("", "emojivoto", "running", label="app=emoji-svc")
     kubectl("delete -f {}".format(manifest))
 
+
 def validate_rbac():
     """
     Validate RBAC is actually on
@@ -338,36 +344,3 @@ def validate_rbac():
     assert "no" in output
     output = kubectl("auth can-i --as=admin --as-group=system:masters view pod")
     assert "yes" in output
-
-
-def cilium(cmd, timeout_insec=300, err_out=None):
-    """
-    Do a cilium <cmd>
-    Args:
-        cmd: left part of cilium <left_part> command
-        timeout_insec: timeout for this job
-        err_out: If command fails and this is the output, return.
-
-    Returns: the cilium response in a string
-    """
-    cmd = '/snap/bin/microk8s.cilium ' + cmd
-    return run_until_success(cmd, timeout_insec, err_out)
-
-def validate_cilium():
-    """
-    Validate cilium by deploying the bookinfo app.
-    """
-    if platform.machine() != 'x86_64':
-        print("Cilium tests are only relevant in x86 architectures")
-        return
-
-    wait_for_installation()
-    wait_for_pod_state("", "kube-system", "running", label="k8s-app=cilium")
-
-    here = os.path.dirname(os.path.abspath(__file__))
-    manifest = os.path.join(here, "templates", "nginx-pod.yaml")
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=nginx")
-    output = cilium('endpoint list -o json')
-    assert "nginx" in output
-    kubectl("delete -f {}".format(manifest))

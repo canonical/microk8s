@@ -51,6 +51,12 @@ clean_cluster() {
   fi
 }
 
+if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.reset on the master."
+  exit 0
+fi
+
 exit_if_stopped
 exit_if_no_permissions
 

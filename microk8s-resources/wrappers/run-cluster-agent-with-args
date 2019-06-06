@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
+export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+
+# This is really the only way I could find to get the args passed in correctly. WTF
+declare -a args="($(cat $SNAP_DATA/args/cluster-agent))"
+
+cd ${SNAP}/scripts/
+${SNAP}/usr/bin/gunicorn3 cluster.agent:app "${args[@]}"

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
+export SNAP_NAME
+
+if echo "$*" | grep -q -- 'help'; then
+  echo "Usage: microk8s.leave"
+  echo ""
+  echo "With microk8s.leave the node will depart from the cluster it is in."
+  exit 0
+fi
+
+if [ "$(id -u)" != "0" ]; then
+  echo "This command must be run as root (or with sudo)"
+  exit 1
+fi
+
+if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  echo "This MicroK8s deployment is not acting as a node in a cluster."
+  exit 1
+fi
+
+if [ "$#" -ne "0" ]
+then
+  echo "This command will remove the node from the cluster. No arguments are needed."
+  exit 1
+fi
+
+${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset

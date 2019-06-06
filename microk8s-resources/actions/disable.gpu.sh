@@ -4,8 +4,11 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
-echo "Disabling NVIDIA GPU support"
-use_manifest gpu delete
+if ! [ -e "$SNAP_DATA/var/lock/clustered.lock" ]
+then
+  echo "Disabling NVIDIA GPU support"
+  use_manifest gpu delete
+fi
 
 sudo rm -rf ${SNAP_DATA}/var/lock/gpu
 

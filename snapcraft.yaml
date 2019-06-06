@@ -18,6 +18,9 @@ apps:
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
+  daemon-flanneld:
+    command: run-flanneld-with-args
+    daemon: simple
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
@@ -26,6 +29,9 @@ apps:
     daemon: simple
   daemon-apiserver-kicker:
     command: apiservice-kicker
+    daemon: simple
+  daemon-cluster-agent:
+    command: run-cluster-agent-with-args
     daemon: simple
   daemon-controller-manager:
     command: run-with-config-args kube-controller-manager
@@ -42,6 +48,14 @@ apps:
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
+  add-node:
+    command: microk8s-add-node.wrapper
+  join:
+    command: microk8s-join.wrapper
+  remove:
+    command: microk8s-remove.wrapper
+  leave:
+    command: microk8s-leave.wrapper
   ctr:
     command: microk8s-ctr.wrapper
   inspect:
@@ -154,6 +168,15 @@ parts:
     - -sbin/xtables-multi
     - -sbin/iptables*
     - -lib/xtables
+  cluster-agent:
+    plugin: python
+    python-version: python3
+    source: .
+    python-packages:
+    - flask
+    stage-packages:
+    - python3-requests
+    - gunicorn3
   microk8s:
     after: [containerd]
     plugin: dump

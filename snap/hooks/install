@@ -78,3 +78,8 @@ do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
 done
+
+if $SNAP/sbin/ip link show cni0
+then
+  $SNAP/sbin/ip link delete cni0
+fi

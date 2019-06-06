@@ -35,6 +35,32 @@ refresh_opt_in_config() {
     else
         sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
+
+    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    then
+        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        if [[ "$tokens" -ge "0" ]]
+        then
+            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+        fi
+    fi
+}
+
+
+nodes_addon() {
+    # Enable or disable a, addon across all nodes
+    # state should be either 'enable' or 'disable'
+    local addon="$1"
+    local state="$2"
+
+    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    then
+        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        if [[ "$tokens" -ge "0" ]]
+        then
+            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+        fi
+    fi
 }
 
 
@@ -45,6 +71,31 @@ skip_opt_in_config() {
     local opt="--$1"
     local config_file="$SNAP_DATA/args/$2"
     sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
+
+    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    then
+        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        if [[ "$tokens" -ge "0" ]]
+        then
+            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+        fi
+    fi
+}
+
+
+restart_service() {
+    # restart a systemd service
+    # argument $1 is the service name
+    sudo systemctl restart "snap.microk8s.daemon-$1.service"
+
+    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    then
+        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        if [[ "$tokens" -ge "0" ]]
+        then
+            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+        fi
+    fi
 }
 
 
@@ -177,11 +228,6 @@ get_ips() {
 gen_server_cert() (
     openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
     openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
-)
-
-gen_proxy_client_cert() (
-    openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config ${SNAP_DATA}/certs/csr.conf -subj "/CN=front-proxy-client"
-    openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 produce_certs() {
