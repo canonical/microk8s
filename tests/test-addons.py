@@ -8,6 +8,7 @@ from validators import (
     validate_ingress,
     validate_gpu,
     validate_istio,
+    validate_knative,
     validate_registry,
     validate_forward,
     validate_metrics_server,
@@ -115,6 +116,23 @@ class TestAddons(object):
         validate_istio()
         print("Disabling Istio")
         microk8s_disable("istio")
+
+    def test_knative(self):
+        """
+        Sets up and validate Knative.
+
+        """
+        if platform.machine() != 'x86_64':
+            print("Knative tests are only relevant in x86 architectures (require Istio)")
+            return
+
+        print("Enabling Knative")
+        p = Popen("/snap/bin/microk8s.enable knative".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        p.communicate(input=b'N\n')[0]
+        print("Validating Knative")
+        validate_knative()
+        print("Disabling Knative")
+        microk8s_disable("knative")
 
     def test_metrics_server(self):
         """

@@ -234,6 +234,9 @@ parts:
         rm "actions/disable.istio.sh"
         # added because the completer is still defined
         touch istioctl.bash
+        # Knative support
+        rm "actions/enable.knative.sh"
+        rm "actions/disable.knative.sh"
         # Prometheus support
         rm "actions/enable.prometheus.sh"
         rm "actions/disable.prometheus.sh"
@@ -258,6 +261,9 @@ parts:
         ./istioctl collateral completion --bash -o .
         sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -F __start_istioctl microk8s.istioctl/g" istioctl.bash
         sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -o nospace -F __start_istioctl microk8s.istioctl/g" istioctl.bash
+        # Knative support
+        echo "Preparing knative"
+        cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
       fi
 
       echo "Creating inspect hook"

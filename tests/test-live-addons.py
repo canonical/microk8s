@@ -3,6 +3,7 @@ from validators import (
     validate_storage,
     validate_ingress,
     validate_istio,
+    validate_knative,
     validate_registry,
     validate_forward,
     validate_metrics_server,
@@ -46,6 +47,13 @@ class TestLiveAddons(object):
 
         """
         validate_istio()
+
+    def test_knative(self):
+        """
+        Validate Knative works.
+
+        """
+        validate_knative()
 
     def test_registry(self):
         """

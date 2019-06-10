@@ -159,6 +159,28 @@ def validate_istio():
     wait_for_pod_state("", "default", "running", label="app=details")
     kubectl("delete -f {}".format(manifest))
 
+def validate_knative():
+    """
+    Validate Knative by deploying the helloworld-go app.
+    """
+    if platform.machine() != 'x86_64':
+        print("Knative tests are only relevant in x86 architectures")
+        return
+
+    wait_for_installation()
+    knative_services = [
+        "activator",
+        "autoscaler",
+        "controller",
+    ]
+    for service in knative_services:
+        wait_for_pod_state("", "knative-serving", "running", label="app={}".format(service))
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "knative-helloworld.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="serving.knative.dev/service=helloworld-go")
+    kubectl("delete -f {}".format(manifest))
 
 def validate_registry():
     """
