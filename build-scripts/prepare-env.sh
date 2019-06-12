@@ -18,7 +18,7 @@ export ISTIO_VERSION="${ISTIO_VERSION:-v1.0.5}"
 export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-bb71b10fd8f58240ca47fbb579b9d1028eea7c84}"
 # Release v1.0.0~rc6 with CVE-2019-5736 fix
 export RUNC_COMMIT="${RUNC_COMMIT:-2b18fe1d885ee5083ef9f0838fee39b62d653e30}"
-export KUBE_TRACK="${KUBE_TRACK:-}"
+export KUBE_TRACK="${KUBE_TRACK:-1.14}"
 export KUBE_SNAP_BINS="${KUBE_SNAP_BINS:-}"
 if [ -z "$KUBE_SNAP_BINS" ]; then
   if [ -z "$KUBE_TRACK" ]; then
