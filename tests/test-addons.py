@@ -100,7 +100,7 @@ class TestAddons(object):
         print("Disable gpu")
         microk8s_disable("gpu")
 
-    def test_istio(self):
+    def test_knative_istio(self):
         """
         Sets up and validate istio.
 
@@ -109,30 +109,17 @@ class TestAddons(object):
             print("Istio tests are only relevant in x86 architectures")
             return
 
-        print("Enabling Istio")
-        p = Popen("/snap/bin/microk8s.enable istio".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        print("Enabling Knative and Istio")
+        p = Popen("/snap/bin/microk8s.enable knative".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         p.communicate(input=b'N\n')[0]
         print("Validating Istio")
         validate_istio()
-        print("Disabling Istio")
-        microk8s_disable("istio")
-
-    def test_knative(self):
-        """
-        Sets up and validate Knative.
-
-        """
-        if platform.machine() != 'x86_64':
-            print("Knative tests are only relevant in x86 architectures (require Istio)")
-            return
-
-        print("Enabling Knative")
-        p = Popen("/snap/bin/microk8s.enable knative".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        p.communicate(input=b'N\n')[0]
         print("Validating Knative")
         validate_knative()
         print("Disabling Knative")
         microk8s_disable("knative")
+        print("Disabling Istio")
+        microk8s_disable("istio")
 
     def test_metrics_server(self):
         """

@@ -21,21 +21,41 @@ done
 
 echo
 echo "Installing Knative CRDs"
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply --selector knative.dev/crd-install=true \
--f ${SNAP}/actions/knative/serving.yaml \
--f ${SNAP}/actions/knative/build.yaml \
--f ${SNAP}/actions/knative/release.yaml \
--f ${SNAP}/actions/knative/eventing-sources.yaml \
--f ${SNAP}/actions/knative/monitoring.yaml \
--f ${SNAP}/actions/knative/clusterrole.yaml
+n=0
+until [ $n -ge 10 ]
+do
+  sleep 3
+  ("$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply --selector knative.dev/crd-install=true \
+    -f ${SNAP}/actions/knative/serving.yaml \
+    -f ${SNAP}/actions/knative/build.yaml \
+    -f ${SNAP}/actions/knative/release.yaml \
+    -f ${SNAP}/actions/knative/eventing-sources.yaml \
+    -f ${SNAP}/actions/knative/monitoring.yaml \
+    -f ${SNAP}/actions/knative/clusterrole.yaml) && break
+  n=$[$n+1]
+  if [ $n -ge 10 ]; then
+    echo "Knative failed to install"
+    exit 1
+  fi
+done
 
 echo "Installing Knative dependencies"
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply  \
--f ${SNAP}/actions/knative/serving.yaml \
--f ${SNAP}/actions/knative/build.yaml \
--f ${SNAP}/actions/knative/release.yaml \
--f ${SNAP}/actions/knative/eventing-sources.yaml \
--f ${SNAP}/actions/knative/monitoring.yaml \
--f ${SNAP}/actions/knative/clusterrole.yaml
+n=0
+until [ $n -ge 10 ]
+do
+  sleep 3
+  ("$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply  \
+    -f ${SNAP}/actions/knative/serving.yaml \
+    -f ${SNAP}/actions/knative/build.yaml \
+    -f ${SNAP}/actions/knative/release.yaml \
+    -f ${SNAP}/actions/knative/eventing-sources.yaml \
+    -f ${SNAP}/actions/knative/monitoring.yaml \
+    -f ${SNAP}/actions/knative/clusterrole.yaml) && break
+  n=$[$n+1]
+  if [ $n -ge 10 ]; then
+    echo "Knative failed to install"
+    exit 1
+  fi
+done
 
 echo "Knative is starting"
