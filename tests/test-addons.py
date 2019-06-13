@@ -109,6 +109,10 @@ class TestAddons(object):
             print("Istio tests are only relevant in x86 architectures")
             return
 
+        if under_time_pressure != 'False':
+            print("Skipping istio and knative tests as we are under time pressure")
+            return
+
         print("Enabling Knative and Istio")
         p = Popen("/snap/bin/microk8s.enable knative".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         p.communicate(input=b'N\n')[0]
