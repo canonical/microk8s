@@ -49,7 +49,7 @@ function store_memory_info {
     free -m &> $INSPECT_DUMP/memory/memory_usage
 }
 
-function store_apparmor {
+function check_apparmor {
     # Collect apparmor information
     printf -- 'Copy APPARMOR information to the final report tarball\n'
     mkdir -p $INSPECT_DUMP/apparmor
@@ -136,6 +136,7 @@ function suggest_fixes {
     then
         printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
         printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
+        printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
     fi
 
     ufw=$(ufw status)
@@ -180,7 +181,7 @@ fi;
 rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
 
-printf -- '\n(1) Inspecting services\n'
+printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-containerd"
 check_service "snap.microk8s.daemon-apiserver"
 check_service "snap.microk8s.daemon-proxy"
@@ -190,29 +191,23 @@ check_service "snap.microk8s.daemon-controller-manager"
 check_service "snap.microk8s.daemon-etcd"
 store_args
 
-printf -- '\n(2) Inspecting Virtual Machine\n'
-store_vm
+printf -- 'Inspecting AppArmor configuration\n'
+check_apparmor
 
-printf -- '\n(3) Inspecting Memory/Disk\n'
+printf -- 'Gathering system info\n'
+store_vm
 store_disk_info
 store_memory_info
-
-printf -- '\n(4) Inspecting AppArmor configuration\n'
-store_apparmor
-
-printf -- '\n(5) Gathering System Information\n'
 store_uptime
 store_distribution
 store_openssl
 store_network
 store_processes
-
-printf -- '\n(6) Inspecting Kubernetes Cluster\n'
 store_kubernetes_info
 
 suggest_fixes
 
-printf -- '\n*** Building the report tarball ***\n'
+printf -- 'Building the report tarball \n'
 build_report_tarball
 
 exit $RETURN_CODE
