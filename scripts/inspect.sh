@@ -132,20 +132,6 @@ function suggest_fixes {
         fi
     fi
 
-    if iptables -L | grep FORWARD | grep DROP &> /dev/null
-    then
-        printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
-        printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
-        printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
-    fi
-
-    ufw=$(ufw status)
-    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
-    then
-        printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-        printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
-    fi
-
     # check for selinux. if enabled, print warning.
     if getenforce | grep -q 'Enabled'
     then
@@ -160,6 +146,20 @@ function suggest_fixes {
         printf -- ' \t "insecure-registries" : ["localhost:32000"] \n'
         printf -- ' }\n'
         printf -- ' and then restart docker with: sudo systemctl restart docker\n'
+    fi
+
+    if iptables -L | grep FORWARD | grep DROP &> /dev/null
+    then
+        printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
+        printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
+        printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
+    fi
+
+    ufw=$(ufw status)
+    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
+    then
+        printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
+        printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
     fi
 }
 
