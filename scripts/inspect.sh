@@ -28,30 +28,8 @@ function check_service {
     fi
 }
 
-function store_vm {
-    # Stores VM name (or none, if we are not on a VM)
-    printf -- 'Copy VM name (or none) to the final report tarball\n'
-    mkdir -p $INSPECT_DUMP/VM
-    systemd-detect-virt &> $INSPECT_DUMP/VM/vm_name
-}
-
-function store_disk_info {
-    # Store disk usage information
-    printf -- 'Copy disk usage information to the final report tarball\n'
-    mkdir -p $INSPECT_DUMP/disk
-    df -h | grep ^/ &> $INSPECT_DUMP/disk/disk_usage # remove the grep to also include virtual in-memory filesystems
-}
-
-function store_memory_info {
-    # Store memory usage information
-    printf -- 'Copy memory usage information to the final report tarball\n'
-    mkdir -p $INSPECT_DUMP/memory
-    free -m &> $INSPECT_DUMP/memory/memory_usage
-}
-
 function check_apparmor {
-    # Collect apparmor information
-    printf -- 'Copy APPARMOR information to the final report tarball\n'
+    # Collect apparmor info.
     mkdir -p $INSPECT_DUMP/apparmor
     if [ -f /etc/apparmor.d/containerd ]
     then
@@ -64,17 +42,10 @@ function check_apparmor {
 
 function store_args {
     # Collect the services arguments.
-    printf -- 'Copy service arguments to the final report tarball\n'
+    printf -- '  Copy service arguments to the final report tarball\n'
     cp -r ${SNAP_DATA}/args $INSPECT_DUMP
 }
 
-
-function store_uptime {
-    # Store server's uptime.
-    printf -- 'Copy server uptime to the final report tarball\n'
-    mkdir -p $INSPECT_DUMP/uptime
-    uptime &> $INSPECT_DUMP/uptime/uptime
-}
 
 function store_network {
     # Collect network setup.
@@ -85,19 +56,6 @@ function store_network {
     iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
 }
 
-function store_distribution {
-    # Store the current linux distro.
-    printf -- 'Copy current linux distribution to the final report tarball\n'
-    mkdir -p $INSPECT_DUMP/distribution
-    lsb_release -a &> $INSPECT_DUMP/distribution/lsb_release
-}
-
-function store_openssl {
-    # Store the current linux distro.
-    printf -- 'Copy openSSL information to the final report tarball\n'
-    mkdir -p $INSPECT_DUMP/openssl
-    openssl version -v -d -e &> $INSPECT_DUMP/openssl/openssl
-}
 
 function store_processes {
     # Collect the processes running.
@@ -121,6 +79,49 @@ function store_kubernetes_info {
     /snap/bin/microk8s.kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
 
+function store_vm {
+    # Stores VM name (or none, if we are not on a VM)
+    printf -- 'Copy VM name (or none) to the final report tarball\n'
+    mkdir -p $INSPECT_DUMP/VM
+    systemd-detect-virt &> $INSPECT_DUMP/VM/vm_name
+}
+
+function store_disk_info {
+    # Store disk usage information
+    printf -- 'Copy disk usage information to the final report tarball\n'
+    mkdir -p $INSPECT_DUMP/disk
+    df -h | grep ^/ &> $INSPECT_DUMP/disk/disk_usage # remove the grep to also include virtual in-memory filesystems
+}
+
+function store_memory_info {
+    # Store memory usage information
+    printf -- 'Copy memory usage information to the final report tarball\n'
+    mkdir -p $INSPECT_DUMP/memory
+    free -m &> $INSPECT_DUMP/memory/memory_usage
+}
+
+function store_uptime {
+    # Store server's uptime.
+    printf -- 'Copy server uptime to the final report tarball\n'
+    mkdir -p $INSPECT_DUMP/uptime
+    uptime &> $INSPECT_DUMP/uptime/uptime
+}
+
+
+function store_distribution {
+    # Store the current linux distro.
+    printf -- 'Copy current linux distribution to the final report tarball\n'
+    mkdir -p $INSPECT_DUMP/distribution
+    lsb_release -a &> $INSPECT_DUMP/distribution/lsb_release
+}
+
+function store_openssl {
+    # Store the current linux distro.
+    printf -- 'Copy openSSL information to the final report tarball\n'
+    mkdir -p $INSPECT_DUMP/openssl
+    openssl version -v -d -e &> $INSPECT_DUMP/openssl/openssl
+}
+
 function suggest_fixes {
     # Propose fixes
     printf -- '\n'
@@ -130,6 +131,20 @@ function suggest_fixes {
         then
             printf -- '\033[0;33m WARNING: \033[0m Port 8080 seems to be in use by another application.\n'
         fi
+    fi
+
+    if iptables -L | grep FORWARD | grep DROP &> /dev/null
+    then
+        printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
+        printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
+        printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
+    fi
+
+    ufw=$(ufw status)
+    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
+    then
+        printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
+        printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
     fi
 
     # check for selinux. if enabled, print warning.
@@ -148,19 +163,6 @@ function suggest_fixes {
         printf -- ' and then restart docker with: sudo systemctl restart docker\n'
     fi
 
-    if iptables -L | grep FORWARD | grep DROP &> /dev/null
-    then
-        printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
-        printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
-        printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
-    fi
-
-    ufw=$(ufw status)
-    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
-    then
-        printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-        printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
-    fi
 }
 
 
