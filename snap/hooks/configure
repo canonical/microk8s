@@ -24,6 +24,12 @@ then
   systemctl restart snap.${SNAP_NAME}.daemon-controller-manager
 fi
 
+#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA 
+if [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
+then
+   cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
+fi
+
 if ! grep "requestheader-client-ca-file" ${SNAP_DATA}/args/kube-apiserver
 then
   echo "Patching requestheader-client-ca-file argument"
@@ -93,9 +99,20 @@ fi
 # Make sure the server certificate includes the IP we are using
 if ! [ -f ${SNAP_DATA}/certs/csr.conf ]
 then
-    IP_ADDR="$(get_default_ip)"
-    produce_server_cert $IP_ADDR
+    produce_server_cert
     rm -rf .srl
     systemctl restart snap.${SNAP_NAME}.daemon-apiserver.service
     systemctl restart snap.${SNAP_NAME}.daemon-proxy.service
+fi
+
+# Make containerd stream server listen to localhost
+if [ -e ${SNAP_DATA}/args/containerd-template.toml ] && grep -e "stream_server_address = \"\"" ${SNAP_DATA}/args/containerd-template.toml
+then
+    "$SNAP/bin/sed" -i 's@stream_server_address = ""@stream_server_address = "127.0.0.1"@g' ${SNAP_DATA}/args/containerd-template.toml
+    if grep -e "stream_server_port = \"10010\"" ${SNAP_DATA}/args/containerd-template.toml
+    then
+        "$SNAP/bin/sed" -i 's@stream_server_port = "10010"@stream_server_port = "0"@g' ${SNAP_DATA}/args/containerd-template.toml
+    fi
+    systemctl restart snap.${SNAP_NAME}.daemon-containerd
+    systemctl restart snap.${SNAP_NAME}.daemon-kubelet
 fi

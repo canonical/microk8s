@@ -1,5 +1,5 @@
+# ------------------- Dashboard Secret ------------------- #
 
-# ------------------- Dashboard ------------------- #
 apiVersion: v1
 kind: Secret
 metadata:
@@ -10,6 +10,8 @@ metadata:
 type: Opaque
 
 ---
+# ------------------- Dashboard Service Account ------------------- #
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -19,8 +21,62 @@ metadata:
   namespace: kube-system
 
 ---
+# ------------------- Dashboard Role & Role Binding ------------------- #
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kubernetes-dashboard-minimal
+  namespace: kube-system
+rules:
+  # Allow Dashboard to create 'kubernetes-dashboard-key-holder' secret.
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create"]
+  # Allow Dashboard to create 'kubernetes-dashboard-settings' config map.
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create"]
+  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs"]
+  verbs: ["get", "update", "delete"]
+  # Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["kubernetes-dashboard-settings"]
+  verbs: ["get", "update"]
+  # Allow Dashboard to get metrics from heapster.
+- apiGroups: [""]
+  resources: ["services"]
+  resourceNames: ["heapster"]
+  verbs: ["proxy"]
+- apiGroups: [""]
+  resources: ["services/proxy"]
+  resourceNames: ["heapster", "http:heapster:", "https:heapster:"]
+  verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubernetes-dashboard-minimal
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubernetes-dashboard-minimal
+subjects:
+- kind: ServiceAccount
+  name: kubernetes-dashboard
+  namespace: kube-system
+
+---
+# ------------------- Dashboard Deployment ------------------- #
+
 kind: Deployment
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 metadata:
   labels:
     k8s-app: kubernetes-dashboard
@@ -39,7 +95,7 @@ spec:
     spec:
       containers:
       - name: kubernetes-dashboard
-        image: k8s.gcr.io/kubernetes-dashboard-$ARCH:v1.8.3
+        image: k8s.gcr.io/kubernetes-dashboard-$ARCH:v1.10.1
         ports:
         - containerPort: 8443
           protocol: TCP
@@ -75,6 +131,8 @@ spec:
         effect: NoSchedule
 
 ---
+# ------------------- Dashboard Service ------------------- #
+
 kind: Service
 apiVersion: v1
 metadata:
@@ -88,7 +146,8 @@ spec:
       targetPort: 8443
   selector:
     k8s-app: kubernetes-dashboard
----
+
+---    
 # ------------------ Monitoring (heapster,influxdb, grafana) ----------- #
 apiVersion: v1
 kind: Service
@@ -145,6 +204,7 @@ spec:
       targetPort: 8082
   selector:
     k8s-app: heapster
+
 ---
 kind: Deployment
 apiVersion: extensions/v1beta1
@@ -241,6 +301,23 @@ metadata:
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: heapster
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:heapster
+subjects:
+- kind: ServiceAccount
+  name: heapster
+  namespace: kube-system    
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -254,6 +331,7 @@ data:
   NannyConfiguration: |-
     apiVersion: nannyconfig/v1alpha1
     kind: NannyConfiguration
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -267,6 +345,7 @@ data:
   NannyConfiguration: |-
     apiVersion: nannyconfig/v1alpha1
     kind: NannyConfiguration
+
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

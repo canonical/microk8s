@@ -153,6 +153,7 @@ function suggest_fixes {
     	printf -- '\033[0;33m WARNING: \033[0m SElinux is enabled. Consider disabling it.\n'
     fi
 
+
     # check for docker
     if [ -d "/etc/docker/" ]; then 
         printf -- '\033[0;33m WARNING: \033[0m Docker is installed. You should mark the registry as insecure. '

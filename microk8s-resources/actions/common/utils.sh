@@ -73,6 +73,33 @@ use_manifest() {
     rm "${tmp_manifest}"
 }
 
+addon_name() {
+    # Extracts the addon from the argument.
+    # addons can have arguments in the form of <addon-name>:<arg1>=<value1>;<arg2>=<value2>
+    # Example: enable linkerd:proxy-auto-inject=on;other-args=xyz
+    # Parameter:
+    #   $1 the full addon command
+    # Returns:
+    #   <addon-name>
+
+    local IFS=':'
+    read -ra ADD_ON <<< "$1"
+    echo "${ADD_ON[0]}"
+}
+
+addon_arguments() {
+    # Extracts the addon arguments.
+    # Example: enable linkerd:proxy-auto-inject=on;other-args=xyz
+    # Parameter:
+    #   $1 the addon arguments in array
+    # Returns:
+    #   add-on arguments array
+    local IFS=':'
+    read -ra ADD_ON <<< "$1"
+    local IFS=';'
+    read -ra ARGUMENTS <<< "${ADD_ON[1]}"
+    echo "${ARGUMENTS[@]}"
+}
 
 wait_for_service() {
     # Wait for a service to start
@@ -104,21 +131,108 @@ get_default_ip() {
     fi
 }
 
+get_ips() {
+    local IP_ADDR="$($SNAP/bin/hostname -I)"
+    if [[ -z "$IP_ADDR" ]]
+    then
+        echo "none"
+    else
+        echo "${IP_ADDR}"
+    fi
+}
+
 
 produce_server_cert() {
-    # Produce the server certificate adding the IP passed as a parameter
-    # Parameters:
-    # $1 IP we want in the certificate
+    # Produce the server certificates based on the rendered csr.conf.rendered.
+    # The file csr.conf.rendered is compared with csr.conf to determine if a regeneration of server certs must be done.
+    #
+    # Returns 
+    #  0 if no change
+    #  1 otherwise. 
 
-    local IP_ADDR="$1"
-
-    cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf
-    if ! [ "$IP_ADDR" == "127.0.0.1" ] && ! [ "$IP_ADDR" == "none" ]
+    render_csr_conf
+    if ! [ -f "${SNAP_DATA}/certs/csr.conf" ];
     then
-        "$SNAP/bin/sed" -i 's/#MOREIPS/IP.3 = '"${IP_ADDR}"'/g' ${SNAP_DATA}/certs/csr.conf
-    else
-        "$SNAP/bin/sed" -i 's/#MOREIPS//g' ${SNAP_DATA}/certs/csr.conf
+        echo "changeme" >  "${SNAP_DATA}/certs/csr.conf" 
     fi
-    openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-    openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+
+    if ! "${SNAP}/usr/bin/cmp" -s "${SNAP_DATA}/certs/csr.conf.rendered" "${SNAP_DATA}/certs/csr.conf"; then
+      cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
+      openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+      openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+      echo "1"
+    else
+      echo "0"
+    fi
+
+}
+
+render_csr_conf() {
+    # Render csr.conf.template to csr.conf.rendered
+
+    local IP_ADDRESSES="$(get_ips)"
+
+    cp ${SNAP_DATA}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.rendered
+    if ! [ "$IP_ADDRESSES" == "127.0.0.1" ] && ! [ "$IP_ADDRESSES" == "none" ]
+    then
+        local ips='' sep=''
+        local -i i=3
+        for IP_ADDR in $(echo "$IP_ADDRESSES"); do
+            ips+="${sep}IP.$((i++)) = ${IP_ADDR}"
+            sep='\n'
+        done
+        "$SNAP/bin/sed" -i "s/#MOREIPS/${ips}/g" ${SNAP_DATA}/certs/csr.conf.rendered
+    else
+        "$SNAP/bin/sed" -i 's/#MOREIPS//g' ${SNAP_DATA}/certs/csr.conf.rendered
+    fi
+}
+
+get_node() {
+    # Returns the node name or no_node_found in case no node is present
+
+    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+
+    timeout=60
+    start_timer="$(date +%s)"
+    node_found="yes"
+    while ! ($KUBECTL get no | grep -z " Ready") &> /dev/null
+    do
+      now="$(date +%s)"
+      if ! [ -z $timeout ] && [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
+        node_found="no"
+        echo "no_node_found"
+        break
+      fi
+      sleep 2
+    done
+
+    if [ "${node_found}" == "yes" ]
+    then
+        node="$($KUBECTL get no | $SNAP/bin/grep ' Ready' | $SNAP/usr/bin/gawk '{print $1}')"
+        echo $node
+    fi
+}
+
+
+drain_node() {
+    # Drain node
+
+    node="$(get_node)"
+    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+    if ! [ "${node}" == "no_node_found" ]
+    then
+        $KUBECTL drain $node --timeout=120s --grace-period=60 --delete-local-data=true || true
+    fi
+}
+
+
+uncordon_node() {
+    # Un-drain node
+
+    node="$(get_node)"
+    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+    if ! [ "${node}" == "no_node_found" ]
+    then
+        $KUBECTL uncordon $node || true
+    fi
 }

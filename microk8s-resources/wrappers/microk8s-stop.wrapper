@@ -4,10 +4,37 @@ set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 
+source $SNAP/actions/common/utils.sh
+
+FORCE=false
+PARSED=$(getopt --options=lho: --longoptions=force,help,output: --name "$@" -- "$@")
+eval set -- "$PARSED"
+while true; do
+    case "$1" in
+        -h|--help)
+            echo "Usage: $0 [OPTIONS]"
+            echo
+            echo "Stop Kubernetes services"
+            echo
+            echo "Options:"
+            echo " -h, --help          Show this help"
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "$0: invalid option -- $1"
+            exit 1
+    esac
+done
+
+
 if ! sudo snap stop ${SNAP_NAME} --disable
 then
-  echo 'Failed to stop microk8s services. Check snapd logs with "journalctl -u snapd.service"'
-  exit 1
+    echo 'Failed to stop microk8s services. Check snapd logs with "journalctl -u snapd.service"'
+    exit 1
 else
-  sudo touch ${SNAP_DATA}/var/lock/stopped.lock
+    sudo touch ${SNAP_DATA}/var/lock/stopped.lock
 fi

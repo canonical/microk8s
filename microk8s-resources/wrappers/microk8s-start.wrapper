@@ -3,6 +3,32 @@
 set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+source $SNAP/actions/common/utils.sh
+
+
+PARSED=$(getopt --options=lho: --longoptions=help,output: --name "$@" -- "$@")
+eval set -- "$PARSED"
+while true; do
+    case "$1" in
+        -h|--help)
+            echo "Usage: $0 [OPTIONS]"
+            echo
+            echo "Start Kubernetes services"
+            echo
+            echo "Options:"
+            echo " -h, --help          Show this help"
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "$0: invalid option -- $1"
+            exit 1
+    esac
+done
+
 
 if ! sudo snap start ${SNAP_NAME} --enable
 then
@@ -15,3 +41,6 @@ else
     sudo rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
   fi
 fi
+
+echo "Enabling pod scheduling"
+uncordon_node

@@ -33,6 +33,12 @@ clean_cluster() {
     n=$[$n+1]
     sleep 20
   done
+
+  echo "Cleaning up addons client binaries.."
+  if [  -d "$SNAP_DATA/bin/" ] 
+  then
+    sudo rm -rf "$SNAP_DATA/bin/"
+  fi
 }
 
 exit_if_stopped

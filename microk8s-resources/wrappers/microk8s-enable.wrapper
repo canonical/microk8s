@@ -25,10 +25,16 @@ fi
 
 exit_if_stopped
 result=1
-for action in "$@"; do
+for addon in "$@"; do
+
+  action="$(addon_name $addon)"
+  arguments="$(addon_arguments $addon)"
   # If there is a script to execute for the $action run the script and ignore any yamls
   if [ -f "${SNAP}/actions/enable.$action.sh" ]; then
-    if "${SNAP}/actions/enable.$action.sh"
+    
+    "${SNAP}/actions/enable.$action.sh" "${arguments}"
+    enable_result="$?"
+    if [ "$enable_result" = "0" ]
     then
       result=0
     else
