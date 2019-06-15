@@ -20,13 +20,14 @@ function check_service {
   systemctl status $service &> $INSPECT_DUMP/$service/systemctl.log
   if systemctl status $service &> /dev/null
   then
-    printf -- ' Service %s is running\n' "$service"
+    printf -- '  Service %s is running\n' "$service"
   else
     printf -- '\033[31m FAIL: \033[0m Service %s is not running\n' "$service"
     printf -- 'For more details look at: sudo journalctl -u %s\n' "$service"
     RETURN_CODE=1
   fi
 }
+
 
 function check_apparmor {
   # Collect apparmor info.
@@ -49,7 +50,7 @@ function store_args {
 
 function store_network {
   # Collect network setup.
-  printf -- ' Copy network configuration to the final report tarball\n'
+  printf -- '  Copy network configuration to the final report tarball\n'
   mkdir -p $INSPECT_DUMP/network
   netstat -ln &> $INSPECT_DUMP/network/netstat
   ifconfig &> $INSPECT_DUMP/network/ifconfig
@@ -59,10 +60,10 @@ function store_network {
 
 function store_processes {
   # Collect the processes running
-  printf -- ' Copy processes list to the final report tarball\n'
+  printf -- '  Copy processes list to the final report tarball\n'
   mkdir -p $INSPECT_DUMP/sys
   ps -ef > $INSPECT_DUMP/sys/ps
-  printf -- ' Copy snap list to the final report tarball\n'
+  printf -- '  Copy snap list to the final report tarball\n'
   snap version > $INSPECT_DUMP/sys/snap-version
   snap list > $INSPECT_DUMP/sys/snap-list
 }
@@ -70,7 +71,7 @@ function store_processes {
 
 function store_kubernetes_info {
   # Collect some in-k8s details
-  printf -- ' Inspect kubernetes cluster\n'
+  printf -- '  Inspect kubernetes cluster\n'
   mkdir -p $INSPECT_DUMP/k8s
   /snap/bin/microk8s.kubectl version | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
   /snap/bin/microk8s.kubectl cluster-info | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
@@ -125,7 +126,7 @@ function store_openssl {
 
 function suggest_fixes {
   # Propose fixes
-  printf -- '\n'
+  printf '\n'
   if ! systemctl status snap.microk8s.daemon-apiserver &> /dev/null
   then
     if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
@@ -147,8 +148,8 @@ function suggest_fixes {
     ufw=$(ufw status)
     if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
     then
-        printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-        printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+      printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
+      printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
     fi
 
     # check for selinux. if enabled, print warning.
@@ -160,12 +161,12 @@ function suggest_fixes {
 
     # check for docker
     if [ -d "/etc/docker/" ]; then 
-        printf -- '\033[0;33m WARNING: \033[0m Docker is installed. You should mark the registry as insecure. '
-        printf -- 'Add the following to /etc/docker/deamon.json : \n'
-        printf -- ' {\n'
-        printf -- ' \t "insecure-registries" : ["localhost:32000"] \n'
-        printf -- ' }\n'
-        printf -- ' and then restart docker with: sudo systemctl restart docker\n'
+      printf -- '\033[0;33m WARNING: \033[0m Docker is installed. You should mark the registry as insecure. '
+      printf -- 'Add the following to /etc/docker/deamon.json : \n'
+      printf -- ' {\n'
+      printf -- ' \t "insecure-registries" : ["localhost:32000"] \n'
+      printf -- ' }\n'
+      printf -- ' and then restart docker with: sudo systemctl restart docker\n'
     fi
   fi
 
@@ -207,7 +208,7 @@ function build_report_tarball {
   local now_is=$(date +"%Y%m%d_%H%M%S")
   tar -C ${SNAP_DATA} -cf ${SNAP_DATA}/inspection-report-${now_is}.tar inspection-report &> /dev/null
   gzip ${SNAP_DATA}/inspection-report-${now_is}.tar
-  printf -- ' Report tarball is at %s/inspection-report-%s.tar.gz\n\n' "${SNAP_DATA}" "${now_is}"
+  printf -- '  Report tarball is at %s/inspection-report-%s.tar.gz\n' "${SNAP_DATA}" "${now_is}"
 }
 
 
@@ -245,7 +246,7 @@ store_kubernetes_info
 
 suggest_fixes
 
-printf -- 'Building the report tarball \n'
+printf -- 'Building the report tarball\n'
 build_report_tarball
 
 exit $RETURN_CODE
