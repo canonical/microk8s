@@ -8,12 +8,15 @@ from validators import (
     validate_ingress,
     validate_gpu,
     validate_istio,
+    validate_knative,
     validate_registry,
     validate_forward,
     validate_metrics_server,
     validate_prometheus,
     validate_fluentd,
     validate_jaeger,
+    validate_linkerd,
+    validate_rbac,
 )
 from utils import (
     microk8s_enable,
@@ -114,6 +117,23 @@ class TestAddons(object):
         print("Disabling Istio")
         microk8s_disable("istio")
 
+    def test_knative(self):
+        """
+        Sets up and validate Knative.
+
+        """
+        if platform.machine() != 'x86_64':
+            print("Knative tests are only relevant in x86 architectures (require Istio)")
+            return
+
+        print("Enabling Knative")
+        p = Popen("/snap/bin/microk8s.enable knative".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        p.communicate(input=b'N\n')[0]
+        print("Validating Knative")
+        validate_knative()
+        print("Disabling Knative")
+        microk8s_disable("knative")
+
     def test_metrics_server(self):
         """
         Test the metrics server.
@@ -158,3 +178,30 @@ class TestAddons(object):
         else:
             print('Skipping jaeger, prometheus and fluentd tests')
 
+    def test_linkerd(self):
+        """
+        Sets up and validate linkerd
+
+        """
+        if platform.machine() != 'x86_64':
+            print("Linkerd tests are only relevant in x86 architectures")
+            return
+
+        print("Enabling Linkerd")
+        microk8s_enable("linkerd")
+        print("Validating Linkerd")
+        validate_linkerd()
+        print("Disabling Linkerd")
+        microk8s_disable("linkerd")
+
+    def test_rbac_addon(self):
+        """
+        Test RBAC.
+
+        """
+        print("Enabling RBAC")
+        microk8s_enable("rbac")
+        print("Validating RBAC")
+        validate_rbac()
+        print("Disabling RBAC")
+        microk8s_disable("rbac")

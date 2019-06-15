@@ -159,6 +159,28 @@ def validate_istio():
     wait_for_pod_state("", "default", "running", label="app=details")
     kubectl("delete -f {}".format(manifest))
 
+def validate_knative():
+    """
+    Validate Knative by deploying the helloworld-go app.
+    """
+    if platform.machine() != 'x86_64':
+        print("Knative tests are only relevant in x86 architectures")
+        return
+
+    wait_for_installation()
+    knative_services = [
+        "activator",
+        "autoscaler",
+        "controller",
+    ]
+    for service in knative_services:
+        wait_for_pod_state("", "knative-serving", "running", label="app={}".format(service))
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "knative-helloworld.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="serving.knative.dev/service=helloworld-go")
+    kubectl("delete -f {}".format(manifest))
 
 def validate_registry():
     """
@@ -265,3 +287,30 @@ def validate_jaeger():
         attempt -= 1
 
     assert attempt > 0
+
+def validate_linkerd():
+    """
+    Validate Linkerd by deploying emojivoto.
+    """
+    if platform.machine() != 'x86_64':
+        print("Linkerd tests are only relevant in x86 architectures")
+        return
+
+    wait_for_installation()
+
+    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-ns")
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "emojivoto.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "emojivoto", "running", label="app=emoji-svc")
+    kubectl("delete -f {}".format(manifest))
+
+def validate_rbac():
+    """
+    Validate RBAC is actually on
+    """
+    output = kubectl("auth can-i --as=system:serviceaccount:default:default view pod", err_out='no')
+    assert "no" in output
+    output = kubectl("auth can-i --as=admin --as-group=system:masters view pod")
+    assert "yes" in output

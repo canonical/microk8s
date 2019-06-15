@@ -63,6 +63,8 @@ apps:
   istioctl:
     command: microk8s-istioctl.wrapper
     completer: istioctl.bash
+  linkerd:
+    command: microk8s-linkerd.wrapper
 
 parts:
   libnftnl:
@@ -134,9 +136,12 @@ parts:
     - aufs-tools
     - gawk
     - sed
+    - socat
     - grep
     - libssl1.0.0
     - coreutils
+    - hostname
+    - diffutils    
     stage:
     - -sbin/xtables-multi
     - -sbin/iptables*
@@ -146,15 +151,14 @@ parts:
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
-    - curl
     - openssl
     - file
     - dpkg
     stage-packages:
+    - curl      
     - net-tools
     - util-linux
     - zfsutils-linux
-    - socat
     - iproute2
     source: .
     override-build: |
@@ -230,6 +234,9 @@ parts:
         rm "actions/disable.istio.sh"
         # added because the completer is still defined
         touch istioctl.bash
+        # Knative support
+        rm "actions/enable.knative.sh"
+        rm "actions/disable.knative.sh"
         # Prometheus support
         rm "actions/enable.prometheus.sh"
         rm "actions/disable.prometheus.sh"
@@ -242,6 +249,9 @@ parts:
         rm "actions/enable.jaeger.sh"
         rm "actions/disable.jaeger.sh"
         rm -rf "actions/jaeger"
+        # Linkerd support
+        rm "actions/enable.linkerd.sh"
+        rm "actions/disable.linkerd.sh"
       else
         # Istio addon
         echo "Preparing istio"
@@ -251,6 +261,9 @@ parts:
         ./istioctl collateral completion --bash -o .
         sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -F __start_istioctl microk8s.istioctl/g" istioctl.bash
         sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -o nospace -F __start_istioctl microk8s.istioctl/g" istioctl.bash
+        # Knative support
+        echo "Preparing knative"
+        cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
       fi
 
       echo "Creating inspect hook"
