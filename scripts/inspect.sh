@@ -13,14 +13,14 @@ function print_help {
 
 
 function check_service {
-  # Check that the service passed as the first argument is up and running and collect its logs.
+  # Chec the service passed as the firsr argument is up and running and collect its logs.
   local service=$1
   mkdir -p $INSPECT_DUMP/$service
   journalctl -n $JOURNALCTL_LIMIT -u $service &> $INSPECT_DUMP/$service/journal.log
   systemctl status $service &> $INSPECT_DUMP/$service/systemctl.log
   if systemctl status $service &> /dev/null
   then
-    printf -- 'Service %s is running\n' "$service"
+    printf -- ' Service %s is running\n' "$service"
   else
     printf -- '\033[31m FAIL: \033[0m Service %s is not running\n' "$service"
     printf -- 'For more details look at: sudo journalctl -u %s\n' "$service"
@@ -49,7 +49,7 @@ function store_args {
 
 function store_network {
   # Collect network setup.
-  printf -- 'Copy network configuration to the final report tarball\n'
+  printf -- ' Copy network configuration to the final report tarball\n'
   mkdir -p $INSPECT_DUMP/network
   netstat -ln &> $INSPECT_DUMP/network/netstat
   ifconfig &> $INSPECT_DUMP/network/ifconfig
@@ -58,11 +58,11 @@ function store_network {
 
 
 function store_processes {
-  # Collect the processes running.
-  printf -- 'Copy processes list to the final report tarball\n'
+  # Collect the processes running
+  printf -- ' Copy processes list to the final report tarball\n'
   mkdir -p $INSPECT_DUMP/sys
   ps -ef > $INSPECT_DUMP/sys/ps
-  printf -- 'Copy snap list to the final report tarball\n'
+  printf -- ' Copy snap list to the final report tarball\n'
   snap version > $INSPECT_DUMP/sys/snap-version
   snap list > $INSPECT_DUMP/sys/snap-list
 }
@@ -70,6 +70,7 @@ function store_processes {
 
 function store_kubernetes_info {
   # Collect some in-k8s details
+  printf -- ' Inspect kubernetes cluster\n'
   mkdir -p $INSPECT_DUMP/k8s
   /snap/bin/microk8s.kubectl version | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
   /snap/bin/microk8s.kubectl cluster-info | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
@@ -129,9 +130,7 @@ function suggest_fixes {
   then
     if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
     then
-<<<<<<< HEAD
       printf -- '\033[0;33m WARNING: \033[0m Port 8080 seems to be in use by another application.\n'
-=======
         if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
         then
             printf -- '\033[0;33m WARNING: \033[0m Port 8080 seems to be in use by another application.\n'
@@ -167,7 +166,6 @@ function suggest_fixes {
         printf -- ' \t "insecure-registries" : ["localhost:32000"] \n'
         printf -- ' }\n'
         printf -- ' and then restart docker with: sudo systemctl restart docker\n'
->>>>>>> c9099aa6596973cc26136d230560263b10167635
     fi
   fi
 
@@ -209,7 +207,7 @@ function build_report_tarball {
   local now_is=$(date +"%Y%m%d_%H%M%S")
   tar -C ${SNAP_DATA} -cf ${SNAP_DATA}/inspection-report-${now_is}.tar inspection-report &> /dev/null
   gzip ${SNAP_DATA}/inspection-report-${now_is}.tar
-  printf -- 'Report tarball is at %s/inspection-report-%s.tar.gz\n\n' "${SNAP_DATA}" "${now_is}"
+  printf -- ' Report tarball is at %s/inspection-report-%s.tar.gz\n\n' "${SNAP_DATA}" "${now_is}"
 }
 
 
