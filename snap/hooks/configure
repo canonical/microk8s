@@ -116,3 +116,11 @@ then
     systemctl restart snap.${SNAP_NAME}.daemon-containerd
     systemctl restart snap.${SNAP_NAME}.daemon-kubelet
 fi
+
+# With v1.15 allow-privileged is removed from kubelet
+if grep -e "\-\-allow-privileged" ${SNAP_DATA}/args/kubelet
+then
+  echo "Patching 1.15 allow-privileged"
+  sudo "${SNAP}/bin/sed" -i '/allow-privileged/d' ${SNAP_DATA}/args/kubelet
+  systemctl restart snap.${SNAP_NAME}.daemon-kubelet
+fi

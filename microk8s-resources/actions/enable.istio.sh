@@ -21,10 +21,8 @@ else
   sudo touch "$SNAP_USER_COMMON/istio.lock"
 fi
 
-refresh_opt_in_config "allow-privileged" "true" kubelet
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
 sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
-sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
 
 
 echo "Istio is starting"
