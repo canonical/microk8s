@@ -16,10 +16,8 @@ NODENAME="$("$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" get no -o yaml | 
 "$SNAP/microk8s-enable.wrapper" dns
 sleep 5
 
-refresh_opt_in_config "allow-privileged" "true" kubelet
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
 sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
-sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
 
 sleep 5
 
