@@ -30,4 +30,4 @@ declare -a args="($(cat $SNAP_DATA/args/$app))"
 set -a
 . "${SNAP_DATA}/args/${app}-env"
 set +a
-exec "$SNAP/usr/bin/docker-$app" "${args[@]}"
+exec "$SNAP/usr/bin/$app" "${args[@]}"
