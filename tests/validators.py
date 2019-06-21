@@ -93,16 +93,16 @@ def validate_ingress():
         output = kubectl("get ing")
         if "microbot.127.0.0.1.xip.io" in output:
             break
-        time.sleep(2)
+        time.sleep(5)
         attempt -= 1
     assert "microbot.127.0.0.1.xip.io" in output
 
     attempt = 50
     while attempt >= 0:
         resp = requests.get("http://microbot.127.0.0.1.xip.io")
-        if resp.status_code == 200:
+        if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
             break
-        time.sleep(2)
+        time.sleep(5)
         attempt -= 1
     assert resp.status_code == 200
     assert "microbot.png" in resp.content.decode("utf-8")
