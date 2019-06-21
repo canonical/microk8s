@@ -25,8 +25,8 @@ oom_score = -500
 
 [plugins]
   [plugins.linux]
-    shim = "docker-containerd-shim"
-    runtime = "docker-runc"
+    shim = "containerd-shim"
+    runtime = "runc"
     runtime_root = "${SNAP_COMMON}/var/lib/docker/runc"
     no_shim = false
     shim_debug = false

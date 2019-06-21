@@ -40,5 +40,6 @@ profile docker-default flags=(attach_disconnected,mediate_deleted) {
   signal (receive) peer=snap.microk8s.daemon-docker,
   signal (receive) peer=snap.microk8s.daemon-contained,
   signal (receive) peer=snap.microk8s.daemon-kubelet,
+  signal (receive) peer=snap.microk8s.daemon-kubectl,
 
 }
