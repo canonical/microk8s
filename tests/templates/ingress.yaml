@@ -18,7 +18,7 @@ spec:
         app: microbot
     spec:
       containers:
-      - image: cdkbot/microbot-$ARCH
+      - image: cdkbot/microbot-amd64
         imagePullPolicy: ""
         name: microbot
         ports:
@@ -57,7 +57,7 @@ spec:
    - host: microbot.127.0.0.1.xip.io
      http:
        paths:
-         - path: /xip
+         - path: /
            backend:
              serviceName: microbot
              servicePort: 80
@@ -71,7 +71,7 @@ spec:
    - host: microbot.127.0.0.1.nip.io
      http:
        paths:
-         - path: /nip
+         - path: /
            backend:
              serviceName: microbot
              servicePort: 80

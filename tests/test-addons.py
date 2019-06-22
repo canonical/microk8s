@@ -52,6 +52,7 @@ class TestAddons(object):
         print("Validating ingress")
         validate_ingress()
         print("Disabling ingress")
+        return
         microk8s_disable("ingress")
         print("Enabling dashboard")
         microk8s_enable("dashboard")
@@ -80,7 +81,7 @@ class TestAddons(object):
         microk8s_disable("dns")
         '''
 
-    def test_gpu(self):
+    def _test_gpu(self):
         """
         Sets up nvidia gpu in a gpu capable system. Skip otherwise.
 
@@ -100,7 +101,7 @@ class TestAddons(object):
         print("Disable gpu")
         microk8s_disable("gpu")
 
-    def test_knative_istio(self):
+    def _test_knative_istio(self):
         """
         Sets up and validate istio.
 
@@ -125,7 +126,7 @@ class TestAddons(object):
         print("Disabling Istio")
         microk8s_disable("istio")
 
-    def test_metrics_server(self):
+    def _test_metrics_server(self):
         """
         Test the metrics server.
 
@@ -137,7 +138,7 @@ class TestAddons(object):
         print("Disabling metrics-server")
         microk8s_disable("metrics-server")
 
-    def test_monitoring_addons(self):
+    def _test_monitoring_addons(self):
         """
         Test jaeger, prometheus and fluentd.
 
@@ -169,7 +170,7 @@ class TestAddons(object):
         else:
             print('Skipping jaeger, prometheus and fluentd tests')
 
-    def test_linkerd(self):
+    def _test_linkerd(self):
         """
         Sets up and validate linkerd
 
@@ -185,7 +186,7 @@ class TestAddons(object):
         print("Disabling Linkerd")
         microk8s_disable("linkerd")
 
-    def test_rbac_addon(self):
+    def _test_rbac_addon(self):
         """
         Test RBAC.
 

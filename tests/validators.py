@@ -108,7 +108,7 @@ def validate_ingress():
     service_ok = False
     attempt = 50
     while attempt >= 0:
-        resp = requests.get("http://microbot.127.0.0.1.xip.io/xip")
+        resp = requests.get("http://microbot.127.0.0.1.xip.io/")
         if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
             service_ok = True
             break
@@ -117,7 +117,7 @@ def validate_ingress():
     if resp.status_code != 200 or "microbot.png" not in resp.content.decode("utf-8"):
         attempt = 50
         while attempt >= 0:
-            resp = requests.get("http://microbot.127.0.0.1.nip.io/nip")
+            resp = requests.get("http://microbot.127.0.0.1.nip.io/")
             if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                 service_ok = True
                 break
