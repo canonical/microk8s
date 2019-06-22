@@ -4,8 +4,6 @@ sudo: required
 services: [docker]
 
 script:
-  - sudo snap install microk8s --classic
-  - sudo snap remove microk8s
   - docker run --network=host -v $(pwd):$(pwd) -w $(pwd) snapcore/snapcraft:beta sh -c "apt update && snapcraft"
   - sudo apt update
   - sudo snap install *.snap --classic --dangerous
