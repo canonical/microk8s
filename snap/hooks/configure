@@ -62,13 +62,5 @@ then
   systemctl start snap.${SNAP_NAME}.daemon-kubelet
 fi
 
-if [ -e "${SNAP_DATA}/args/containerd-template.toml" ]
-then
-  echo "Handle docker and containerd upgrade"
-  "$SNAP/bin/sed" -i 's@docker-containerd-shim@containerd-shim@g' "${SNAP_DATA}/args/containerd-template.toml"
-  "$SNAP/bin/sed" -i 's@docker-runc@runc@g' "${SNAP_DATA}/args/containerd-template.toml"
-  systemctl restart snap.${SNAP_NAME}.daemon-containerd
-fi
-
 # Create the locks directory
 mkdir -p ${SNAP_DATA}/var/lock/

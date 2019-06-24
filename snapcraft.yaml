@@ -96,16 +96,19 @@ parts:
     plugin: dump
     stage-packages:
     - conntrack
-    - docker.io
     - aufs-tools
     - gawk
     - sed
-    source: .
     stage:
     - -sbin/xtables-multi
     - -sbin/iptables*
     - -lib/xtables
-    override-build: "true"
+    source:
+    - on amd64: "http://archive.ubuntu.com/ubuntu/pool/universe/d/docker.io/docker.io_18.06.1-0ubuntu1.2~16.04.1_amd64.deb"
+    - on arm64: "http://ports.ubuntu.com/pool/universe/d/docker.io/docker.io_18.06.1-0ubuntu1.2~16.04.1_arm64.deb"
+    source-type: deb
+    override-build: |
+      snapcraftctl build
   microk8s:
     after: [docker]
     plugin: dump
