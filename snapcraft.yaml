@@ -96,6 +96,12 @@ parts:
     plugin: dump
     stage-packages:
     - conntrack
+    - libltdl7
+    - libseccomp2
+    - libdevmapper1.02.1
+    - libc6
+    - debconf-2.0
+    - adduser
     - aufs-tools
     - gawk
     - sed
