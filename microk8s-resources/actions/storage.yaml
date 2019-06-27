@@ -16,6 +16,7 @@ spec:
       labels:
         k8s-app: hostpath-provisioner
     spec:
+      serviceAccountName: microk8s-hostpath
       containers:
         - name: hostpath-provisioner
           image: cdkbot/hostpath-provisioner-$ARCH:latest
@@ -43,3 +44,57 @@ metadata:
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
 provisioner: microk8s.io/hostpath
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: microk8s-hostpath
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: microk8s-hostpath
+rules:
+- apiGroups: [""]
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - list
+  - get
+  - watch
+  - update
+- apiGroups: [""]
+  resources:
+  - persistentvolumes
+  verbs:
+  - list
+  - get
+  - update
+  - watch
+  - create
+- apiGroups: [""]
+  resources:
+    - events
+  verbs:
+    - create
+    - patch
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - storageclasses
+  verbs:
+    - list
+    - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: microk8s-hostpath
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: microk8s-hostpath
+subjects:
+  - kind: ServiceAccount
+    name: microk8s-hostpath
+    namespace: kube-system
