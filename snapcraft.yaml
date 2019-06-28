@@ -132,6 +132,9 @@ parts:
     organize:
       containerd/install/bin/*: bin/
     stage-packages:
+    - libnss-myhostname
+    - libnss-resolve
+    - libnss-mymachines
     - conntrack
     - aufs-tools
     - gawk
