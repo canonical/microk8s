@@ -38,7 +38,7 @@ echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
     tar -xvf istio-${ISTIO_ERSION}-linux.tar
     mv istio-${ISTIO_ERSION}/bin/istioctl .
     mkdir istio-yaml
-    mv istio-${ISTIO_ERSION}/install/kubernetes/helm/istio/templates/crds.yaml ./istio-yaml/
+    cp istio-${ISTIO_ERSION}/install/kubernetes/helm/istio-init/files/crd*.yaml ./istio-yaml/
     mv istio-${ISTIO_ERSION}/install/kubernetes/istio-demo-auth.yaml ./istio-yaml/
     mv istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml ./istio-yaml/ 
 

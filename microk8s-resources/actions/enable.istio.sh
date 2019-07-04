@@ -11,7 +11,11 @@ echo "Enabling Istio"
 
 read -p "Enforce mutual TLS authentication (https://bit.ly/2KB4j04) between sidecars? If unsure, choose N. (y/N): " confirm
 
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP}/actions/istio/crds.yaml"
+for i in "${SNAP}"/actions/istio/crd*yaml
+do
+  "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "$i"
+done
+
 if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]
 then
   "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP}/actions/istio/istio-demo-auth.yaml"
