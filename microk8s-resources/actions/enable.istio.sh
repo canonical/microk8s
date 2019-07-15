@@ -6,12 +6,33 @@ source $SNAP/actions/common/utils.sh
 
 echo "Enabling Istio"
 
+if [ ! -f "${SNAP_DATA}/bin/istioctl" ]
+then
+  ISTIO_VERSION="v1.2.2"
+  echo "Fetching istioctl version $ISTIO_VERSION."
+  ISTIO_ERSION=$(echo $ISTIO_VERSION | sed 's/v//g')
+  mkdir -p "${SNAP_DATA}/tmp/istio"
+  sudo "${SNAP}/usr/bin/curl" -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux.tar.gz -o "$SNAP_DATA/tmp/istio/istio.tar.gz"
+
+  gzip -d "$SNAP_DATA/tmp/istio/istio.tar.gz"
+  tar -xvf "$SNAP_DATA/tmp/istio/istio.tar"
+  mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/bin/istioctl" "$SNAP_DATA/bin/"
+
+  mkdir -p "$SNAP_DATA/actions/istio/"
+
+  cp "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/helm/istio-init/files/crd*.yaml" "$SNAP_DATA/actions/istio/"
+  mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo-auth.yaml" "$SNAP_DATA/actions/istio/"
+  mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml" "$SNAP_DATA/actions/istio/"
+
+  mkdir -p "$SNAP_DATA/tmp/istio"
+fi
+
 # pod/servicegraph will start failing without dns
 "$SNAP/microk8s-enable.wrapper" dns
 
 read -p "Enforce mutual TLS authentication (https://bit.ly/2KB4j04) between sidecars? If unsure, choose N. (y/N): " confirm
 
-for i in "${SNAP}"/actions/istio/crd*yaml
+for i in "${SNAP_DATA}"/actions/istio/crd*yaml
 do
   "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "$i"
 done
@@ -27,6 +48,5 @@ fi
 
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
 sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
-
 
 echo "Istio is starting"
