@@ -62,7 +62,6 @@ apps:
     command: microk8s-reset.wrapper
   istioctl:
     command: microk8s-istioctl.wrapper
-    completer: ${SNAP_DATA}/etc/istio/istioctl.bash
   linkerd:
     command: microk8s-linkerd.wrapper
 
@@ -235,8 +234,6 @@ parts:
         # Istio support
         rm "actions/enable.istio.sh"
         rm "actions/disable.istio.sh"
-        # added because the completer is still defined
-        touch istioctl.bash
         # Knative support
         rm "actions/enable.knative.sh"
         rm "actions/disable.knative.sh"

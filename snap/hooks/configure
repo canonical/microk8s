@@ -144,11 +144,4 @@ then
   mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml" "$SNAP_DATA/actions/istio/"
 
   rm -rf "$SNAP_DATA/tmp/istio"
-
-    # Add bash completion for istioctl. This is located here to make sure it is only added when istio is added.
-  mkdir -p "$SNAP_DATA/etc/istio/"
-  "$SNAP_DATA/bin/istioctl" collateral completion --bash -o "$SNAP_DATA/etc/istio/"
-  sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -F __start_istioctl microk8s.istioctl/g" "$SNAP_DATA/etc/istio/istioctl.bash"
-  sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -o nospace -F __start_istioctl microk8s.istioctl/g" "$SNAP_DATA/etc/istio/istioctl.bash"
-
 fi
