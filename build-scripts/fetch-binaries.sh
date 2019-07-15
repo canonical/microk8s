@@ -37,8 +37,6 @@ echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
     curl -L https://github.com/knative/serving/releases/download/$KNATIVE_SERVING_VERSION/serving.yaml -o ./knative-yaml/serving.yaml
     curl -L https://github.com/knative/build/releases/download/$KNATIVE_BUILD_VERSION/build.yaml -o ./knative-yaml/build.yaml
     curl -L https://github.com/knative/eventing/releases/download/$KNATIVE_EVENTING_VERSION/release.yaml  -o ./knative-yaml/release.yaml
-    curl -L https://github.com/knative/eventing-sources/releases/download/$KNATIVE_EVENTING_VERSION/eventing-sources.yaml  -o ./knative-yaml/eventing-sources.yaml
     curl -L https://github.com/knative/serving/releases/download/$KNATIVE_SERVING_VERSION/monitoring.yaml  -o ./knative-yaml/monitoring.yaml
-    curl -L https://raw.githubusercontent.com/knative/serving/$KNATIVE_SERVING_VERSION/third_party/config/build/clusterrole.yaml  -o ./knative-yaml/clusterrole.yaml
   fi
 )
