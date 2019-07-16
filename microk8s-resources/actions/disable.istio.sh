@@ -7,6 +7,8 @@ source $SNAP/actions/common/utils.sh
 echo "Disabling Istio"
 
 "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" delete namespaces istio-system
-"$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" delete -f "${SNAP}/actions/istio/crds.yaml" -n istio-system &> /dev/null || true
+sudo rm -rf "${SNAP_DATA}/bin/istioctl"
+sudo rm -rf "$SNAP_USER_COMMON/istio-auth.lock"
+sudo rm -rf "$SNAP_USER_COMMON/istio.lock"
 
 echo "Istio is terminating"

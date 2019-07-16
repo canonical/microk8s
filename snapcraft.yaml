@@ -62,7 +62,6 @@ apps:
     command: microk8s-reset.wrapper
   istioctl:
     command: microk8s-istioctl.wrapper
-    completer: istioctl.bash
   linkerd:
     command: microk8s-linkerd.wrapper
 
@@ -235,8 +234,6 @@ parts:
         # Istio support
         rm "actions/enable.istio.sh"
         rm "actions/disable.istio.sh"
-        # added because the completer is still defined
-        touch istioctl.bash
         # Knative support
         rm "actions/enable.knative.sh"
         rm "actions/disable.knative.sh"
@@ -256,14 +253,6 @@ parts:
         rm "actions/enable.linkerd.sh"
         rm "actions/disable.linkerd.sh"
       else
-        # Istio addon
-        echo "Preparing istio"
-        cp $KUBE_SNAP_BINS/istioctl .
-        cp -r $KUBE_SNAP_BINS/istio-yaml ./actions/istio
-        # Add bash completion for istioctl. This is located here to make sure it is only added when istio is added.
-        ./istioctl collateral completion --bash -o .
-        sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -F __start_istioctl microk8s.istioctl/g" istioctl.bash
-        sed -i  "s/complete -o default -F __start_istioctl istioctl/complete -o default -o nospace -F __start_istioctl microk8s.istioctl/g" istioctl.bash
         # Knative support
         echo "Preparing knative"
         cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
