@@ -92,7 +92,7 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         if datetime.datetime.now() > deadline:
-            raise TimeoutError("Pod {} not in {} after {] seconds.".format(pod,
+            raise TimeoutError("Pod {} not in {} after {} seconds.".format(pod,
                                                                            desired_state,
                                                                            timeout_insec))
         cmd = 'po {} -n {}'.format(pod, namespace)

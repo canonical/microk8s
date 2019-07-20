@@ -93,19 +93,42 @@ def validate_ingress():
         output = kubectl("get ing")
         if "microbot.127.0.0.1.xip.io" in output:
             break
-        time.sleep(2)
+        time.sleep(5)
         attempt -= 1
     assert "microbot.127.0.0.1.xip.io" in output
-
     attempt = 50
     while attempt >= 0:
-        resp = requests.get("http://microbot.127.0.0.1.xip.io")
-        if resp.status_code == 200:
+        output = kubectl("get ing")
+        if "microbot.127.0.0.1.nip.io" in output:
             break
-        time.sleep(2)
+        time.sleep(5)
         attempt -= 1
-    assert resp.status_code == 200
-    assert "microbot.png" in resp.content.decode("utf-8")
+    assert "microbot.127.0.0.1.nip.io" in output
+
+    service_ok = False
+    attempt = 50
+    while attempt >= 0:
+        try:
+            resp = requests.get("http://microbot.127.0.0.1.xip.io/")
+            if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
+                service_ok = True
+                break
+        except:
+            time.sleep(5)
+            attempt -= 1
+    if resp.status_code != 200 or "microbot.png" not in resp.content.decode("utf-8"):
+        attempt = 50
+        while attempt >= 0:
+            try:
+                resp = requests.get("http://microbot.127.0.0.1.nip.io/")
+                if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
+                    service_ok = True
+                    break
+            except:
+                time.sleep(5)
+                attempt -= 1
+
+    assert service_ok
 
     kubectl("delete -f {}".format(manifest))
 
@@ -159,6 +182,28 @@ def validate_istio():
     wait_for_pod_state("", "default", "running", label="app=details")
     kubectl("delete -f {}".format(manifest))
 
+def validate_knative():
+    """
+    Validate Knative by deploying the helloworld-go app.
+    """
+    if platform.machine() != 'x86_64':
+        print("Knative tests are only relevant in x86 architectures")
+        return
+
+    wait_for_installation()
+    knative_services = [
+        "activator",
+        "autoscaler",
+        "controller",
+    ]
+    for service in knative_services:
+        wait_for_pod_state("", "knative-serving", "running", label="app={}".format(service))
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "knative-helloworld.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="serving.knative.dev/service=helloworld-go")
+    kubectl("delete -f {}".format(manifest))
 
 def validate_registry():
     """

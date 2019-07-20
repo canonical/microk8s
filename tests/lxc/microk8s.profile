@@ -19,4 +19,7 @@ devices:
     path: /sys/module/apparmor/parameters/enabled
     source: /dev/null
     type: disk
-
+  aadisable2:
+    path: /dev/kmsg
+    source: /dev/kmsg
+    type: disk

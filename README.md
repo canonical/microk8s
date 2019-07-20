@@ -1,6 +1,6 @@
 # MicroK8s
 
-![](https://img.shields.io/badge/Kubernetes-1.14-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg)
+![](https://img.shields.io/badge/Kubernetes-1.15-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg?branch=master)
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
 
@@ -51,6 +51,9 @@ We can then set the following environment variables prior to building:
  - CNI_VERSION: version of CNI tools. Defaults to v0.7.1.
  - KUBE_TRACK: kubernetes release series (e.g., 1.10) to package. Defaults to latest stable.
  - ISTIO_VERSION: istio release. Defaults to v1.0.5.
+ - KNATIVE_SERVING_VERSION: Knative Serving release. Defaults to v0.6.0.
+ - KNATIVE_BUILD_VERSION: Knative Build release. Defaults to v0.5.0.
+ - KNATIVE_EVENTING_VERSION: Knative Eventing release. Defaults to v0.5.0.
  - RUNC_COMMIT: the commit hash from which to build runc
  - CONTAINERD_COMMIT: the commit hash from which to build containerd
 

@@ -51,10 +51,24 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
- name: microbot-ingress
+ name: microbot-ingress-xip
 spec:
  rules:
    - host: microbot.127.0.0.1.xip.io
+     http:
+       paths:
+         - path: /
+           backend:
+             serviceName: microbot
+             servicePort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+ name: microbot-ingress-nip
+spec:
+ rules:
+   - host: microbot.127.0.0.1.nip.io
      http:
        paths:
          - path: /

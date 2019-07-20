@@ -27,6 +27,18 @@ then
       sleep 2
     done
   fi
+
+  # Handle non-unified cgroups https://github.com/ubuntu/microk8s/issues/519
+  if [ -e /proc/$$/cgroup ] &&
+     [[ $(awk -F '[:]' '(/cpu/ && !/cpuset/) || /memory/ {print $3}' /proc/$$/cgroup | uniq | wc -l) -eq "2" ]] &&
+     ! grep -e "runtime-cgroups" $SNAP_DATA/args/kubelet &> /dev/null &&
+     ! grep -e "kubelet-cgroups" $SNAP_DATA/args/kubelet &> /dev/null &&
+     [ -e  /sys/fs/cgroup/systemd/system.slice ]
+  then
+    refresh_opt_in_config "runtime-cgroups" "/systemd/system.slice" kubelet
+    refresh_opt_in_config "kubelet-cgroups" "/systemd/system.slice" kubelet
+  fi
+
 elif [ "${app}" = "kube-apiserver" ] || [ "${app}" = "kube-proxy" ]
 then
   # Check if we advertise an address. If we do we do not need to wait for a default network interface.

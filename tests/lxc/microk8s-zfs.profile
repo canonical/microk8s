@@ -23,4 +23,7 @@ devices:
     path: /dev/zfs
     source: /dev/zfs
     type: disk
-
+  aadisable3:
+    path: /dev/kmsg
+    source: /dev/kmsg
+    type: disk

@@ -5,6 +5,11 @@ set -eu
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 
+if [ ! -f "${SNAP_DATA}/bin/istioctl" ]; then
+  echo "Istio not available, try enabling is with 'microk8s.enable istio'"
+  exit 0
+fi
+
 source $SNAP/actions/common/utils.sh
 ARCH=$(arch)
 if ! [ "${ARCH}" = "amd64" ]
@@ -12,5 +17,5 @@ then
   echo "Istio is not available for ${ARCH}"
 else
   exit_if_stopped
-  "${SNAP}/istioctl" --kubeconfig=$SNAP/client.config "$@"
+  "${SNAP_DATA}/bin/istioctl" --kubeconfig=$SNAP/client.config "$@"
 fi
