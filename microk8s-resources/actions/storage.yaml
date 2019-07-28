@@ -19,7 +19,7 @@ spec:
       serviceAccountName: microk8s-hostpath
       containers:
         - name: hostpath-provisioner
-          image: cdkbot/hostpath-provisioner-$ARCH:latest
+          image: cdkbot/hostpath-provisioner-$SNAP_ARCH:latest
           env:
             - name: NODE_NAME
               valueFrom:
