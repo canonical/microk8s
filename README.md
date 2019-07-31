@@ -14,7 +14,7 @@ As [Kelsey Hightower](https://twitter.com/kelseyhightower/status/112083459413840
 
 ## How does it work?
 
-Being a [snap](https://snapcraft.io/) MicroK8s installs on 42 distributions with:
+Being a [snap](https://snapcraft.io/microk8s), MicroK8s installs on 42 distributions with:
 
 ```
 snap install microk8s --classic
@@ -25,14 +25,14 @@ To test your workload on a specific Kubernetes version or even alpha, beta and c
 snap install microk8s --classic --channel=1.14/stable
 ```
 
-As releases happen the same day as upstream and updates are delivered transparently, your cluster is always kept up-to-date following the latest Kubernetes.
+As MicroK8s releases happen the same day as upstream Kubernetes and snap updates are delivered transparently, your cluster is always kept up-to-date with the latest Kubernetes.
 
 All dependencies are in a 200MB snap package making MicroK8s a great fit for the edge.
 
 
 ## Documentation
 
-For more information on using MicroK8s see the [official docs](https://microk8s.io/docs/).
+For more information see the [official docs](https://microk8s.io/docs/).
 
 ## Quickstart Guide
 
