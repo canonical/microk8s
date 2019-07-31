@@ -10,7 +10,7 @@ Dead simple to install, fully featured, always fresh, upstream Kubernetes availa
 - CI/CD, and
 - the edge
 
-As [Kelsey Hightower](https://twitter.com/kelseyhightower/status/1120834594138406912) has said `... Canonical might have assembled the easiest way to provision a single node Kubernetes cluster`.
+To quote [Kelsey Hightower](https://twitter.com/kelseyhightower/status/1120834594138406912), `... Canonical might have assembled the easiest way to provision a single node Kubernetes cluster`.
 
 ## How does it work?
 
@@ -25,18 +25,14 @@ To test your workload on a specific Kubernetes version or even alpha, beta and c
 snap install microk8s --classic --channel=1.14/stable
 ```
 
-As MicroK8s releases happen the same day as upstream Kubernetes and snap updates are delivered transparently, your cluster is always kept up-to-date with the latest Kubernetes.
+As MicroK8s releases happen the same day as upstream Kubernetes and snap updates are seemlessly delivered, your cluster is always kept up-to-date with the latest Kubernetes.
 
 All dependencies are in a 200MB snap package making MicroK8s a great fit for the edge.
 
 
-## Documentation
-
-For more information see the [official docs](https://microk8s.io/docs/).
-
 ## Quickstart Guide
 
-To avoid colliding with a `kubectl` already installed and to avoid overwriting any existing Kubernetes configuration file, MicroK8s adds a `microk8s.kubectl` command, configured to exclusively access the new MicroK8s install. When following instructions online, make sure to prefix `kubectl` with `microk8s.`.
+To avoid colliding with a `kubectl` already installed and to avoid overwriting any existing Kubernetes configuration file, MicroK8s adds a `microk8s.kubectl` command, configured to exclusively access the MicroK8s cluster. When following instructions online, make sure to prefix `kubectl` with `microk8s.`.
 
 ```
 microk8s.kubectl get nodes
@@ -59,6 +55,11 @@ microk8s.enable dns dashboard
 
 
 With `microk8s.status` you can see the list of available addons and which ones are currently enabled. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
+
+## Documentation
+
+For more information see the [official docs](https://microk8s.io/docs/).
+
 
 ## Are you using MicroK8s?
 
