@@ -4,7 +4,7 @@
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/).
 
-Dead simple to install, fully featured, always current with upstream Kubernetes available in 42 Linux distributions. Prefect for:
+Dead simple to install, fully featured, always current with upstream Kubernetes available in 42 Linux distributions. Perfect for:
 
 - workstations
 - IoT devices
@@ -24,10 +24,10 @@ To quote [Kelsey Hightower](https://twitter.com/kelseyhightower/status/112083459
 
 - Dependencies are included in the 200MB snap package.
 
-- All K8s versions from v1.10 onwards as well as alpha, beta and release candidates are available for testing your workload with.
+- All K8s versions from v1.10 onwards as well as alpha, beta and release candidates are available.
 
 - We maintain a curated collection of manifests for:
-  - Service Mesh:  Istio, Linkerd
+  - Service Mesh: Istio, Linkerd
   - Serverless: Knative
   - Monitoring: Fluentd, Prometheus, Grafana, Metrics
   - Ingress, DNS, Dashboard, Clustering
@@ -43,14 +43,14 @@ Deploy MicroK8s with:
 snap install microk8s --classic
 ```
 
-To avoid colliding with a `kubectl` already installed and to avoid overwriting any existing Kubernetes configuration file, MicroK8s adds a `microk8s.kubectl` command, configured to exclusively access the MicroK8s cluster. When following instructions online, make sure to prefix `kubectl` with `microk8s.`.
+To avoid colliding with an already-installed `kubectl`, and to avoid overwriting any existing Kubernetes configuration files, MicroK8s adds a `microk8s.kubectl` command, configured to exclusively access the MicroK8s cluster.
 
 ```
 microk8s.kubectl get nodes
 microk8s.kubectl get services
 ```
 
-To use MicroK8s with your already installed kubectl, do this:
+To instead use MicroK8s with an already-installed kubectl, do this:
 
 ```
 microk8s.kubectl config view --raw > $HOME/.kube/config
@@ -58,14 +58,13 @@ microk8s.kubectl config view --raw > $HOME/.kube/config
 
 #### Kubernetes add-ons
 
-MicroK8s installs a barebones upstream Kubernetes. Additional services like dns and dashboard can be run using the `microk8s.enable` command
+MicroK8s installs a barebones upstream Kubernetes. Additional services like dns and the Kubernetes dashboard can be enabled using the `microk8s.enable` command.
 
 ```
 microk8s.enable dns dashboard
 ```
 
-
-With `microk8s.status` you can see the list of available addons and which ones are currently enabled. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
+Use `microk8s.status` to see a list of enabled and available addons. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
 
 ## Documentation
 
@@ -76,7 +75,6 @@ To contribute to the project have a look at the [build instructions](docs/build.
 ## Are you using MicroK8s?
 
 Drop us a line at the "[MicroK8s In The Wild](docs/community.md)" page.
-
 
 <p align="center">
   <img src="https://assets.ubuntu.com/v1/9309d097-MicroK8s_SnapStore_icon.svg" width="150px">
