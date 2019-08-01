@@ -75,3 +75,7 @@ To contribute to the project have a look at the [build instructions](docs/build.
 ## Are you using MicroK8s?
 
 Drop us a line at the "[MicroK8s In The Wild](docs/community.md)" page.
+
+<a href="https://snapcraft.io/microk8s" title="Get it from the Snap Store">
+            <img src="https://snapcraft.io/static/images/badges/en/snap-store-white.svg" alt="Get it from the Snap Store" width="200" />
+          </a>
