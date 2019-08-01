@@ -75,5 +75,3 @@ To contribute to the project have a look at the [build instructions](docs/build.
 ## Are you using MicroK8s?
 
 Drop us a line at the "[MicroK8s In The Wild](docs/community.md)" page.
-
-<iframe src="https://snapcraft.io/microk8s/embedded?button=black" frameborder="0" width="100%" height="330px" style="border: 1px solid #CCC; border-radius: 2px;"></iframe>
