@@ -2,7 +2,7 @@
 
 ![](https://img.shields.io/badge/Kubernetes-1.15-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg?branch=master)
 
-<img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/).
+<img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/microk8s).
 
 Simple to install, full featured, always current Kubernetes available on 42 Linux distributions. Perfect for:
 
@@ -16,7 +16,7 @@ To quote [Kelsey Hightower](https://twitter.com/kelseyhightower/status/112083459
 
 ## How does it work?
 
-- Being a [snap](https://snapcraft.io/microk8s), MicroK8s targets 42 Linux distributions.
+- A [snap](https://snapcraft.io/microk8s) package, MicroK8s runs on 42 different Linux distributions.
 
 - MicroK8s releases happen the same day as upstream K8s.
 
