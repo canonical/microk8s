@@ -4,9 +4,9 @@
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/).
 
-Dead simple to install, fully featured, always current with upstream Kubernetes available in 42 Linux distributions. Perfect for:
+Simple to install, full featured, always current Kubernetes available nn 42 Linux distributions. Perfect for:
 
-- workstations
+- Workstations
 - IoT devices
 - Edge Computing
 - CI/CD
@@ -76,6 +76,4 @@ To contribute to the project have a look at the [build instructions](docs/build.
 
 Drop us a line at the "[MicroK8s In The Wild](docs/community.md)" page.
 
-<p align="center">
-  <img src="https://assets.ubuntu.com/v1/9309d097-MicroK8s_SnapStore_icon.svg" width="150px">
-</p>
+<iframe src="https://snapcraft.io/microk8s/embedded?button=black" frameborder="0" width="100%" height="330px" style="border: 1px solid #CCC; border-radius: 2px;"></iframe>
