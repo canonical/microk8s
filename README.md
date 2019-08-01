@@ -71,7 +71,7 @@ With `microk8s.status` you can see the list of available addons and which ones a
 
 For more information see the [official docs](https://microk8s.io/docs/).
 
-To contribute to the project have a look at the [build instruction](docs/build.md).
+To contribute to the project have a look at the [build instructions](docs/build.md).
 
 ## Are you using MicroK8s?
 
