@@ -4,7 +4,7 @@
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/).
 
-Simple to install, full featured, always current Kubernetes available nn 42 Linux distributions. Perfect for:
+Simple to install, full featured, always current Kubernetes available on 42 Linux distributions. Perfect for:
 
 - Workstations
 - IoT devices
