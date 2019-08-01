@@ -4,11 +4,13 @@
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/).
 
-Dead simple to install, fully featured, always fresh, upstream Kubernetes available in 42 Linux distributions. Prefect for:
+Dead simple to install, fully featured, always current with upstream Kubernetes available in 42 Linux distributions. Prefect for:
 
-- your workstation,
-- CI/CD, and
-- the edge
+- workstations
+- IoT devices
+- Edge Computing
+- CI/CD
+- Cloud VMs (small clusters)
 
 To quote [Kelsey Hightower](https://twitter.com/kelseyhightower/status/1120834594138406912), `... Canonical might have assembled the easiest way to provision a single node Kubernetes cluster`.
 
@@ -24,8 +26,14 @@ To quote [Kelsey Hightower](https://twitter.com/kelseyhightower/status/112083459
 
 - All K8s versions from v1.10 onwards as well as alpha, beta and release candidates are available for testing your workload with.
 
-- A curated collection of manifests is maintained for your convenience. You can enable DNS, dashboard, ingress, istio, knative in a single command.
-
+- A curated collection of manifests for:
+  - Service Mesh:  Istio, Linkerd
+  - Serverless: Knative
+  - Monitoring: Fluentd, Prometheus, Grafana, Metrics
+  - Ingress, DNS, Dashboard, Clustering
+  - Automatic updates to the latest Kubernetes version
+  - GPGPU bindings for AI/ML
+  - Kubeflow!
 
 ## Quickstart
 
@@ -42,7 +50,7 @@ microk8s.kubectl get nodes
 microk8s.kubectl get services
 ```
 
-If you already have `kubectl` installed and you want to use it to access the MicroK8s deployment you can export the cluster's config with:
+To use MicroK8s with your already installed kubectl, do this:
 
 ```
 microk8s.kubectl config view --raw > $HOME/.kube/config
