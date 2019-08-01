@@ -14,23 +14,26 @@ To quote [Kelsey Hightower](https://twitter.com/kelseyhightower/status/112083459
 
 ## How does it work?
 
-Being a [snap](https://snapcraft.io/microk8s), MicroK8s installs on 42 distributions with:
+- Being a [snap](https://snapcraft.io/microk8s), MicroK8s targets 42 Linux distributions.
+
+- MicroK8s releases happen the same day as upstream K8s.
+
+- Snap updates are seamlessly delivered keeping your cluster up-to-date.
+
+- Dependencies are included in the 200MB snap package.
+
+- All K8s versions from v1.10 onwards as well as alpha, beta and release candidates are available for testing your workload with.
+
+- A curated collection of manifests is maintained for your convenience. You can enable DNS, dashboard, ingress, istio, knative in a single command.
+
+
+## Quickstart
+
+Deploy MicroK8s with:
 
 ```
 snap install microk8s --classic
 ```
-
-To test your workload on a specific Kubernetes version or even alpha, beta and candidate releases, you select the proper channel from `snap info microk8s`, eg:
-```
-snap install microk8s --classic --channel=1.14/stable
-```
-
-As MicroK8s releases happen the same day as upstream Kubernetes and snap updates are seemlessly delivered, your cluster is always kept up-to-date with the latest Kubernetes.
-
-All dependencies are in a 200MB snap package making MicroK8s a great fit for the edge.
-
-
-## Quickstart Guide
 
 To avoid colliding with a `kubectl` already installed and to avoid overwriting any existing Kubernetes configuration file, MicroK8s adds a `microk8s.kubectl` command, configured to exclusively access the MicroK8s cluster. When following instructions online, make sure to prefix `kubectl` with `microk8s.`.
 
@@ -45,7 +48,7 @@ If you already have `kubectl` installed and you want to use it to access the Mic
 microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
 
-#### Kubernetes Addons
+#### Kubernetes add-ons
 
 MicroK8s installs a barebones upstream Kubernetes. Additional services like dns and dashboard can be run using the `microk8s.enable` command
 
