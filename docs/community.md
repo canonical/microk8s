@@ -6,8 +6,6 @@ Feel free to update the table below by submitting a Pull Request.
 
 | Event/Mention                                          | Author(s)       | Source     | Date          |
 |---------------------------------------------------------------------|--------------|----------|---------------|
-| [Microk8s + Flask (Part 2): Exposing Flask Application in a Microk8s service](https://medium.com/@giorgos.apost.1994/microk8s-flask-part-2-280ac2d9eff) | George Apostolopoulos | medium.com | 19-Jul-2019 |
-| [Microk8s + Flask (Part 1): Dockerize a Flask Application](https://medium.com/@giorgos.apost.1994/microk8s-flask-part-1-efa3cc4e0e00)| George Apostolopoulos | medium.com | 19-Jul-2019 |
 | [Getting Started with Cilium on Microk8s](https://docs.cilium.io/en/stable/gettingstarted/microk8s/)| Joe Stringer | docs.cilium.io | 23-Apr-2019 |
 | [Single-User Production on Microk8s](https://transcrob.es/post/single-user-prod-microk8s/)| Anton Melser | transcrob.es | 05-Feb-2019 |
 | [MicroK8s, Part 3: How To Deploy a Pod in Kubernetes](https://virtualizationreview.com/articles/2019/02/01/microk8s-part-3-how-to-deploy-a-pod-in-kubernetes.aspx)| Tom Fenton | virtualizationreview.com | 02-Feb-2019 |
