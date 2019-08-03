@@ -2,31 +2,41 @@
 
 ![](https://img.shields.io/badge/Kubernetes-1.15-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg?branch=master)
 
-<img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/microk8s).
+<img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">
 
-Simple to install, full featured, always current Kubernetes available on 42 Linux distributions. Perfect for:
+## The smallest, fastest Kubernetes
 
-- Workstations
-- IoT devices
-- Edge Computing
+Single-package fully conformant lightweight Kubernetes that works on [42
+flavours of Linux](https://snapcraft.io/microk8s). Perfect for:
+
+- Developer workstations
+- IoT
+- Edge
 - CI/CD
-- Cloud VMs (small clusters)
 
-To quote [Kelsey Hightower](https://twitter.com/kelseyhightower/status/1120834594138406912), `... Canonical might have assembled the easiest way to provision a single node Kubernetes cluster`.
+`Canonical might have assembled the easiest way to provision a single node
+Kubernetes cluster`. - [Kelsey Hightower](https://twitter.com/kelseyhightower/status/1120834594138406912)
 
-## How does it work?
+## Why MicroK8s?
 
-- A [snap](https://snapcraft.io/microk8s) package, MicroK8s runs on 42 different Linux distributions.
+- Small. Developers want the smallest K8s for laptop and workstation
+  development.  MicroK8s provides a standalone K8s compatible with Azure
+  AKS, Amazon EKS, Google GKE when you run it on Ubuntu.
 
-- MicroK8s releases happen the same day as upstream K8s.
+- Simple. Minimize administration and operations with a single-package
+  install that has no moving parts for simplicity and certainty. All
+  dependencies and batteries included.
 
-- Updates are seamlessly delivered keeping your cluster up-to-date.
+- Secure. Updates are available for all security issues and can be applied
+  immediately or scheduled to suit your maintenance cycle.
 
-- Dependencies are included in the 200MB snap package.
+- Current. MicroK8s tracks upstream and releases beta, RC and final bits the
+  same day as upstream K8s. You can track latest K8s or stick to any release
+  version from 1.10 onwards.
 
-- All K8s versions from v1.10 onwards as well as alpha, beta and release candidates are available.
+- Comprehensive. MicroK8s includes a curated collection of manifests for
+  common K8s capabilities and services:
 
-- We maintain a curated collection of manifests for:
   - Service Mesh: Istio, Linkerd
   - Serverless: Knative
   - Monitoring: Fluentd, Prometheus, Grafana, Metrics
@@ -37,20 +47,20 @@ To quote [Kelsey Hightower](https://twitter.com/kelseyhightower/status/112083459
 
 ## Quickstart
 
-Deploy MicroK8s with:
+Install MicroK8s with:
 
 ```
 snap install microk8s --classic
 ```
 
-To avoid colliding with an already-installed `kubectl`, and to avoid overwriting any existing Kubernetes configuration files, MicroK8s adds a `microk8s.kubectl` command, configured to exclusively access the MicroK8s cluster.
+MicroK8s includes a `microk8s.kubectl` command:
 
 ```
 microk8s.kubectl get nodes
 microk8s.kubectl get services
 ```
 
-To instead use MicroK8s with an already-installed kubectl, do this:
+To use MicroK8s with your existing kubectl:
 
 ```
 microk8s.kubectl config view --raw > $HOME/.kube/config
