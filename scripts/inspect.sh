@@ -77,8 +77,52 @@ function store_kubernetes_info {
   /snap/bin/microk8s.kubectl cluster-info | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
   /snap/bin/microk8s.kubectl cluster-info dump | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
   /snap/bin/microk8s.kubectl get all --all-namespaces | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
+  /snap/bin/microk8s.kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+  /snap/bin/microk8s.kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
 
+function store_vm {
+  # Stores VM name (or none, if we are not on a VM)
+  printf -- 'Copy VM name (or none) to the final report tarball\n'
+  mkdir -p $INSPECT_DUMP/VM
+  systemd-detect-virt &> $INSPECT_DUMP/VM/vm_name
+}
+
+function store_disk_info {
+  # Store disk usage information
+  printf -- 'Copy disk usage information to the final report tarball\n'
+  mkdir -p $INSPECT_DUMP/disk
+  df -h | grep ^/ &> $INSPECT_DUMP/disk/disk_usage # remove the grep to also include virtual in-memory filesystems
+}
+
+function store_memory_info {
+  # Store memory usage information
+  printf -- 'Copy memory usage information to the final report tarball\n'
+  mkdir -p $INSPECT_DUMP/memory
+  free -m &> $INSPECT_DUMP/memory/memory_usage
+}
+
+function store_uptime {
+  # Store server's uptime.
+  printf -- 'Copy server uptime to the final report tarball\n'
+  mkdir -p $INSPECT_DUMP/uptime
+  uptime &> $INSPECT_DUMP/uptime/uptime
+}
+
+
+function store_distribution {
+  # Store the current linux distro.
+  printf -- 'Copy current linux distribution to the final report tarball\n'
+  mkdir -p $INSPECT_DUMP/distribution
+  lsb_release -a &> $INSPECT_DUMP/distribution/lsb_release
+}
+
+function store_openssl {
+  # Store the current linux distro.
+  printf -- 'Copy openSSL information to the final report tarball\n'
+  mkdir -p $INSPECT_DUMP/openssl
+  openssl version -v -d -e &> $INSPECT_DUMP/openssl/openssl
+}
 
 function suggest_fixes {
   # Propose fixes
@@ -88,22 +132,74 @@ function suggest_fixes {
     if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
     then
       printf -- '\033[0;33m WARNING: \033[0m Port 8080 seems to be in use by another application.\n'
+        if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
+        then
+            printf -- '\033[0;33m WARNING: \033[0m Port 8080 seems to be in use by another application.\n'
+        fi
+    fi
+
+    if iptables -L | grep FORWARD | grep DROP &> /dev/null
+    then
+        printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
+        printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
+        printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
+    fi
+
+    ufw=$(ufw status)
+    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
+    then
+      printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
+      printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+    fi
+
+    # check for selinux. if enabled, print warning.
+    if getenforce | grep -q 'Enabled'
+    then
+    	printf -- '\033[0;33m WARNING: \033[0m SElinux is enabled. Consider disabling it.\n'
+    fi
+
+
+    # check for docker
+    if [ -d "/etc/docker/" ]; then 
+      printf -- '\033[0;33m WARNING: \033[0m Docker is installed. You should mark the registry as insecure. '
+      printf -- 'Add the following to /etc/docker/deamon.json : \n'
+      printf -- ' {\n'
+      printf -- ' \t "insecure-registries" : ["localhost:32000"] \n'
+      printf -- ' }\n'
+      printf -- ' and then restart docker with: sudo systemctl restart docker\n'
     fi
   fi
 
   if iptables -L | grep FORWARD | grep DROP &> /dev/null
   then
-      printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
-      printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
-      printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
+    printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
+    printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
+    printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
   fi
 
   ufw=$(ufw status)
   if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
   then
-      printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-      printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+    printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
+    printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
   fi
+
+  # check for selinux. if enabled, print warning.
+  if getenforce | grep -q 'Enabled'
+  then
+    printf -- '\033[0;33m WARNING: \033[0m SElinux is enabled. Consider disabling it.\n'
+  fi
+
+  # check for docker
+  if [ -d "/etc/docker/" ]; then 
+    printf -- '\033[0;33m WARNING: \033[0m Docker is installed. You should mark the registry as insecure. '
+    printf -- 'Add the following to /etc/docker/deamon.json : \n'
+    printf -- ' {\n'
+    printf -- ' \t "insecure-registries" : ["localhost:32000"] \n'
+    printf -- ' }\n'
+    printf -- ' and then restart docker with: sudo systemctl restart docker\n'
+  fi
+
 }
 
 
@@ -138,6 +234,12 @@ printf -- 'Inspecting AppArmor configuration\n'
 check_apparmor
 
 printf -- 'Gathering system info\n'
+store_vm
+store_disk_info
+store_memory_info
+store_uptime
+store_distribution
+store_openssl
 store_network
 store_processes
 store_kubernetes_info
