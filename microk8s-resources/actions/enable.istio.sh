@@ -34,7 +34,11 @@ fi
 
 read -p "Enforce mutual TLS authentication (https://bit.ly/2KB4j04) between sidecars? If unsure, choose N. (y/N): " confirm
 
+<<<<<<< Updated upstream
 for i in "${SNAP_DATA}"/actions/istio/crd*yaml
+=======
+for i in "${SNAP}"/actions/istio/crd*yaml
+>>>>>>> Stashed changes
 do
   "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "$i"
 done
