@@ -132,66 +132,31 @@ function suggest_fixes {
     if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
     then
       printf -- '\033[0;33m WARNING: \033[0m Port 8080 seems to be in use by another application.\n'
-        if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
-        then
-            printf -- '\033[0;33m WARNING: \033[0m Port 8080 seems to be in use by another application.\n'
-        fi
-    fi
-
-    if iptables -L | grep FORWARD | grep DROP &> /dev/null
-    then
-      printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
-      printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
-      printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
-    fi
-
-    ufw=$(ufw status)
-    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
-    then
-      printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-      printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
-    fi
-
-    # check for selinux. if enabled, print warning.
-    if getenforce | grep -q 'Enabled'
-    then
-    	printf -- '\033[0;33m WARNING: \033[0m SElinux is enabled. Consider disabling it.\n'
-    fi
-
-
-    # check for docker
-    if [ -d "/etc/docker/" ]; then 
-      printf -- '\033[0;33m WARNING: \033[0m Docker is installed. You should mark the registry as insecure. '
-      printf -- 'Add the following to /etc/docker/deamon.json : \n'
-      printf -- ' {\n'
-      printf -- ' \t "insecure-registries" : ["localhost:32000"] \n'
-      printf -- ' }\n'
-      printf -- ' and then restart docker with: sudo systemctl restart docker\n'
     fi
   fi
 
   if iptables -L | grep FORWARD | grep DROP &> /dev/null
   then
-      printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
-      printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
-      printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
+    printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
+    printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
+    printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
   fi
 
   ufw=$(ufw status)
   if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
   then
-      printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-      printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+    printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
+    printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
   fi
 
   # check for selinux. if enabled, print warning.
-  if getenforce | grep -q 'Enabled'
+  if getenforce 2>&1 | grep 'Enabled' > /dev/null
   then
     printf -- '\033[0;33m WARNING: \033[0m SElinux is enabled. Consider disabling it.\n'
   fi
 
   # check for docker
-  if [ -d "/etc/docker/" ]; then 
+  if [ -d "/etc/docker/" ] && ! sudo grep localhost:32000 /etc/docker/daemon.json > /dev/null; then 
     printf -- '\033[0;33m WARNING: \033[0m Docker is installed. You should mark the registry as insecure. '
     printf -- 'Add the following to /etc/docker/deamon.json : \n'
     printf -- ' {\n'
@@ -199,9 +164,7 @@ function suggest_fixes {
     printf -- ' }\n'
     printf -- ' and then restart docker with: sudo systemctl restart docker\n'
   fi
-
 }
-
 
 function build_report_tarball {
   # Tar and gz the report
