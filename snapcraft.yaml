@@ -152,8 +152,6 @@ parts:
     after: [containerd]
     plugin: dump
     build-attributes: [no-patchelf]
-    build-snaps:
-    - go/1.12/stable
     build-packages:
     - make
     - mercurial
