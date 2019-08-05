@@ -1,8 +1,7 @@
 # MicroK8s In The Wild
 
-Welcome to the MicroK8s In The Wild page. Here you can find events, tutorials, blog posts and talks on MicroK8s.
-
-Feel free to update the table below by submitting a Pull Request.
+People are doing amazing things with MicroK8s. Feel free to submit a pull
+request with updates to this page.
 
 | Event/Mention                                          | Author(s)       | Source     | Date          |
 |---------------------------------------------------------------------|--------------|----------|---------------|

@@ -45,7 +45,7 @@ flavours of Linux](https://snapcraft.io/microk8s). Perfect for:
   - GPGPU bindings for AI/ML
   - Kubeflow!
 
-Drop us a line at "[MicroK8s In The Wild](docs/community.md)" if you are
+Drop us a line at [MicroK8s in the Wild](docs/community.md) if you are
 doing something fun with MicroK8s!
 
 ## Quickstart
