@@ -1,4 +1,4 @@
-# MicroK8s In The Wild
+# MicroK8s in the Wild
 
 People are doing amazing things with MicroK8s. Feel free to submit a pull
 request with updates to this page.
