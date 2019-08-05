@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+set -eu
 
 mkdir -p $KUBE_SNAP_BINS
 (cd $KUBE_SNAP_BINS

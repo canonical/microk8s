@@ -169,12 +169,19 @@ parts:
     - zfsutils-linux
     - iproute2
     source: .
+    prime:
+      - -README*
+      - -tests*
+      - -docs*
+      - -build*
     override-build: |
       set -eux
       . build-scripts/set-env-variables.sh
 
+      REMOVE_KUBE_SNAP_BINS=false
       echo "Reached here"
       if [ -z "${KUBE_SNAP_BINS}" ]; then
+        REMOVE_KUBE_SNAP_BINS=true
         echo "Downloading binaries"
         . build-scripts/set-env-binaries-location.sh
         . build-scripts/fetch-other-binaries.sh
@@ -280,6 +287,9 @@ parts:
       # Add bash completion for microk8s.kubectl. 
       ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
 
+      if $REMOVE_KUBE_SNAP_BINS; then
+        rm -rf "$KUBE_SNAP_BINS"
+      fi
       snapcraftctl build
 
   # Unfortunately we cannot add package repositories to our snaps

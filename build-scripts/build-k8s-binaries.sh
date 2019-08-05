@@ -1,6 +1,7 @@
 #!/bin/bash
-set -eux
+set -eu
 
+echo "Building k8s bianries from $KUBERNETES_REPOSITORY commit $KUBERNETES_COMMIT"
 apps="kubectl kube-apiserver kube-controller-manager kube-scheduler kubelet kube-proxy"
 path_apps="cmd/kubectl cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-scheduler cmd/kubelet cmd/kube-proxy"
 export KUBE_SNAP_BINS="build/kube_bins/$KUBE_VERSION"
