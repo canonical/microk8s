@@ -84,44 +84,38 @@ function store_kubernetes_info {
 function store_vm {
   # Stores VM name (or none, if we are not on a VM)
   printf -- 'Copy VM name (or none) to the final report tarball\n'
-  mkdir -p $INSPECT_DUMP/VM
-  systemd-detect-virt &> $INSPECT_DUMP/VM/vm_name
+  systemd-detect-virt &> $INSPECT_DUMP/sys/vm_name
 }
 
 function store_disk_info {
   # Store disk usage information
   printf -- 'Copy disk usage information to the final report tarball\n'
-  mkdir -p $INSPECT_DUMP/disk
-  df -h | grep ^/ &> $INSPECT_DUMP/disk/disk_usage # remove the grep to also include virtual in-memory filesystems
+  df -h | grep ^/ &> $INSPECT_DUMP/sys/disk_usage # remove the grep to also include virtual in-memory filesystems
 }
 
 function store_memory_info {
   # Store memory usage information
   printf -- 'Copy memory usage information to the final report tarball\n'
-  mkdir -p $INSPECT_DUMP/memory
-  free -m &> $INSPECT_DUMP/memory/memory_usage
+  free -m &> $INSPECT_DUMP/sys/memory_usage
 }
 
 function store_uptime {
   # Store server's uptime.
   printf -- 'Copy server uptime to the final report tarball\n'
-  mkdir -p $INSPECT_DUMP/uptime
-  uptime &> $INSPECT_DUMP/uptime/uptime
+  uptime &> $INSPECT_DUMP/sys/uptime
 }
 
 
 function store_distribution {
   # Store the current linux distro.
   printf -- 'Copy current linux distribution to the final report tarball\n'
-  mkdir -p $INSPECT_DUMP/distribution
-  lsb_release -a &> $INSPECT_DUMP/distribution/lsb_release
+  lsb_release -a &> $INSPECT_DUMP/sys/lsb_release
 }
 
 function store_openssl {
   # Store the current linux distro.
   printf -- 'Copy openSSL information to the final report tarball\n'
-  mkdir -p $INSPECT_DUMP/openssl
-  openssl version -v -d -e &> $INSPECT_DUMP/openssl/openssl
+  openssl version -v -d -e &> $INSPECT_DUMP/sys/openssl
 }
 
 function suggest_fixes {
