@@ -150,13 +150,30 @@ function suggest_fixes {
   fi
 
   # check for docker
-  if [ -d "/etc/docker/" ] && ! sudo grep localhost:32000 /etc/docker/daemon.json > /dev/null; then 
-    printf -- '\033[0;33m WARNING: \033[0m Docker is installed. You should mark the registry as insecure. '
-    printf -- 'Add the following to /etc/docker/deamon.json : \n'
-    printf -- ' {\n'
-    printf -- ' \t "insecure-registries" : ["localhost:32000"] \n'
-    printf -- ' }\n'
-    printf -- ' and then restart docker with: sudo systemctl restart docker\n'
+  # if docker is installed
+  if [ -d "/etc/docker/" ]; then 
+    # if docker/daemon.json file doesn't exist print prompt to create it and mark the registry as insecure
+    if [ ! -f "/etc/docker/daemon.json" ]; then
+      printf -- '\033[0;33mWARNING: \033[0m Docker is installed. \n'
+      printf -- 'File "/etc/docker/daemon.json" does not exist. \n'
+      printf -- 'You should create it and add the following lines: \n'
+      printf -- '{\n'
+      printf -- '    "insecure-registries" : ["localhost:32000"] \n'
+      printf -- '}\n'
+      printf -- 'and then restart docker with: sudo systemctl restart docker\n'
+    # else if the file docker/daemon.json exists 
+    else
+      # if it doesn't include the registry as insecure, prompt to add the following lines
+      if ! grep -qs localhost:32000 /etc/docker/daemon.json
+      then
+        printf -- '\033[0;33mWARNING: \033[0m Docker is installed. \n'
+        printf -- 'Add the following lines to /etc/docker/daemon.json: \n'
+        printf -- '{\n'
+        printf -- '    "insecure-registries" : ["localhost:32000"] \n'
+        printf -- '}\n'
+        printf -- 'and then restart docker with: sudo systemctl restart docker\n'
+      fi
+    fi     
   fi
 }
 
