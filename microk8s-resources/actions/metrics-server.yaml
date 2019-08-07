@@ -233,4 +233,4 @@ roleRef:
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
-  name: 127.0.0.1
+  name: front-proxy-client
