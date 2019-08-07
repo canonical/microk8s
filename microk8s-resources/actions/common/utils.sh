@@ -18,7 +18,7 @@ refresh_opt_in_config() {
     local config_file="$SNAP_DATA/args/$3"
     local replace_line="$opt=$value"
     if $(grep -qE "^$opt=" $config_file); then
-        sudo "$SNAP/bin/sed" -i "s/^$opt=.*/$replace_line/" $config_file
+        sudo "$SNAP/bin/sed" -i "s;^$opt=.*;$replace_line;" $config_file
     else
         sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
