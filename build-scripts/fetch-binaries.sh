@@ -10,9 +10,17 @@ echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
     mkdir -p $KUBE_ARCH
     (cd $KUBE_ARCH
       echo "Fetching $app $KUBE_VERSION $KUBE_ARCH"
-      curl -LO \
-        https://dl.k8s.io/${KUBE_VERSION}/bin/linux/$KUBE_ARCH/$app
-      chmod +x $app
+      cachepath="../../../../../../cache/kube-$KUBE_VERSION-$KUBE_ARCH"
+      if [ -e $cachepath/$app ]; then
+        echo "Copying $app from local cache"
+        cp $cachepath/$app $app
+      else
+        curl -LO \
+          https://dl.k8s.io/${KUBE_VERSION}/bin/linux/$KUBE_ARCH/$app
+        chmod +x $app
+        mkdir -p $cachepath
+        cp $app $cachepath/$app
+      fi
       if ! file ${app} 2>&1 | grep -q 'executable'; then
         echo "${app} is not an executable"
         exit 1
