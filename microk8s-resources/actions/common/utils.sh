@@ -141,30 +141,59 @@ get_ips() {
     fi
 }
 
+gen_server_cert() (
+    openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+    openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+)
 
-produce_server_cert() {
-    # Produce the server certificates based on the rendered csr.conf.rendered.
-    # The file csr.conf.rendered is compared with csr.conf to determine if a regeneration of server certs must be done.
+gen_proxy_client_cert() (
+    openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config ${SNAP_DATA}/certs/csr.conf -subj "/CN=front-proxy-client"
+    openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+)
+
+produce_certs() {
+    # Generate RSA keys if not yet
+    for key in serviceaccount.key ca.key server.key front-proxy-client.key; do
+        if ! [ -f ${SNAP_DATA}/certs/$key ]; then
+            openssl genrsa -out ${SNAP_DATA}/certs/$key 2048
+        fi
+    done
+
+    # Generate root CA
+    if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
+        openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+    fi
+
+    # Produce certificates based on the rendered csr.conf.rendered.
+    # The file csr.conf.rendered is compared with csr.conf to determine if a regeneration of the certs must be done.
     #
     # Returns 
     #  0 if no change
     #  1 otherwise. 
 
     render_csr_conf
-    if ! [ -f "${SNAP_DATA}/certs/csr.conf" ];
-    then
+    if ! [ -f "${SNAP_DATA}/certs/csr.conf" ]; then
         echo "changeme" >  "${SNAP_DATA}/certs/csr.conf" 
     fi
 
+    local force
     if ! "${SNAP}/usr/bin/cmp" -s "${SNAP_DATA}/certs/csr.conf.rendered" "${SNAP_DATA}/certs/csr.conf"; then
-      cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
-      openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-      openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
-      echo "1"
+        force=true
+        cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
     else
-      echo "0"
+        force=false
     fi
 
+    if $force; then
+        gen_server_cert
+        gen_proxy_client_cert
+        echo "1"
+    elif [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ]; then
+        gen_proxy_client_cert
+        echo "1"
+    else
+        echo "0"
+    fi
 }
 
 render_csr_conf() {

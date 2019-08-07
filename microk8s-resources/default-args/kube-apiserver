@@ -20,6 +20,6 @@
 --requestheader-extra-headers-prefix=X-Remote-Extra-
 --requestheader-group-headers=X-Remote-Group
 --requestheader-username-headers=X-Remote-User
---proxy-client-cert-file=${SNAP_DATA}/certs/server.crt
---proxy-client-key-file=${SNAP_DATA}/certs/server.key
+--proxy-client-cert-file=${SNAP_DATA}/certs/front-proxy-client.crt
+--proxy-client-key-file=${SNAP_DATA}/certs/front-proxy-client.key
 #~Enable the aggregation layer

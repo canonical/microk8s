@@ -49,8 +49,8 @@ then
   echo '--requestheader-extra-headers-prefix=X-Remote-Extra-' >> ${SNAP_DATA}/args/kube-apiserver
   echo '--requestheader-group-headers=X-Remote-Group' >> ${SNAP_DATA}/args/kube-apiserver
   echo '--requestheader-username-headers=X-Remote-User' >> ${SNAP_DATA}/args/kube-apiserver
-  echo '--proxy-client-cert-file=${SNAP_DATA}/certs/server.crt' >> ${SNAP_DATA}/args/kube-apiserver
-  echo '--proxy-client-key-file=${SNAP_DATA}/certs/server.key' >> ${SNAP_DATA}/args/kube-apiserver
+  echo '--proxy-client-cert-file=${SNAP_DATA}/certs/front-proxy-client.crt' >> ${SNAP_DATA}/args/kube-apiserver
+  echo '--proxy-client-key-file=${SNAP_DATA}/certs/front-proxy-client.key' >> ${SNAP_DATA}/args/kube-apiserver
   systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 fi
 
@@ -112,9 +112,8 @@ then
 fi
 
 # Make sure the server certificate includes the IP we are using
-if ! [ -f ${SNAP_DATA}/certs/csr.conf ]
+if [ "$(produce_certs)" == "1" ]
 then
-    produce_server_cert
     rm -rf .srl
     systemctl restart snap.${SNAP_NAME}.daemon-apiserver.service
     systemctl restart snap.${SNAP_NAME}.daemon-proxy.service

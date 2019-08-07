@@ -13,11 +13,7 @@ cp -r ${SNAP}/default-args ${SNAP_DATA}/args
 mkdir ${SNAP_DATA}/certs
 # Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA 
 cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
-openssl genrsa -out ${SNAP_DATA}/certs/serviceaccount.key 2048
-openssl genrsa -out ${SNAP_DATA}/certs/ca.key 2048
-openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
-openssl genrsa -out ${SNAP_DATA}/certs/server.key 2048
-produce_server_cert
+produce_certs
 rm -rf .srl
 
 # Create the basic tokens
