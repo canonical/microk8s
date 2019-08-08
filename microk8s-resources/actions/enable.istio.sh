@@ -11,13 +11,14 @@ echo "Enabling Istio"
 
 read -p "Enforce mutual TLS authentication (https://bit.ly/2KB4j04) between sidecars? If unsure, choose N. (y/N): " confirm
 
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP}/actions/istio/crds.yaml"
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
+$KUBECTL apply -f "${SNAP}/actions/istio/crds.yaml"
 if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]
 then
-  "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP}/actions/istio/istio-demo-auth.yaml"
+  $KUBECTL apply -f "${SNAP}/actions/istio/istio-demo-auth.yaml"
   sudo touch "$SNAP_USER_COMMON/istio-auth.lock"
 else
-  "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP}/actions/istio/istio-demo.yaml"
+  $KUBECTL apply -f "${SNAP}/actions/istio/istio-demo.yaml"
   sudo touch "$SNAP_USER_COMMON/istio.lock"
 fi
 

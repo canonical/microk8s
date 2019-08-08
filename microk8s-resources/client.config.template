@@ -7,13 +7,13 @@ clusters:
 contexts:
 - context:
     cluster: microk8s-cluster
-    user: admin
+    user: NAME
   name: microk8s
 current-context: microk8s
 kind: Config
 preferences: {}
 users:
-- name: admin
+- name: NAME
   user:
-    username: admin
-    password: PASSWORD
+    username: NAME
+    AUTHTYPE: PASSWORD

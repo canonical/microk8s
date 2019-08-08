@@ -3,7 +3,8 @@
 set -eu
 
 source $SNAP/actions/common/utils.sh
-KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
 clean_cluster() {
   echo "Calling clean_cluster"

@@ -1,2 +1,2 @@
---master='http://127.0.0.1:8080'
+--kubeconfig=${SNAP_DATA}/credentials/scheduler.config
 --address=127.0.0.1
