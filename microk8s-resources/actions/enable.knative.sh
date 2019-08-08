@@ -12,8 +12,9 @@ echo "Enabling Knative"
 echo "Waiting for Istio to be ready"
 JSONPATH='{range .items[*]}{range @.status.readyReplicas}{@}{"\n"}{end}{end}'
 
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 # Wait for all 12 Istio deployments to be ready.
-while ! [ $($SNAP/kubectl get deployments -n istio-system -o jsonpath="$JSONPATH" | grep 1 | wc -l) -eq 12 ]
+while ! [ $($KUBECTL get deployments -n istio-system -o jsonpath="$JSONPATH" | grep 1 | wc -l) -eq 12 ]
 do
     echo -n "."
     sleep 2
@@ -25,7 +26,7 @@ n=0
 until [ $n -ge 10 ]
 do
   sleep 3
-  ("$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply --selector knative.dev/crd-install=true \
+  ($KUBECTL apply --selector knative.dev/crd-install=true \
     -f ${SNAP}/actions/knative/serving.yaml \
     -f ${SNAP}/actions/knative/build.yaml \
     -f ${SNAP}/actions/knative/release.yaml \
@@ -42,7 +43,7 @@ n=0
 until [ $n -ge 10 ]
 do
   sleep 3
-  ("$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply  \
+  ($KUBECTL apply  \
     -f ${SNAP}/actions/knative/serving.yaml \
     -f ${SNAP}/actions/knative/build.yaml \
     -f ${SNAP}/actions/knative/release.yaml \

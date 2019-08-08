@@ -1,4 +1,4 @@
---kubeconfig=${SNAP}/configs/kubelet.config
+--kubeconfig=${SNAP_DATA}/credentials/kubelet.config
 --cert-dir=${SNAP_DATA}/certs
 --client-ca-file=${SNAP_DATA}/certs/ca.crt
 --anonymous-auth=false

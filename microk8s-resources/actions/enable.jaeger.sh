@@ -8,13 +8,14 @@ echo "Enabling Jaeger"
 
 "$SNAP/microk8s-enable.wrapper" dns ingress
 
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP}/actions/jaeger/crds"
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
+$KUBECTL apply -f "${SNAP}/actions/jaeger/crds"
 
 n=0
 until [ $n -ge 10 ]
 do
   sleep 3
-  ("$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP}/actions/jaeger/") && break
+  ($KUBECTL apply -f "${SNAP}/actions/jaeger/") && break
   n=$[$n+1]
   if [ $n -ge 10 ]; then
     echo "Jaeger operator failed to install"

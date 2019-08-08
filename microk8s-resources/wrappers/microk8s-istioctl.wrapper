@@ -17,5 +17,5 @@ then
   echo "Istio is not available for ${ARCH}"
 else
   exit_if_stopped
-  "${SNAP_DATA}/bin/istioctl" --kubeconfig=$SNAP/client.config "$@"
+  "${SNAP_DATA}/bin/istioctl" --kubeconfig=${SNAP_DATA}/credentials/client.config "$@"
 fi

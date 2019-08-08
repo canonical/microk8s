@@ -1,4 +1,3 @@
---master='http://127.0.0.1:8080'
+--kubeconfig=${SNAP_DATA}/credentials/proxy.config
 --cluster-cidr=10.152.183.0/24
---kubeconfig=${SNAP}/kubeproxy.config
 --healthz-bind-address=127.0.0.1

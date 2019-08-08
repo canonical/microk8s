@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -eux
 
 source $SNAP/actions/common/utils.sh
 
@@ -158,3 +158,111 @@ then
   mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml" "$SNAP_DATA/actions/istio/"
   sudo rm -rf "$SNAP_DATA/tmp/istio"
 fi
+
+need_api_restart=false
+if ! [ -f "$SNAP_DATA/credentials/kubelet.config" ]
+then
+  # Create the known tokens
+  touch ${SNAP_DATA}/credentials/known_tokens.csv
+  chmod 660 ${SNAP_DATA}/credentials/known_tokens.csv
+  kubelet_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+  hostname=$(hostname)
+  echo "${kubelet_token},system:node:${hostname},kubelet-0,\"system:nodes\"" >> ${SNAP_DATA}/credentials/known_tokens.csv
+  ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
+
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/kubelet.config
+  chmod 660 ${SNAP_DATA}/credentials/kubelet.config
+  $SNAP/bin/sed -i 's/NAME/kubelet/g' ${SNAP_DATA}/credentials/kubelet.config
+  $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/kubelet.config
+  $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/kubelet.config
+  $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/kubelet.config
+  $SNAP/bin/sed -i 's/PASSWORD/'"${kubelet_token}"'/g' ${SNAP_DATA}/credentials/kubelet.config
+
+  refresh_opt_in_config kubeconfig \${SNAP_DATA}/credentials/kubelet.config kubelet
+  refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
+
+  systemctl restart snap.${SNAP_NAME}.daemon-kubelet
+  need_api_restart=true
+fi
+
+if ! [ -f "$SNAP_DATA/credentials/proxy.config" ]
+then
+  # Create the known tokens
+  touch ${SNAP_DATA}/credentials/known_tokens.csv
+  chmod 660 ${SNAP_DATA}/credentials/known_tokens.csv
+  proxy_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+  echo "${proxy_token},system:kube-proxy,kube-proxy" >> ${SNAP_DATA}/credentials/known_tokens.csv
+
+  ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/proxy.config
+  chmod 660 ${SNAP_DATA}/credentials/proxy.config
+  $SNAP/bin/sed -i 's/NAME/kubeproxy/g' ${SNAP_DATA}/credentials/proxy.config
+  $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/proxy.config
+  $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/proxy.config
+  $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/proxy.config
+  $SNAP/bin/sed -i 's/PASSWORD/'"${proxy_token}"'/g' ${SNAP_DATA}/credentials/proxy.config
+
+  refresh_opt_in_config kubeconfig \${SNAP_DATA}/credentials/proxy.config kube-proxy
+  skip_opt_in_config master kube-proxy
+  refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
+
+  systemctl restart snap.${SNAP_NAME}.daemon-proxy
+  need_api_restart=true
+fi
+
+if ! [ -f "$SNAP_DATA/credentials/scheduler.config" ]
+then
+  # Create the known tokens
+  touch ${SNAP_DATA}/credentials/known_tokens.csv
+  chmod 660 ${SNAP_DATA}/credentials/known_tokens.csv
+  scheduler_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+  echo "${scheduler_token},system:kube-scheduler,scheduler" >> ${SNAP_DATA}/credentials/known_tokens.csv
+  ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
+  # Create the client kubeconfig for the scheduler
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/scheduler.config
+  chmod 660 ${SNAP_DATA}/credentials/scheduler.config
+  $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/scheduler.config
+  $SNAP/bin/sed -i 's/NAME/scheduler/g' ${SNAP_DATA}/credentials/scheduler.config
+  $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/scheduler.config
+  $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/scheduler.config
+  $SNAP/bin/sed -i 's/PASSWORD/'"${scheduler_token}"'/g' ${SNAP_DATA}/credentials/scheduler.config
+
+  refresh_opt_in_config kubeconfig \${SNAP_DATA}/credentials/scheduler.config kube-scheduler
+  skip_opt_in_config master kube-scheduler
+  refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
+
+  systemctl restart snap.${SNAP_NAME}.daemon-scheduler
+  need_api_restart=true
+fi
+
+if ! [ -f "$SNAP_DATA/credentials/controller.config" ]
+then
+  # Create the known tokens
+  touch ${SNAP_DATA}/credentials/known_tokens.csv
+  chmod 660 ${SNAP_DATA}/credentials/known_tokens.csv
+  controller_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+  echo "${controller_token},system:kube-controller-manager,controller" >> ${SNAP_DATA}/credentials/known_tokens.csv
+  ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
+
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/controller.config
+  chmod 660 ${SNAP_DATA}/credentials/controller.config
+  $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/controller.config
+  $SNAP/bin/sed -i 's/NAME/controller/g' ${SNAP_DATA}/credentials/controller.config
+  $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/controller.config
+  $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/controller.config
+  $SNAP/bin/sed -i 's/PASSWORD/'"${controller_token}"'/g' ${SNAP_DATA}/credentials/controller.config
+
+  refresh_opt_in_config kubeconfig \${SNAP_DATA}/credentials/controller.config kube-controller-manager
+  skip_opt_in_config master kube-controller-manager
+  refresh_opt_in_config use-service-account-credentials true kube-controller-manager
+
+  refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
+  systemctl restart snap.${SNAP_NAME}.daemon-controller-manager
+  need_api_restart=true
+fi
+
+if [ "${need_api_restart}" ]
+then
+  systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+fi
+

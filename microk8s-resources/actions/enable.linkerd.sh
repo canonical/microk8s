@@ -20,6 +20,7 @@ fi
 
 echo "Enabling Linkerd2"
 # pod/servicegraph will start failing without dns
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 "$SNAP/microk8s-enable.wrapper" dns
-"$SNAP_DATA/bin/linkerd" "--kubeconfig=$SNAP/client.config" install "${argz[@]}" | "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f -
+"$SNAP_DATA/bin/linkerd" "--kubeconfig=$SNAP_DATA/credentials/client.config" install "${argz[@]}" | $KUBECTL apply -f -
 echo "Linkerd is starting"

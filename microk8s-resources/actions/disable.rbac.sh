@@ -21,7 +21,7 @@ else
 fi
 
 echo "Removing default RBAC resources"
-KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 tmp_manifest="${SNAP_USER_DATA}/tmp/temp.rbac.yaml"
 trap "rm -f '${tmp_manifest}'" EXIT ERR INT TERM
 mkdir -p "${SNAP_USER_DATA}/tmp"
