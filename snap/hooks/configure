@@ -30,12 +30,27 @@ then
    cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
 fi
 
+# Enable the aggregation layer
 if ! grep "requestheader-client-ca-file" ${SNAP_DATA}/args/kube-apiserver
 then
   echo "Patching requestheader-client-ca-file argument"
   # Add a new line at the end
   echo "" >> ${SNAP_DATA}/args/kube-apiserver
   echo "--requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt" >> ${SNAP_DATA}/args/kube-apiserver
+  systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+fi
+
+# Enable the aggregation layer (continue)
+if ! grep -E -- '--(requestheader-allowed-names|requestheader-extra-headers-prefix|requestheader-group-headers|requestheader-username-headers|proxy-client-cert-file|proxy-client-key-file)=' ${SNAP_DATA}/args/kube-apiserver
+then
+  echo "Enabling Enable the aggregation layer"
+  echo "" >> ${SNAP_DATA}/args/kube-apiserver
+  echo '--requestheader-allowed-names=front-proxy-client' >> ${SNAP_DATA}/args/kube-apiserver
+  echo '--requestheader-extra-headers-prefix=X-Remote-Extra-' >> ${SNAP_DATA}/args/kube-apiserver
+  echo '--requestheader-group-headers=X-Remote-Group' >> ${SNAP_DATA}/args/kube-apiserver
+  echo '--requestheader-username-headers=X-Remote-User' >> ${SNAP_DATA}/args/kube-apiserver
+  echo '--proxy-client-cert-file=${SNAP_DATA}/certs/front-proxy-client.crt' >> ${SNAP_DATA}/args/kube-apiserver
+  echo '--proxy-client-key-file=${SNAP_DATA}/certs/front-proxy-client.key' >> ${SNAP_DATA}/args/kube-apiserver
   systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 fi
 
@@ -97,9 +112,8 @@ then
 fi
 
 # Make sure the server certificate includes the IP we are using
-if ! [ -f ${SNAP_DATA}/certs/csr.conf ]
+if [ "$(produce_certs)" == "1" ]
 then
-    produce_server_cert
     rm -rf .srl
     systemctl restart snap.${SNAP_NAME}.daemon-apiserver.service
     systemctl restart snap.${SNAP_NAME}.daemon-proxy.service

@@ -12,3 +12,13 @@
 --kubelet-client-key=${SNAP_DATA}/certs/server.key
 --secure-port=16443
 --insecure-port=8080
+
+# Enable the aggregation layer
+--requestheader-client-ca-file=${SNAP_DATA}/certs/ca.crt
+--requestheader-allowed-names=front-proxy-client
+--requestheader-extra-headers-prefix=X-Remote-Extra-
+--requestheader-group-headers=X-Remote-Group
+--requestheader-username-headers=X-Remote-User
+--proxy-client-cert-file=${SNAP_DATA}/certs/front-proxy-client.crt
+--proxy-client-key-file=${SNAP_DATA}/certs/front-proxy-client.key
+#~Enable the aggregation layer

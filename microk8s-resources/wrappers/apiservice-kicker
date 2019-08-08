@@ -23,7 +23,7 @@ do
        ip route | grep default &> /dev/null &&
        systemctl is-active --quiet snap.microk8s.daemon-apiserver.service
     then
-        csr_modified="$(produce_server_cert)"
+        csr_modified="$(produce_certs)"
         if [[ "$csr_modified" -eq "1" ]];
         then
             echo "CSR change detected. Reconfiguring the kube-apiserver"
