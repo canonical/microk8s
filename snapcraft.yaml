@@ -1,6 +1,6 @@
 name: microk8s
 version-script: |
-  . build-scripts/prepare-env.sh > /dev/null
+  . build-scripts/set-env-variables.sh > /dev/null
   echo $KUBE_VERSION
 version: "latest"
 summary: Kubernetes for workstations and appliances
@@ -89,7 +89,7 @@ parts:
     - "--enable-static"
     prime: [ -bin/iptables-xml ]
   go:
-    source-tag: go1.10.4
+    source-tag: go1.12.7
   containerd:
     after: [go, iptables]
     source: .
@@ -100,7 +100,7 @@ parts:
     - libseccomp-dev
     override-build: |
       set -eu
-      . build-scripts/prepare-env.sh
+      . build-scripts/set-env-variables.sh
 
       go version
       export GOPATH=$(realpath ../go)
@@ -153,6 +153,10 @@ parts:
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
+    - make
+    - mercurial
+    - git
+    - rsync
     - openssl
     - file
     - dpkg
@@ -163,14 +167,31 @@ parts:
     - zfsutils-linux
     - iproute2
     source: .
+    prime:
+      - -README*
+      - -tests*
+      - -docs*
+      - -build*
     override-build: |
-      set -eu
-      . build-scripts/prepare-env.sh
+      set -eux
+      . build-scripts/set-env-variables.sh
 
-      if [ -z "$KUBE_SNAP_BINS" ]; then
-        echo "Downloading binaries from upstream"
-        # Also sets KUBE_SNAP_BINS
-        . build-scripts/fetch-binaries.sh
+      REMOVE_KUBE_SNAP_BINS=false
+      echo "Reached here"
+      if [ -z "${KUBE_SNAP_BINS}" ]; then
+        REMOVE_KUBE_SNAP_BINS=true
+        echo "Downloading binaries"
+        . build-scripts/set-env-binaries-location.sh
+        . build-scripts/fetch-other-binaries.sh
+        if [ -z "${KUBERNETES_COMMIT}" ]; then
+          echo "Downloading k8s binaries from upstream"
+          . build-scripts/fetch-k8s-binaries.sh
+        else
+          echo "Building k8s binaries"
+          . build-scripts/build-k8s-binaries.sh
+        fi
+      else
+        echo "Binaries provided in $KUBE_SNAP_BINS"
       fi
 
       echo "Setting default daemon configs"
@@ -264,6 +285,9 @@ parts:
       # Add bash completion for microk8s.kubectl. 
       ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
 
+      if $REMOVE_KUBE_SNAP_BINS; then
+        rm -rf "$KUBE_SNAP_BINS"
+      fi
       snapcraftctl build
 
   # Unfortunately we cannot add package repositories to our snaps

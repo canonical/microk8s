@@ -1,6 +1,24 @@
 # Building the snap from source
 
-To produce a custome build with specific component versions we need to prepare an LXC container with Ubuntu 16:04 and snapcraft:
+Snapcraft and LXD are needed to build the snap. Both are available as snaps:
+```
+sudo snap install snapcraft --classic
+sudo snap install lxd
+sudo apt-get remove lxd* -y
+sudo apt-get remove lxc* -y
+sudo lxd init
+```
+
+Build the snap with:
+```
+git clone http://github.com/ubuntu/microk8s
+cd ./microk8s/
+snapcraft cleanbuild
+```
+
+## Building a custom MicroK8s package
+
+To produce a custom build with specific component versions we need to prepare an LXC container with Ubuntu 16:04 and snapcraft:
 ```
 lxc launch ubuntu:16.04 --ephemeral test-build
 lxc exec test-build -- snap install snapcraft --classic
@@ -19,6 +37,9 @@ We can then set the following environment variables prior to building:
  - KNATIVE_EVENTING_VERSION: Knative Eventing release. Defaults to v0.7.1.
  - RUNC_COMMIT: the commit hash from which to build runc
  - CONTAINERD_COMMIT: the commit hash from which to build containerd
+ - KUBERNETES_REPOSITORY: build the kubernetes binaries from this repository instead of getting them from upstream
+ - KUBERNETES_COMMIT: commit to be used from KUBERNETES_REPOSITORY for building the kubernetes banaries
+
 
 For building we use `snapcraft` (not `snapcraft cleanbuild`) and we prepend and variables we need. For example to build the MicroK8s snap for Kubernetes v1.9.6 we:
 ```
