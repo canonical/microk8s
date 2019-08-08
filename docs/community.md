@@ -5,6 +5,7 @@ request with updates to this page.
 
 | Event/Mention                                          | Author(s)       | Source     | Date          |
 |---------------------------------------------------------------------|--------------|----------|---------------|
+| [How do I set up Tilt to use MicroK8s?](https://docs.tilt.dev/faq.html#q-how-do-i-set-up-tilt-to-use-microk8s) | The tilt.dev team | docs.tilt.dev | 8-Aug-2019 |
 | [Microk8s + Flask (Part 2): Exposing Flask app in a Microk8s service](https://medium.com/@giorgos.apost.1994/microk8s-flask-part-2-280ac2d9eff) | George Apostolopoulos | medium.com | 19-Aug-2019 |
 | [Microk8s + Flask (Part 1): Dockerize a Flask Application](https://medium.com/@giorgos.apost.1994/microk8s-flask-part-1-efa3cc4e0e00) | George Apostolopoulos | medium.com | 19-Jul-2019 |
 | [Getting Started with Cilium on Microk8s](https://docs.cilium.io/en/stable/gettingstarted/microk8s/)| Joe Stringer | docs.cilium.io | 23-Apr-2019 |
