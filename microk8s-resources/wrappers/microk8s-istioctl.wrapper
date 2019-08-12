@@ -11,6 +11,11 @@ if [ ! -f "${SNAP_DATA}/bin/istioctl" ]; then
 fi
 
 source $SNAP/actions/common/utils.sh
+
+if echo "$*" | grep -v -q -- '--kubeconfig'; then
+  exit_if_no_sudo
+fi
+
 ARCH=$(arch)
 if ! [ "${ARCH}" = "amd64" ]
 then

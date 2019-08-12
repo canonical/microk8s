@@ -266,3 +266,6 @@ then
   systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 fi
 
+chmod 660 -R ${SNAP_DATA}/credentials/
+chmod 660 -R ${SNAP_DATA}/certs/
+chmod 660 -R ${SNAP_DATA}/args/
