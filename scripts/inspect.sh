@@ -73,10 +73,10 @@ function store_kubernetes_info {
   # Collect some in-k8s details
   printf -- '  Inspect kubernetes cluster\n'
   mkdir -p $INSPECT_DUMP/k8s
-  /snap/bin/microk8s.kubectl version | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
-  /snap/bin/microk8s.kubectl cluster-info | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
-  /snap/bin/microk8s.kubectl cluster-info dump | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
-  /snap/bin/microk8s.kubectl get all --all-namespaces | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
+  sudo -E /snap/bin/microk8s.kubectl version | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
+  sudo -E /snap/bin/microk8s.kubectl cluster-info | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
+  sudo -E /snap/bin/microk8s.kubectl cluster-info dump | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+  sudo -E /snap/bin/microk8s.kubectl get all --all-namespaces | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
 }
 
 

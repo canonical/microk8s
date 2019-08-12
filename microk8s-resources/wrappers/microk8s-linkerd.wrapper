@@ -12,6 +12,11 @@ fi
 
 source $SNAP/actions/common/utils.sh
 ARCH=$(arch)
+
+if echo "$*" | grep -v -q -- '--kubeconfig'; then
+  exit_if_no_sudo
+fi
+
 if ! [ "${ARCH}" = "amd64" ]
 then
   echo "Linkerd is not available for ${ARCH}"

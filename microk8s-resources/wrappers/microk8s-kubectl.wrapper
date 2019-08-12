@@ -7,5 +7,10 @@ source $SNAP/actions/common/utils.sh
 
 exit_if_stopped
 
+if echo "$*" | grep -v -q -- '--kubeconfig'; then
+  exit_if_no_sudo
+fi
+
+
 declare -a args="($(cat $SNAP_DATA/args/kubectl))"
 "${SNAP}/kubectl" "${args[@]}" "$@"

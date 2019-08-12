@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+exit_if_no_sudo() {
+  # test if we can access the default kubeconfig
+  if ! cat $SNAP_DATA/credentials/client.config 2>&1 > /dev/null; then
+    echo "You do not have enough permissions to access MicroK8s. Please try again with sudo."
+    exit 1
+  fi
+}
+
 exit_if_stopped() {
   # test if the snap is marked as stopped
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
