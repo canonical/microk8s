@@ -258,6 +258,29 @@ then
 
   refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
   systemctl restart snap.${SNAP_NAME}.daemon-controller-manager
+fi
+
+# Securing important directories
+chmod 660 -R ${SNAP_DATA}/credentials/
+chmod 660 -R ${SNAP_DATA}/certs/
+chmod 660 -R ${SNAP_DATA}/args/
+
+if grep -e "etcd.socket:2379" ${SNAP_DATA}/args/etcd
+then
+  echo "Using a port for etcd"
+  # TODO: Do something smart in selecting a port
+  refresh_opt_in_config advertise-client-urls https://\${DEFAULT_INTERFACE_IP_ADDR}:12379 etcd
+  refresh_opt_in_config listen-client-urls https://0.0.0.0:12379 etcd
+  refresh_opt_in_config client-cert-auth true etcd
+  refresh_opt_in_config trusted-ca-file \${SNAP_DATA}/certs/ca.crt etcd
+  refresh_opt_in_config cert-file \${SNAP_DATA}/certs/server.crt etcd
+  refresh_opt_in_config key-file \${SNAP_DATA}/certs/server.key etcd
+  systemctl restart snap.${SNAP_NAME}.daemon-etcd
+
+  refresh_opt_in_config etcd-servers https://127.0.0.1:12379 kube-apiserver
+  refresh_opt_in_config etcd-cafile \${SNAP_DATA}/certs/ca.crt kube-apiserver
+  refresh_opt_in_config etcd-certfile \${SNAP_DATA}/certs/server.crt kube-apiserver
+  refresh_opt_in_config etcd-keyfile \${SNAP_DATA}/certs/server.key kube-apiserver
   need_api_restart=true
 fi
 
@@ -266,6 +289,3 @@ then
   systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 fi
 
-chmod 660 -R ${SNAP_DATA}/credentials/
-chmod 660 -R ${SNAP_DATA}/certs/
-chmod 660 -R ${SNAP_DATA}/args/
