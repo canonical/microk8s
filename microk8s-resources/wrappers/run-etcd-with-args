@@ -17,6 +17,8 @@ if ! [ "$ARCH" = "amd64" ]; then
   export ETCD_UNSUPPORTED_ARCH="$ARCH"
 fi
 
+export DEFAULT_INTERFACE_IP_ADDR="$(get_default_ip)"
+
 # This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/etcd))"
 exec "$SNAP/etcd" "${args[@]}"
