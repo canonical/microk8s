@@ -2,7 +2,7 @@
 
 exit_if_no_sudo() {
   # test if we can access the default kubeconfig
-  if ! cat $SNAP_DATA/credentials/client.config 2>&1 > /dev/null; then
+  if ! cat $SNAP_DATA/credentials/client.config > /dev/null 2>&1; then
     echo "You do not have enough permissions to access MicroK8s. Please try again with sudo."
     exit 1
   fi
