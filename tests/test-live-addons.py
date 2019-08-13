@@ -10,6 +10,7 @@ from validators import (
     validate_prometheus,
     validate_fluentd,
     validate_jaeger,
+    validate_cilium,
 )
 from utils import wait_for_pod_state
 
@@ -82,3 +83,9 @@ class TestLiveAddons(object):
 
         """
         validate_jaeger()
+
+    def test_cilium(self):
+        """
+        Validates Cilium works.
+        """
+        validate_cilium()

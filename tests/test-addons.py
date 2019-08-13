@@ -17,6 +17,7 @@ from validators import (
     validate_jaeger,
     validate_linkerd,
     validate_rbac,
+    validate_cilium,
 )
 from utils import (
     microk8s_enable,
@@ -124,6 +125,26 @@ class TestAddons(object):
         microk8s_disable("knative")
         print("Disabling Istio")
         microk8s_disable("istio")
+
+    def test_cilium(self):
+        """
+        Sets up and validates Cilium.
+        """
+        if platform.machine() != 'x86_64':
+            print("Cilium tests are only relevant in x86 architectures")
+            return
+
+        if under_time_pressure != 'False':
+            print("Skipping cilium tests as we are under time pressure")
+            return
+
+        print("Enabling Cilium")
+        p = Popen("/snap/bin/microk8s.enable cilium".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        p.communicate(input=b'N\n')[0]
+        print("Validating Cilium")
+        validate_cilium()
+        print("Disabling Cilium")
+        microk8s_disable("cilium")
 
     def test_metrics_server(self):
         """
