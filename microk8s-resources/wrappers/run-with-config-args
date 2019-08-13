@@ -13,10 +13,13 @@ then
   pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
   if ! [ -z "$pod_cidr" ]
   then
-    # The point of "|| true" is that if for any reason this is failing we "fallback"
-    # to the previous manual approach of pointing people to the troubleshooting guide.
-    iptables -t filter -A FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
-    iptables -t filter -A FORWARD -d "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+    if ! iptables -C FORWARD -s "$pod_cidr" -j ACCEPT
+    then
+      # The point of "|| true" is that if for any reason this is failing we "fallback"
+      # to the previous manual approach of pointing people to the troubleshooting guide.
+      iptables -t filter -A FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+      iptables -t filter -A FORWARD -d "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+    fi
   fi
 
   # wait for containerd socket
