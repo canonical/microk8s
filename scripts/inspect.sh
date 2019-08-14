@@ -58,20 +58,38 @@ function store_network {
 }
 
 
-function store_processes {
-  # Collect the processes running
-  printf -- '  Copy processes list to the final report tarball\n'
+function store_sys {
+  # Generate sys directory
   mkdir -p $INSPECT_DUMP/sys
+  # collect the processes running
+  printf -- '  Copy processes list to the final report tarball\n'
   ps -ef > $INSPECT_DUMP/sys/ps
   printf -- '  Copy snap list to the final report tarball\n'
   snap version > $INSPECT_DUMP/sys/snap-version
   snap list > $INSPECT_DUMP/sys/snap-list
+  # Stores VM name (or none, if we are not on a VM)
+  printf -- '  Copy VM name (or none) to the final report tarball\n'
+  systemd-detect-virt &> $INSPECT_DUMP/sys/vm_name
+  # Store disk usage information
+  printf -- '  Copy disk usage information to the final report tarball\n'
+  df -h | grep ^/ &> $INSPECT_DUMP/sys/disk_usage # remove the grep to also include virtual in-memory filesystems
+  # Store memory usage information
+  printf -- '  Copy memory usage information to the final report tarball\n'
+  free -m &> $INSPECT_DUMP/sys/memory_usage
+  # Store server's uptime.
+  printf -- '  Copy server uptime to the final report tarball\n'
+  uptime &> $INSPECT_DUMP/sys/uptime
+  # Store the current linux distro.
+  printf -- '  Copy current linux distribution to the final report tarball\n'
+  lsb_release -a &> $INSPECT_DUMP/sys/lsb_release
+  # Store openssl information.
+  printf -- '  Copy openSSL information to the final report tarball\n'
+  openssl version -v -d -e &> $INSPECT_DUMP/sys/openssl
 }
 
 
 function store_kubernetes_info {
   # Collect some in-k8s details
-  printf -- '  Inspect kubernetes cluster\n'
   mkdir -p $INSPECT_DUMP/k8s
   /snap/bin/microk8s.kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
   /snap/bin/microk8s.kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
@@ -79,43 +97,6 @@ function store_kubernetes_info {
   /snap/bin/microk8s.kubectl get all --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
   /snap/bin/microk8s.kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
   /snap/bin/microk8s.kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
-}
-
-function store_vm {
-  # Stores VM name (or none, if we are not on a VM)
-  printf -- 'Copy VM name (or none) to the final report tarball\n'
-  systemd-detect-virt &> $INSPECT_DUMP/sys/vm_name
-}
-
-function store_disk_info {
-  # Store disk usage information
-  printf -- 'Copy disk usage information to the final report tarball\n'
-  df -h | grep ^/ &> $INSPECT_DUMP/sys/disk_usage # remove the grep to also include virtual in-memory filesystems
-}
-
-function store_memory_info {
-  # Store memory usage information
-  printf -- 'Copy memory usage information to the final report tarball\n'
-  free -m &> $INSPECT_DUMP/sys/memory_usage
-}
-
-function store_uptime {
-  # Store server's uptime.
-  printf -- 'Copy server uptime to the final report tarball\n'
-  uptime &> $INSPECT_DUMP/sys/uptime
-}
-
-
-function store_distribution {
-  # Store the current linux distro.
-  printf -- 'Copy current linux distribution to the final report tarball\n'
-  lsb_release -a &> $INSPECT_DUMP/sys/lsb_release
-}
-
-function store_openssl {
-  # Store the current linux distro.
-  printf -- 'Copy openSSL information to the final report tarball\n'
-  openssl version -v -d -e &> $INSPECT_DUMP/sys/openssl
 }
 
 function suggest_fixes {
@@ -207,15 +188,10 @@ store_args
 printf -- 'Inspecting AppArmor configuration\n'
 check_apparmor
 
-printf -- 'Gathering system info\n'
-store_processes
-store_vm
-store_disk_info
-store_memory_info
-store_uptime
-store_distribution
-store_openssl
-store_network
+printf -- 'Gathering system information\n'
+store_sys
+
+printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info
 
 suggest_fixes
