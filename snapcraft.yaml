@@ -64,6 +64,8 @@ apps:
     command: microk8s-istioctl.wrapper
   linkerd:
     command: microk8s-linkerd.wrapper
+  helm:
+    command: microk8s-helm.wrapper
 
 parts:
   libnftnl:
