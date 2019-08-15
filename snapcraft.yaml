@@ -179,10 +179,12 @@ parts:
 
       REMOVE_KUBE_SNAP_BINS=false
       echo "Reached here"
-      if [ -z "${KUBE_SNAP_BINS}" ]; then
-        REMOVE_KUBE_SNAP_BINS=true
+      if [ ! -e "${KUBE_SNAP_BINS}" ]; then
+        if [ -z "${KUBE_SNAP_BINS}" ]; then
+          REMOVE_KUBE_SNAP_BINS=true
+          . build-scripts/set-env-binaries-location.sh
+        fi
         echo "Downloading binaries"
-        . build-scripts/set-env-binaries-location.sh
         . build-scripts/fetch-other-binaries.sh
         if [ -z "${KUBERNETES_COMMIT}" ]; then
           echo "Downloading k8s binaries from upstream"
