@@ -92,7 +92,8 @@ parts:
     source-tag: go1.12.7
   containerd:
     after: [go, iptables]
-    source: .
+    source: https://github.com/containerd/containerd
+    source-type: git
     plugin: go
     go-importpath: github.com/containerd/containerd
     build-packages:
@@ -100,7 +101,7 @@ parts:
     - libseccomp-dev
     override-build: |
       set -eu
-      . build-scripts/set-env-variables.sh
+      . ../../../build-scripts/set-env-variables.sh
 
       go version
       export GOPATH=$(realpath ../go)
