@@ -10,6 +10,7 @@ pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{p
 if ! [ -z "$pod_cidr" ]
 then
   iptables -D FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+  iptables -D FORWARD -d "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
 fi
 
 snapctl stop ${SNAP_NAME}.daemon-containerd 2>&1 || true
