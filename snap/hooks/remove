@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 set -eu
 
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
+
 snapctl stop ${SNAP_NAME}.daemon-kubelet 2>&1 || true
 snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
 
+pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
+if ! [ -z "$pod_cidr" ]
+then
+  iptables -D FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+  iptables -D FORWARD -d "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+fi
 
 snapctl stop ${SNAP_NAME}.daemon-containerd 2>&1 || true
 # wait for containerd to stop its processes or we will be getting a umount error
