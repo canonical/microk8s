@@ -3,6 +3,8 @@
 --client-ca-file=${SNAP_DATA}/certs/ca.crt
 --anonymous-auth=false
 --network-plugin=cni
+--authentication-token-webhook=true
+--authorization-mode=Webhook
 --root-dir=${SNAP_COMMON}/var/lib/kubelet
 --fail-swap-on=false
 --cni-conf-dir=${SNAP_DATA}/args/cni-network/

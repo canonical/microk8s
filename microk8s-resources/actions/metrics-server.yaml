@@ -73,24 +73,24 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: metrics-server-v0.2.1
+  name: metrics-server-v0.3.3
   namespace: kube-system
   labels:
     k8s-app: metrics-server
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
-    version: v0.2.1
+    version: v0.3.3
 spec:
   selector:
     matchLabels:
       k8s-app: metrics-server
-      version: v0.2.1
+      version: v0.3.3
   template:
     metadata:
       name: metrics-server
       labels:
         k8s-app: metrics-server
-        version: v0.2.1
+        version: v0.3.3
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
         seccomp.security.alpha.kubernetes.io/pod: 'docker/default'
@@ -99,51 +99,22 @@ spec:
       serviceAccountName: metrics-server
       containers:
       - name: metrics-server
-        image: k8s.gcr.io/metrics-server-$ARCH:v0.2.1
+        image: k8s.gcr.io/metrics-server-$ARCH:v0.3.3
         command:
         - /metrics-server
-        - --source=kubernetes.summary_api:''
+        - --kubelet-insecure-tls=true
+        - --kubelet-preferred-address-types=InternalIP
         ports:
         - containerPort: 443
           name: https
           protocol: TCP
-      - name: metrics-server-nanny
-        image: cdkbot/addon-resizer-$ARCH:1.8.1
-        resources:
-          limits:
-            cpu: 100m
-            memory: 300Mi
-          requests:
-            cpu: 5m
-            memory: 50Mi
-        env:
-          - name: MY_POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: MY_POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
         volumeMounts:
-        - name: metrics-server-config-volume
-          mountPath: /etc/config
-        command:
-          - /pod_nanny
-          - --config-dir=/etc/config
-          - --cpu=40m
-          - --extra-cpu=0.5m
-          - --memory=40Mi
-          - --extra-memory=4Mi
-          - --threshold=5
-          - --deployment=metrics-server-v0.2.1
-          - --container=metrics-server
-          - --poll-period=300000
-          - --estimator=exponential
+        - name: tmp-dir
+          mountPath: /tmp
       volumes:
-        - name: metrics-server-config-volume
-          configMap:
-            name: metrics-server-config
+      # mount in tmp so we can safely use from-scratch images and/or read-only containers
+      - name: tmp-dir
+        emptyDir: {}
       tolerations:
         - key: "CriticalAddonsOnly"
           operator: "Exists"
@@ -178,19 +149,10 @@ rules:
   resources:
   - pods
   - nodes
-  - namespaces
+  - nodes/stats
   verbs:
   - get
   - list
-  - watch
-- apiGroups:
-  - "extensions"
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - update
   - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -219,7 +181,7 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
 - apiGroups: ["metrics.k8s.io"]
-  resources: ["pods", "nodes"]
+  resources: ["pods"]
   verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
