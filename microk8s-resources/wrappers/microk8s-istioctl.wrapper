@@ -13,7 +13,7 @@ fi
 source $SNAP/actions/common/utils.sh
 
 if echo "$*" | grep -v -q -- '--kubeconfig'; then
-  exit_if_no_sudo
+  exit_if_no_permissions
 fi
 
 ARCH=$(arch)

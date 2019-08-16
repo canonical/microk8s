@@ -24,7 +24,7 @@ if echo "$*" | grep -q -- '--help'; then
 fi
 
 exit_if_stopped
-exit_if_no_sudo
+exit_if_no_permissions
 
 result=1
 for addon in "$@"; do

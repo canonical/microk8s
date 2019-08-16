@@ -43,7 +43,7 @@ clean_cluster() {
 }
 
 exit_if_stopped
-exit_if_no_sudo
+exit_if_no_permissions
 
 ${SNAP}/microk8s-stop.wrapper
 sleep 5

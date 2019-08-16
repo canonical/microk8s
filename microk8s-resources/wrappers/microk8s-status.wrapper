@@ -141,7 +141,7 @@ function check_ready() {
 
 
 # Main flow #
-exit_if_no_sudo
+exit_if_no_permissions
 parse_args "$@"
 if ! [ -z ${wait_ready} ]
 then
