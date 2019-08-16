@@ -36,7 +36,7 @@ while true; do
     esac
 done
 
-exit_if_no_sudo
+exit_if_no_permissions
 
 if [[ "$USE_LOOPBACK" == "true" ]]; then
     cat "$SNAP_DATA/credentials/client.config"
