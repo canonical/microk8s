@@ -21,16 +21,11 @@ then
   use_manifest coredns delete
 fi
 sleep 15
-timeout=30
-start_timer="$(date +%s)"
-while ($KUBECTL get po -n kube-system | grep -z " Terminating") &> /dev/null
-do
-  now="$(date +%s)"
-  if [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
-    break
-  fi
-  sleep 5
-done
+dns=$(wait_for_service_shutdown "kube-system" "k8s-app=kube-dns")
+if [[ $dns == fail ]]
+then
+  echo "DNS did not shut down on time. Proceeding."
+fi
 
 skip_opt_in_config "cluster-domain" kubelet
 skip_opt_in_config "cluster-dns" kubelet
