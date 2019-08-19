@@ -7,7 +7,7 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 source $SNAP/actions/common/utils.sh
 
-KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP_DATA/credentials/client.config"
 
 # Arrray of what we query per addon
 declare -A addon
@@ -141,6 +141,7 @@ function check_ready() {
 
 
 # Main flow #
+exit_if_no_permissions
 parse_args "$@"
 if ! [ -z ${wait_ready} ]
 then

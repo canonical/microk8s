@@ -232,17 +232,14 @@ parts:
       echo "Preparing kubelet"
       mkdir -p configs
       cp $KUBE_SNAP_BINS/$KUBE_ARCH/kubelet .
-      cp $KUBE_SNAP_ROOT/microk8s-resources/kubelet.config ./configs/
 
       echo "Preparing kube-proxy"
       cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-proxy .
-      cp $KUBE_SNAP_ROOT/microk8s-resources/kubeproxy.config .
 
       echo "Preparing kubelet"
       cp $KUBE_SNAP_BINS/$KUBE_ARCH/kubectl .
 
       echo "Preparing user config"
-      cp $KUBE_SNAP_ROOT/microk8s-resources/client.config .
       cp $KUBE_SNAP_ROOT/microk8s-resources/client.config.template .
 
       echo "Creating commands and wrappers"

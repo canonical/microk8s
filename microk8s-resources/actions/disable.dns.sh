@@ -6,7 +6,7 @@ source $SNAP/actions/common/utils.sh
 
 echo "Disabling DNS"
 echo "Reconfiguring kubelet"
-KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
 # Delete the dns yaml
 # We need to wait for the dns pods to terminate before we restart kubelet
