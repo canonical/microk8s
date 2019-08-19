@@ -18,7 +18,7 @@ refresh_opt_in_config() {
     local config_file="$SNAP_DATA/args/$3"
     local replace_line="$opt=$value"
     if $(grep -qE "^$opt=" $config_file); then
-        sudo "$SNAP/bin/sed" -i "s/^$opt=.*/$replace_line/" $config_file
+        sudo "$SNAP/bin/sed" -i "s;^$opt=.*;$replace_line;" $config_file
     else
         sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
@@ -118,6 +118,26 @@ wait_for_service() {
     fi
 }
 
+wait_for_service_shutdown() {
+    # Wait for a service to stop
+    # Return  fail if the service did not stop in 30 seconds
+
+    local namespace="$1"
+    local labels="$2"
+    local shutdown_timeout=30
+    local start_timer="$(date +%s)"
+    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+
+    while ($KUBECTL get po -n "$namespace" -l "$labels" | grep -z " Terminating") &> /dev/null
+    do
+      now="$(date +%s)"
+      if [[ "$now" > "$(($start_timer + $shutdown_timeout))" ]] ; then
+        echo "fail"
+        break
+      fi
+      sleep 5
+    done
+}
 
 get_default_ip() {
     # Get the IP of the default interface

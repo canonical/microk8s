@@ -44,4 +44,7 @@ do
   sleep 6
 done
 
+# Set the path to the Cilium socket correctly for CNI
+export CILIUM_SOCK="${SNAP_DATA}/var/run/cilium/cilium.sock"
+
 exec "$SNAP/bin/$app" "${args[@]}"

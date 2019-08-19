@@ -25,6 +25,7 @@ addon[prometheus]="pod/prometheus-k8s-0"
 addon[fluentd]="daemonset.apps/fluentd-es-v2.2.0"
 addon[jaeger]="pod/jaeger-operator"
 addon[linkerd]="pod/linkerd-controller"
+addon[cilium]="pod/cilium"
 
 
 function show_help() {
