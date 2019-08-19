@@ -10,6 +10,19 @@ if [ -L "${SNAP_DATA}/bin/cilium" ]
 then
   "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" delete -f "$SNAP_DATA/actions/cilium.yaml"
 
+  # Give K8s some time to process the deletion request
+  sleep 15
+  cilium=$(wait_for_service_shutdown "kube-system" "k8s-app=cilium")
+  if [[ $cilium == fail ]]
+  then
+    echo "Cilium did not shut down on time. Proceeding."
+  fi
+
+  cilium=$(wait_for_service_shutdown "kube-system" "name=cilium-operator")
+  if [[ $cilium == fail ]]
+  then
+    echo "Cilium operator did not shut down on time. Proceeding."
+  fi
   sudo rm -f "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
   sudo rm -f "$SNAP_DATA/opt/cni/bin/cilium-cni"
   sudo rm -rf $SNAP_DATA/bin/cilium*
@@ -29,9 +42,4 @@ then
   sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
 
   echo "Cilium is terminating"
-  cilium=$(wait_for_service_shutdown "kube-system" "k8s-app=cilium")
-  if [[ $cilium == fail ]]
-  then
-    echo "Cilium did not shut down on time. Proceeding."
-  fi
 fi
