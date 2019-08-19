@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+exit_if_no_permissions() {
+  # test if we can access the default kubeconfig
+  if [ ! -r $SNAP_DATA/credentials/client.config ]; then
+    echo "You do not have enough permissions to access MicroK8s. Please try again with sudo."
+    exit 1
+  fi
+}
+
 exit_if_stopped() {
   # test if the snap is marked as stopped
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
@@ -18,7 +26,7 @@ refresh_opt_in_config() {
     local config_file="$SNAP_DATA/args/$3"
     local replace_line="$opt=$value"
     if $(grep -qE "^$opt=" $config_file); then
-        sudo "$SNAP/bin/sed" -i "s/^$opt=.*/$replace_line/" $config_file
+        sudo "$SNAP/bin/sed" -i "s@^$opt=.*@$replace_line@" $config_file
     else
         sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
@@ -190,7 +198,7 @@ render_csr_conf() {
 get_node() {
     # Returns the node name or no_node_found in case no node is present
 
-    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+    KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
     timeout=60
     start_timer="$(date +%s)"
@@ -218,7 +226,7 @@ drain_node() {
     # Drain node
 
     node="$(get_node)"
-    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+    KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
     if ! [ "${node}" == "no_node_found" ]
     then
         $KUBECTL drain $node --timeout=120s --grace-period=60 --delete-local-data=true || true
@@ -230,7 +238,7 @@ uncordon_node() {
     # Un-drain node
 
     node="$(get_node)"
-    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+    KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
     if ! [ "${node}" == "no_node_found" ]
     then
         $KUBECTL uncordon $node || true
