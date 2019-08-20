@@ -28,7 +28,9 @@ export KUBE_TRACK="${KUBE_TRACK:-}"
 
 export KUBE_VERSION="${KUBE_VERSION:-}"
 export KUBE_SNAP_BINS="${KUBE_SNAP_BINS:-}"
-if [ -z "$KUBE_SNAP_BINS" ]; then
+if [ -e "$KUBE_SNAP_BINS/version" ]; then
+  export KUBE_VERSION=`cat $KUBE_SNAP_BINS/version`
+else
   # KUBE_SNAP_BINS is not set meaning we will either build the binaries OR fetch them from upstream
   # eitherway the k8s binaries should land at build/kube_bins/$KUBE_VERSION
   if [ -z "$KUBE_VERSION" ]; then
@@ -40,8 +42,6 @@ if [ -z "$KUBE_SNAP_BINS" ]; then
       export KUBE_VERSION="${KUBE_VERSION:-`curl -L https://dl.k8s.io/release/stable-${KUBE_TRACK}.txt`}"
     fi
   fi
-else
-  export KUBE_VERSION=`cat $KUBE_SNAP_BINS/version`
 fi
 
 export KUBE_SNAP_ROOT="$(readlink -f .)"
