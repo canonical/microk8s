@@ -1,6 +1,6 @@
 --insecure-bind-address=127.0.0.1
 --cert-dir=${SNAP_DATA}/certs
---etcd-servers='unix://etcd.socket:2379'
+--etcd-servers='http://localhost:2379'
 --service-cluster-ip-range=10.152.183.0/24
 --authorization-mode=AlwaysAllow
 --basic-auth-file=${SNAP_DATA}/credentials/basic_auth.csv
