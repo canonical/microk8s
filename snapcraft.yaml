@@ -2,7 +2,7 @@ name: microk8s
 version-script: |
   . build-scripts/prepare-env.sh > /dev/null
   echo $KUBE_VERSION
-version: "latest"
+version: "latest-strict"
 summary: Kubernetes for workstations and appliances
 description: |-
  MicroK8s is a small, fast, secure, single node Kubernetes that installs on
@@ -13,6 +13,16 @@ description: |-
 
 grade: devel
 confinement: strict
+
+hooks:
+  configure:
+    plugs: []
+  install:
+    plugs: []
+  remove:
+    plugs:
+    - k8s-kubelet
+    - mount-observe
 
 plugs:
   docker-privileged:
@@ -46,16 +56,23 @@ apps:
     daemon: simple
     plugs:
     - network-bind
+    - network-observe
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
     plugs:
     - network-bind
+    - network-observe
   daemon-controller-manager:
     command: run-with-config-args kube-controller-manager
     daemon: simple
     plugs:
     - network-bind
+    - docker-support
+    - docker-privileged
+    - firewall-control
+    - kernel-module-control
+    - network-control
   daemon-scheduler:
     command: run-with-config-args kube-scheduler
     daemon: simple
@@ -82,13 +99,21 @@ apps:
     - k8s-kubeproxy
     - kernel-module-observe
     - mount-observe
+    - network-observe
     - system-observe
     - kernel-module-control
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
     plugs:
-    - network
+    - firewall-control
+    - network-bind
+    - k8s-kubelet
+    - hardware-observe
+    - mount-observe
+    - network-control
+    - process-control
+    - system-observe
   ctr:
     command: microk8s-ctr.wrapper
   inspect:
@@ -99,17 +124,36 @@ apps:
     command: microk8s-disable.wrapper
   start:
     command: microk8s-start.wrapper
+    plugs:
+    - network
   stop:
     command: microk8s-stop.wrapper
+    plugs:
+    - network
   status:
     command: microk8s-status.wrapper
+    plugs:
+    - network
   config:
     command: microk8s-config.wrapper
   reset:
     command: microk8s-reset.wrapper
+    plugs:
+    - network
   istioctl:
     command: microk8s-istioctl.wrapper
     completer: istioctl.bash
+
+passthrough:
+  layout:
+    /usr/libexec:
+      symlink: $SNAP_COMMON/usr/libexec
+    /var/lib/cni:
+      symlink: $SNAP_COMMON/var/lib/cni
+    /var/log/pods:
+      symlink: $SNAP_COMMON/var/log/pods
+    /var/log/containers:
+      symlink: $SNAP_COMMON/var/log/containers
 
 parts:
   libnftnl:
