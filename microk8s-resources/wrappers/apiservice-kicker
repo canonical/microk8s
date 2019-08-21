@@ -22,7 +22,7 @@ do
     if [ -f "${SNAP_DATA}/external_ip.txt" ] &&
        ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
        ip route | grep default &> /dev/null &&
-       systemctl is-active --quiet snap.microk8s.daemon-apiserver.service
+       snapctl services | grep "microk8s.daemon-apiserver *enabled *active"
     then
         IP_ADDR="$(get_ips)"
         USED_IP_ADDR="$(cat "${SNAP_DATA}"/external_ip.txt)"
@@ -32,8 +32,8 @@ do
             produce_server_cert $IP_ADDR
             rm -rf .srl
 
-            systemctl restart snap.microk8s.daemon-apiserver.service
-            systemctl restart snap.microk8s.daemon-proxy.service
+	    snapctl restart microk8s.daemon-apiserver
+	    snapctl restart microk8s.daemon-proxy
             restart_attempt=$[$restart_attempt+1]
         else
             restart_attempt=0
