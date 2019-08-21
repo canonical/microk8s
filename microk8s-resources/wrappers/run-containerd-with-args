@@ -8,14 +8,10 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 export XDG_RUNTIME_DIR="${SNAP_COMMON}/run"
 mkdir -p "${XDG_RUNTIME_DIR}"
 
-if [ -d "/etc/apparmor.d" ]; then
-  echo "Using a default profile template"
-  cp ${SNAP}/containerd-profile /etc/apparmor.d/cri-containerd.apparmor.d
-  echo "Reloading AppArmor profiles"
-  if ! service apparmor reload
-  then
-    echo "AppArmor profiles loading failed. AppArmor may be unavailable on this host."
-  fi
+apparmor_parser -r ${SNAP}/containerd-profile
+
+if [ ! -d "$SNAP_COMMON/run/containerd" ]; then
+  mkdir -p "$SNAP_COMMON/run/containerd"
 fi
 
 app=containerd
