@@ -6,6 +6,12 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 source $SNAP/actions/common/utils.sh
 
+for d in "$SNAP_COMMON/var/lib/cni" "$SNAP_COMMON/usr/libexec" "$SNAP_COMMON/var/log/pods" "$SNAP_COMMON/var/log/containers" "$SNAP_COMMON/var/lib/kubelet/pod-resources"; do
+  if [ ! -d "$d" ]; then
+    mkdir -p "$d" || true
+  fi
+done
+
 app=$1
 
 if [ "${app}" = "kubelet" ]
