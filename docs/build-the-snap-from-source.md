@@ -1,4 +1,4 @@
-# Building the snap from source
+# How to build the snap from source
 
 Snapcraft and LXD are needed to build the snap. Both are available as snaps:
 ```
@@ -51,7 +51,23 @@ The produced snap is inside the ephemeral LXC container, we need to copy it to t
 lxc file pull test-build/root/microk8s/microk8s_v1.9.6_amd64.snap .
 ```
 
+### Reducing the build time
+
+Building the snap involves downloading a nuber of binaries. To reuse binaries already downloaded from a previous build we can make use of the KUBE_SNAP_BINS environment variable. By setting KUBE_SNAP_BINS to point to a non-existent directory the build will create the directory and cache k8s artifacts there. Successive builds with the same variable set will lookup the binaries from the set location:
+```
+# This will cache the binaries
+lxc exec test-build -- sh -c "cd microk8s && KUBE_SNAP_BINS=/var/tmp/k8s-bins snapcraft"
+# Succesive builds will be much faster. Same build command.
+lxc exec test-build -- sh -c "cd microk8s && KUBE_SNAP_BINS=/var/tmp/k8s-bins snapcraft"
+```
+
+
 #### Installing the snap
 ```
 snap install microk8s_latest_amd64.snap --classic --dangerous
 ```
+
+## Further reading
+- https://tutorials.ubuntu.com/tutorial/create-your-first-snap#0
+- https://snapcraft.io/docs/creating-a-snap
+-
