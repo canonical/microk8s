@@ -261,9 +261,11 @@ then
 fi
 
 # Securing important directories
-chmod 660 -R ${SNAP_DATA}/credentials/
-chmod 660 -R ${SNAP_DATA}/certs/
-chmod 660 -R ${SNAP_DATA}/args/
+for dir in "${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/"
+do
+  chmod -R ug+rwX ${dir}
+  chmod -R o-rwX ${dir}
+done
 
 user_group=$(snapctl get user.group)
 if [ ! -z "${user_group}" ]
