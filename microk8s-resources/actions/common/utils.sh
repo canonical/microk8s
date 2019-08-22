@@ -6,6 +6,15 @@ exit_if_no_permissions() {
     echo "Not enough permissions to access MicroK8s."
     echo "You can either try again with sudo or grant access to a specific user group with:"
     echo "    sudo snap set microk8s user.group=<GROUP_NAME>"
+    echo ""
+    echo ""
+    echo "Example: create and configure a 'microk8s' group and add a user to it:"
+    echo ""
+    echo "    sudo addgroup microk8s"
+    echo "    sudo snap set microk8s user.group=microk8s"
+    echo "    sudo usermod -a -G microk8s myuser"
+    echo ""
+    echo "The new group will be available on the user's next login."
     exit 1
   fi
 }
