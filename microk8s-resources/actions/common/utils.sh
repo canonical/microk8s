@@ -4,15 +4,13 @@ exit_if_no_permissions() {
   # test if we can access the default kubeconfig
   if [ ! -r $SNAP_DATA/credentials/client.config ]; then
     echo "Insufficient permissions to access MicroK8s."
-    echo "You can either try again with sudo or grant access to a specific user group with:"
-    echo "    sudo snap set microk8s user.group=<GROUP_NAME>"
-    echo ""
+    echo "You can either try again with sudo or grant access to the 'microk8s' group:"
     echo ""
     echo "Example: create and configure a 'microk8s' group and add a user to it:"
     echo ""
     echo "    sudo addgroup microk8s"
-    echo "    sudo snap set microk8s user.group=microk8s"
-    echo "    sudo usermod -a -G microk8s myuser"
+    echo "    cd /var/snap/microk8s/current; sudo chgrp -R microk8s ./credentials ./certs ./args"
+    echo "    sudo usermod -a -G microk8s $USER"
     echo ""
     echo "The new group will be available on the user's next login."
     exit 1
