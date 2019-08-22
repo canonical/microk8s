@@ -70,7 +70,7 @@ sudo microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
 
 #### User access without sudo
-If the *microk8s* user group exist at MicroK8s `snap install` time, users on that group
+If the *microk8s* user group exists at MicroK8s `snap install` time, users in that group
 will be granted access to `microk8s` commands.
 
 At any point you grant access to a specific group with:
