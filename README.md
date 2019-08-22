@@ -84,7 +84,7 @@ Use `microk8s.status` to see a list of enabled and available addons. You can fin
 The [official docs](https://microk8s.io/docs/) are maintained in the
 Kubernetes upstream Discourse.
 
-Take a look at the [build instructions](docs/build.md) if you want to
+Take a look at the [developer's guide](docs/README.md) if you want to
 contribute to MicroK8s.
 
 <a href="https://snapcraft.io/microk8s" title="Get it from the Snap Store">
