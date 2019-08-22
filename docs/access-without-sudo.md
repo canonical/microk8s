@@ -1,6 +1,6 @@
 # How to access MicroK8s (almost) without sudo
-Using sudo in every interaction may be annoying here are
-some option we have to overcome this sudo requirement.
+Using sudo in every interaction may be annoying. Here are
+some options we have to overcome this sudo requirement.
 
 ## Use a sudo shell
 Get a sudo shell with:
