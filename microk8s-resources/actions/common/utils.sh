@@ -3,7 +3,12 @@
 exit_if_no_permissions() {
   # test if we can access the default kubeconfig
   if [ ! -r $SNAP_DATA/credentials/client.config ]; then
-    echo "You do not have enough permissions to access MicroK8s. Please try again with sudo."
+    echo "Insufficient permissions to access MicroK8s."
+    echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:"
+    echo ""
+    echo "    sudo usermod -a -G microk8s $USER"
+    echo ""
+    echo "The new group will be available on the user's next login."
     exit 1
   fi
 }
