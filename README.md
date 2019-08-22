@@ -59,22 +59,30 @@ snap install microk8s --classic
 MicroK8s includes a `microk8s.kubectl` command:
 
 ```
-microk8s.kubectl get nodes
-microk8s.kubectl get services
+sudo microk8s.kubectl get nodes
+sudo microk8s.kubectl get services
 ```
 
 To use MicroK8s with your existing kubectl:
 
 ```
-microk8s.kubectl config view --raw > $HOME/.kube/config
+sudo microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
+
+#### User access without sudo
+The *microk8s* user group is created during the snap installation. Users in that group
+are granted access to `microk8s` commands. To add a user to that group:
+```
+sudo usermod -a -G microk8s <username>"
+```
+
 
 #### Kubernetes add-ons
 
 MicroK8s installs a barebones upstream Kubernetes. Additional services like dns and the Kubernetes dashboard can be enabled using the `microk8s.enable` command.
 
 ```
-microk8s.enable dns dashboard
+sudo microk8s.enable dns dashboard
 ```
 
 Use `microk8s.status` to see a list of enabled and available addons. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
