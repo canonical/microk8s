@@ -6,6 +6,25 @@ source $SNAP/actions/common/utils.sh
 
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
+
+usage() {
+  cat<<EOF
+Usage: ${SNAP_NAME} [OPTIONS...]
+
+Options:
+  -h, --help                 give this help list
+  --destroy-storage          Also destroy storage
+EOF
+}
+
+
+destroy_storage() {
+  echo "Destroying storage"
+  microk8s.enable storage && microk8s.disable storage \
+      || echo "Ignoring storage destroying issue"
+}
+
+
 clean_cluster() {
   echo "Calling clean_cluster"
   # Clean the cluster
@@ -42,11 +61,48 @@ clean_cluster() {
   fi
 }
 
+destroy_storage_enabled=false
+while getopts ':h-:' opt; do
+  case $opt in
+    -)
+      case "${OPTARG}" in
+        help)
+          usage
+          exit 0
+          ;;
+        destroy-storage)
+          destroy_storage_enabled=true
+          ;;
+        *)
+          echo "Invalid option --${OPTARG}" >&2
+          echo "Try '${SNAP_NAME} --help' for more information."
+          exit 2
+          ;;
+      esac
+      ;;
+    h)
+      usage
+      exit 0
+      ;;
+    \?)
+      echo "Invalid option -${OPTARG}" >&2
+      echo "Try '${SNAP_NAME} --help' for more information."
+      exit 2
+      ;;
+
+  esac
+done
+
+
 exit_if_stopped
 exit_if_no_permissions
 
+if ${destroy_storage_enabled} ; then
+  destroy_storage
+fi
 clean_cluster
 
 ${SNAP}/microk8s-stop.wrapper
 sleep 5
 ${SNAP}/microk8s-start.wrapper
+
