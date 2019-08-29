@@ -14,8 +14,7 @@ flavours of Linux](https://snapcraft.io/microk8s). Perfect for:
 - Edge
 - CI/CD
 
-`Canonical might have assembled the easiest way to provision
- a single node Kubernetes cluster` - [Kelsey Hightower](https://twitter.com/kelseyhightower/status/1120834594138406912)
+ > Canonical might have assembled the easiest way to provision a single node Kubernetes cluster` - [Kelsey Hightower](https://twitter.com/kelseyhightower/status/1120834594138406912)
 
 ## Why MicroK8s?
 
