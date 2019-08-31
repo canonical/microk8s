@@ -16,9 +16,7 @@ KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 $KUBECTL delete deployment -n default default-http-backend || true
 $KUBECTL delete service -n default default-http-backend || true
 $KUBECTL delete serviceaccount -n default nginx-ingress-microk8s-serviceaccount || true 
-$KUBECTL delete clusterrole nginx-ingress-microk8s-clusterrole  || true
 $KUBECTL delete role -n default nginx-ingress-microk8s-role || true 
-$KUBECTL delete clusterrolebinding nginx-ingress-microk8s || true
 $KUBECTL delete rolebinding -n default nginx-ingress-microk8s || true 
 $KUBECTL delete configmap -n default nginx-load-balancer-microk8s-conf || true
 $KUBECTL delete daemonset -n default nginx-ingress-microk8s-controller || true
