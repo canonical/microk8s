@@ -322,6 +322,8 @@ def validate_linkerd():
     wait_for_installation()
     wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=controller", timeout_insec=1200)
     print("Linkerd controller up and running.")
+    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=proxy-injector", timeout_insec=300)
+    print("Linkerd proxy injector up and running.")
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "emojivoto.yaml")
     kubectl("apply -f {}".format(manifest))
