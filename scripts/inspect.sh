@@ -58,14 +58,33 @@ function store_network {
 }
 
 
-function store_processes {
-  # Collect the processes running
-  printf -- '  Copy processes list to the final report tarball\n'
+function store_sys {
+  # Generate sys directory
   mkdir -p $INSPECT_DUMP/sys
+  # collect the processes running
+  printf -- '  Copy processes list to the final report tarball\n'
   ps -ef > $INSPECT_DUMP/sys/ps
   printf -- '  Copy snap list to the final report tarball\n'
   snap version > $INSPECT_DUMP/sys/snap-version
   snap list > $INSPECT_DUMP/sys/snap-list
+  # Stores VM name (or none, if we are not on a VM)
+  printf -- '  Copy VM name (or none) to the final report tarball\n'
+  systemd-detect-virt &> $INSPECT_DUMP/sys/vm_name
+  # Store disk usage information
+  printf -- '  Copy disk usage information to the final report tarball\n'
+  df -h | grep ^/ &> $INSPECT_DUMP/sys/disk_usage # remove the grep to also include virtual in-memory filesystems
+  # Store memory usage information
+  printf -- '  Copy memory usage information to the final report tarball\n'
+  free -m &> $INSPECT_DUMP/sys/memory_usage
+  # Store server's uptime.
+  printf -- '  Copy server uptime to the final report tarball\n'
+  uptime &> $INSPECT_DUMP/sys/uptime
+  # Store the current linux distro.
+  printf -- '  Copy current linux distribution to the final report tarball\n'
+  lsb_release -a &> $INSPECT_DUMP/sys/lsb_release
+  # Store openssl information.
+  printf -- '  Copy openSSL information to the final report tarball\n'
+  openssl version -v -d -e &> $INSPECT_DUMP/sys/openssl
 }
 
 
@@ -73,10 +92,12 @@ function store_kubernetes_info {
   # Collect some in-k8s details
   printf -- '  Inspect kubernetes cluster\n'
   mkdir -p $INSPECT_DUMP/k8s
-  /snap/bin/microk8s.kubectl version | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
-  /snap/bin/microk8s.kubectl cluster-info | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
-  /snap/bin/microk8s.kubectl cluster-info dump | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
-  /snap/bin/microk8s.kubectl get all --all-namespaces | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
+  sudo -E /snap/bin/microk8s.kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
+  sudo -E /snap/bin/microk8s.kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
+  sudo -E /snap/bin/microk8s.kubectl cluster-info dump 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+  sudo -E /snap/bin/microk8s.kubectl get all --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
+  sudo -E /snap/bin/microk8s.kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+  sudo -E /snap/bin/microk8s.kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
 
 
@@ -93,16 +114,49 @@ function suggest_fixes {
 
   if iptables -L | grep FORWARD | grep DROP &> /dev/null
   then
-      printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
-      printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
-      printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
+    printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
+    printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
+    printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
   fi
 
   ufw=$(ufw status)
   if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
   then
-      printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-      printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+    printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
+    printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+  fi
+
+  # check for selinux. if enabled, print warning.
+  if getenforce 2>&1 | grep 'Enabled' > /dev/null
+  then
+    printf -- '\033[0;33m WARNING: \033[0m SElinux is enabled. Consider disabling it.\n'
+  fi
+
+  # check for docker
+  # if docker is installed
+  if [ -d "/etc/docker/" ]; then 
+    # if docker/daemon.json file doesn't exist print prompt to create it and mark the registry as insecure
+    if [ ! -f "/etc/docker/daemon.json" ]; then
+      printf -- '\033[0;33mWARNING: \033[0m Docker is installed. \n'
+      printf -- 'File "/etc/docker/daemon.json" does not exist. \n'
+      printf -- 'You should create it and add the following lines: \n'
+      printf -- '{\n'
+      printf -- '    "insecure-registries" : ["localhost:32000"] \n'
+      printf -- '}\n'
+      printf -- 'and then restart docker with: sudo systemctl restart docker\n'
+    # else if the file docker/daemon.json exists 
+    else
+      # if it doesn't include the registry as insecure, prompt to add the following lines
+      if ! grep -qs localhost:32000 /etc/docker/daemon.json
+      then
+        printf -- '\033[0;33mWARNING: \033[0m Docker is installed. \n'
+        printf -- 'Add the following lines to /etc/docker/daemon.json: \n'
+        printf -- '{\n'
+        printf -- '    "insecure-registries" : ["localhost:32000"] \n'
+        printf -- '}\n'
+        printf -- 'and then restart docker with: sudo systemctl restart docker\n'
+      fi
+    fi     
   fi
 }
 
@@ -137,9 +191,10 @@ store_args
 printf -- 'Inspecting AppArmor configuration\n'
 check_apparmor
 
-printf -- 'Gathering system info\n'
-store_network
-store_processes
+printf -- 'Gathering system information\n'
+store_sys
+
+printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info
 
 suggest_fixes

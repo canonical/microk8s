@@ -2,80 +2,98 @@
 
 ![](https://img.shields.io/badge/Kubernetes-1.15-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg?branch=master)
 
-<img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">Kubernetes in a [snap](https://snapcraft.io/) that you can run locally.
+<img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">
 
-You can install MicroK8s with the latest stable upstream Kubernetes release with:
+## The smallest, fastest Kubernetes
+
+Single-package fully conformant lightweight Kubernetes that works on [42
+flavours of Linux](https://snapcraft.io/microk8s). Perfect for:
+
+- Developer workstations
+- IoT
+- Edge
+- CI/CD
+
+ > Canonical might have assembled the easiest way to provision a single node Kubernetes cluster - [Kelsey Hightower](https://twitter.com/kelseyhightower/status/1120834594138406912)
+
+## Why MicroK8s?
+
+- **Small**. Developers want the smallest K8s for laptop and workstation
+  development.  MicroK8s provides a standalone K8s compatible with Azure
+  AKS, Amazon EKS, Google GKE when you run it on Ubuntu.
+
+- **Simple**. Minimize administration and operations with a single-package
+  install that has no moving parts for simplicity and certainty. All
+  dependencies and batteries included.
+
+- **Secure**. Updates are available for all security issues and can be
+  applied immediately or scheduled to suit your maintenance cycle.
+
+- **Current**. MicroK8s tracks upstream and releases beta, RC and final bits
+  the same day as upstream K8s. You can track latest K8s or stick to any
+  release version from 1.10 onwards.
+
+- **Comprehensive**. MicroK8s includes a curated collection of manifests for
+  common K8s capabilities and services:
+
+  - Service Mesh: Istio, Linkerd
+  - Serverless: Knative
+  - Monitoring: Fluentd, Prometheus, Grafana, Metrics
+  - Ingress, DNS, Dashboard, Clustering
+  - Automatic updates to the latest Kubernetes version
+  - GPGPU bindings for AI/ML
+  - Kubeflow!
+
+Drop us a line at [MicroK8s in the Wild](docs/community.md) if you are
+doing something fun with MicroK8s!
+
+## Quickstart
+
+Install MicroK8s with:
 
 ```
 snap install microk8s --classic
 ```
 
-For more information on using MicroK8s see the [official docs](https://microk8s.io/docs/).
+MicroK8s includes a `microk8s.kubectl` command:
 
-
-
-## Building from source
-
-To build the snap you need a [working LXD](https://linuxcontainers.org/lxd/getting-started-cli/#snap-package-archlinux-debian-fedora-opensuse-and-ubuntu) installation. To install LXD on Ubuntu first remove any old packages:
 ```
-sudo apt-get purge lxc*
-sudo apt-get purge lxd*
+sudo microk8s.kubectl get nodes
+sudo microk8s.kubectl get services
 ```
 
-Get the latest LXD and configure it with:
+To use MicroK8s with your existing kubectl:
+
 ```
-sudo snap install lxd
-lxd init --auto
+sudo microk8s.kubectl config view --raw > $HOME/.kube/config
 ```
 
-Build MicroK8s with:
+#### User access without sudo
+The *microk8s* user group is created during the snap installation. Users in that group
+are granted access to `microk8s` commands. To add a user to that group:
 ```
-git clone https://github.com/ubuntu/microk8s
-cd microk8s
-snapcraft cleanbuild
-```
-
-### Building for specific versions
-
-To produce a custome build with specific component versions we need to prepare an LXC container with Ubuntu 16:04 and snapcraft:
-```
-lxc launch ubuntu:16.04 --ephemeral test-build
-lxc exec test-build -- snap install snapcraft --classic
-lxc exec test-build -- apt update
-lxc exec test-build -- git clone https://github.com/ubuntu/microk8s
+sudo usermod -a -G microk8s <username>"
 ```
 
-We can then set the following environment variables prior to building:
- - KUBE_VERSION: kubernetes release to package. Defaults to latest stable.
- - ETCD_VERSION: version of etcd. Defaults to v3.3.4.
- - CNI_VERSION: version of CNI tools. Defaults to v0.7.1.
- - KUBE_TRACK: kubernetes release series (e.g., 1.10) to package. Defaults to latest stable.
- - ISTIO_VERSION: istio release. Defaults to v1.0.5.
- - KNATIVE_SERVING_VERSION: Knative Serving release. Defaults to v0.6.0.
- - KNATIVE_BUILD_VERSION: Knative Build release. Defaults to v0.5.0.
- - KNATIVE_EVENTING_VERSION: Knative Eventing release. Defaults to v0.5.0.
- - RUNC_COMMIT: the commit hash from which to build runc
- - CONTAINERD_COMMIT: the commit hash from which to build containerd
 
-For building we use `snapcraft` (not `snapcraft cleanbuild`) and we prepend and variables we need. For example to build the MicroK8s snap for Kubernetes v1.9.6 we:
+#### Kubernetes add-ons
+
+MicroK8s installs a barebones upstream Kubernetes. Additional services like dns and the Kubernetes dashboard can be enabled using the `microk8s.enable` command.
+
 ```
-lxc exec test-build -- sh -c "cd microk8s && KUBE_VERSION=v1.9.6 snapcraft"
+sudo microk8s.enable dns dashboard
 ```
 
-The produced snap is inside the ephemeral LXC container, we need to copy it to the host:
-```
-lxc file pull test-build/root/microk8s/microk8s_v1.9.6_amd64.snap .
-```
+Use `microk8s.status` to see a list of enabled and available addons. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
 
-### Installing the snap
-```
-snap install microk8s_latest_amd64.snap --classic --dangerous
-```
+## Documentation
 
-## Who's Using MicroK8s
+The [official docs](https://microk8s.io/docs/) are maintained in the
+Kubernetes upstream Discourse.
 
-Check out the "[MicroK8s In The Wild](docs/community.md)" page to see some interesting use cases.
+Take a look at the [build instructions](docs/build.md) if you want to
+contribute to MicroK8s.
 
-<p align="center">
-  <img src="https://assets.ubuntu.com/v1/9309d097-MicroK8s_SnapStore_icon.svg" width="150px">
-</p>
+<a href="https://snapcraft.io/microk8s" title="Get it from the Snap Store">
+            <img src="https://snapcraft.io/static/images/badges/en/snap-store-white.svg" alt="Get it from the Snap Store" width="200" />
+          </a>

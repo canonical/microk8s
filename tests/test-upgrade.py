@@ -12,6 +12,7 @@ from validators import (
     validate_prometheus,
     validate_fluentd,
     validate_jaeger,
+    validate_cilium,
 )
 from subprocess import check_call, CalledProcessError, check_output
 from utils import (
@@ -138,6 +139,14 @@ class TestUpgrade(object):
                 test_matrix['jaeger'] = validate_jaeger
             except:
                 print('Will not test the jaeger addon')
+
+            try:
+                enable = microk8s_enable("cilium", timeout_insec=300)
+                assert "Nothing to do for" not in enable
+                validate_cilium()
+                test_matrix['cilium'] = validate_cilium
+            except:
+                print('Will not test the cilium addon')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

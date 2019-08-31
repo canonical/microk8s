@@ -6,10 +6,12 @@ source $SNAP/actions/common/utils.sh
 
 echo "Disabling Fluentd-Elasticsearch"
 
-NODENAME="$("$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" get no -o yaml | grep " name:"| awk '{print $2}')"
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" label nodes "$NODENAME" beta.kubernetes.io/fluentd-ds-ready- || true
+NODENAME="$($KUBECTL get no -o yaml | grep " name:"| awk '{print $2}')"
 
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" delete -f "${SNAP}/actions/fluentd"
+$KUBECTL label nodes "$NODENAME" beta.kubernetes.io/fluentd-ds-ready- || true
+
+$KUBECTL delete -f "${SNAP}/actions/fluentd"
 
 echo "Fluentd-Elasticsearch is disabled"

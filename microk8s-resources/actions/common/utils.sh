@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 
+exit_if_no_permissions() {
+  # test if we can access the default kubeconfig
+  if [ ! -r $SNAP_DATA/credentials/client.config ]; then
+    echo "Insufficient permissions to access MicroK8s."
+    echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:"
+    echo ""
+    echo "    sudo usermod -a -G microk8s $USER"
+    echo ""
+    echo "The new group will be available on the user's next login."
+    exit 1
+  fi
+}
+
 exit_if_stopped() {
   # test if the snap is marked as stopped
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
@@ -18,7 +31,7 @@ refresh_opt_in_config() {
     local config_file="$SNAP_DATA/args/$3"
     local replace_line="$opt=$value"
     if $(grep -qE "^$opt=" $config_file); then
-        sudo "$SNAP/bin/sed" -i "s/^$opt=.*/$replace_line/" $config_file
+        sudo "$SNAP/bin/sed" -i "s;^$opt=.*;$replace_line;" $config_file
     else
         sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
@@ -118,6 +131,26 @@ wait_for_service() {
     fi
 }
 
+wait_for_service_shutdown() {
+    # Wait for a service to stop
+    # Return  fail if the service did not stop in 30 seconds
+
+    local namespace="$1"
+    local labels="$2"
+    local shutdown_timeout=30
+    local start_timer="$(date +%s)"
+    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+
+    while ($KUBECTL get po -n "$namespace" -l "$labels" | grep -z " Terminating") &> /dev/null
+    do
+      now="$(date +%s)"
+      if [[ "$now" > "$(($start_timer + $shutdown_timeout))" ]] ; then
+        echo "fail"
+        break
+      fi
+      sleep 5
+    done
+}
 
 get_default_ip() {
     # Get the IP of the default interface
@@ -141,30 +174,59 @@ get_ips() {
     fi
 }
 
+gen_server_cert() (
+    openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+    openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+)
 
-produce_server_cert() {
-    # Produce the server certificates based on the rendered csr.conf.rendered.
-    # The file csr.conf.rendered is compared with csr.conf to determine if a regeneration of server certs must be done.
+gen_proxy_client_cert() (
+    openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config ${SNAP_DATA}/certs/csr.conf -subj "/CN=front-proxy-client"
+    openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+)
+
+produce_certs() {
+    # Generate RSA keys if not yet
+    for key in serviceaccount.key ca.key server.key front-proxy-client.key; do
+        if ! [ -f ${SNAP_DATA}/certs/$key ]; then
+            openssl genrsa -out ${SNAP_DATA}/certs/$key 2048
+        fi
+    done
+
+    # Generate root CA
+    if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
+        openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+    fi
+
+    # Produce certificates based on the rendered csr.conf.rendered.
+    # The file csr.conf.rendered is compared with csr.conf to determine if a regeneration of the certs must be done.
     #
     # Returns 
     #  0 if no change
     #  1 otherwise. 
 
     render_csr_conf
-    if ! [ -f "${SNAP_DATA}/certs/csr.conf" ];
-    then
+    if ! [ -f "${SNAP_DATA}/certs/csr.conf" ]; then
         echo "changeme" >  "${SNAP_DATA}/certs/csr.conf" 
     fi
 
+    local force
     if ! "${SNAP}/usr/bin/cmp" -s "${SNAP_DATA}/certs/csr.conf.rendered" "${SNAP_DATA}/certs/csr.conf"; then
-      cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
-      openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-      openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
-      echo "1"
+        force=true
+        cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
     else
-      echo "0"
+        force=false
     fi
 
+    if $force; then
+        gen_server_cert
+        gen_proxy_client_cert
+        echo "1"
+    elif [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ]; then
+        gen_proxy_client_cert
+        echo "1"
+    else
+        echo "0"
+    fi
 }
 
 render_csr_conf() {
@@ -190,7 +252,7 @@ render_csr_conf() {
 get_node() {
     # Returns the node name or no_node_found in case no node is present
 
-    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+    KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
     timeout=60
     start_timer="$(date +%s)"
@@ -218,7 +280,7 @@ drain_node() {
     # Drain node
 
     node="$(get_node)"
-    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+    KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
     if ! [ "${node}" == "no_node_found" ]
     then
         $KUBECTL drain $node --timeout=120s --grace-period=60 --delete-local-data=true || true
@@ -230,7 +292,7 @@ uncordon_node() {
     # Un-drain node
 
     node="$(get_node)"
-    KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP/client.config"
+    KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
     if ! [ "${node}" == "no_node_found" ]
     then
         $KUBECTL uncordon $node || true

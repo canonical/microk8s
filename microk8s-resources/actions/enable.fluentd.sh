@@ -8,9 +8,10 @@ source $SNAP/actions/common/utils.sh
 
 echo "Enabling Fluentd-Elasticsearch"
 
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 echo "Labeling nodes"
-NODENAME="$("$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" get no -o yaml | grep " name:"| awk '{print $2}')"
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" label nodes "$NODENAME" beta.kubernetes.io/fluentd-ds-ready=true || true
+NODENAME="$($KUBECTL get no -o yaml | grep " name:"| awk '{print $2}')"
+$KUBECTL label nodes "$NODENAME" beta.kubernetes.io/fluentd-ds-ready=true || true
 
 
 "$SNAP/microk8s-enable.wrapper" dns
@@ -21,6 +22,6 @@ sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 
 sleep 5
 
-"$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP}/actions/fluentd"
+$KUBECTL apply -f "${SNAP}/actions/fluentd"
 
 echo "Fluentd-Elasticsearch is enabled"

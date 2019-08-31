@@ -73,6 +73,7 @@ rules:
   - update
   - watch
   - create
+  - delete
 - apiGroups: [""]
   resources:
     - events

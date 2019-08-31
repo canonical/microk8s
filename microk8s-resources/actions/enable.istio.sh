@@ -34,17 +34,18 @@ fi
 
 read -p "Enforce mutual TLS authentication (https://bit.ly/2KB4j04) between sidecars? If unsure, choose N. (y/N): " confirm
 
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 for i in "${SNAP_DATA}"/actions/istio/crd*yaml
 do
-  "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "$i"
+  $KUBECTL apply -f "$i"
 done
 
 if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]
 then
-  "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP_DATA}/actions/istio/istio-demo-auth.yaml"
+  $KUBECTL apply -f "${SNAP_DATA}/actions/istio/istio-demo-auth.yaml"
   sudo touch "$SNAP_USER_COMMON/istio-auth.lock"
 else
-  "$SNAP/kubectl" "--kubeconfig=$SNAP/client.config" apply -f "${SNAP_DATA}/actions/istio/istio-demo.yaml"
+  $KUBECTL apply -f "${SNAP_DATA}/actions/istio/istio-demo.yaml"
   sudo touch "$SNAP_USER_COMMON/istio.lock"
 fi
 
