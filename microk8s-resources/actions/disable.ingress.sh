@@ -7,13 +7,22 @@ source $SNAP/actions/common/utils.sh
 echo "Disabling Ingress"
 
 ARCH=$(arch)
-TAG="0.22.0"
+TAG="0.25.1"
 EXTRA_ARGS="- --publish-status-address=127.0.0.1"
-if [ "${ARCH}" = arm64 ]
-then
-  TAG="0.11.0"
-  EXTRA_ARGS=""
-fi
+
+
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
+# Clean up old ingress controller resources in the default namespace, in case these are still lurking around.  
+$KUBECTL delete deployment -n default default-http-backend || true
+$KUBECTL delete service -n default default-http-backend || true
+$KUBECTL delete serviceaccount -n default nginx-ingress-microk8s-serviceaccount || true 
+$KUBECTL delete clusterrole nginx-ingress-microk8s-clusterrole  || true
+$KUBECTL delete role -n default nginx-ingress-microk8s-role || true 
+$KUBECTL delete clusterrolebinding nginx-ingress-microk8s || true
+$KUBECTL delete rolebinding -n default nginx-ingress-microk8s || true 
+$KUBECTL delete configmap -n default nginx-load-balancer-microk8s-conf || true
+$KUBECTL delete daemonset -n default nginx-ingress-microk8s-controller || true
+
 
 declare -A map
 map[\$TAG]="$TAG"
