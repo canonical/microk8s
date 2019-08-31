@@ -320,13 +320,12 @@ def validate_linkerd():
         return
 
     wait_for_installation()
-
-    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=controller")
-
+    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=controller", timeout_insec=1200)
+    print("Linkerd controller up and running.")
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "emojivoto.yaml")
     kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "emojivoto", "running", label="app=emoji-svc")
+    wait_for_pod_state("", "emojivoto", "running", label="app=emoji-svc", timeout_insec=1200)
     kubectl("delete -f {}".format(manifest))
 
 def validate_rbac():

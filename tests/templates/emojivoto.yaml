@@ -22,10 +22,9 @@ metadata:
   name: web
   namespace: emojivoto
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   name: emoji
   namespace: emojivoto
 spec:
@@ -36,7 +35,8 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
+      annotations:
+        linkerd.io/inject: enabled
       labels:
         app: emoji-svc
     spec:
@@ -72,7 +72,7 @@ spec:
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  creationTimestamp: null
+  
   name: voting
   namespace: emojivoto
 spec:
@@ -83,7 +83,8 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
+      annotations:
+        linkerd.io/inject: enabled
       labels:
         app: voting-svc
     spec:
@@ -119,7 +120,6 @@ spec:
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   name: web
   namespace: emojivoto
 spec:
@@ -130,7 +130,8 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
+      annotations:
+        linkerd.io/inject: enabled
       labels:
         app: web-svc
     spec:
@@ -172,7 +173,6 @@ spec:
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   name: vote-bot
   namespace: emojivoto
 spec:
@@ -183,7 +183,8 @@ spec:
   strategy: {}
   template:
     metadata:
-      creationTimestamp: null
+      annotations:
+        linkerd.io/inject: enabled    
       labels:
         app: vote-bot
     spec:
