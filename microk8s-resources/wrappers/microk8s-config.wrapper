@@ -40,7 +40,9 @@ exit_if_no_permissions
 
 if [[ "$USE_LOOPBACK" == "true" ]]; then
     cat "$SNAP_DATA/credentials/client.config"
+    "$SNAP/bin/echo"
 else
     IP_ADDR="$(get_default_ip)"
     "$SNAP/bin/sed" -e "s/127.0.0.1/$IP_ADDR/" "$SNAP_DATA/credentials/client.config"
+    "$SNAP/bin/echo"
 fi
