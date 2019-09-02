@@ -52,7 +52,7 @@ function store_network {
   # Collect network setup.
   printf -- '  Copy network configuration to the final report tarball\n'
   mkdir -p $INSPECT_DUMP/network
-  netstat -ln &> $INSPECT_DUMP/network/netstat
+  netstat -pln &> $INSPECT_DUMP/network/netstat
   ifconfig &> $INSPECT_DUMP/network/ifconfig
   iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
 }
@@ -193,6 +193,7 @@ check_apparmor
 
 printf -- 'Gathering system information\n'
 store_sys
+store_network
 
 printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info
