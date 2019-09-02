@@ -140,6 +140,7 @@ parts:
     - libnss-resolve
     - libnss-mymachines
     - conntrack
+    - curl
     - aufs-tools
     - gawk
     - sed
@@ -166,7 +167,6 @@ parts:
     - file
     - dpkg
     stage-packages:
-    - curl      
     - net-tools
     - util-linux
     - zfsutils-linux
