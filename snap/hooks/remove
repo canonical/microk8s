@@ -10,6 +10,10 @@ snapctl stop ${SNAP_NAME}.daemon-containerd 2>&1 || true
 # because the mount points are busy
 sleep 10
 
+# Clean the container location so we do not snapshot it.
+rm -rf ${SNAP_COMMON}/var/lib/containerd/* || true
+rm -rf ${SNAP_COMMON}/run/containerd/* || true
+
 (cat /proc/mounts | grep ${SNAP_COMMON}/var/lib/kubelet/pods | cut -d ' ' -f 2 | xargs umount -l) || true
 # in case this is a pre root-dir fix deployment
 (cat /proc/mounts | grep ${SNAP_COMMON}/pods | cut -d ' ' -f 2 | xargs umount -l) || true
