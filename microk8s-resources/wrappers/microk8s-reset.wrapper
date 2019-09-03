@@ -9,6 +9,11 @@ KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 clean_cluster() {
   echo "Calling clean_cluster"
   # Clean the cluster
+  REMOVEABLE_NSES=$($KUBECTL get ns -o=name | awk -F/ '{if ($2 !~ /^(default|kube-public|kube-system|kube-node-lease)$/) print}' | paste -s --delimiters=' ')
+  if [ -n "$REMOVEABLE_NSES" ]
+  then
+    $KUBECTL delete $REMOVEABLE_NSES
+  fi
   NSES=$($KUBECTL get ns -o=name | awk -F/ '{print $2}' | paste -s --delimiters=' ')
   for NS in $NSES
   do
@@ -16,11 +21,6 @@ clean_cluster() {
     # Remove all resource types except the standard k8s apiservices themselves
     $KUBECTL delete --all $($KUBECTL api-resources -o name --verbs=delete --namespaced=true | grep -v '^apiservices$' | paste -s --delimiters=',') --namespace="$NS"
   done
-  REMOVEABLE_NSES=$($KUBECTL get ns -o=name | awk -F/ '{if ($2 !~ /^(default|kube-public|kube-system)$/) print}' | paste -s --delimiters=' ')
-  if [ -n "$REMOVEABLE_NSES" ]
-  then
-    $KUBECTL delete $REMOVEABLE_NSES
-  fi
 
   echo "Removing CRDs"
   $KUBECTL delete --all customresourcedefinitions.apiextensions.k8s.io
@@ -36,7 +36,7 @@ clean_cluster() {
   done
 
   echo "Cleaning up addons client binaries.."
-  if [  -d "$SNAP_DATA/bin/" ] 
+  if [ -d "$SNAP_DATA/bin/" ]
   then
     sudo rm -rf "$SNAP_DATA/bin/"
   fi
@@ -44,6 +44,8 @@ clean_cluster() {
 
 exit_if_stopped
 exit_if_no_permissions
+
+clean_cluster
 
 ${SNAP}/microk8s-stop.wrapper
 sleep 5
