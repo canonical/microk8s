@@ -62,9 +62,6 @@ class TestAddons(object):
         microk8s_enable("storage")
         print("Validating storage")
         validate_storage()
-        print("Disabling storage")
-        p = Popen("/snap/bin/microk8s.disable storage".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        p.communicate(input=b'Y\n')[0]
         microk8s_enable("registry")
         print("Validating registry")
         validate_registry()
@@ -74,6 +71,9 @@ class TestAddons(object):
         microk8s_disable("registry")
         print("Disabling dashboard")
         microk8s_disable("dashboard")
+        print("Disabling storage")
+        p = Popen("/snap/bin/microk8s.disable storage".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        p.communicate(input=b'Y\n')[0]
         '''
         We would disable DNS here but this freezes any terminating pods.
         We let microk8s.reset to do the cleanup.
