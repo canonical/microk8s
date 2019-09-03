@@ -302,7 +302,7 @@ then
   systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 fi
 
-if [ -f "${SNAP_DATA}/bin/cilium" ]
+if [ -L "${SNAP_DATA}/bin/cilium" ]
 then
   echo "Cilium is enabled we need to reconfigure it."
   sudo rm -rf $SNAP_DATA/bin/cilium*
