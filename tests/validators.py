@@ -320,7 +320,7 @@ def validate_linkerd():
         return
 
     wait_for_installation()
-    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=controller", timeout_insec=1200)
+    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=controller", timeout_insec=300)
     print("Linkerd controller up and running.")
     wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=proxy-injector", timeout_insec=300)
     print("Linkerd proxy injector up and running.")
