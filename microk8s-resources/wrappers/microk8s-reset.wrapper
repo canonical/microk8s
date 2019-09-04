@@ -18,6 +18,15 @@ clean_cluster() {
   for NS in $NSES
   do
     echo "Cleaning resources in namespace $NS"
+    # we remove first resources that are automatically recreated so we do not risk race conditions
+    # during which a deployment for example is recreated while any tokens are missing
+    # delete all replicationcontrollers
+    $KUBECTL delete --all replicationcontrollers --namespace="$NS"
+    # delete all daemonsets
+    $KUBECTL delete --all daemonsets --namespace="$NS"
+    # delete all deployments
+    $KUBECTL delete --all deployments --namespace="$NS"
+
     # Remove all resource types except the standard k8s apiservices themselves
     $KUBECTL delete --all $($KUBECTL api-resources -o name --verbs=delete --namespaced=true | grep -v '^apiservices$' | paste -s --delimiters=',') --namespace="$NS"
   done
