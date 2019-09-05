@@ -240,7 +240,7 @@ produce_certs() {
 
     # Generate root CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+        openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.
