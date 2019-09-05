@@ -235,6 +235,10 @@ parts:
       mkdir -p opt/cni/bin/
       cp $KUBE_SNAP_BINS/cni/* opt/cni/bin/
 
+      echo "Preparing flanneld"
+      mkdir -p opt/cni/bin/
+      cp $KUBE_SNAP_BINS/flanneld/flanneld opt/cni/bin/
+
       echo "Preparing containerd"
       cp $KUBE_SNAP_ROOT/microk8s-resources/containerd-profile .
 
