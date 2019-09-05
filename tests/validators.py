@@ -81,7 +81,7 @@ def validate_ingress():
     """
     Validate ingress by creating a ingress rule.
     """
-    daemonset = kubectl("-n default get ds nginx-ingress-microk8s-controller")
+    daemonset = kubectl("get ds")
     if "nginx-ingress-microk8s-controller" in daemonset:
         wait_for_pod_state("", "default", "running", label="app=default-http-backend")
         wait_for_pod_state("", "default", "running", label="name=nginx-ingress-microk8s")
