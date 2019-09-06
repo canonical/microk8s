@@ -18,9 +18,11 @@ sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 
 # Reconfigure kubelet/containerd to pick up the new CNI config and binary.
 echo "Restarting kubelet"
-refresh_opt_in_config "network-plugin" "cni" kubelet
 refresh_opt_in_config "cni-bin-dir" "\${SNAP_DATA}/opt/cni/bin/" kubelet
 sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
+
+set_service_not_expected_to_start flanneld
+sudo systemctl stop snap.${SNAP_NAME}.daemon-flanneld
 
 if grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
   echo "Restarting containerd"
@@ -57,6 +59,7 @@ else
   sudo tar -xf "$SNAP_DATA/tmp/cilium/cilium.tar" "$CILIUM_DIR/install" "$CILIUM_DIR/$CILIUM_CNI_CONF")
 
   sudo mv "$SNAP_DATA/args/cni-network/cni.conf" "$SNAP_DATA/args/cni-network/10-kubenet.conf" 2>/dev/null || true
+  sudo mv "$SNAP_DATA/args/cni-network/flannel.conflist" "$SNAP_DATA/args/cni-network/20-flanneld.conflist" 2>/dev/null || true
   sudo cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF" "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
 
   # Generate the YAMLs for Cilium and apply them

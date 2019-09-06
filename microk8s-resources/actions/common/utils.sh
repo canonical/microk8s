@@ -22,6 +22,48 @@ exit_if_stopped() {
   fi
 }
 
+exit_if_service_not_expected_to_start() {
+  # exit if a lock is available for the service
+  local service="$1"
+  if [ -f ${SNAP_DATA}/var/lock/no-${service} ]
+  then
+    exit 0
+  fi
+}
+
+is_service_expected_to_start() {
+  # return 1 if service is expected to start
+  local service="$1"
+  if [ -f ${SNAP_DATA}/var/lock/no-${service} ]
+  then
+    echo "0"
+  else
+    echo "1"
+  fi
+}
+
+set_service_not_expected_to_start() {
+  # mark service as not starting
+  local service="$1"
+  touch ${SNAP_DATA}/var/lock/no-${service}
+}
+
+set_service_expected_to_start() {
+  # mark service as not starting
+  local service="$1"
+  rm -rf ${SNAP_DATA}/var/lock/no-${service}
+}
+
+remove_vxlan_interfaces() {
+  links=$("${SNAP}/sbin/ip link show type vxlan | $SNAP/bin/grep -E "flannel|cilium_vxlan" | $SNAP/usr/bin/gawk '{print $2}' | $SNAP/usr/bin/tr -d :")
+  for link in "$links"
+  do
+    if $SNAP/sbin/ip link show ${link}
+    then
+      $SNAP/sbin/ip link delete ${link}
+    fi
+  done
+}
 
 refresh_opt_in_config() {
     # add or replace an option inside the config file.

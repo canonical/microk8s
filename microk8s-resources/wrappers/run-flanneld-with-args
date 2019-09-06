@@ -6,6 +6,8 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 source $SNAP/actions/common/utils.sh
 
+exit_if_service_not_expected_to_start flanneld
+
 # TODO rewrite for snaps
 etcd_endpoints="$(cat $SNAP_DATA/args/flanneld | grep "etcd-endpoints" | tr "=" " "| awk '{print $2}')"
 cert_file="$(cat $SNAP_DATA/args/flanneld | grep "etcd-certfile" | tr "=" " "| awk '{print $2}')"
