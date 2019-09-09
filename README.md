@@ -84,6 +84,13 @@ MicroK8s installs a barebones upstream Kubernetes. Additional services like dns 
 sudo microk8s.enable dns dashboard
 ```
 
+
+If you are running microk8s for development, you can enable unsecured-dashboard 
+```
+sudo microk8s.enable unsecured-dashboard
+``` 
+and access it at the following url  `http://127.0.0.1:30090` 
+
 Use `microk8s.status` to see a list of enabled and available addons. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
 
 ## Documentation
