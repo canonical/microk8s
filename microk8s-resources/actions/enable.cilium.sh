@@ -23,6 +23,7 @@ sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
 
 set_service_not_expected_to_start flanneld
 sudo systemctl stop snap.${SNAP_NAME}.daemon-flanneld
+remove_vxlan_interfaces
 
 if grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
   echo "Restarting containerd"
