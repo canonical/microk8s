@@ -28,13 +28,8 @@ if [[ $subject == *"127.0.0.1"* ]]; then
   exit 1
 fi
 
-if [ "$(id -u)" != "0" ]; then
-  echo "This command must be run as root (or with sudo)"
-  exit 1
-fi
-
 exit_if_stopped
-
+exit_if_no_permissions
 
 token=$(< /dev/urandom tr -dc A-Za-z | head -c32;echo;)
 echo ${token} | tee -a $SNAP_DATA/credentials/cluster-tokens.txt > /dev/null
