@@ -6,6 +6,8 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 export SNAP_NAME
 
+source $SNAP/actions/common/utils.sh
+
 if echo "$*" | grep -q -- 'help'; then
   echo "Usage: microk8s.remove <node>"
   echo ""
@@ -13,10 +15,7 @@ if echo "$*" | grep -q -- 'help'; then
   exit 0
 fi
 
-if [ "$(id -u)" != "0" ]; then
-  echo "This command must be run as root (or with sudo)"
-  exit 1
-fi
+exit_if_no_permissions
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
