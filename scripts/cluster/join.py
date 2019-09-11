@@ -142,7 +142,7 @@ def ca_one_line(ca):
     return base64.b64encode(ca.encode('utf-8')).decode('utf-8')
 
 
-def create_kubeconfig(token, ca, master_ip, api_port, user):
+def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
     """
     Create a kubeconfig file. The file in stored under credentials named after the user
 
@@ -150,11 +150,12 @@ def create_kubeconfig(token, ca, master_ip, api_port, user):
     :param ca: the ca
     :param master_ip: the master node IP
     :param api_port: the API server port
+    :param filename: the name of the config file
     :param user: the user to use al login
     """
     snap_path = os.environ.get('SNAP')
     config_template = "{}/{}".format(snap_path, "kubelet.config.template")
-    config = "{}/credentials/{}.config".format(snapdata_path, user)
+    config = "{}/credentials/{}".format(snapdata_path, filename)
     shutil.copyfile(config, "{}.backup".format(config))
     ca_line = ca_one_line(ca)
     with open(config_template, 'r') as tfp:
@@ -177,7 +178,7 @@ def update_kubeproxy(token, ca, master_ip, api_port):
     :param master_ip: the master node IP
     :param api_port: the API server port
     """
-    create_kubeconfig(token, ca, master_ip, api_port, "kubeproxy")
+    create_kubeconfig(token, ca, master_ip, api_port, "proxy.config", "kubeproxy")
     set_arg("--master", None, "kube-proxy")
     subprocess.check_call("systemctl restart snap.microk8s.daemon-proxy.service".split())
 
@@ -191,7 +192,7 @@ def update_kubelet(token, ca, master_ip, api_port):
     :param master_ip: the master node IP
     :param api_port: the API server port
     """
-    create_kubeconfig(token, ca, master_ip, api_port, "kubelet")
+    create_kubeconfig(token, ca, master_ip, api_port, "kubelet.config", "kubelet")
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
     subprocess.check_call("systemctl restart snap.microk8s.daemon-kubelet.service".split())
 
@@ -260,7 +261,7 @@ def reset_current_installation():
         shutil.copyfile("{}/default-args/{}".format(snap_path, config_file),
                         "{}/args/{}".format(snapdata_path, config_file))
 
-    for user in ["kubeproxy", "kubelet"]:
+    for user in ["proxy", "kubelet"]:
         config = "{}/credentials/{}.config".format(snapdata_path, user)
         shutil.copyfile("{}.backup".format(config), config)
 
