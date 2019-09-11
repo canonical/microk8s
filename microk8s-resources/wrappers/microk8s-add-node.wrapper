@@ -20,6 +20,8 @@ if echo "$*" | grep -q -- 'help'; then
   exit 0
 fi
 
+exit_if_no_permissions
+
 subject=$(openssl x509 -noout -subject -in "$SNAP_DATA/certs/ca.crt")
 if [[ $subject == *"127.0.0.1"* ]]; then
   echo "Clustering requires a fresh MicroK8s installation. Reinstall with:"
@@ -29,7 +31,6 @@ if [[ $subject == *"127.0.0.1"* ]]; then
 fi
 
 exit_if_stopped
-exit_if_no_permissions
 
 token=$(< /dev/urandom tr -dc A-Za-z | head -c32;echo;)
 echo ${token} | tee -a $SNAP_DATA/credentials/cluster-tokens.txt > /dev/null

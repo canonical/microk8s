@@ -58,7 +58,7 @@ remove_vxlan_interfaces() {
   links="$(${SNAP}/sbin/ip link show type vxlan | $SNAP/bin/grep -E 'flannel|cilium_vxlan' | $SNAP/usr/bin/gawk '{print $2}' | $SNAP/usr/bin/tr -d :)"
   for link in "$links"
   do
-    if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link}
+    if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
     then
       $SNAP/sbin/ip link delete ${link}
     fi
