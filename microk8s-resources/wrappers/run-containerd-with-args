@@ -1,12 +1,14 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 export XDG_RUNTIME_DIR="${SNAP_COMMON}/run"
 mkdir -p "${XDG_RUNTIME_DIR}"
+
+source $SNAP/actions/common/utils.sh
 
 if [ -d "/etc/apparmor.d" ]; then
   echo "Using a default profile template"
@@ -26,6 +28,12 @@ else
   RUNTIME="runc"
 fi
 sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${RUNTIME}@'"${RUNTIME}"'@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml
+
+run_flanneld="$(is_service_expected_to_start flanneld)"
+if [ "${run_flanneld}" == "1" ]
+then
+  sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${SNAP_COMMON}@'"${SNAP_COMMON}"'@g' $SNAP_DATA/args/flannel-template.conflist > $SNAP_DATA/args/cni-network/flannel.conflist
+fi
 
 # This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/$app))"

@@ -78,3 +78,12 @@ do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
 done
+
+for link in "cni0 cilium_vxlan"
+do
+  if $SNAP/sbin/ip link show ${link}
+  then
+    $SNAP/sbin/ip link delete ${link}
+  fi
+done
+

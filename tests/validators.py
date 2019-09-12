@@ -183,6 +183,7 @@ def validate_istio():
     wait_for_pod_state("", "default", "running", label="app=details")
     kubectl("delete -f {}".format(manifest))
 
+
 def validate_knative():
     """
     Validate Knative by deploying the helloworld-go app.
@@ -205,6 +206,7 @@ def validate_knative():
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "default", "running", label="serving.knative.dev/service=helloworld-go")
     kubectl("delete -f {}".format(manifest))
+
 
 def validate_registry():
     """
@@ -233,11 +235,11 @@ def validate_forward():
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "default", "running", label="app=nginx")
     os.system('killall kubectl')
-    os.system('/snap/bin/microk8s.kubectl port-forward pod/nginx 5000:80 &')
+    os.system('/snap/bin/microk8s.kubectl port-forward pod/nginx 5123:80 &')
     attempt = 10
     while attempt >= 0:
         try:
-            resp = requests.get("http://localhost:5000")
+            resp = requests.get("http://localhost:5123")
             if resp.status_code == 200:
                 break
         except:
@@ -266,6 +268,7 @@ def validate_metrics_server():
 
     assert attempt > 0
 
+
 def validate_prometheus():
     """
     Validate the prometheus operator
@@ -290,6 +293,7 @@ def validate_fluentd():
     wait_for_pod_state("", "kube-system", "running", label="k8s-app=fluentd-es")
     wait_for_pod_state("", "kube-system", "running", label="k8s-app=kibana-logging")
 
+
 def validate_jaeger():
     """
     Validate the jaeger operator
@@ -312,6 +316,7 @@ def validate_jaeger():
 
     assert attempt > 0
 
+
 def validate_linkerd():
     """
     Validate Linkerd by deploying emojivoto.
@@ -329,6 +334,7 @@ def validate_linkerd():
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "emojivoto", "running", label="app=emoji-svc")
     kubectl("delete -f {}".format(manifest))
+
 
 def validate_rbac():
     """
@@ -352,6 +358,7 @@ def cilium(cmd, timeout_insec=300, err_out=None):
     """
     cmd = '/snap/bin/microk8s.cilium ' + cmd
     return run_until_success(cmd, timeout_insec, err_out)
+
 
 def validate_cilium():
     """

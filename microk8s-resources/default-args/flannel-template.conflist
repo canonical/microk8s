@@ -1,0 +1,20 @@
+{
+    "name": "microk8s-flannel-network",
+    "plugins": [
+      {
+        "type": "flannel",
+        "name": "flannel-plugin",
+        "subnetFile": "${SNAP_COMMON}/run/flannel/subnet.env",
+        "dataDir": "${SNAP_COMMON}/var/lib/cni/flannel",
+        "delegate": {
+          "hairpinMode": true,
+          "isDefaultGateway": true
+        }
+      },
+      {
+        "type": "portmap",
+        "capabilities": {"portMappings": true},
+        "snat": true
+      }
+    ]
+}
