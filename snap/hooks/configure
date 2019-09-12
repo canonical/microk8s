@@ -278,6 +278,15 @@ then
   chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ || true
 fi
 
+if ! [ -f "${SNAP_DATA}/args/flanneld" ]
+then
+  cp -r ${SNAP}/default-args/cni-network/flannel.conflist ${SNAP_DATA}/args/cni-network/
+  cp ${SNAP}/default-args/flanneld ${SNAP_DATA}/args/
+  cp ${SNAP}/default-args/flannel-template.conflist ${SNAP_DATA}/args/
+  cp ${SNAP}/default-args/flannel-network-mgr-config ${SNAP_DATA}/args/
+  systemctl restart snap.${SNAP_NAME}.daemon-flanneld
+fi
+
 if grep -e "etcd.socket:2379" ${SNAP_DATA}/args/etcd
 then
   echo "Using a port for etcd"
