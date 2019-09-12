@@ -69,7 +69,7 @@ if [ ! -f ${SNAP_DATA}/credentials/client.config ]
 then
   echo "Patching client config location"
   mkdir -p ${SNAP_DATA}/credentials/
-  cp ${SNAP}/client.config ${SNAP_DATA}/credentials/
+  cp ${SNAP}/microk8s-resources/client.config ${SNAP_DATA}/credentials/
 fi
 
 # Upgrading to containerd
