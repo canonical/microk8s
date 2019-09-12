@@ -118,7 +118,7 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
         time.sleep(3)
 
 
-def wait_for_installation():
+def wait_for_installation(cluster_nodes=1):
     """
     Wait for kubernetes service to appear.
     """
@@ -134,7 +134,7 @@ def wait_for_installation():
     while True:
         cmd = 'get no'
         nodes = kubectl(cmd, 300)
-        if ' Ready' in nodes:
+        if nodes.count(' Ready') == cluster_nodes:
             break
         else:
             time.sleep(3)
@@ -175,13 +175,21 @@ def microk8s_disable(addon):
     return run_until_success(cmd, timeout_insec=300)
 
 
-def microk8s_reset():
+def microk8s_clustering_capable():
+    """
+    Are we in a clustering capable microk8s?
+    """
+    return os.path.isfile('/snap/bin/microk8s.join')
+
+
+
+def microk8s_reset(cluster_nodes=1):
     """
     Call microk8s reset
     """
     cmd = '/snap/bin/microk8s.reset'
     run_until_success(cmd, timeout_insec=300)
-    wait_for_installation()
+    wait_for_installation(cluster_nodes)
 
 
 def update_yaml_with_arch(manifest_file):

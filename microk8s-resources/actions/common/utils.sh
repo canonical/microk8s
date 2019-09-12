@@ -22,6 +22,48 @@ exit_if_stopped() {
   fi
 }
 
+exit_if_service_not_expected_to_start() {
+  # exit if a lock is available for the service
+  local service="$1"
+  if [ -f ${SNAP_DATA}/var/lock/no-${service} ]
+  then
+    exit 0
+  fi
+}
+
+is_service_expected_to_start() {
+  # return 1 if service is expected to start
+  local service="$1"
+  if [ -f ${SNAP_DATA}/var/lock/no-${service} ]
+  then
+    echo "0"
+  else
+    echo "1"
+  fi
+}
+
+set_service_not_expected_to_start() {
+  # mark service as not starting
+  local service="$1"
+  touch ${SNAP_DATA}/var/lock/no-${service}
+}
+
+set_service_expected_to_start() {
+  # mark service as not starting
+  local service="$1"
+  rm -rf ${SNAP_DATA}/var/lock/no-${service}
+}
+
+remove_vxlan_interfaces() {
+  links="$(${SNAP}/sbin/ip link show type vxlan | $SNAP/bin/grep -E 'flannel|cilium_vxlan' | $SNAP/usr/bin/gawk '{print $2}' | $SNAP/usr/bin/tr -d :)"
+  for link in "$links"
+  do
+    if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
+    then
+      $SNAP/sbin/ip link delete ${link}
+    fi
+  done
+}
 
 refresh_opt_in_config() {
     # add or replace an option inside the config file.
@@ -35,6 +77,32 @@ refresh_opt_in_config() {
     else
         sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
+
+    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    then
+        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        if [[ "$tokens" -ge "0" ]]
+        then
+            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+        fi
+    fi
+}
+
+
+nodes_addon() {
+    # Enable or disable a, addon across all nodes
+    # state should be either 'enable' or 'disable'
+    local addon="$1"
+    local state="$2"
+
+    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    then
+        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        if [[ "$tokens" -ge "0" ]]
+        then
+            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+        fi
+    fi
 }
 
 
@@ -45,6 +113,31 @@ skip_opt_in_config() {
     local opt="--$1"
     local config_file="$SNAP_DATA/args/$2"
     sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
+
+    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    then
+        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        if [[ "$tokens" -ge "0" ]]
+        then
+            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+        fi
+    fi
+}
+
+
+restart_service() {
+    # restart a systemd service
+    # argument $1 is the service name
+    sudo systemctl restart "snap.microk8s.daemon-$1.service"
+
+    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    then
+        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        if [[ "$tokens" -ge "0" ]]
+        then
+            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+        fi
+    fi
 }
 
 
@@ -194,7 +287,7 @@ produce_certs() {
 
     # Generate root CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=127.0.0.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+        openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.

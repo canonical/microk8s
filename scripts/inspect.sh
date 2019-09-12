@@ -179,8 +179,11 @@ rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
 
 printf -- 'Inspecting services\n'
+check_service "snap.microk8s.daemon-cluster-agent"
+check_service "snap.microk8s.daemon-flanneld"
 check_service "snap.microk8s.daemon-containerd"
 check_service "snap.microk8s.daemon-apiserver"
+check_service "snap.microk8s.daemon-apiserver-kicker"
 check_service "snap.microk8s.daemon-proxy"
 check_service "snap.microk8s.daemon-kubelet"
 check_service "snap.microk8s.daemon-scheduler"
