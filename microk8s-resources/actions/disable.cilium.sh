@@ -31,7 +31,8 @@ sudo rm -rf "$SNAP_DATA/sys/fs/bpf"
 
 if $SNAP/sbin/ip link show "cilium_vxlan"
 then
-  $SNAP/sbin/ip link delete "cilium_vxlan"
+  echo "Need to deleting old cilium_vxlan link"
+  sudo $SNAP/sbin/ip link delete "cilium_vxlan"
 fi
 
 set_service_expected_to_start flanneld
