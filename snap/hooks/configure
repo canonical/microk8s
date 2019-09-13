@@ -261,7 +261,7 @@ then
 fi
 
 # Securing important directories
-for dir in "${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/"
+for dir in "${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock"
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
