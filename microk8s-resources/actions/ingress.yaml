@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: default-http-backend
@@ -162,7 +162,7 @@ kind: ConfigMap
 metadata:
   name: nginx-load-balancer-microk8s-conf
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: nginx-ingress-microk8s-controller

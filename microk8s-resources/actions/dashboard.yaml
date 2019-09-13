@@ -207,7 +207,7 @@ spec:
 
 ---
 kind: Deployment
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 metadata:
   name: monitoring-influxdb-grafana-v4
   namespace: kube-system
@@ -347,7 +347,7 @@ data:
     kind: NannyConfiguration
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: heapster-v1.5.2
