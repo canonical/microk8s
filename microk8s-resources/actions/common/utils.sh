@@ -60,7 +60,7 @@ remove_vxlan_interfaces() {
   do
     if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
     then
-      echo "Need to deleting old ${link} link"
+      echo "Deleting old ${link} link"
       sudo $SNAP/sbin/ip link delete ${link}
     fi
   done
