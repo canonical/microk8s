@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hostpath-provisioner
@@ -19,7 +19,7 @@ spec:
       serviceAccountName: microk8s-hostpath
       containers:
         - name: hostpath-provisioner
-          image: cdkbot/hostpath-provisioner-$ARCH:latest
+          image: cdkbot/hostpath-provisioner-$ARCH:1.0.0
           env:
             - name: NODE_NAME
               valueFrom:
