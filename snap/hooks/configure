@@ -298,7 +298,7 @@ then
   refresh_opt_in_config trusted-ca-file \${SNAP_DATA}/certs/ca.crt etcd
   refresh_opt_in_config cert-file \${SNAP_DATA}/certs/server.crt etcd
   refresh_opt_in_config key-file \${SNAP_DATA}/certs/server.key etcd
-  snapctl restart snap.${SNAP_NAME}.daemon-etcd
+  snapctl restart ${SNAP_NAME}.daemon-etcd
 
   refresh_opt_in_config etcd-servers https://127.0.0.1:12379 kube-apiserver
   refresh_opt_in_config etcd-cafile \${SNAP_DATA}/certs/ca.crt kube-apiserver
