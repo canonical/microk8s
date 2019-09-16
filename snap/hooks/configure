@@ -285,6 +285,8 @@ then
   cp ${SNAP}/default-args/flanneld ${SNAP_DATA}/args/
   cp ${SNAP}/default-args/flannel-template.conflist ${SNAP_DATA}/args/
   cp ${SNAP}/default-args/flannel-network-mgr-config ${SNAP_DATA}/args/
+  snapctl restart ${SNAP_NAME}.daemon-etcd
+  snapctl restart ${SNAP_NAME}.daemon-containerd
   snapctl restart ${SNAP_NAME}.daemon-flanneld
 fi
 

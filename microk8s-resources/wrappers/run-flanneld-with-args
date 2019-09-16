@@ -8,6 +8,9 @@ source $SNAP/actions/common/utils.sh
 
 exit_if_service_not_expected_to_start flanneld
 
+# Allow some slack for containerd and etcd to start
+sleep 5
+
 # TODO rewrite for snaps
 etcd_endpoints="$(cat $SNAP_DATA/args/flanneld | grep "etcd-endpoints" | tr "=" " "| awk '{print $2}')"
 cert_file="$(cat $SNAP_DATA/args/flanneld | grep "etcd-certfile" | tr "=" " "| awk '{print $2}')"
@@ -26,7 +29,6 @@ if ! "${SNAP}/etcdctl" --endpoint "${etcd_endpoints}" --cert-file "${cert_file}"
 fi
 
 "${SNAP}/etcdctl" --endpoint "${etcd_endpoints}"  --cert-file "${cert_file}" --key-file "${key_file}" --ca-file "${ca_file}" set "/coreos.com/network/config" "$data"
-
 
 # This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/flanneld))"
