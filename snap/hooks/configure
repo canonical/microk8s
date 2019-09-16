@@ -20,8 +20,8 @@ then
   "$SNAP/bin/sed" -i 's@\${SNAP}/certs/serviceaccount.key@\${SNAP_DATA}/certs/serviceaccount.key@g' ${SNAP_DATA}/args/kube-apiserver
   "$SNAP/bin/sed" -i 's@\${SNAP}/certs/ca.crt@\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-controller-manager
   "$SNAP/bin/sed" -i 's@\${SNAP}/certs/serviceaccount.key@\${SNAP_DATA}/certs/serviceaccount.key@g' ${SNAP_DATA}/args/kube-controller-manager
-  snapctl restart snap.${SNAP_NAME}.daemon-apiserver
-  snapctl restart snap.${SNAP_NAME}.daemon-controller-manager
+  snapctl restart ${SNAP_NAME}.daemon-apiserver
+  snapctl restart ${SNAP_NAME}.daemon-controller-manager
 fi
 
 #Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA 
@@ -37,7 +37,7 @@ then
   # Add a new line at the end
   echo "" >> ${SNAP_DATA}/args/kube-apiserver
   echo "--requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt" >> ${SNAP_DATA}/args/kube-apiserver
-  snapctl restart snap.${SNAP_NAME}.daemon-apiserver
+  snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
 # Enable the aggregation layer (continue)
@@ -51,7 +51,7 @@ then
   echo '--requestheader-username-headers=X-Remote-User' >> ${SNAP_DATA}/args/kube-apiserver
   echo '--proxy-client-cert-file=${SNAP_DATA}/certs/front-proxy-client.crt' >> ${SNAP_DATA}/args/kube-apiserver
   echo '--proxy-client-key-file=${SNAP_DATA}/certs/front-proxy-client.key' >> ${SNAP_DATA}/args/kube-apiserver
-  snapctl restart snap.${SNAP_NAME}.daemon-apiserver
+  snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
 # Patch for issue: https://github.com/ubuntu/microk8s/issues/121
@@ -98,8 +98,8 @@ then
   skip_opt_in_config docker kubelet
   skip_opt_in_config docker-endpoint kubelet
 
-  snapctl restart snap.${SNAP_NAME}.daemon-containerd
-  snapctl restart snap.${SNAP_NAME}.daemon-kubelet
+  snapctl restart ${SNAP_NAME}.daemon-containerd
+  snapctl restart ${SNAP_NAME}.daemon-kubelet
 
   if [ -e ${SNAP_DATA}/args/dockerd ] && grep -e "default-runtime=nvidia" ${SNAP_DATA}/args/dockerd
   then
@@ -115,8 +115,8 @@ fi
 if [ "$(produce_certs)" == "1" ]
 then
     rm -rf .srl
-    snapctl restart snap.${SNAP_NAME}.daemon-apiserver.service
-    snapctl restart snap.${SNAP_NAME}.daemon-proxy.service
+    snapctl restart ${SNAP_NAME}.daemon-apiserver
+    snapctl restart ${SNAP_NAME}.daemon-proxy
 fi
 
 # Make containerd stream server listen to localhost
@@ -127,8 +127,8 @@ then
     then
         "$SNAP/bin/sed" -i 's@stream_server_port = "10010"@stream_server_port = "0"@g' ${SNAP_DATA}/args/containerd-template.toml
     fi
-    snapctl restart snap.${SNAP_NAME}.daemon-containerd
-    snapctl restart snap.${SNAP_NAME}.daemon-kubelet
+    snapctl restart ${SNAP_NAME}.daemon-containerd
+    snapctl restart ${SNAP_NAME}.daemon-kubelet
 fi
 
 # With v1.15 allow-privileged is removed from kubelet
@@ -136,7 +136,7 @@ if grep -e "\-\-allow-privileged" ${SNAP_DATA}/args/kubelet
 then
   echo "Patching 1.15 allow-privileged"
   sudo "${SNAP}/bin/sed" -i '/allow-privileged/d' ${SNAP_DATA}/args/kubelet
-  snapctl restart snap.${SNAP_NAME}.daemon-kubelet
+  snapctl restart ${SNAP_NAME}.daemon-kubelet
 fi
 
 if ([ -f "$SNAP_USER_COMMON/istio-auth.lock" ] || [ -f "$SNAP_USER_COMMON/istio-auth.lock" ]) && ! [ -f "$SNAP_DATA/bin/istioctl" ]
@@ -181,7 +181,7 @@ then
   refresh_opt_in_config kubeconfig \${SNAP_DATA}/credentials/kubelet.config kubelet
   refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
 
-  snapctl restart snap.${SNAP_NAME}.daemon-kubelet
+  snapctl restart ${SNAP_NAME}.daemon-kubelet
   need_api_restart=true
 fi
 
@@ -206,7 +206,7 @@ then
   skip_opt_in_config master kube-proxy
   refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
 
-  snapctl restart snap.${SNAP_NAME}.daemon-proxy
+  snapctl restart ${SNAP_NAME}.daemon-proxy
   need_api_restart=true
 fi
 
@@ -231,7 +231,7 @@ then
   skip_opt_in_config master kube-scheduler
   refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
 
-  snapctl restart snap.${SNAP_NAME}.daemon-scheduler
+  snapctl restart ${SNAP_NAME}.daemon-scheduler
   need_api_restart=true
 fi
 
@@ -257,7 +257,7 @@ then
   refresh_opt_in_config use-service-account-credentials true kube-controller-manager
 
   refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
-  snapctl restart snap.${SNAP_NAME}.daemon-controller-manager
+  snapctl restart ${SNAP_NAME}.daemon-controller-manager
 fi
 
 # Securing important directories
@@ -285,7 +285,7 @@ then
   cp ${SNAP}/default-args/flanneld ${SNAP_DATA}/args/
   cp ${SNAP}/default-args/flannel-template.conflist ${SNAP_DATA}/args/
   cp ${SNAP}/default-args/flannel-network-mgr-config ${SNAP_DATA}/args/
-  snapctl restart snap.${SNAP_NAME}.daemon-flanneld
+  snapctl restart ${SNAP_NAME}.daemon-flanneld
 fi
 
 if grep -e "etcd.socket:2379" ${SNAP_DATA}/args/etcd
@@ -309,7 +309,7 @@ fi
 
 if [ "${need_api_restart}" ]
 then
-  snapctl restart snap.${SNAP_NAME}.daemon-apiserver
+  snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
 if [ -L "${SNAP_DATA}/bin/cilium" ]
