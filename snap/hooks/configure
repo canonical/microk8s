@@ -280,6 +280,7 @@ fi
 
 if ! [ -f "${SNAP_DATA}/args/flanneld" ]
 then
+  mkdir -p ${SNAP_DATA}/args/cni-network/
   cp -r ${SNAP}/default-args/cni-network/flannel.conflist ${SNAP_DATA}/args/cni-network/
   cp ${SNAP}/default-args/flanneld ${SNAP_DATA}/args/
   cp ${SNAP}/default-args/flannel-template.conflist ${SNAP_DATA}/args/
