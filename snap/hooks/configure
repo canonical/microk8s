@@ -80,11 +80,15 @@ then
 fi
 
 # Upgrading to containerd
-if [ ! -e ${SNAP_DATA}/args/containerd ]
+if [ ! -e ${SNAP_DATA}/args/containerd ] ||
+   grep -e "\-\-docker unix://\${SNAP_DATA}/docker.sock" ${SNAP_DATA}/args/kubelet
 then
   echo "Making sure we have containerd file"
+  cp ${SNAP_DATA}/args/containerd ${SNAP_DATA}/args/containerd.backup || true
   cp ${SNAP}/default-args/containerd ${SNAP_DATA}/args/containerd
+  cp ${SNAP_DATA}/args/containerd-template.toml ${SNAP_DATA}/args/containerd-template.toml.backup || true
   cp ${SNAP}/default-args/containerd-template.toml ${SNAP_DATA}/args/containerd-template.toml
+  cp ${SNAP_DATA}/args/containerd-env ${SNAP_DATA}/args/containerd-env.backup || true
   cp ${SNAP}/default-args/containerd-env ${SNAP_DATA}/args/containerd-env
 
   cp -r ${SNAP}/default-args/cni-network ${SNAP_DATA}/args/

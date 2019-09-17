@@ -9,7 +9,17 @@ source $SNAP/actions/common/utils.sh
 exit_if_service_not_expected_to_start flanneld
 
 # Allow some slack for containerd and etcd to start
+# so we avoid this edge case: https://forum.snapcraft.io/t/restarting-services-from-configure-hook-race-condition/2513/13
 sleep 5
+
+n=0
+until [ $n -ge 10 ]
+do
+  test -e "$SNAP_DATA/args/flannel-network-mgr-config" && "$SNAP_DATA/args/flanneld" && break
+  echo "Waiting for flannled configuration to appear. (attempt $n)"
+  n=$[$n+1]
+  sleep 2
+done
 
 # TODO rewrite for snaps
 etcd_endpoints="$(cat $SNAP_DATA/args/flanneld | grep "etcd-endpoints" | tr "=" " "| awk '{print $2}')"
