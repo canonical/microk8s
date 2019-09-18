@@ -4,6 +4,9 @@ metadata:
   name: nvidia-device-plugin-daemonset
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      name: nvidia-device-plugin-ds
   template:
     metadata:
       # Mark this pod as a critical add-on; when enabled, the critical add-on scheduler
