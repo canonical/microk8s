@@ -15,6 +15,7 @@
 --etcd-cafile=${SNAP_DATA}/certs/ca.crt
 --etcd-certfile=${SNAP_DATA}/certs/server.crt
 --etcd-keyfile=${SNAP_DATA}/certs/server.key
+--insecure-port=0
 
 # Enable the aggregation layer
 --requestheader-client-ca-file=${SNAP_DATA}/certs/ca.crt
