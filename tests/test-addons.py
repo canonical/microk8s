@@ -199,6 +199,10 @@ class TestAddons(object):
             print("Linkerd tests are only relevant in x86 architectures")
             return
 
+        if under_time_pressure != 'False':
+            print("Skipping Linkerd tests as we are under time pressure")
+            return
+            
         print("Enabling Linkerd")
         microk8s_enable("linkerd")
         print("Validating Linkerd")

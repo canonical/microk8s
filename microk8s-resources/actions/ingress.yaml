@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -38,25 +39,18 @@ spec:
             cpu: 10m
             memory: 20Mi
 ---
+=======
+>>>>>>> dec78a831766e591481cce53137baf54074aa455
 apiVersion: v1
-kind: Service
+kind: Namespace
 metadata:
-  name: default-http-backend
-#  namespace: kube-system
-  labels:
-    k8s-app: default-http-backend
-spec:
-  ports:
-  - port: 80
-    protocol: TCP
-    targetPort: 8080
-  selector:
-    app: default-http-backend
----
+  name: ingress
+---  
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: nginx-ingress-microk8s-serviceaccount
+  namespace: ingress
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -111,7 +105,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: nginx-ingress-microk8s-role
-  namespace: default
+  namespace: ingress
 rules:
 - apiGroups:
   - ""
@@ -143,12 +137,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: nginx-ingress-microk8s-serviceaccount
-  namespace: default
+  namespace: ingress
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: nginx-ingress-microk8s
+  namespace: ingress
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -161,11 +156,13 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: nginx-load-balancer-microk8s-conf
+  namespace: ingress
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: nginx-ingress-microk8s-controller
+  namespace: ingress
   labels:
     microk8s-application: nginx-ingress-microk8s
 spec:
@@ -208,6 +205,5 @@ spec:
         - containerPort: 443
         args:
         - /nginx-ingress-controller
-        - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
         - --configmap=$(POD_NAMESPACE)/nginx-load-balancer-microk8s-conf
         $EXTRA_ARGS
