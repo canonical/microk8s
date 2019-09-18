@@ -11,6 +11,7 @@ from validators import (
     validate_fluentd,
     validate_jaeger,
     validate_cilium,
+    validate_gpu,
 )
 from utils import wait_for_pod_state
 
@@ -55,6 +56,13 @@ class TestLiveAddons(object):
 
         """
         validate_knative()
+
+    def test_gpu(self):
+        """
+        Validates GPU
+
+        """
+        validate_gpu()
 
     def test_registry(self):
         """
