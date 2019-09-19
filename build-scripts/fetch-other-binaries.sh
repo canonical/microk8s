@@ -22,7 +22,6 @@ mkdir -p $KUBE_SNAP_BINS
     # Knative, not quite binares but still fetcing.
     mkdir knative-yaml
     curl -L https://github.com/knative/serving/releases/download/$KNATIVE_SERVING_VERSION/serving.yaml -o ./knative-yaml/serving.yaml
-    curl -L https://github.com/knative/build/releases/download/$KNATIVE_BUILD_VERSION/build.yaml -o ./knative-yaml/build.yaml
     curl -L https://github.com/knative/eventing/releases/download/$KNATIVE_EVENTING_VERSION/release.yaml  -o ./knative-yaml/release.yaml
     curl -L https://github.com/knative/serving/releases/download/$KNATIVE_SERVING_VERSION/monitoring.yaml  -o ./knative-yaml/monitoring.yaml
   fi

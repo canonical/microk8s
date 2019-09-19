@@ -4,6 +4,12 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
+echo "Knative is not yet available in v1.16 MicroK8s. Please install the v1.15 release:"
+echo ""
+echo "sudo snap install microk8s --classic --channel=1.15/stable"
+echo ""
+exit 1
+
 echo "Enabling Knative"
 
 # Knative require istio
@@ -28,7 +34,6 @@ do
   sleep 3
   ($KUBECTL apply --selector knative.dev/crd-install=true \
     -f ${SNAP}/actions/knative/serving.yaml \
-    -f ${SNAP}/actions/knative/build.yaml \
     -f ${SNAP}/actions/knative/release.yaml \
     -f ${SNAP}/actions/knative/monitoring.yaml) && break
   n=$[$n+1]
@@ -45,7 +50,6 @@ do
   sleep 3
   ($KUBECTL apply  \
     -f ${SNAP}/actions/knative/serving.yaml \
-    -f ${SNAP}/actions/knative/build.yaml \
     -f ${SNAP}/actions/knative/release.yaml \
     -f ${SNAP}/actions/knative/monitoring.yaml) && break
   n=$[$n+1]
