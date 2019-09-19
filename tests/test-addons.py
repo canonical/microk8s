@@ -190,7 +190,8 @@ class TestAddons(object):
         else:
             print('Skipping jaeger, prometheus and fluentd tests')
 
-    def test_linkerd(self):
+    """Disabled for v1.16"""
+    def _test_linkerd(self):
         """
         Sets up and validate linkerd
 

@@ -4,6 +4,12 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
+echo "Linkerd is not yet available in v1.16 MicroK8s. Please install the v1.15 release:"
+echo ""
+echo "sudo snap install microk8s --classic --channel=1.15/stable"
+echo ""
+exit 1
+
 read -ra ARGUMENTS <<< "$1"
 argz=("${ARGUMENTS[@]/#/--}")
 
