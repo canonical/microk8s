@@ -28,13 +28,12 @@ lxc exec test-build -- git clone https://github.com/ubuntu/microk8s
 
 We can then set the following environment variables prior to building:
  - KUBE_VERSION: kubernetes release to package. Defaults to latest stable.
- - ETCD_VERSION: version of etcd. Defaults to v3.3.4.
- - CNI_VERSION: version of CNI tools. Defaults to v0.7.1.
+ - ETCD_VERSION: version of etcd.
+ - CNI_VERSION: version of CNI tools.
  - KUBE_TRACK: kubernetes release series (e.g., 1.10) to package. Defaults to latest stable.
- - ISTIO_VERSION: istio release. Defaults to v1.2.2.
- - KNATIVE_SERVING_VERSION: Knative Serving release. Defaults to v0.7.1.
- - KNATIVE_BUILD_VERSION: Knative Build release. Defaults to v0.7.0.
- - KNATIVE_EVENTING_VERSION: Knative Eventing release. Defaults to v0.7.1.
+ - ISTIO_VERSION: istio release.
+ - KNATIVE_SERVING_VERSION: Knative Serving release.
+ - KNATIVE_EVENTING_VERSION: Knative Eventing release.
  - RUNC_COMMIT: the commit hash from which to build runc
  - CONTAINERD_COMMIT: the commit hash from which to build containerd
  - KUBERNETES_REPOSITORY: build the kubernetes binaries from this repository instead of getting them from upstream
