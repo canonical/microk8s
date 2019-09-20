@@ -193,8 +193,7 @@ class TestAddons(object):
         else:
             print('Skipping jaeger, prometheus and fluentd tests')
 
-    """Disabled for v1.16"""
-    def _test_linkerd(self):
+    def test_linkerd(self):
         """
         Sets up and validate linkerd
 
@@ -206,7 +205,7 @@ class TestAddons(object):
         if under_time_pressure != 'False':
             print("Skipping Linkerd tests as we are under time pressure")
             return
-            
+
         print("Enabling Linkerd")
         microk8s_enable("linkerd")
         print("Validating Linkerd")
