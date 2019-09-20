@@ -1,6 +1,7 @@
 import pytest
 import os
 import platform
+import time
 
 from validators import (
     validate_dns_dashboard,
@@ -22,6 +23,7 @@ from validators import (
 from utils import (
     microk8s_enable,
     wait_for_pod_state,
+    wait_for_namespace_termination,
     microk8s_disable,
     microk8s_reset
 )
@@ -62,9 +64,6 @@ class TestAddons(object):
         microk8s_enable("storage")
         print("Validating storage")
         validate_storage()
-        print("Disabling storage")
-        p = Popen("/snap/bin/microk8s.disable storage".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        p.communicate(input=b'Y\n')[0]
         microk8s_enable("registry")
         print("Validating registry")
         validate_registry()
@@ -74,6 +73,9 @@ class TestAddons(object):
         microk8s_disable("registry")
         print("Disabling dashboard")
         microk8s_disable("dashboard")
+        print("Disabling storage")
+        p = Popen("/snap/bin/microk8s.disable storage".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        p.communicate(input=b'Y\n')[0]
         '''
         We would disable DNS here but this freezes any terminating pods.
         We let microk8s.reset to do the cleanup.
@@ -123,6 +125,7 @@ class TestAddons(object):
         validate_knative()
         print("Disabling Knative")
         microk8s_disable("knative")
+        wait_for_namespace_termination("knative-serving", timeout_insec=600)
         print("Disabling Istio")
         microk8s_disable("istio")
 
@@ -190,7 +193,8 @@ class TestAddons(object):
         else:
             print('Skipping jaeger, prometheus and fluentd tests')
 
-    def test_linkerd(self):
+    """Disabled for v1.16"""
+    def _test_linkerd(self):
         """
         Sets up and validate linkerd
 

@@ -1,0 +1,3 @@
+--bind 0.0.0.0:25000
+--keyfile "${SNAP_DATA}/certs/server.key"
+--certfile "${SNAP_DATA}/certs/server.crt"

@@ -52,7 +52,7 @@ function store_network {
   # Collect network setup.
   printf -- '  Copy network configuration to the final report tarball\n'
   mkdir -p $INSPECT_DUMP/network
-  netstat -ln &> $INSPECT_DUMP/network/netstat
+  netstat -pln &> $INSPECT_DUMP/network/netstat
   ifconfig &> $INSPECT_DUMP/network/ifconfig
   iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
 }
@@ -179,8 +179,11 @@ rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
 
 printf -- 'Inspecting services\n'
+check_service "snap.microk8s.daemon-cluster-agent"
+check_service "snap.microk8s.daemon-flanneld"
 check_service "snap.microk8s.daemon-containerd"
 check_service "snap.microk8s.daemon-apiserver"
+check_service "snap.microk8s.daemon-apiserver-kicker"
 check_service "snap.microk8s.daemon-proxy"
 check_service "snap.microk8s.daemon-kubelet"
 check_service "snap.microk8s.daemon-scheduler"
@@ -193,6 +196,7 @@ check_apparmor
 
 printf -- 'Gathering system information\n'
 store_sys
+store_network
 
 printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info

@@ -28,12 +28,17 @@ spec:
   selector:
     app: details
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: details-v1
+  labels:
+    app: details
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: details
   template:
     metadata:
       labels:
@@ -63,12 +68,17 @@ spec:
   selector:
     app: ratings
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ratings-v1
+  labels:
+    app: ratings
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: ratings
   template:
     metadata:
       labels:
@@ -98,12 +108,17 @@ spec:
   selector:
     app: reviews
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: reviews-v1
+  labels:
+    app: reviews
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: reviews
   template:
     metadata:
       labels:
@@ -117,16 +132,21 @@ spec:
         ports:
         - containerPort: 9080
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: reviews-v2
+  labels:
+    app: reviews-v2
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: reviews-v2
   template:
     metadata:
       labels:
-        app: reviews
+        app: reviews-v2
         version: v2
     spec:
       containers:
@@ -136,16 +156,21 @@ spec:
         ports:
         - containerPort: 9080
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: reviews-v3
+  labels:
+    app: reviews-v3
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: reviews-v3
   template:
     metadata:
       labels:
-        app: reviews
+        app: reviews-v3
         version: v3
     spec:
       containers:
@@ -171,12 +196,17 @@ spec:
   selector:
     app: productpage
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: productpage-v1
+  labels:
+    app: productpage
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: productpage
   template:
     metadata:
       labels:

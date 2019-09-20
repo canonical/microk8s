@@ -28,7 +28,6 @@ do
   sleep 3
   ($KUBECTL apply --selector knative.dev/crd-install=true \
     -f ${SNAP}/actions/knative/serving.yaml \
-    -f ${SNAP}/actions/knative/build.yaml \
     -f ${SNAP}/actions/knative/release.yaml \
     -f ${SNAP}/actions/knative/monitoring.yaml) && break
   n=$[$n+1]
@@ -45,7 +44,6 @@ do
   sleep 3
   ($KUBECTL apply  \
     -f ${SNAP}/actions/knative/serving.yaml \
-    -f ${SNAP}/actions/knative/build.yaml \
     -f ${SNAP}/actions/knative/release.yaml \
     -f ${SNAP}/actions/knative/monitoring.yaml) && break
   n=$[$n+1]

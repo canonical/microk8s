@@ -1,0 +1,18 @@
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: CADATA
+    server: https://127.0.0.1:16443
+  name: microk8s-cluster
+contexts:
+- context:
+    cluster: microk8s-cluster
+    user: NAME
+  name: microk8s
+current-context: microk8s
+kind: Config
+preferences: {}
+users:
+- name: NAME
+  user:
+    token: TOKEN

@@ -4,6 +4,12 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
+echo "Linkerd is not yet available in v1.16 MicroK8s. Please install the v1.15 release:"
+echo ""
+echo "sudo snap install microk8s --classic --channel=1.15/stable"
+echo ""
+exit 1
+
 read -ra ARGUMENTS <<< "$1"
 argz=("${ARGUMENTS[@]/#/--}")
 
@@ -22,5 +28,8 @@ echo "Enabling Linkerd2"
 # pod/servicegraph will start failing without dns
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 "$SNAP/microk8s-enable.wrapper" dns
+# Allow some time for the apiserver to start
+sleep 5
+
 "$SNAP_DATA/bin/linkerd" "--kubeconfig=$SNAP_DATA/credentials/client.config" install "${argz[@]}" | $KUBECTL apply -f -
 echo "Linkerd is starting"
