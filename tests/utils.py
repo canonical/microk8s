@@ -154,13 +154,13 @@ def wait_for_namespace_termination(namespace, timeout_insec=360):
         try:
             cmd='/snap/bin/microk8s.kubectl get ns {}'.format(namespace)
             output = check_output(cmd.split()).strip().decode('utf8')
-            print('.', end='',flush=True)
+            print('Waiting...')
         except CalledProcessError as err:
             if datetime.datetime.now() > deadline:
                 raise
             else:
                 return
-        time.sleep(5)
+        time.sleep(10)
 
 
 def microk8s_enable(addon, timeout_insec=300):
