@@ -1,6 +1,7 @@
 import pytest
 import os
 import platform
+import time
 
 from validators import (
     validate_dns_dashboard,
@@ -22,6 +23,7 @@ from validators import (
 from utils import (
     microk8s_enable,
     wait_for_pod_state,
+    wait_for_namespace_termination,
     microk8s_disable,
     microk8s_reset
 )
@@ -123,6 +125,7 @@ class TestAddons(object):
         validate_knative()
         print("Disabling Knative")
         microk8s_disable("knative")
+        wait_for_namespace_termination("knative-serving", timeout_insec=600)
         print("Disabling Istio")
         microk8s_disable("istio")
 
@@ -202,7 +205,7 @@ class TestAddons(object):
         if under_time_pressure != 'False':
             print("Skipping Linkerd tests as we are under time pressure")
             return
-            
+
         print("Enabling Linkerd")
         microk8s_enable("linkerd")
         print("Validating Linkerd")

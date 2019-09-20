@@ -32,8 +32,13 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: details-v1
+  labels:
+    app: details
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: details
   template:
     metadata:
       labels:
@@ -67,8 +72,13 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ratings-v1
+  labels:
+    app: ratings
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: ratings
   template:
     metadata:
       labels:
@@ -102,8 +112,13 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: reviews-v1
+  labels:
+    app: reviews
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: reviews
   template:
     metadata:
       labels:
@@ -121,12 +136,17 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: reviews-v2
+  labels:
+    app: reviews-v2
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: reviews-v2
   template:
     metadata:
       labels:
-        app: reviews
+        app: reviews-v2
         version: v2
     spec:
       containers:
@@ -140,12 +160,17 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: reviews-v3
+  labels:
+    app: reviews-v3
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: reviews-v3
   template:
     metadata:
       labels:
-        app: reviews
+        app: reviews-v3
         version: v3
     spec:
       containers:
@@ -175,8 +200,13 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: productpage-v1
+  labels:
+    app: productpage
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: productpage
   template:
     metadata:
       labels:
