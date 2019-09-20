@@ -193,14 +193,17 @@ class TestAddons(object):
         else:
             print('Skipping jaeger, prometheus and fluentd tests')
 
-    """Disabled for v1.16"""
-    def _test_linkerd(self):
+    def test_linkerd(self):
         """
         Sets up and validate linkerd
 
         """
         if platform.machine() != 'x86_64':
             print("Linkerd tests are only relevant in x86 architectures")
+            return
+
+        if under_time_pressure != 'False':
+            print("Skipping Linkerd tests as we are under time pressure")
             return
 
         print("Enabling Linkerd")
