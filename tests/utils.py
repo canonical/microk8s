@@ -143,6 +143,26 @@ def wait_for_installation(cluster_nodes=1):
     time.sleep(30)
 
 
+def wait_for_namespace_termination(namespace, timeout_insec=360):
+    """
+    Wait for the termination of the provided namespace.
+    """
+
+    print("Waiting for namespace {} to be removed".format(namespace))
+    deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
+    while True:
+        try:
+            cmd='/snap/bin/microk8s.kubectl get ns {}'.format(namespace)
+            output = check_output(cmd.split()).strip().decode('utf8')
+            print('.', end='',flush=True)
+        except CalledProcessError as err:
+            if datetime.datetime.now() > deadline:
+                raise
+            else:
+                return
+        time.sleep(5)
+
+
 def microk8s_enable(addon, timeout_insec=300):
     """
     Disable an addon
@@ -204,3 +224,4 @@ def update_yaml_with_arch(manifest_file):
     with open(manifest_file, 'w') as f:
         s = s.replace('$ARCH', arch)
         f.write(s)
+

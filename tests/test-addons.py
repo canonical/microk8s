@@ -23,6 +23,7 @@ from validators import (
 from utils import (
     microk8s_enable,
     wait_for_pod_state,
+    wait_for_namespace_termination,
     microk8s_disable,
     microk8s_reset
 )
@@ -124,10 +125,9 @@ class TestAddons(object):
         validate_knative()
         print("Disabling Knative")
         microk8s_disable("knative")
-        time.sleep(60)
+        wait_for_namespace_termination("knative-serving", timeout_insec=600)
         print("Disabling Istio")
         microk8s_disable("istio")
-        time.sleep(60)
 
     def test_cilium(self):
         """
