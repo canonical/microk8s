@@ -19,7 +19,7 @@
 
 # Enable the aggregation layer
 --requestheader-client-ca-file=${SNAP_DATA}/certs/ca.crt
---requestheader-allowed-names=front-proxy-client
+--requestheader-allowed-names=127.0.0.1
 --requestheader-extra-headers-prefix=X-Remote-Extra-
 --requestheader-group-headers=X-Remote-Group
 --requestheader-username-headers=X-Remote-User
