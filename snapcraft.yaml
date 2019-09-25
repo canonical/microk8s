@@ -175,6 +175,8 @@ parts:
     python-packages:
     - flask
     stage-packages:
+    - python3-openssl
+    - openssl
     - python3-requests
     - gunicorn3
   microk8s:
