@@ -21,7 +21,7 @@ if echo "$*" | grep -q -- '--help'; then
     echo
     echo "Available addons:"
     echo
-    actions="$(find "${SNAP}/actions" -maxdepth 1 -name '*.yaml' -or -name 'enable.*.sh')"
+    actions="$(find "${SNAP}/actions" -maxdepth 1 ! -name 'coredns.yaml' -name '*.yaml' -or -name 'enable.*.sh')"
     actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
     for action in $actions; do
         echo "  $action"
