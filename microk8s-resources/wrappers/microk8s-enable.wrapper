@@ -34,12 +34,13 @@ exit_if_no_permissions
 
 result=1
 for addon in "$@"; do
-
+  # Making sure the cluster is up and running befor each addon
+  ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 >/dev/null
   action="$(addon_name $addon)"
   arguments="$(addon_arguments $addon)"
   # If there is a script to execute for the $action run the script and ignore any yamls
   if [ -f "${SNAP}/actions/enable.$action.sh" ]; then
-    
+
     "${SNAP}/actions/enable.$action.sh" "${arguments}"
     enable_result="$?"
     if [ "$enable_result" = "0" ]
