@@ -13,6 +13,7 @@ description: |-
 
 grade: stable
 confinement: classic
+base: core
 
 apps:
   daemon-etcd:
@@ -106,10 +107,9 @@ parts:
     - "--disable-shared"
     - "--enable-static"
     prime: [ -bin/iptables-xml ]
-  go:
-    source-tag: go1.12.7
   containerd:
-    after: [go, iptables]
+    build-snaps: [go]
+    after: [iptables]
     source: https://github.com/containerd/containerd
     source-type: git
     plugin: go
@@ -119,7 +119,7 @@ parts:
     - libseccomp-dev
     override-build: |
       set -eu
-      . ../../../build-scripts/set-env-variables.sh
+      . ../../../project/build-scripts/set-env-variables.sh
 
       go version
       export GOPATH=$(realpath ../go)
