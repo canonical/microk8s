@@ -119,11 +119,14 @@ function suggest_fixes {
     printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
   fi
 
-  ufw=$(ufw status)
-  if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
+  if /snap/core/current/usr/bin/which ufw &> /dev/null
   then
-    printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-    printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+    ufw=$(ufw status)
+    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
+    then
+      printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
+      printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+    fi
   fi
 
   # check for selinux. if enabled, print warning.
