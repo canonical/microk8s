@@ -3,12 +3,12 @@
 exit_if_no_permissions() {
   # test if we can access the default kubeconfig
   if [ ! -r $SNAP_DATA/credentials/client.config ]; then
-    echo "Insufficient permissions to access MicroK8s."
-    echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:"
-    echo ""
-    echo "    sudo usermod -a -G microk8s $USER"
-    echo ""
-    echo "The new group will be available on the user's next login."
+    echo "Insufficient permissions to access MicroK8s." >&2
+    echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:" >&2
+    echo "" >&2
+    echo "    sudo usermod -a -G microk8s $USER" >&2
+    echo "" >&2
+    echo "The new group will be available on the user's next login." >&2
     exit 1
   fi
 }
@@ -17,7 +17,7 @@ exit_if_stopped() {
   # test if the snap is marked as stopped
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
   then
-    echo "microk8s is not running, try microk8s.start"
+    echo "microk8s is not running, try microk8s.start" >&2
     exit 1
   fi
 }
@@ -60,7 +60,7 @@ remove_vxlan_interfaces() {
   do
     if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
     then
-      echo "Deleting old ${link} link"
+      echo "Deleting old ${link} link" >&2
       sudo $SNAP/sbin/ip link delete ${link}
     fi
   done
