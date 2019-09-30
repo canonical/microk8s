@@ -72,7 +72,7 @@ sudo microk8s.kubectl config view --raw > $HOME/.kube/config
 The *microk8s* user group is created during the snap installation. Users in that group
 are granted access to `microk8s` commands. To add a user to that group:
 ```
-sudo usermod -a -G microk8s <username>"
+sudo usermod -a -G microk8s <username>
 ```
 
 
