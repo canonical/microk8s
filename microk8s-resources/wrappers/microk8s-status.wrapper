@@ -125,7 +125,8 @@ function format_output() {
             for a in "${!addon[@]}"
             do
               echo "$a: ${addon[$a]}"
-            done
+            done |
+            sort
             exit 0
         else
             echo "microk8s is not running. Use microk8s.inspect for a deeper inspection."
