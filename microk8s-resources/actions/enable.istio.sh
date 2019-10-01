@@ -3,6 +3,7 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
+CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 
 echo "Enabling Istio"
 
@@ -13,7 +14,7 @@ then
   ISTIO_ERSION=$(echo $ISTIO_VERSION | sed 's/v//g')
   sudo mkdir -p "${SNAP_DATA}/tmp/istio"
   (cd "${SNAP_DATA}/tmp/istio"
-  sudo "${SNAP}/usr/bin/curl" -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux.tar.gz -o "$SNAP_DATA/tmp/istio/istio.tar.gz"
+  sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux.tar.gz -o "$SNAP_DATA/tmp/istio/istio.tar.gz"
   sudo gzip -d "$SNAP_DATA/tmp/istio/istio.tar.gz"
   sudo tar -xvf "$SNAP_DATA/tmp/istio/istio.tar")
   sudo mkdir -p "$SNAP_DATA/bin/"
