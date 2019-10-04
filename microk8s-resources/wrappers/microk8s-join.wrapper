@@ -9,4 +9,4 @@ source $SNAP/actions/common/utils.sh
 
 exit_if_no_permissions
 
-sudo -E ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py $@
+sudo -E  LD_LIBRARY_PATH=$LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py $@

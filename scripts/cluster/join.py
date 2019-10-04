@@ -8,13 +8,6 @@ import getopt
 import sys
 import time
 
-snap_path = os.environ.get('SNAP')
-ld_library_path = '{0}/lib:{0}/usr/lib:{0}/lib/x86_64-linux-gnu:{0}/usr/lib/x86_64-linux-gnu'.format(snap_path)
-
-if 'LD_LIBRARY_PATH' not in os.environ:
-    os.environ['LD_LIBRARY_PATH'] = ld_library_path
-    os.execv(sys.argv[0], sys.argv)
-
 import requests
 import socket
 import json
@@ -25,6 +18,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
 snapdata_path = os.environ.get('SNAP_DATA')
+snap_path = os.environ.get('SNAP')
 ca_cert_file = "{}/certs/ca.remote.crt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)

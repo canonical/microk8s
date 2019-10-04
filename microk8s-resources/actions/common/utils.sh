@@ -84,7 +84,7 @@ refresh_opt_in_config() {
         tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
         fi
     fi
 }
@@ -101,7 +101,7 @@ nodes_addon() {
         tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
         fi
     fi
 }
@@ -120,7 +120,7 @@ skip_opt_in_config() {
         tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
         fi
     fi
 }
@@ -136,7 +136,7 @@ restart_service() {
         tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
         fi
     fi
 }
