@@ -39,14 +39,14 @@ set_service_expected_to_start flanneld
 
 echo "Restarting kubelet"
 refresh_opt_in_config "cni-bin-dir" "\${SNAP}/opt/cni/bin/" kubelet
-sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
+sudo snapctl restart ${SNAP_NAME}.daemon-kubelet
 echo "Restarting containerd"
 if ! grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
   sudo "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP_DATA}/opt;bin_dir = "${SNAP}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
 fi
-sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
+sudo snapctl restart ${SNAP_NAME}.daemon-containerd
 
 echo "Restarting flanneld"
-sudo systemctl stop snap.${SNAP_NAME}.daemon-flanneld
+sudo snapctl stop ${SNAP_NAME}.daemon-flanneld
 
 echo "Cilium is terminating"

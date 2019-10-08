@@ -20,7 +20,7 @@ done
 sleep 5
 
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+sudo snapctl restart ${SNAP_NAME}.daemon-apiserver
 
 sleep 5
 

@@ -281,7 +281,7 @@ def join_node():
     api_port = get_arg('--secure-port', 'kube-apiserver')
     proxy_token = get_token('kube-proxy')
     kubelet_token = add_kubelet_token(hostname)
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-apiserver.service".split())
+    subprocess.check_call("snapctl restart microk8s.daemon-apiserver".split())
     if node_addr != hostname:
         kubelet_args = read_kubelet_args_file(node_addr)
     else:
@@ -388,7 +388,7 @@ def configure():
             if "restart" in service and service["restart"]:
                 service_name = get_service_name(service["name"])
                 print("restarting {}".format(service["name"]))
-                subprocess.check_call("systemctl restart snap.microk8s.daemon-{}.service".format(service_name).split())
+                subprocess.check_call("snapctl restart microk8s.daemon-{}".format(service_name).split())
 
     if "addon" in configuration:
         for addon in configuration["addon"]:

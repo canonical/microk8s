@@ -129,7 +129,7 @@ skip_opt_in_config() {
 restart_service() {
     # restart a systemd service
     # argument $1 is the service name
-    sudo systemctl restart "snap.microk8s.daemon-$1.service"
+    sudo snapctl restart "microk8s.daemon-$1"
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
@@ -213,7 +213,7 @@ wait_for_service() {
     # Return fail if the service did not start in 30 seconds
     local service_name="$1"
     local TRY_ATTEMPT=0
-    while ! (sudo systemctl is-active --quiet snap.${SNAP_NAME}.daemon-${service_name}) &&
+    while ! (sudo snapctl services | grep "${SNAP_NAME}.daemon-${service_name} *enabled *active") &&
           ! [ ${TRY_ATTEMPT} -eq 30 ]
     do
         TRY_ATTEMPT=$((TRY_ATTEMPT+1))

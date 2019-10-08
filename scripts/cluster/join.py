@@ -130,7 +130,7 @@ def update_flannel(etcd, master_ip, master_port, token):
     set_arg("--etcd-certfile", server_cert_file, "flanneld")
     set_arg("--etcd-keyfile", "${SNAP_DATA}/certs/server.key", "flanneld")
 
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-flanneld.service".split())
+    subprocess.check_call("snapctl restart microk8s.daemon-flanneld".split())
 
 
 def ca_one_line(ca):
@@ -180,7 +180,7 @@ def update_kubeproxy(token, ca, master_ip, api_port):
     """
     create_kubeconfig(token, ca, master_ip, api_port, "proxy.config", "kubeproxy")
     set_arg("--master", None, "kube-proxy")
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-proxy.service".split())
+    subprocess.check_call("snapctl restart microk8s.daemon-proxy".split())
 
 
 def update_kubelet(token, ca, master_ip, api_port):
@@ -194,7 +194,7 @@ def update_kubelet(token, ca, master_ip, api_port):
     """
     create_kubeconfig(token, ca, master_ip, api_port, "kubelet.config", "kubelet")
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-kubelet.service".split())
+    subprocess.check_call("snapctl restart microk8s.daemon-kubelet".split())
 
 
 def store_remote_ca(ca):
@@ -216,7 +216,7 @@ def mark_cluster_node():
     os.chmod(lock_file, 0o700)
     services = ['etcd', 'apiserver', 'apiserver-kicker', 'controller-manager', 'scheduler']
     for service in services:
-        subprocess.check_call("systemctl restart snap.microk8s.daemon-{}.service".format(service).split())
+        subprocess.check_call("snapctl restart microk8s.daemon-{}".format(service).split())
 
 
 def generate_callback_token():

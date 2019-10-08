@@ -16,7 +16,7 @@ fi
 sudo mkdir -p ${SNAP_DATA}/var/lock
 sudo touch ${SNAP_DATA}/var/lock/gpu
 
-sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
+sudo snapctl restart ${SNAP_NAME}.daemon-containerd
 containerd_up=$(wait_for_service containerd)
 if [[ $containerd_up == fail ]]
 then

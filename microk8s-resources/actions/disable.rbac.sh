@@ -9,7 +9,7 @@ echo "Disabling RBAC"
 
 echo "Reconfiguring apiserver"
 refresh_opt_in_config "authorization-mode" "AlwaysAllow" kube-apiserver
-sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+sudo snapctl restart ${SNAP_NAME}.daemon-apiserver
 apiserver=$(wait_for_service apiserver)
 if [[ $apiserver == fail ]]
 then

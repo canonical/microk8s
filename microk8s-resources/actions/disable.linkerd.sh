@@ -15,5 +15,3 @@ KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 "$SNAP_DATA/bin/linkerd" "--kubeconfig=${SNAP_DATA}/credentials/client.config" install "--ignore-cluster" | $KUBECTL delete -f -
 echo "Deleting linkerd binary."
 sudo rm -f "$SNAP_DATA/bin/linkerd"
-
-

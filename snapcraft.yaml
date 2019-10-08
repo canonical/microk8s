@@ -11,43 +11,126 @@ description: |-
  also a great k8s for appliances - develop your IoT apps for k8s and deploy 
  them to MicroK8s on your boxes.
 
-grade: stable
-confinement: classic
+grade: devel
+confinement: strict
+
+plugs:
+  docker-privileged:
+    interface: docker-support
+    privileged-containers: true
+  k8s-kubelet:
+    interface: kubernetes-support
+    flavor: kubelet
+  k8s-kubeproxy:
+    interface: kubernetes-support
+    flavor: kubeproxy
+  dot-kube:
+    interface: personal-files
+    write:
+      - $HOME/.kube
+
+hooks:
+  configure:
+    plugs:
+    - dot-kube
+  install:
+    plugs: []
+  remove:
+    plugs:
+    - k8s-kubelet
+    - mount-observe
 
 apps:
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
+    plugs:
+    - network-bind
   daemon-flanneld:
     command: run-flanneld-with-args
     daemon: simple
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
+    plugs:
+    - network-bind
+    - docker-support
+    - docker-privileged
+    - firewall-control
+    - kernel-module-control
+    - network-control
+    - mount-observe
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
     daemon: simple
+    plugs:
+    - network-bind
+    - network-observe
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
+    plugs:
+    - network-bind
+    - network-observe
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
+    plugs:
+    - network-bind
+    - network-observe
   daemon-controller-manager:
     command: run-with-config-args kube-controller-manager
     daemon: simple
+    plugs:
+    - network-bind
+    - docker-support
+    - docker-privileged
+    - firewall-control
+    - kernel-module-control
+    - network-control
   daemon-scheduler:
     command: run-with-config-args kube-scheduler
     daemon: simple
+    plugs:
+    - network-bind
   daemon-kubelet:
     command: run-with-config-args kubelet
     daemon: simple
+    plugs:
+    - dot-kube
+    - firewall-control
+    - network-bind
+    - k8s-kubelet
+    - hardware-observe
+    - mount-observe
+    - network-control
+    - process-control
+    - system-observe
   daemon-proxy:
     command: run-with-config-args kube-proxy
     daemon: simple
+    plugs:
+    - network-bind
+    - firewall-control
+    - k8s-kubeproxy
+    - kernel-module-observe
+    - mount-observe
+    - network-observe
+    - system-observe
+    - kernel-module-control
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
+    plugs:
+    - dot-kube
+    - firewall-control
+    - network-bind
+    - k8s-kubelet
+    - hardware-observe
+    - mount-observe
+    - network-control
+    - process-control
+    - system-observe
   add-node:
     command: microk8s-add-node.wrapper
   join:
@@ -66,14 +149,22 @@ apps:
     command: microk8s-disable.wrapper
   start:
     command: microk8s-start.wrapper
+    plugs:
+    - network
   stop:
     command: microk8s-stop.wrapper
+    plugs:
+    - network
   status:
     command: microk8s-status.wrapper
+    plugs:
+    - network
   config:
     command: microk8s-config.wrapper
   reset:
     command: microk8s-reset.wrapper
+    plugs:
+    - network
   istioctl:
     command: microk8s-istioctl.wrapper
   linkerd:
@@ -82,6 +173,21 @@ apps:
     command: microk8s-helm.wrapper
   cilium:
     command: microk8s-cilium.wrapper
+
+passthrough:
+  layout:
+    /usr/libexec:
+      symlink: $SNAP_COMMON/usr/libexec
+    /var/lib/cni:
+      symlink: $SNAP_COMMON/var/lib/cni
+    /var/log/pods:
+      symlink: $SNAP_COMMON/var/log/pods
+    /var/log/containers:
+      symlink: $SNAP_COMMON/var/log/containers
+    /var/lib/kubelet:
+      bind: $SNAP_DATA/kubelet
+    /var/lib/kube-proxy:
+      bind: $SNAP_DATA/kube-proxy
 
 parts:
   libnftnl:
