@@ -21,32 +21,32 @@ if [[ $cilium == fail ]]
 then
   echo "Cilium operator did not shut down on time. Proceeding."
 fi
-sudo rm -f "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
-sudo rm -f "$SNAP_DATA/opt/cni/bin/cilium-cni"
-sudo rm -rf $SNAP_DATA/bin/cilium*
-sudo rm -f "$SNAP_DATA/actions/cilium.yaml"
-sudo rm -rf "$SNAP_DATA/actions/cilium"
-sudo rm -rf "$SNAP_DATA/var/run/cilium"
-sudo rm -rf "$SNAP_DATA/sys/fs/bpf"
+rm -f "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
+rm -f "$SNAP_DATA/opt/cni/bin/cilium-cni"
+rm -rf $SNAP_DATA/bin/cilium*
+rm -f "$SNAP_DATA/actions/cilium.yaml"
+rm -rf "$SNAP_DATA/actions/cilium"
+rm -rf "$SNAP_DATA/var/run/cilium"
+rm -rf "$SNAP_DATA/sys/fs/bpf"
 
 if $SNAP/sbin/ip link show "cilium_vxlan"
 then
   echo "Deleting old cilium_vxlan link"
-  sudo $SNAP/sbin/ip link delete "cilium_vxlan"
+  $SNAP/sbin/ip link delete "cilium_vxlan"
 fi
 
 set_service_expected_to_start flanneld
 
 echo "Restarting kubelet"
 refresh_opt_in_config "cni-bin-dir" "\${SNAP}/opt/cni/bin/" kubelet
-sudo snapctl restart ${SNAP_NAME}.daemon-kubelet
+snapctl restart ${SNAP_NAME}.daemon-kubelet
 echo "Restarting containerd"
 if ! grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
-  sudo "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP_DATA}/opt;bin_dir = "${SNAP}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
+  "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP_DATA}/opt;bin_dir = "${SNAP}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
 fi
-sudo snapctl restart ${SNAP_NAME}.daemon-containerd
+snapctl restart ${SNAP_NAME}.daemon-containerd
 
 echo "Restarting flanneld"
-sudo snapctl stop ${SNAP_NAME}.daemon-flanneld
+snapctl stop ${SNAP_NAME}.daemon-flanneld
 
 echo "Cilium is terminating"

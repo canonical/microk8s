@@ -70,7 +70,7 @@ clean_cluster() {
   echo "Cleaning up addons client binaries.."
   if [ -d "$SNAP_DATA/bin/" ]
   then
-    sudo rm -rf "$SNAP_DATA/bin/"
+    rm -rf "$SNAP_DATA/bin/"
   fi
 }
 

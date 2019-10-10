@@ -49,6 +49,9 @@ apps:
   daemon-flanneld:
     command: run-flanneld-with-args
     daemon: simple
+    plugs:
+    - network-bind
+    - network-control
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
@@ -142,11 +145,17 @@ apps:
   ctr:
     command: microk8s-ctr.wrapper
   inspect:
-    command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    command: inspect.sh
   enable:
     command: microk8s-enable.wrapper
+    plugs:
+    - network
+    - network-control
   disable:
     command: microk8s-disable.wrapper
+    plugs:
+    - network
+    - network-control
   start:
     command: microk8s-start.wrapper
     plugs:
@@ -167,23 +176,31 @@ apps:
     - network
   istioctl:
     command: microk8s-istioctl.wrapper
+    plugs:
+    - network
   linkerd:
     command: microk8s-linkerd.wrapper
+    plugs:
+    - network
   helm:
     command: microk8s-helm.wrapper
+    plugs:
+    - network
   cilium:
     command: microk8s-cilium.wrapper
+    plugs:
+    - network
 
 passthrough:
   layout:
-    /usr/libexec:
-      symlink: $SNAP_COMMON/usr/libexec
-    /var/lib/cni:
-      symlink: $SNAP_COMMON/var/lib/cni
+#    /usr/libexec:
+#      symlink: $SNAP_COMMON/usr/libexec
+#    /var/lib/cni:
+#      symlink: $SNAP_COMMON/var/lib/cni
     /var/log/pods:
-      symlink: $SNAP_COMMON/var/log/pods
+      bind: $SNAP_COMMON/var/log/pods
     /var/log/containers:
-      symlink: $SNAP_COMMON/var/log/containers
+      bind: $SNAP_COMMON/var/log/containers
     /var/lib/kubelet:
       bind: $SNAP_DATA/kubelet
     /var/lib/kube-proxy:

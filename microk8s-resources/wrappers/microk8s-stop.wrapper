@@ -37,10 +37,10 @@ while true; do
 done
 
 
-if ! sudo snap stop ${SNAP_NAME} --disable
+if ! snap stop ${SNAP_NAME} --disable
 then
     echo 'Failed to stop microk8s services. Check snapd logs with "journalctl -u snapd.service"'
     exit 1
 else
-    sudo touch ${SNAP_DATA}/var/lock/stopped.lock
+    touch ${SNAP_DATA}/var/lock/stopped.lock
 fi

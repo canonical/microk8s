@@ -139,7 +139,7 @@ fi
 if grep -e "\-\-allow-privileged" ${SNAP_DATA}/args/kubelet
 then
   echo "Patching 1.15 allow-privileged"
-  sudo "${SNAP}/bin/sed" -i '/allow-privileged/d' ${SNAP_DATA}/args/kubelet
+  "${SNAP}/bin/sed" -i '/allow-privileged/d' ${SNAP_DATA}/args/kubelet
   snapctl restart ${SNAP_NAME}.daemon-kubelet
 fi
 
@@ -160,7 +160,7 @@ then
   cp "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}"/install/kubernetes/helm/istio/templates/crds.yaml "$SNAP_DATA/actions/istio/"
   mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo-auth.yaml" "$SNAP_DATA/actions/istio/"
   mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml" "$SNAP_DATA/actions/istio/"
-  sudo rm -rf "$SNAP_DATA/tmp/istio"
+  rm -rf "$SNAP_DATA/tmp/istio"
 fi
 
 need_api_restart=false
@@ -321,6 +321,6 @@ fi
 if [ -L "${SNAP_DATA}/bin/cilium" ]
 then
   echo "Cilium is enabled we need to reconfigure it."
-  sudo rm -rf $SNAP_DATA/bin/cilium*
+  rm -rf $SNAP_DATA/bin/cilium*
   ${SNAP}/microk8s-enable.wrapper cilium
 fi

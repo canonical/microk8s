@@ -13,18 +13,18 @@ then
   HELM_VERSION="v2.14.3"
 
   echo "Fetching helm version $HELM_VERSION."
-  sudo mkdir -p "${SNAP_DATA}/tmp/helm"
+  mkdir -p "${SNAP_DATA}/tmp/helm"
   (cd "${SNAP_DATA}/tmp/helm"
-  sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $SOURCE_URI/helm-$HELM_VERSION-linux-$(arch).tar.gz -o "$SNAP_DATA/tmp/helm/helm.tar.gz"
-  sudo gzip -f -d "$SNAP_DATA/tmp/helm/helm.tar.gz"
-  sudo tar -xf "$SNAP_DATA/tmp/helm/helm.tar")
+  "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $SOURCE_URI/helm-$HELM_VERSION-linux-$(arch).tar.gz -o "$SNAP_DATA/tmp/helm/helm.tar.gz"
+  gzip -f -d "$SNAP_DATA/tmp/helm/helm.tar.gz"
+  tar -xf "$SNAP_DATA/tmp/helm/helm.tar")
 
-  sudo mkdir -p "$SNAP_DATA/bin/"
-  sudo mv "$SNAP_DATA/tmp/helm/linux-$(arch)/helm" "$SNAP_DATA/bin/helm"
-  sudo chmod +x "$SNAP_DATA/bin/"
-  sudo chmod +x "$SNAP_DATA/bin/helm"
+  mkdir -p "$SNAP_DATA/bin/"
+  mv "$SNAP_DATA/tmp/helm/linux-$(arch)/helm" "$SNAP_DATA/bin/helm"
+  chmod +x "$SNAP_DATA/bin/"
+  chmod +x "$SNAP_DATA/bin/helm"
 
-  sudo rm -rf "$SNAP_DATA/tmp/helm"
+  rm -rf "$SNAP_DATA/tmp/helm"
 fi
 
 echo "Helm is enabled"

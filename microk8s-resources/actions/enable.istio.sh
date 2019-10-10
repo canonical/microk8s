@@ -12,22 +12,22 @@ then
   ISTIO_VERSION="v1.2.2"
   echo "Fetching istioctl version $ISTIO_VERSION."
   ISTIO_ERSION=$(echo $ISTIO_VERSION | sed 's/v//g')
-  sudo mkdir -p "${SNAP_DATA}/tmp/istio"
+  mkdir -p "${SNAP_DATA}/tmp/istio"
   (cd "${SNAP_DATA}/tmp/istio"
-  sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux.tar.gz -o "$SNAP_DATA/tmp/istio/istio.tar.gz"
-  sudo gzip -d "$SNAP_DATA/tmp/istio/istio.tar.gz"
-  sudo tar -xvf "$SNAP_DATA/tmp/istio/istio.tar")
-  sudo mkdir -p "$SNAP_DATA/bin/"
-  sudo mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/bin/istioctl" "$SNAP_DATA/bin/"
-  sudo chmod +x "$SNAP_DATA/bin/"
+  "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux.tar.gz -o "$SNAP_DATA/tmp/istio/istio.tar.gz"
+  gzip -d "$SNAP_DATA/tmp/istio/istio.tar.gz"
+  tar -xvf "$SNAP_DATA/tmp/istio/istio.tar")
+  mkdir -p "$SNAP_DATA/bin/"
+  mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/bin/istioctl" "$SNAP_DATA/bin/"
+  chmod +x "$SNAP_DATA/bin/"
 
-  sudo mkdir -p "$SNAP_DATA/actions/istio/"
+  mkdir -p "$SNAP_DATA/actions/istio/"
 
-  sudo cp "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}"/install/kubernetes/helm/istio-init/files/crd*.yaml "$SNAP_DATA/actions/istio/"
-  sudo mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo-auth.yaml" "$SNAP_DATA/actions/istio/"
-  sudo mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml" "$SNAP_DATA/actions/istio/"
+  cp "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}"/install/kubernetes/helm/istio-init/files/crd*.yaml "$SNAP_DATA/actions/istio/"
+  mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo-auth.yaml" "$SNAP_DATA/actions/istio/"
+  mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml" "$SNAP_DATA/actions/istio/"
 
-  sudo rm -rf "$SNAP_DATA/tmp/istio"
+  rm -rf "$SNAP_DATA/tmp/istio"
 fi
 
 # pod/servicegraph will start failing without dns
@@ -44,13 +44,13 @@ done
 if [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]]
 then
   $KUBECTL apply -f "${SNAP_DATA}/actions/istio/istio-demo-auth.yaml"
-  sudo touch "$SNAP_USER_COMMON/istio-auth.lock"
+  touch "$SNAP_USER_COMMON/istio-auth.lock"
 else
   $KUBECTL apply -f "${SNAP_DATA}/actions/istio/istio-demo.yaml"
-  sudo touch "$SNAP_USER_COMMON/istio.lock"
+  touch "$SNAP_USER_COMMON/istio.lock"
 fi
 
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-sudo snapctls restart ${SNAP_NAME}.daemon-apiserver
+snapctls restart ${SNAP_NAME}.daemon-apiserver
 
 echo "Istio is starting"
