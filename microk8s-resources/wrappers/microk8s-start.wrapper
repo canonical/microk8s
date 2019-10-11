@@ -34,7 +34,7 @@ while true; do
     esac
 done
 
-
+echo "Starting all Kubernetes services"
 enable_service apiserver-kicker
 enable_service flanneld
 enable_service etcd
@@ -47,3 +47,5 @@ enable_service kubelet
 enable_service proxy
 
 rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+
+echo "Use 'microk8s.status --wait-ready' to wait for services to initialize"

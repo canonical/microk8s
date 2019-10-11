@@ -37,6 +37,7 @@ while true; do
 done
 
 
+echo "Stopping all services."
 disable_service apiserver-kicker
 disable_service flanneld
 disable_service etcd
