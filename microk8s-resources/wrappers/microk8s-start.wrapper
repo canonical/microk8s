@@ -45,7 +45,6 @@ enable_service controller-manager
 enable_service scheduler
 enable_service kubelet
 enable_service proxy
+echo "Use 'microk8s.status --wait-ready' to wait for services to initialize"
 
 rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
-
-echo "Use 'microk8s.status --wait-ready' to wait for services to initialize"

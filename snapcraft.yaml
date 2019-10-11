@@ -34,11 +34,17 @@ hooks:
     plugs:
     - dot-kube
   install:
-    plugs: []
+    plugs:
+    - network-bind
+    - network-control
+    - firewall-control
   remove:
     plugs:
     - k8s-kubelet
     - mount-observe
+    - network-bind
+    - network-control
+    - firewall-control
 
 apps:
   daemon-etcd:
@@ -53,8 +59,6 @@ apps:
     - network-bind
     - network-control
     - firewall-control
-    - docker-support
-    - docker-privileged
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple

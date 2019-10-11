@@ -23,3 +23,7 @@ sleep 10
 rm -rf ${SNAP_COMMON}/var/lib/containerd/* || true
 rm -rf ${SNAP_COMMON}/run/containerd/* || true
 
+if $SNAP/sbin/ip link show cni0
+then
+  $SNAP/sbin/ip link delete cni0
+fi
