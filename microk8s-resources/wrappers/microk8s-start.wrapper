@@ -35,17 +35,15 @@ while true; do
 done
 
 
-if ! snap start ${SNAP_NAME} --enable
-then
-  echo 'Failed to start microk8s services. Check snapd logs with "journalctl -u snapd.service"'
-  exit 1
-else
-  if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
-  then
-    # Mark the api server as starting
-    rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
-  fi
-fi
+enable_service apiserver-kicker
+enable_service flanneld
+enable_service etcd
+enable_service containerd
+enable_service apiserver
+enable_service cluster-agent
+enable_service controller-manager
+enable_service scheduler
+enable_service kubelet
+enable_service proxy
 
-echo "Enabling pod scheduling"
-uncordon_node
+rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null

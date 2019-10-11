@@ -126,6 +126,20 @@ skip_opt_in_config() {
 }
 
 
+disable_service() {
+    # disable a service
+    # argument $1 is the service name
+    snapctl stop "microk8s.daemon-$1" --disable
+}
+
+
+enable_service() {
+    # enable a service
+    # argument $1 is the service name
+    snapctl start "microk8s.daemon-$1" --enable
+}
+
+
 restart_service() {
     # restart a systemd service
     # argument $1 is the service name

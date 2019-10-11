@@ -37,10 +37,15 @@ while true; do
 done
 
 
-if ! snap stop ${SNAP_NAME} --disable
-then
-    echo 'Failed to stop microk8s services. Check snapd logs with "journalctl -u snapd.service"'
-    exit 1
-else
-    touch ${SNAP_DATA}/var/lock/stopped.lock
-fi
+disable_service apiserver-kicker
+disable_service flanneld
+disable_service etcd
+disable_service containerd
+disable_service apiserver
+disable_service cluster-agent
+disable_service controller-manager
+disable_service scheduler
+disable_service kubelet
+disable_service proxy
+
+touch ${SNAP_DATA}/var/lock/stopped.lock
