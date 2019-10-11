@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-set -eu
+set -eux
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
 
 snapctl stop ${SNAP_NAME}.daemon-kubelet 2>&1 || true
 snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
+snapctl stop ${SNAP_NAME}.daemon-flanneld 2>&1 || true
 
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
 if ! [ -z "$pod_cidr" ]
@@ -22,15 +23,3 @@ sleep 10
 rm -rf ${SNAP_COMMON}/var/lib/containerd/* || true
 rm -rf ${SNAP_COMMON}/run/containerd/* || true
 
-(cat /proc/mounts | grep ${SNAP_COMMON}/var/lib/kubelet/pods | cut -d ' ' -f 2 | xargs umount -l) || true
-# in case this is a pre root-dir fix deployment
-(cat /proc/mounts | grep ${SNAP_COMMON}/pods | cut -d ' ' -f 2 | xargs umount -l) || true
-(cat /proc/mounts | grep ${SNAP_COMMON}/var/lib/containerd | cut -d ' ' -f 2 | xargs umount -l) || true
-(cat /proc/mounts | grep ${SNAP_COMMON}/run/containerd | cut -d ' ' -f 2 | xargs umount) || true
-(cat /proc/mounts | grep ${SNAP_COMMON}/var/lib/docker | cut -d ' ' -f 2 | xargs umount -l) || true
-(cat /proc/mounts | grep ${SNAP_COMMON}/var/run/docker | cut -d ' ' -f 2 | xargs umount) || true
-
-if $SNAP/sbin/ip link show cni0
-then
-  $SNAP/sbin/ip link delete cni0
-fi

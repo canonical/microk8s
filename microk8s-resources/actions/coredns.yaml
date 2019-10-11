@@ -102,7 +102,7 @@ spec:
           name: metrics
           protocol: TCP
         securityContext:
-          allowPrivilegeEscalation: $ALLOWESCALATION
+          allowPrivilegeEscalation: true
           capabilities:
             add:
             - NET_BIND_SERVICE

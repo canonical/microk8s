@@ -88,4 +88,3 @@ do
     $SNAP/sbin/ip link delete ${link}
   fi
 done
-

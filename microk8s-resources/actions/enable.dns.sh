@@ -8,14 +8,7 @@ source $SNAP/actions/common/utils.sh
 # We do not need to see dns pods running at this point just give some slack
 echo "Enabling DNS"
 echo "Applying manifest"
-ALLOWESCALATION="false"
-if grep  -e ubuntu /proc/version | grep 16.04 &> /dev/null
-then
-  ALLOWESCALATION="true"
-fi
-declare -A map
-map[\$ALLOWESCALATION]="$ALLOWESCALATION"
-use_manifest coredns apply "$(declare -p map)"
+use_manifest coredns apply
 sleep 5
 
 echo "Restarting kubelet"

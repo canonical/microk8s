@@ -52,6 +52,9 @@ apps:
     plugs:
     - network-bind
     - network-control
+    - firewall-control
+    - docker-support
+    - docker-privileged
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
@@ -193,10 +196,10 @@ apps:
 
 passthrough:
   layout:
-#    /usr/libexec:
-#      symlink: $SNAP_COMMON/usr/libexec
-#    /var/lib/cni:
-#      symlink: $SNAP_COMMON/var/lib/cni
+    /usr/libexec:
+      symlink: $SNAP_COMMON/usr/libexec
+    /var/lib/cni:
+      bind: $SNAP_COMMON/var/lib/cni
     /var/log/pods:
       bind: $SNAP_COMMON/var/log/pods
     /var/log/containers:
@@ -287,6 +290,7 @@ parts:
     - coreutils
     - hostname
     - diffutils    
+    - vim
     stage:
     - -sbin/xtables-multi
     - -sbin/iptables*

@@ -3,6 +3,7 @@
 set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export KUBE_EDITOR="$SNAP/usr/bin/vim.basic"
 source $SNAP/actions/common/utils.sh
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
