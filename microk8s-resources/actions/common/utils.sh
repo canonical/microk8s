@@ -3,12 +3,12 @@
 exit_if_no_permissions() {
   # test if we can access the default kubeconfig
   if [ ! -r $SNAP_DATA/credentials/client.config ]; then
-    echo "Insufficient permissions to access MicroK8s."
-    echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:"
-    echo ""
-    echo "    sudo usermod -a -G microk8s $USER"
-    echo ""
-    echo "The new group will be available on the user's next login."
+    echo "Insufficient permissions to access MicroK8s." >&2
+    echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:" >&2
+    echo "" >&2
+    echo "    sudo usermod -a -G microk8s $USER" >&2
+    echo "" >&2
+    echo "The new group will be available on the user's next login." >&2
     exit 1
   fi
 }
@@ -17,7 +17,7 @@ exit_if_stopped() {
   # test if the snap is marked as stopped
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
   then
-    echo "microk8s is not running, try microk8s.start"
+    echo "microk8s is not running, try microk8s.start" >&2
     exit 1
   fi
 }
@@ -60,7 +60,7 @@ remove_vxlan_interfaces() {
   do
     if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
     then
-      echo "Deleting old ${link} link"
+      echo "Deleting old ${link} link" >&2
       sudo $SNAP/sbin/ip link delete ${link}
     fi
   done
@@ -84,7 +84,7 @@ refresh_opt_in_config() {
         tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
         fi
     fi
 }
@@ -101,7 +101,7 @@ nodes_addon() {
         tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
         fi
     fi
 }
@@ -120,7 +120,7 @@ skip_opt_in_config() {
         tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
         fi
     fi
 }
@@ -136,7 +136,7 @@ restart_service() {
         tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
         fi
     fi
 }
@@ -269,26 +269,29 @@ get_ips() {
 }
 
 gen_server_cert() (
-    openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-    openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
+    ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 gen_proxy_client_cert() (
-    openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config ${SNAP_DATA}/certs/csr.conf
-    openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
+    ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config ${SNAP_DATA}/certs/csr.conf -subj "/CN=front-proxy-client"
+    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 produce_certs() {
+    export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
     # Generate RSA keys if not yet
     for key in serviceaccount.key ca.key server.key front-proxy-client.key; do
         if ! [ -f ${SNAP_DATA}/certs/$key ]; then
-            openssl genrsa -out ${SNAP_DATA}/certs/$key 2048
+            ${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/$key 2048
         fi
     done
 
     # Generate root CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.

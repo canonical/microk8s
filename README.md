@@ -1,6 +1,6 @@
 # MicroK8s
 
-![](https://img.shields.io/badge/Kubernetes-1.15-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg?branch=master)
+![](https://img.shields.io/badge/Kubernetes-1.16-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg?branch=master)
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">
 
@@ -72,7 +72,7 @@ sudo microk8s.kubectl config view --raw > $HOME/.kube/config
 The *microk8s* user group is created during the snap installation. Users in that group
 are granted access to `microk8s` commands. To add a user to that group:
 ```
-sudo usermod -a -G microk8s <username>"
+sudo usermod -a -G microk8s <username>
 ```
 
 

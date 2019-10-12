@@ -15,7 +15,7 @@ sleep 5
 n=0
 until [ $n -ge 10 ]
 do
-  test -e "$SNAP_DATA/args/flannel-network-mgr-config" && "$SNAP_DATA/args/flanneld" && break
+  test -e "$SNAP_DATA/args/flannel-network-mgr-config" && test -e "$SNAP_DATA/args/flanneld" && break
   echo "Waiting for flannled configuration to appear. (attempt $n)"
   n=$[$n+1]
   sleep 2

@@ -4,6 +4,7 @@ set -eux
 
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
+export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
 
 source $SNAP/actions/common/utils.sh
 
@@ -31,14 +32,14 @@ $SNAP/bin/sed -i 's/AUTHTYPE/password/g' ${SNAP_DATA}/credentials/client.config
 $SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
 
 # Create the known tokens
-proxy_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+proxy_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
 echo "${proxy_token},system:kube-proxy,kube-proxy" > ${SNAP_DATA}/credentials/known_tokens.csv
-kubelet_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+kubelet_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
 hostname=$(hostname)
 echo "${kubelet_token},system:node:${hostname},kubelet-0,\"system:nodes\"" >> ${SNAP_DATA}/credentials/known_tokens.csv
-controller_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+controller_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
 echo "${controller_token},system:kube-controller-manager,controller" >> ${SNAP_DATA}/credentials/known_tokens.csv
-scheduler_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+scheduler_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
 echo "${scheduler_token},system:kube-scheduler,scheduler" >> ${SNAP_DATA}/credentials/known_tokens.csv
 
 
@@ -79,7 +80,7 @@ do
   chmod -R o-rwX ${dir}
 done
 
-for link in "cni0 cilium_vxlan"
+for link in cni0 cilium_vxlan
 do
   if $SNAP/sbin/ip link show ${link}
   then
