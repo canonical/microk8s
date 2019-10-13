@@ -98,6 +98,12 @@ function format_output() {
           addon["$a"]="disabled"
         fi
       done
+      if [ -f "${SNAP_DATA}/bin/helm" ]
+        then
+          addon["helm"]="enabled"
+        else
+          addon["helm"]="disabled"
+      fi
     fi
 
     if ! [ -z ${yaml} ]
