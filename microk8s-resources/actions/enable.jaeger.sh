@@ -14,20 +14,15 @@ if [ ! -z "${ARGUMENTS[@]}" ]
 then
 
   KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config -n ${ARGUMENTS[0]}"
-
   $KUBECTL apply -f "${SNAP}/actions/jaeger/crds"
 
   yaml_path=${SNAP}/actions/jaeger/
-
-  sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/service_account.yaml | $KUBECTL apply -n ${ARGUMENTS[0]} -f -
-  sleep 3
-  sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/role.yaml | $KUBECTL apply -n ${ARGUMENTS[0]} -f -
-  sleep 3
-  sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/role_binding.yaml | $KUBECTL apply -n ${ARGUMENTS[0]} -f -
-  sleep 3
-  sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/operator.yaml | $KUBECTL apply -n ${ARGUMENTS[0]} -f -
-  sleep 3
-  sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/simplest.yaml | $KUBECTL apply -n ${ARGUMENTS[0]} -f -
+  manifests="service_account.yaml role.yaml role_binding.yaml operator.yaml simplest.yaml"
+  for yaml in $manifests
+  do
+    sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/$yaml | $KUBECTL apply -f -
+    sleep 3
+  done
 
 else
 

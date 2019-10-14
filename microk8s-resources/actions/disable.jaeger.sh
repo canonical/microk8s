@@ -11,17 +11,14 @@ if [ ! -z "${ARGUMENTS[@]}" ]
 then
 
   $KUBECTL delete -f "${SNAP}/actions/jaeger/crds"
-
   yaml_path=${SNAP}/actions/jaeger/
-
-  sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/service_account.yaml | $KUBECTL delete -n ${ARGUMENTS[0]} -f -
-  sleep 3
-  sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/role.yaml | $KUBECTL delete -n ${ARGUMENTS[0]} -f -
-  sleep 3
-  sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/role_binding.yaml | $KUBECTL delete -n ${ARGUMENTS[0]} -f -
-  sleep 3
+  manifests="service_account.yaml role.yaml role_binding.yaml operator.yaml"
   KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config -n ${ARGUMENTS[0]}"
-  sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/operator.yaml | $KUBECTL delete -n ${ARGUMENTS[0]} -f -
+  for yaml in $manifests
+  do
+    sed "s/namespace: default/namespace: ${ARGUMENTS[0]}/g" $yaml_path/$yaml | $KUBECTL delete -f -
+    sleep 3
+  done
 
 else
 
