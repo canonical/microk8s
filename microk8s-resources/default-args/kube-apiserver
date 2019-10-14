@@ -18,7 +18,7 @@
 --insecure-port=0
 
 # Enable the aggregation layer
---requestheader-client-ca-file=${SNAP_DATA}/certs/ca.crt
+--requestheader-client-ca-file=${SNAP_DATA}/certs/front-proxy-ca.crt
 --requestheader-allowed-names=front-proxy-client
 --requestheader-extra-headers-prefix=X-Remote-Extra-
 --requestheader-group-headers=X-Remote-Group

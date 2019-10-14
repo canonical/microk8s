@@ -36,7 +36,7 @@ then
   echo "Patching requestheader-client-ca-file argument"
   # Add a new line at the end
   echo "" >> ${SNAP_DATA}/args/kube-apiserver
-  echo "--requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt" >> ${SNAP_DATA}/args/kube-apiserver
+  echo "--requestheader-client-ca-file=\${SNAP_DATA}/certs/front-proxy-ca.crt" >> ${SNAP_DATA}/args/kube-apiserver
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
@@ -58,6 +58,12 @@ fi
 if grep -e  "requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt"  ${SNAP_DATA}/args/kube-apiserver
 then
   "$SNAP/bin/sed" -i 's@requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt@requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
+fi
+
+# Patch for issue: https://github.com/ubuntu/microk8s/issues/721
+if grep -F 'requestheader-client-ca-file=${SNAP_DATA}/certs/ca.crt' ${SNAP_DATA}/args/kube-apiserver
+then
+  "$SNAP/bin/sed" -i 's@requestheader-client-ca-file=${SNAP_DATA}/certs/ca.crt@requestheader-client-ca-file=${SNAP_DATA}/certs/front-proxy-ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
 fi
 
 # Create the locks directory
