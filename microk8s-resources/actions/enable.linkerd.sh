@@ -10,7 +10,7 @@ argz=("${ARGUMENTS[@]/#/--}")
 
 # check if linkerd cli is already in the system.  Download if it doesn't exist.
 if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
-  LINKERD_VERSION="${LINKERD_VERSION:-v2.5.0}"
+  LINKERD_VERSION="${LINKERD_VERSION:-v2.6.0}"
   echo "Fetching Linkerd2 version $LINKERD_VERSION."
   sudo mkdir -p "$SNAP_DATA/bin"
   LINKERD_VERSION=$(echo $LINKERD_VERSION | sed 's/v//g')
@@ -20,14 +20,12 @@ if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
 fi
 
 echo "Enabling Linkerd2"
-# temporary fix while we wait for linkerd to support v1.16
-refresh_opt_in_config "runtime-config" "api/all=true" kube-apiserver
-echo "Restarting the API server."
+
+refresh_opt_in_config "requestheader-allowed-names" "127.0.0.1" kube-apiserver
 sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 sleep 5
-${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 >/dev/null
 
-# pod/servicegraph will start failing without dns
+# enable dns service
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 "$SNAP/microk8s-enable.wrapper" dns
 # Allow some time for the apiserver to start

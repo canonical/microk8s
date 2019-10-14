@@ -11,6 +11,7 @@ from validators import (
     validate_fluentd,
     validate_jaeger,
     validate_cilium,
+    validate_linkerd,
     validate_gpu,
 )
 from utils import wait_for_pod_state
@@ -97,3 +98,9 @@ class TestLiveAddons(object):
         Validates Cilium works.
         """
         validate_cilium()
+
+    def test_linkerd(self):
+        """
+        Validates linkerd works.
+        """
+        validate_linkerd()
