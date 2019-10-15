@@ -32,6 +32,7 @@ addon[fluentd]="daemonset.apps/fluentd-es-v2.2.0"
 addon[jaeger]="pod/jaeger-operator"
 addon[linkerd]="pod/linkerd-controller"
 addon[cilium]="pod/cilium"
+addon[helm]="${SNAP_DATA}/bin/helm"
 
 
 function show_help() {
@@ -91,19 +92,14 @@ function format_output() {
       get_all="$get_all\n$($KUBECTL get clusterroles --show-kind --no-headers 2>&1)"
       for a in "${!addon[@]}"
       do
-        if echo "$get_all" | grep "${addon[$a]}" &> /dev/null
+        if (echo "$get_all" | grep "${addon[$a]}" &> /dev/null) ||
+            [ -f "${addon[$a]}" ]
         then
           addon["$a"]="enabled"
         else
           addon["$a"]="disabled"
         fi
       done
-      if [ -f "${SNAP_DATA}/bin/helm" ]
-        then
-          addon["helm"]="enabled"
-        else
-          addon["helm"]="disabled"
-      fi
     fi
 
     if ! [ -z ${yaml} ]
