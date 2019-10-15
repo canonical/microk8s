@@ -109,10 +109,10 @@ apps:
     plugs:
     - dot-kube
     - firewall-control
-    - network-bind
-    - k8s-kubelet
     - hardware-observe
+    - k8s-kubelet
     - mount-observe
+    - network-bind
     - network-control
     - process-control
     - system-observe
@@ -121,11 +121,12 @@ apps:
     daemon: simple
     plugs:
     - network-bind
+    - network-control
+    - network-observe
     - firewall-control
     - k8s-kubeproxy
     - kernel-module-observe
     - mount-observe
-    - network-observe
     - system-observe
     - kernel-module-control
   kubectl:
