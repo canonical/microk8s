@@ -145,14 +145,43 @@ apps:
     - system-observe
   add-node:
     command: microk8s-add-node.wrapper
+    plugs:
+    - network
+    - network-bind
+    - network-observe
+    - mount-observe
   join:
     command: microk8s-join.wrapper
+    plugs:
+    - network
+    - mount-observe
   remove-node:
     command: microk8s-remove-node.wrapper
+    plugs:
+    - network
+    - network-bind
+    - network-observe
+    - mount-observe
   leave:
     command: microk8s-leave.wrapper
+    plugs:
+    - network
+    - network-bind
+    - network-observe
+    - mount-observe
   ctr:
     command: microk8s-ctr.wrapper
+    plugs:
+    - dot-kube
+    - home
+    - firewall-control
+    - network-bind
+    - k8s-kubelet
+    - hardware-observe
+    - mount-observe
+    - network-control
+    - process-control
+    - system-observe
   enable:
     command: microk8s-enable.wrapper
     plugs:
@@ -442,9 +471,6 @@ parts:
         echo "Preparing knative"
         cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
       fi
-
-      echo "Creating inspect hook"
-      cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
       # Add bash completion for microk8s.kubectl. 
       ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash

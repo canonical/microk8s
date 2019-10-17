@@ -47,4 +47,7 @@ enable_service kubelet
 enable_service proxy
 echo "Use 'microk8s.status --wait-ready' to wait for services to initialize"
 
-rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
+then
+  rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+fi
