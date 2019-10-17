@@ -134,6 +134,7 @@ apps:
     completer: kubectl.bash
     plugs:
     - dot-kube
+    - home
     - firewall-control
     - network-bind
     - k8s-kubelet
@@ -152,8 +153,6 @@ apps:
     command: microk8s-leave.wrapper
   ctr:
     command: microk8s-ctr.wrapper
-  inspect:
-    command: inspect.sh
   enable:
     command: microk8s-enable.wrapper
     plugs:
