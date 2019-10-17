@@ -83,7 +83,7 @@ class TestAddons(object):
         microk8s_disable("dns")
         '''
 
-    def test_gpu(self):
+    def _test_gpu(self):
         """
         Sets up nvidia gpu in a gpu capable system. Skip otherwise.
 
@@ -103,7 +103,7 @@ class TestAddons(object):
         print("Disable gpu")
         microk8s_disable("gpu")
 
-    def test_knative_istio(self):
+    def _test_knative_istio(self):
         """
         Sets up and validate istio.
 
@@ -129,7 +129,7 @@ class TestAddons(object):
         print("Disabling Istio")
         microk8s_disable("istio")
 
-    def test_cilium(self):
+    def _test_cilium(self):
         """
         Sets up and validates Cilium.
         """
@@ -193,7 +193,7 @@ class TestAddons(object):
         else:
             print('Skipping jaeger, prometheus and fluentd tests')
 
-    def test_linkerd(self):
+    def _test_linkerd(self):
         """
         Sets up and validate linkerd
 

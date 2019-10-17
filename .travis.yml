@@ -6,7 +6,7 @@ services: [docker]
 script:
   - docker run --network=host -v $(pwd):$(pwd) -w $(pwd) snapcore/snapcraft:beta sh -c "apt update && snapcraft"
   - sudo apt update
-  - sudo snap install *.snap --classic --dangerous
+  - sudo snap install *.snap --dangerous
   - sudo pip install -U pytest
   - pwd
   - ps -ef

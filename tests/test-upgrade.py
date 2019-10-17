@@ -80,7 +80,7 @@ class TestUpgrade(object):
             test_matrix['ingress'] = validate_ingress
         except:
             print('Will not test ingress')
-
+        '''
         try:
             enable = microk8s_enable("gpu")
             assert "Nothing to do for" not in enable
@@ -88,6 +88,7 @@ class TestUpgrade(object):
             test_matrix['gpu'] = validate_gpu
         except:
             print('Will not test gpu')
+        '''
 
         try:
             enable = microk8s_enable("registry")
@@ -139,7 +140,7 @@ class TestUpgrade(object):
                 test_matrix['jaeger'] = validate_jaeger
             except:
                 print('Will not test the jaeger addon')
-
+            '''
             try:
                 enable = microk8s_enable("cilium", timeout_insec=300)
                 assert "Nothing to do for" not in enable
@@ -147,10 +148,11 @@ class TestUpgrade(object):
                 test_matrix['cilium'] = validate_cilium
             except:
                 print('Will not test the cilium addon')
+            '''
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):
-            cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to)
+            cmd = "sudo snap install {} --dangerous".format(upgrade_to)
         else:
             cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to)
         run_until_success(cmd)
