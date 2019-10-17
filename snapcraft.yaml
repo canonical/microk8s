@@ -214,18 +214,18 @@ apps:
     command: microk8s-istioctl.wrapper
     plugs:
     - network
-  linkerd:
-    command: microk8s-linkerd.wrapper
-    plugs:
-    - network
+#  linkerd:
+#    command: microk8s-linkerd.wrapper
+#    plugs:
+#    - network
   helm:
     command: microk8s-helm.wrapper
     plugs:
     - network
-  cilium:
-    command: microk8s-cilium.wrapper
-    plugs:
-    - network
+#  cilium:
+#    command: microk8s-cilium.wrapper
+#    plugs:
+#    - network
 
 passthrough:
   layout:
@@ -471,6 +471,18 @@ parts:
         echo "Preparing knative"
         cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
       fi
+
+      # Some actions are not available on strict confinement
+      rm "actions/enable.gpu.sh"
+      rm "actions/disable.gpu.sh"
+      rm "actions/gpu.yaml"
+      rm "actions/enable.prometheus.sh"
+      rm "actions/disable.prometheus.sh"
+      rm -rf "actions/prometheus"
+      rm "actions/enable.cilium.sh"
+      rm "actions/disable.cilium.sh"
+      rm "actions/enable.linkerd.sh"
+      rm "actions/disable.linkerd.sh"
 
       # Add bash completion for microk8s.kubectl. 
       ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash

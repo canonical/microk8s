@@ -27,13 +27,13 @@ addon[registry]="pod/registry"
 addon[metrics-server]="pod/metrics-server"
 addon[istio]="pod/istio"
 addon[knative]="pod/knative"
-addon[gpu]="daemonset.apps/nvidia-device-plugin-daemonset"
-addon[prometheus]="pod/prometheus-k8s-0"
+#addon[gpu]="daemonset.apps/nvidia-device-plugin-daemonset"
+#addon[prometheus]="pod/prometheus-k8s-0"
 addon[fluentd]="daemonset.apps/fluentd-es-v2.2.0"
 addon[jaeger]="pod/jaeger-operator"
-addon[linkerd]="pod/linkerd-controller"
-addon[cilium]="pod/cilium"
 addon[helm]="${SNAP_DATA}/bin/helm"
+#addon[linkerd]="pod/linkerd-controller"
+#addon[cilium]="pod/cilium"
 
 
 function show_help() {
