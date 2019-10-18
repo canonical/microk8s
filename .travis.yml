@@ -6,7 +6,12 @@ services: [docker]
 script:
   - docker run --network=host -v $(pwd):$(pwd) -w $(pwd) snapcore/snapcraft:beta sh -c "apt update && snapcraft"
   - sudo apt update
+  - sudo snap install core --edge
+  - sudo snap set core experimental.layouts=true
   - sudo snap install *.snap --dangerous
+  - for i in docker-privileged k8s-kubelet kernel-module-observe network-bind network  k8s-kubeproxy network-observe dot-kube docker-support firewall-control hardware-observe kernel-module-control mount-observe network-control process-control system-observe; do snap connect microk8s:$i; done
+  - sudo snap stop microk8s
+  - sudo snap start microk8s
   - sudo pip install -U pytest
   - pwd
   - ps -ef
