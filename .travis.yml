@@ -9,7 +9,7 @@ script:
   - sudo snap install core --edge
   - sudo snap set core experimental.layouts=true
   - sudo snap install *.snap --dangerous
-  - sudo for i in docker-privileged k8s-kubelet kernel-module-observe network-bind network  k8s-kubeproxy network-observe dot-kube docker-support firewall-control hardware-observe kernel-module-control mount-observe network-control process-control system-observe; do snap connect microk8s:$i; done
+  - for i in docker-privileged k8s-kubelet kernel-module-observe network-bind network  k8s-kubeproxy network-observe dot-kube docker-support firewall-control hardware-observe kernel-module-control mount-observe network-control process-control system-observe; do sudo snap connect microk8s:$i; done
   - sudo snap stop microk8s
   - sudo snap start microk8s
   - sudo pip install -U pytest
