@@ -1,4 +1,6 @@
-dist: bionic
+os: linux
+arch: arm64
+# dist: bionic
 language: bash
 sudo: required
 services: [docker]
