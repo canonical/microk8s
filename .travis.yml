@@ -1,6 +1,4 @@
-os: linux
-arch: arm64
-# dist: bionic
+dist: bionic
 language: bash
 sudo: required
 services: [docker]
@@ -14,6 +12,7 @@ script:
   - for i in docker-privileged k8s-kubelet kernel-module-observe network-bind network  k8s-kubeproxy network-observe dot-kube docker-support firewall-control hardware-observe kernel-module-control mount-observe network-control process-control system-observe; do sudo snap connect microk8s:$i; done
   - sudo snap stop microk8s
   - sudo snap start microk8s
+  - sleep 30; sudo journalctl -u snap.microk8s.daemon-containerd
   - sudo pip install -U pytest
   - pwd
   - ps -ef
