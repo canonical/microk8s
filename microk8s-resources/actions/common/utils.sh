@@ -264,6 +264,11 @@ get_ips() {
     then
         echo "none"
     else
+        if $SNAP/sbin/ifconfig cni0 &> /dev/null
+        then
+          CNI_IP="$($SNAP/sbin/ip -o -4 addr list cni0 | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
+          IP_ADDR=${IP_ADDR/$CNI_IP}
+        fi
         echo "${IP_ADDR}"
     fi
 }
