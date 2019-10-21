@@ -276,22 +276,27 @@ gen_server_cert() (
 
 gen_proxy_client_cert() (
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
-    ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config ${SNAP_DATA}/certs/csr.conf -subj "/CN=front-proxy-client"
-    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
+    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 produce_certs() {
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
     # Generate RSA keys if not yet
-    for key in serviceaccount.key ca.key server.key front-proxy-client.key; do
+    for key in serviceaccount.key ca.key server.key front-proxy-ca.key front-proxy-client.key; do
         if ! [ -f ${SNAP_DATA}/certs/$key ]; then
             ${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/$key 2048
         fi
     done
 
-    # Generate root CA
+    # Generate apiserver CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
         ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+    fi
+
+    # Generate front proxy CA
+    if ! [ -f ${SNAP_DATA}/certs/front-proxy-ca.crt ]; then
+        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -days 10000 -out ${SNAP_DATA}/certs/front-proxy-ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.
@@ -318,7 +323,8 @@ produce_certs() {
         gen_server_cert
         gen_proxy_client_cert
         echo "1"
-    elif [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ]; then
+    elif [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ] ||
+         [ "$(${SNAP}/usr/bin/openssl < ${SNAP_DATA}/certs/front-proxy-client.crt x509 -noout -issuer)" == "issuer=CN = 127.0.0.1" ]; then
         gen_proxy_client_cert
         echo "1"
     else
