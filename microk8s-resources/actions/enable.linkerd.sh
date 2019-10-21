@@ -20,11 +20,6 @@ if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
 fi
 
 echo "Enabling Linkerd2"
-
-refresh_opt_in_config "requestheader-allowed-names" "127.0.0.1" kube-apiserver
-sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
-sleep 5
-
 # enable dns service
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 "$SNAP/microk8s-enable.wrapper" dns
