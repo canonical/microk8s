@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 
+exit_if_no_root() {
+  # exist if we are not root
+  if [ "$($SNAP/usr/bin/whoami)" != "root" ]; then
+    echo "This command requires elevated privileges. Please, try again with sudo."
+    exit 1
+  fi
+}
+
 exit_if_no_permissions() {
   # test if we can access the default kubeconfig
   if [ ! -r $SNAP_DATA/credentials/client.config ]; then
     echo "Insufficient permissions to access MicroK8s." >&2
-    echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:" >&2
+    echo "You can either try again with sudo or add the user $USER to the 'snap_daemon' group:" >&2
     echo "" >&2
-    echo "    sudo usermod -a -G microk8s $USER" >&2
+    echo "    sudo usermod -a -G snap_daemon $USER" >&2
     echo "" >&2
     echo "The new group will be available on the user's next login." >&2
     exit 1

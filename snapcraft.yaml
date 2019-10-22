@@ -228,6 +228,8 @@ apps:
 #    - network
 
 passthrough:
+  system-usernames:
+    snap_daemon: shared
   layout:
     /usr/libexec:
       symlink: $SNAP_COMMON/usr/libexec

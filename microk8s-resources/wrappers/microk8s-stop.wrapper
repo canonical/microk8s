@@ -37,6 +37,7 @@ while true; do
 done
 
 
+exit_if_no_root
 echo "Stopping all services."
 disable_service apiserver-kicker
 disable_service flanneld

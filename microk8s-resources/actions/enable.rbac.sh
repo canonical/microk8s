@@ -4,6 +4,8 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
+exit_if_no_root
+
 echo "Enabling RBAC"
 
 echo "Reconfiguring apiserver"

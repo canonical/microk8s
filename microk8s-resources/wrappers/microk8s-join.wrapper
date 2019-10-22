@@ -8,6 +8,6 @@ export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/
 
 source $SNAP/actions/common/utils.sh
 
-exit_if_no_permissions
+exit_if_no_root
 
 ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py $@

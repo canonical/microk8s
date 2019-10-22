@@ -31,7 +31,7 @@ if echo "$*" | grep -q -- '--help'; then
 fi
 
 exit_if_stopped
-exit_if_no_permissions
+exit_if_no_root
 
 result=1
 for addon in "$@"; do

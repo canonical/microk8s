@@ -4,6 +4,7 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
+exit_if_no_root
 
 echo "Disabling RBAC"
 

@@ -113,10 +113,9 @@ while getopts ':h-:' opt; do
 done
 
 exit_if_stopped
-exit_if_no_permissions
+exit_if_no_root
 
 if ${destroy_storage_enabled} ; then
   destroy_storage
 fi
 clean_cluster
-

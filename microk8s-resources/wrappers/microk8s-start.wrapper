@@ -34,6 +34,7 @@ while true; do
     esac
 done
 
+exit_if_no_root
 echo "Starting all Kubernetes services"
 enable_service apiserver-kicker
 enable_service flanneld
