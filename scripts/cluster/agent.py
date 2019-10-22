@@ -28,7 +28,7 @@ def get_service_name(service):
     Returns the service name from its configuration file name.
 
     :param service: the name of the service configuration file
-    :return: the service name
+    :returns: the service name
     """
     if service in ["kube-proxy", "kube-apiserver", "kube-scheduler", "kube-controller-manager"]:
         return service[len("kube-"), :]
@@ -41,7 +41,7 @@ def update_service_argument(service, key, val):
     Adds an argument to the arguments file of the service.
 
     :param service: the service
-    :param key: the arguments to add
+    :param key: the argument to add
     :param val: the value for the argument
     """
 
@@ -93,9 +93,10 @@ def store_callback_token(node, callback_token):
 def sign_client_cert(cert_request, token):
     """
     Sign a certificate request
+    
     :param cert_request: the request
-    :param token: a token acttin as a request uuid
-    :return: the certificate
+    :param token: a token acting as a request uuid
+    :returns: the certificate
     """
     req_file = "{}/certs/request.{}.csr".format(snapdata_path, token)
     sign_cmd = "openssl x509 -req -in {csr} -CA {SNAP_DATA}/certs/ca.crt -CAkey" \
@@ -112,7 +113,8 @@ def sign_client_cert(cert_request, token):
 
 def add_token_to_certs_request(token):
     """
-    Add a token to the file holding the nodes we expect a certificate request from.
+    Add a token to the file holding the nodes we expect a certificate request from
+    
     :param token: the token
     """
     with open(certs_request_tokens_file, "a+") as fp:
@@ -122,12 +124,13 @@ def add_token_to_certs_request(token):
 def remove_token_from_file(token, file):
     """
     Remove a token from the valid tokens set
+    
     :param token: the token to be removed
     :param file: the file to be removed from
     """
     backup_file = "{}.backup".format(file)
     # That is a critical section. We need to protect it.
-    # We are safe sor now because flask serves one request at a time.
+    # We are safe for now because flask serves one request at a time.
     with open(backup_file, 'w') as back_fp:
         with open(file, 'r') as fp:
             for _, line in enumerate(fp):
@@ -143,7 +146,7 @@ def get_token(name):
     Get token from known_tokens file
 
     :param name: the name of the node
-    :return: the token or None
+    :returns: the token or None(if name doesn't exist)
     """
     file = "{}/credentials/known_tokens.csv".format(snapdata_path)
     with open(file) as fp:
@@ -159,7 +162,7 @@ def add_kubelet_token(hostname):
     Add a token for a node in the known tokens
 
     :param hostname: the name of the node
-    :return: the token added
+    :returns: the token added
     """
     file = "{}/credentials/known_tokens.csv".format(snapdata_path)
     old_token = get_token("system:node:{}".format(hostname))
@@ -179,7 +182,8 @@ def add_kubelet_token(hostname):
 def getCA():
     """
     Return the CA
-    :return: the CA file contents
+    
+    :returns: the CA file contents
     """
     ca_file = "{}/certs/ca.crt".format(snapdata_path)
     with open(ca_file) as fp:
@@ -189,11 +193,11 @@ def getCA():
 
 def get_arg(key, file):
     """
-    Get an argument froman arguments file
+    Get an argument from an arguments file
 
     :param key: the argument we look for
     :param file: the arguments file to search in
-    :return: the value of the argument
+    :returns: the value of the argument or None(if the key doesn't exist)
     """
     filename = "{}/args/{}".format(snapdata_path, file)
     with open(filename) as fp:
@@ -207,11 +211,11 @@ def get_arg(key, file):
 
 def is_valid(token, token_type=cluster_tokens_file):
     """
-    Check token
+    Check whether a token is valid
 
     :param token: token to be checked
     :param token_type: the type of token (bootstrap or signature)
-    :return: True for a valid token, false otherwise
+    :returns: True for a valid token, False otherwise
     """
     with open(token_type) as fp:
         for _, line in enumerate(fp):
@@ -223,8 +227,9 @@ def is_valid(token, token_type=cluster_tokens_file):
 def read_kubelet_args_file(node=None):
     """
     Return the contents of the kubelet arguments file
-    :param node: should we add a host override?
-    :return: the kubelet args file
+    
+    :param node: node to add a host override (defaults to None)
+    :returns: the kubelet args file
     """
     filename = "{}/args/kubelet".format(snapdata_path)
     with open(filename) as fp:
@@ -237,9 +242,10 @@ def read_kubelet_args_file(node=None):
 def get_node_ep(hostname, remote_addr):
     """
     Return the endpoint to be used for the node based by trying to resolve the hostname provided
+    
     :param hostname: the provided hostname
     :param remote_addr: the address the request came from
-    :return: the node's location
+    :returns: the node's location
     """
     try:
         socket.gethostbyname(hostname)
@@ -252,7 +258,7 @@ def get_node_ep(hostname, remote_addr):
 @app.route('/{}/join'.format(CLUSTER_API), methods=['POST'])
 def join_node():
     """
-    Web call to join an node to the cluster
+    Web call to join a node to the cluster
     """
     if request.headers['Content-Type'] == 'application/json':
         token = request.json['token']
@@ -350,22 +356,22 @@ def configure():
             {"myarg2": "myvalue2"},
             {"myarg3": "myvalue3"}
           ],
-          "restart": false
+          "restart": False
         },
         {
           "name": "kube-proxy",
-          "restart": true
+          "restart": True
         }
       ],
       "addon":
       [
         {
           "name": "gpu",
-          "enable": true
+          "enable": True
         },
         {
           "name": "gpu",
-          "disable": true
+          "disable": True
         }
       ]
     }
