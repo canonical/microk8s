@@ -104,13 +104,9 @@ refresh_opt_in_config() {
         run_with_sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
 
-    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    if [ -e "${SNAP_DATA}/credentials/callback-token.txt" ]
     then
-        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
-        if [[ "$tokens" -ge "0" ]]
-        then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
-        fi
+        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
     fi
 }
 
@@ -121,13 +117,9 @@ nodes_addon() {
     local addon="$1"
     local state="$2"
 
-    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    if [ -e "${SNAP_DATA}/credentials/callback-token.txt" ]
     then
-        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
-        if [[ "$tokens" -ge "0" ]]
-        then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
-        fi
+        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
     fi
 }
 
@@ -140,13 +132,9 @@ skip_opt_in_config() {
     local config_file="$SNAP_DATA/args/$2"
     run_with_sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
 
-    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    if [ -e "${SNAP_DATA}/credentials/callback-token.txt" ]
     then
-        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
-        if [[ "$tokens" -ge "0" ]]
-        then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
-        fi
+        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
     fi
 }
 
@@ -156,19 +144,29 @@ restart_service() {
     # argument $1 is the service name
     run_with_sudo systemctl restart "snap.microk8s.daemon-$1.service"
 
-    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    if [ -e "${SNAP_DATA}/credentials/callback-token.txt" ]
     then
-        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
-        if [[ "$tokens" -ge "0" ]]
-        then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
-        fi
+        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
     fi
 }
 
 
 arch() {
     echo $SNAP_ARCH
+}
+
+
+init_cluster() {
+  mkdir -p ${SNAP_DATA}/var/kubernetes/backend
+  IP="127.0.0.1"
+  # TODO: make the port configurable
+  echo "Address: $IP:19001" > ${SNAP_DATA}/var/kubernetes/backend/init.yaml
+  DNS=$($SNAP/bin/hostname)
+  mkdir -p $SNAP_DATA/var/tmp/
+  cp $SNAP/microk8s-resources/certs/csr-dqlite.conf.template $SNAP_DATA/var/tmp/csr-dqlite.conf
+  $SNAP/bin/sed -i 's/HOSTNAME/'"${DNS}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
+  $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
+  ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
 }
 
 
@@ -200,7 +198,12 @@ use_manifest() {
     do
         "$SNAP/bin/sed" -i 's@'$i'@'"${items[$i]}"'@g' "${tmp_manifest}"
     done
-    "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" "$action" -f "${tmp_manifest}"
+    if [ "$action" = "delete" ]
+    then
+        "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" "$action" "--wait=false" -f "${tmp_manifest}"
+    else
+        "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" "$action" -f "${tmp_manifest}"
+    fi
     use_manifest_result="$?"
     rm "${tmp_manifest}"
 }
@@ -441,4 +444,40 @@ get_all_addons() {
     actions="$(find "$SNAP/actions" -maxdepth 1 ! -name 'coredns.yaml' -name '*.yaml' -or -name 'enable.*.sh')"
     actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
     echo $actions
+}
+
+cilium_running() {
+    if ${SNAP}/sbin/ip link show type vxlan | $SNAP/bin/grep -E 'cilium_vxlan' &> /dev/null
+    then
+        echo "installed"
+    else
+        echo "missing"
+    fi
+}
+
+configure_cilium_cni() {
+    cilium_already_available="$(cilium_running)"
+    if [ "${cilium_already_available}" == installed ]
+    then
+        # Check version. Handle updates.
+        echo "Cilium already available"
+        return
+    fi
+
+    start_timer="$(date +%s)"
+    # Wait up to two minutes for the apiserver to come up.
+    # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
+    timeout="120"
+    KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
+    while ! ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null
+    do
+        sleep 15
+        now="$(date +%s)"
+        if [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
+            break
+        fi
+    done
+
+    remove_vxlan_interfaces
+    $KUBECTL apply -f ${SNAP_DATA}/args/cni-network/cilium.yaml
 }

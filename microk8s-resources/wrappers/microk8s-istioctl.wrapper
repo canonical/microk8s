@@ -13,12 +13,6 @@ fi
 
 source $SNAP/actions/common/utils.sh
 
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.istioctl on the master."
-  exit 0
-fi
-
 if echo "$*" | grep -v -q -- '--kubeconfig'; then
   exit_if_no_permissions
 fi

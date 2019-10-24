@@ -12,8 +12,7 @@ from validators import (
     validate_prometheus,
     validate_fluentd,
     validate_jaeger,
-    validate_kubeflow,
-    validate_cilium,
+    validate_kubeflow
 )
 from subprocess import check_call, CalledProcessError, check_output
 from utils import (
@@ -83,34 +82,12 @@ class TestUpgrade(object):
             print('Will not test ingress')
 
         try:
-            enable = microk8s_enable("gpu")
-            assert "Nothing to do for" not in enable
-            validate_gpu()
-            test_matrix['gpu'] = validate_gpu
-        except:
-            print('Will not test gpu')
-
-        try:
             enable = microk8s_enable("registry")
             assert "Nothing to do for" not in enable
             validate_registry()
             test_matrix['registry'] = validate_registry
         except:
             print('Will not test registry')
-
-        try:
-            validate_forward()
-            test_matrix['forward'] = validate_forward
-        except:
-            print('Will not test port forward')
-
-        try:
-            enable = microk8s_enable("metrics-server")
-            assert "Nothing to do for" not in enable
-            validate_metrics_server()
-            test_matrix['metrics_server'] = validate_metrics_server
-        except:
-            print('Will not test the metrics server')
 
         # AMD64 only tests
         if platform.machine() == 'x86_64' and under_time_pressure == 'False':
@@ -137,6 +114,28 @@ class TestUpgrade(object):
             '''
 
             try:
+                validate_forward()
+                test_matrix['forward'] = validate_forward
+            except:
+                print('Will not test port forward')
+
+            try:
+                enable = microk8s_enable("metrics-server")
+                assert "Nothing to do for" not in enable
+                validate_metrics_server()
+                test_matrix['metrics_server'] = validate_metrics_server
+            except:
+                print('Will not test the metrics server')
+
+            try:
+                enable = microk8s_enable("gpu")
+                assert "Nothing to do for" not in enable
+                validate_gpu()
+                test_matrix['gpu'] = validate_gpu
+            except:
+                print('Will not test gpu')
+
+            try:
                 enable = microk8s_enable("fluentd", timeout_insec=30)
                 assert "Nothing to do for" not in enable
                 validate_fluentd()
@@ -151,14 +150,6 @@ class TestUpgrade(object):
                 test_matrix['jaeger'] = validate_jaeger
             except:
                 print('Will not test the jaeger addon')
-
-            try:
-                enable = microk8s_enable("cilium", timeout_insec=300)
-                assert "Nothing to do for" not in enable
-                validate_cilium()
-                test_matrix['cilium'] = validate_cilium
-            except:
-                print('Will not test the cilium addon')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

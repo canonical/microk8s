@@ -4,7 +4,7 @@ set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export SNAP_NAME
 
 source $SNAP/actions/common/utils.sh
@@ -19,16 +19,10 @@ fi
 exit_if_stopped
 exit_if_no_permissions
 
-if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "This MicroK8s deployment is not acting as a node in a cluster."
-  exit 1
-fi
-
 if [ "$#" -ne "0" ]
 then
   echo "This command will remove the node from the cluster. No arguments are needed."
   exit 1
 fi
 
-${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset
+sudo -E  LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset

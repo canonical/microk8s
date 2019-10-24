@@ -34,7 +34,6 @@ lxc exec test-build -- git clone https://github.com/ubuntu/microk8s
 
 We can then set the following environment variables prior to building:
  - KUBE_VERSION: kubernetes release to package. Defaults to latest stable.
- - ETCD_VERSION: version of etcd.
  - CNI_VERSION: version of CNI tools.
  - KUBE_TRACK: kubernetes release series (e.g., 1.10) to package. Defaults to latest stable.
  - ISTIO_VERSION: istio release.
@@ -43,7 +42,6 @@ We can then set the following environment variables prior to building:
  - RUNC_COMMIT: the commit hash from which to build runc
  - CONTAINERD_COMMIT: the commit hash from which to build containerd
  - KUBERNETES_REPOSITORY: build the kubernetes binaries from this repository instead of getting them from upstream
- - KUBERNETES_COMMIT: commit to be used from KUBERNETES_REPOSITORY for building the kubernetes banaries
 
 
 For building we prepend the variables we need as well as `SNAPCRAFT_BUILD_ENVIRONMENT=host` so the current LXC container is used. For example to build the MicroK8s snap for Kubernetes v1.9.6 we:
@@ -60,6 +58,48 @@ lxc file pull test-build/root/microk8s/microk8s_v1.9.6_amd64.snap .
 ```
 snap install microk8s_latest_amd64.snap --classic --dangerous
 ```
+
+## Compiling the Cilium CNI manifest
+
+The cilium CNI manifest can be found at runtime under `$SNAP_DATA/args/cni-network/cilium.yaml` and
+in the source tree along with the rest of the `default-args`. Building the manifest is subject to
+the upstream cilium project k8s installation process. At the time of the v1.7 release the following script was used to place the
+cilium manifest under `$SNAP_DATA/args/cni-network/cilium.yaml`:
+
+```
+#!/bin/bash
+
+set -x
+
+SNAP_DATA="/var/snap/microk8s/current"
+SNAP_COMMON="/var/snap/microk8s/common"
+
+CILIUM_VERSION="v1.7"
+CILIUM_ERSION=$(echo $CILIUM_VERSION | sed 's/v//g')
+SOURCE_URI="https://github.com/cilium/cilium/archive"
+CILIUM_DIR="cilium-$CILIUM_ERSION"
+CILIUM_CNI_CONF="plugins/cilium-cni/05-cilium-cni.conf"
+CILIUM_LABELS="k8s-app=cilium"
+NAMESPACE=kube-system
+
+mkdir -p /tmp/cilium
+cd /tmp/cilium
+curl -L $SOURCE_URI/$CILIUM_VERSION.tar.gz -o "/tmp/cilium/cilium.tar.gz"
+gzip -f -d /tmp/cilium/cilium.tar.gz
+tar -xf /tmp/cilium/cilium.tar "$CILIUM_DIR/install" "$CILIUM_DIR/$CILIUM_CNI_CONF"
+cp /tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
+
+cd "/tmp/cilium/$CILIUM_DIR/install/kubernetes"
+helm template cilium \
+   --namespace $NAMESPACE \
+   --set global.cni.confPath="$SNAP_DATA/args/cni-network" \
+   --set global.cni.binPath="$SNAP_DATA/opt/cni/bin" \
+   --set global.cni.customConf=true \
+   --set global.containerRuntime.integration="containerd" \
+   --set global.daemon.runPath="$SNAP_DATA/var/run/cilium"
+   --set global.containerRuntime.socketPath="$SNAP_COMMON/run/containerd.sock" > $SNAP_DATA/args/cni-network/cilium.yaml
+```
+  
 
 ## References
 

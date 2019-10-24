@@ -1,7 +1,6 @@
 import pytest
 import os
 import platform
-import time
 
 from validators import (
     validate_dns_dashboard,
@@ -18,7 +17,6 @@ from validators import (
     validate_jaeger,
     validate_linkerd,
     validate_rbac,
-    validate_cilium,
     validate_kubeflow,
 )
 from utils import (
@@ -80,6 +78,7 @@ class TestAddons(object):
         microk8s_disable("dns")
         '''
 
+    @pytest.mark.skipif(os.environ.get('UNDER_TIME_PRESSURE') == 'True', reason = "Skipping istio and knative tests as we are under time pressure")
     @pytest.mark.skipif(platform.machine() != 'x86_64', reason = "GPU tests are only relevant in x86 architectures")
     def test_gpu(self):
         """
@@ -117,20 +116,6 @@ class TestAddons(object):
         wait_for_namespace_termination("knative-serving", timeout_insec=600)
         print("Disabling Istio")
         microk8s_disable("istio")
-
-    @pytest.mark.skipif(platform.machine() != 'x86_64', reason = "Cilium tests are only relevant in x86 architectures")
-    @pytest.mark.skipif(os.environ.get('UNDER_TIME_PRESSURE') == 'True', reason = "Skipping cilium tests as we are under time pressure")    
-    def test_cilium(self):
-        """
-        Sets up and validates Cilium.
-        """
-        print("Enabling Cilium")
-        p = Popen("/snap/bin/microk8s.enable cilium".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        p.communicate(input=b'N\n')[0]
-        print("Validating Cilium")
-        validate_cilium()
-        print("Disabling Cilium")
-        microk8s_disable("cilium")
 
     def test_metrics_server(self):
         """

@@ -19,11 +19,6 @@ done
 "$SNAP/microk8s-enable.wrapper" dns
 sleep 5
 
-refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
-
-sleep 5
-
 $KUBECTL apply -f "${SNAP}/actions/fluentd"
 
 echo "Fluentd-Elasticsearch is enabled"

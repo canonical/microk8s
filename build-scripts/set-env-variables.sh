@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+set -eux
 
 export ARCH="${KUBE_ARCH:-`dpkg --print-architecture`}"
 KUBE_ARCH=${ARCH}
@@ -10,8 +10,6 @@ elif [ "$ARCH" = "armhf" ]; then
   KUBE_ARCH="arm"
 fi
 export KUBE_ARCH
-export ETCD_VERSION="${ETCD_VERSION:-v3.4.3}"
-export FLANNELD_VERSION="${FLANNELD_VERSION:-v0.11.0}"
 export CNI_VERSION="${CNI_VERSION:-v0.7.1}"
 export KNATIVE_SERVING_VERSION="${KNATIVE_SERVING_VERSION:-v0.9.0}"
 export KNATIVE_EVENTING_VERSION="${KNATIVE_EVENTING_VERSION:-v0.9.0}"
@@ -21,8 +19,7 @@ export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-bb71b10fd8f58240ca47fbb579b9d1028
 # Release v1.0.0~rc6 with CVE-2019-5736 fix
 export RUNC_COMMIT="${RUNC_COMMIT:-2b18fe1d885ee5083ef9f0838fee39b62d653e30}"
 # Set this to the kubernetes fork you want to build binaries from
-export KUBERNETES_REPOSITORY="${KUBERNETES_REPOSITORY:-}"
-export KUBERNETES_COMMIT="${KUBERNETES_COMMIT:-}"
+export KUBERNETES_REPOSITORY="${KUBERNETES_REPOSITORY:-github.com/kubernetes/kubernetes}"
 
 export KUBE_TRACK="${KUBE_TRACK:-}"
 
@@ -44,12 +41,12 @@ else
   fi
 fi
 
+export KUBERNETES_TAG="${KUBE_VERSION}"
+
 export KUBE_SNAP_ROOT="$(readlink -f .)"
 
 echo "Building with:"
 echo "KUBE_VERSION=${KUBE_VERSION}"
-echo "ETCD_VERSION=${ETCD_VERSION}"
-echo "FLANNELD_VERSION=${FLANNELD_VERSION}"
 echo "CNI_VERSION=${CNI_VERSION}"
 echo "KUBE_ARCH=${KUBE_ARCH}"
 echo "KUBE_SNAP_BINS=${KUBE_SNAP_BINS}"
@@ -58,4 +55,4 @@ echo "KNATIVE_EVENTING_VERSION=${KNATIVE_EVENTING_VERSION}"
 echo "RUNC_COMMIT=${RUNC_COMMIT}"
 echo "CONTAINERD_COMMIT=${CONTAINERD_COMMIT}"
 echo "KUBERNETES_REPOSITORY=${KUBERNETES_REPOSITORY}"
-echo "KUBERNETES_COMMIT=${KUBERNETES_COMMIT}"
+echo "KUBERNETES_TAG=${KUBERNETES_TAG}"
