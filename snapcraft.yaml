@@ -89,6 +89,61 @@ apps:
     command: microk8s-juju.wrapper
 
 parts:
+  libco:
+    source: https://github.com/canonical/libco
+    source-type: git
+    plugin: make
+    organize:
+      usr/lib/: lib/
+    prime:
+      - lib/libco*so*
+  raft:
+    source: https://github.com/canonical/raft
+    source-type: git
+    plugin: autotools
+    organize:
+      usr/lib/: lib/
+    prime:
+      - lib/libraft*so*
+  sqlite:
+    source: https://github.com/canonical/sqlite
+    source-type: git
+    plugin: autotools
+    configflags:
+      - --enable-replication
+    build-packages:
+      - tclsh
+    override-build: |-
+      set -ex
+
+      git log -1 --format=format:%ci%n | sed -e 's/ [-+].*$//;s/ /T/;s/^/D /' > manifest
+      git log -1 --format=format:%H > manifest.uuid
+      cp /usr/share/misc/config.guess .
+      cp /usr/share/misc/config.sub .
+      autoreconf -f -i
+
+      set +ex
+      snapcraftctl build
+    prime:
+      - bin/sqlite3
+      - lib/libsqlite3*so*
+  dqlite:
+    after:
+      - libco
+      - raft
+      - sqlite
+    source: https://github.com/canonical/dqlite
+    source-type: git
+    plugin: autotools
+    stage-packages:
+      - libuv1
+    build-packages:
+      - libuv1-dev
+    organize:
+      usr/lib/: lib/
+    prime:
+      - lib/libdqlite*so*
+      - lib/*/libuv*
   libnftnl:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
