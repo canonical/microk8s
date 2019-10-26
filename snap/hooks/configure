@@ -147,7 +147,8 @@ then
     "$SNAP/bin/sed" -i 's@plugins.cri.registry.mirrors."local.insecure-registry.io"@plugins.cri.registry.mirrors."localhost:32000"@g' ${SNAP_DATA}/args/containerd-template.toml
     snapctl restart ${SNAP_NAME}.daemon-containerd
     sleep 10
-    "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" "delete pod --all --all-namespaces"
+    KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
+    $KUBECTL delete pod --all --all-namespaces
 fi
 
 # With v1.15 allow-privileged is removed from kubelet
