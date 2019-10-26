@@ -141,6 +141,15 @@ then
     snapctl restart ${SNAP_NAME}.daemon-kubelet
 fi
 
+# modify the containerd localhost:32000 mirror registry
+if [ -e ${SNAP_DATA}/args/containerd-template.toml ] && grep -e "plugins.cri.registry.mirrors.\"local.insecure-registry.io\"" ${SNAP_DATA}/args/containerd-template.toml
+then
+    "$SNAP/bin/sed" -i 's@plugins.cri.registry.mirrors."local.insecure-registry.io"@plugins.cri.registry.mirrors."localhost:32000"@g' ${SNAP_DATA}/args/containerd-template.toml
+    snapctl restart ${SNAP_NAME}.daemon-containerd
+    sleep 10
+    "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" "delete pod --all --all-namespaces"
+fi
+
 # With v1.15 allow-privileged is removed from kubelet
 if grep -e "\-\-allow-privileged" ${SNAP_DATA}/args/kubelet
 then
