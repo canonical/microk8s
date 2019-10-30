@@ -330,3 +330,18 @@ then
   sudo rm -rf $SNAP_DATA/bin/cilium*
   ${SNAP}/microk8s-enable.wrapper cilium
 fi
+
+# modify the containerd localhost:32000 mirror registry
+if [ -e ${SNAP_DATA}/args/containerd-template.toml ] && grep -e "plugins.cri.registry.mirrors.\"local.insecure-registry.io\"" ${SNAP_DATA}/args/containerd-template.toml
+then
+    "$SNAP/bin/sed" -i 's@plugins.cri.registry.mirrors."local.insecure-registry.io"@plugins.cri.registry.mirrors."localhost:32000"@g' ${SNAP_DATA}/args/containerd-template.toml
+    snapctl restart ${SNAP_NAME}.daemon-containerd
+fi
+
+# This patches flanneld conf template by adding cniversion if it doesnt exist.
+if [ -e ${SNAP_DATA}/args/flannel-template.conflist ] && ! grep -e "cniVersion" ${SNAP_DATA}/args/flannel-template.conflist
+then
+    "$SNAP/bin/sed" -i 's@"name": "microk8s-flannel-network",@"name": "microk8s-flannel-network",\n    "cniVersion": "0.3.1",@g' ${SNAP_DATA}/args/flannel-template.conflist
+    snapctl restart ${SNAP_NAME}.daemon-flanneld
+    snapctl restart ${SNAP_NAME}.daemon-containerd
+fi
