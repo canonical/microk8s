@@ -192,6 +192,7 @@ parts:
     - file
     - dpkg
     stage-packages:
+    - libatm1
     - net-tools
     - util-linux
     - zfsutils-linux
