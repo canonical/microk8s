@@ -160,6 +160,7 @@ parts:
     - sed
     - socat
     - grep
+    - jq
     - libssl1.0.0
     - coreutils
     - hostname
