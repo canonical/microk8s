@@ -106,9 +106,9 @@ function suggest_fixes {
   printf '\n'
   if ! systemctl status snap.microk8s.daemon-apiserver &> /dev/null
   then
-    if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
+    if lsof -Pi :16443 -sTCP:LISTEN -t &> /dev/null
     then
-      printf -- '\033[0;33m WARNING: \033[0m Port 8080 seems to be in use by another application.\n'
+      printf -- '\033[0;33m WARNING: \033[0m Port 16443 seems to be in use by another application.\n'
     fi
   fi
 
@@ -122,10 +122,10 @@ function suggest_fixes {
   if /snap/core/current/usr/bin/which ufw &> /dev/null
   then
     ufw=$(ufw status)
-    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
+    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cni0 &> /dev/null
     then
       printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-      printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+      printf -- 'with: sudo ufw allow in on cni0 && sudo ufw allow out on cni0\n'
     fi
   fi
 
