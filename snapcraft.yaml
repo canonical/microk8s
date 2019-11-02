@@ -107,7 +107,7 @@ parts:
     - "--enable-static"
     prime: [ -bin/iptables-xml ]
   containerd:
-    build-snaps: [go]
+    build-snaps: [go/1.12/stable]
     after: [iptables]
     source: https://github.com/containerd/containerd
     source-type: git
