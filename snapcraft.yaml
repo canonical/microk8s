@@ -106,9 +106,8 @@ parts:
     - "--disable-shared"
     - "--enable-static"
     prime: [ -bin/iptables-xml ]
-  go:
-    source-tag: go1.12.7
   containerd:
+    build-snaps: [go]
     after: [go, iptables]
     source: https://github.com/containerd/containerd
     source-type: git
