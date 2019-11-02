@@ -108,7 +108,7 @@ parts:
     prime: [ -bin/iptables-xml ]
   containerd:
     build-snaps: [go]
-    after: [go, iptables]
+    after: [iptables]
     source: https://github.com/containerd/containerd
     source-type: git
     plugin: go
