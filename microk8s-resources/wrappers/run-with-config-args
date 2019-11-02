@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
@@ -22,6 +22,10 @@ fi
 if [ "${app}" = "kubelet" ]
 then
   pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
+  if [ -z "$pod_cidr" ]
+  then
+    pod_cidr="$(jq .Network $SNAP_DATA/args/flannel-network-mgr-config | tr -d '\"')"
+  fi
   if ! [ -z "$pod_cidr" ]
   then
     if ! iptables -C FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT
