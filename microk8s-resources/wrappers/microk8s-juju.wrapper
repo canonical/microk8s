@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
+export GOCOOKIES=/var/lib/landscape/juju-homes/1/.go-cookies
+export JUJU_DATA="$SNAP_DATA/juju/share/juju"
+export JUJU_HOME="$SNAP_DATA/juju-home"
+
+if [ ! -f "${SNAP_DATA}/bin/juju" ]; then
+  echo "Juju not available, try enabling it with 'microk8s.enable juju'" >&2
+  exit 1
+fi
+
+source $SNAP/actions/common/utils.sh
+
+ARCH=$(arch)
+if ! [ "${ARCH}" = "amd64" ]
+then
+  echo "Juju is not available for ${ARCH}"
+  exit 2
+else
+  exit_if_stopped
+  sudo -E "${SNAP_DATA}/bin/juju" "$@"
+fi

@@ -385,3 +385,14 @@ def validate_cilium():
     output = cilium('endpoint list -o json')
     assert "nginx" in output
     kubectl("delete -f {}".format(manifest))
+
+
+def validate_kubeflow():
+    """
+    Validate kubeflow
+    """
+    if platform.machine() != 'x86_64':
+        print("Kubeflow tests are only relevant in x86 architectures")
+        return
+
+    wait_for_pod_state("ambassador-operator-0", "kubeflow", "running")
