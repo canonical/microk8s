@@ -19,6 +19,7 @@ from validators import (
     validate_linkerd,
     validate_rbac,
     validate_cilium,
+    validate_kubeflow,
 )
 from utils import (
     microk8s_enable,
@@ -224,3 +225,23 @@ class TestAddons(object):
         validate_rbac()
         print("Disabling RBAC")
         microk8s_disable("rbac")
+
+    def test_kubeflow_addon(self):
+        """
+        Test kubeflow.
+
+        """
+        if platform.machine() != 'x86_64':
+            print("Kubeflow tests are only relevant in x86 architectures")
+            return
+
+        if under_time_pressure != 'False':
+            print("Skipping kubeflow test as we are under time pressure")
+            return
+
+        print("Enabling Kubeflow")
+        microk8s_enable("kubeflow")
+        print("Validating Kubeflow")
+        validate_kubeflow()
+        print("Disabling kubeflow")
+        microk8s_disable("kubeflow")

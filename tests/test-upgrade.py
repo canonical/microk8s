@@ -12,6 +12,7 @@ from validators import (
     validate_prometheus,
     validate_fluentd,
     validate_jaeger,
+    validate_kubeflow,
     validate_cilium,
 )
 from subprocess import check_call, CalledProcessError, check_output
@@ -123,6 +124,14 @@ class TestUpgrade(object):
             except:
                 print('Will not test the prometheus')
             '''
+
+            try:
+                enable = microk8s_enable("kubeflow", timeout_insec=30)
+                assert "Nothing to do for" not in enable
+                validate_kubeflow()
+                test_matrix['kubeflow'] = validate_kubeflow
+            except:
+                print('Will not test kubeflow')
 
             try:
                 enable = microk8s_enable("fluentd", timeout_insec=30)

@@ -13,6 +13,7 @@ from validators import (
     validate_cilium,
     validate_linkerd,
     validate_gpu,
+    validate_kubeflow,
 )
 from utils import wait_for_pod_state
 
@@ -104,3 +105,9 @@ class TestLiveAddons(object):
         Validates linkerd works.
         """
         validate_linkerd()
+
+    def test_kubeflow(self):
+        """
+        Validates kubeflow.
+        """
+        validate_kubeflow()
