@@ -7,4 +7,4 @@ ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 
 declare -a args="($(cat $SNAP_DATA/args/ctr))"
-sudo -E "${SNAP}/bin/ctr" "${args[@]}" "$@"
+run_with_sudo -E "${SNAP}/bin/ctr" "${args[@]}" "$@"
