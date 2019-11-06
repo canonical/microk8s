@@ -67,12 +67,14 @@ remove_vxlan_interfaces() {
 }
 
 run_with_sudo() {
+  # As we call the sudo binary of the host we have to make sure we do not change the LD_LIBRARY_PATH used
   GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
   local LD_LIBRARY_PATH=""
   sudo LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
 }
 
 run_with_sudo_preserve_env() {
+  # As we call the sudo binary of the host we have to make sure we do not change the LD_LIBRARY_PATH used
   GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
   local LD_LIBRARY_PATH=""
   sudo -E LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
