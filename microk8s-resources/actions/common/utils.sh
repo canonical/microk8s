@@ -67,7 +67,7 @@ remove_vxlan_interfaces() {
 }
 
 run_with_sudo() {
-  $GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+  GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
   local LD_LIBRARY_PATH=""
   sudo LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
 }
