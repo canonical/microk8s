@@ -68,16 +68,21 @@ remove_vxlan_interfaces() {
 
 run_with_sudo() {
   # As we call the sudo binary of the host we have to make sure we do not change the LD_LIBRARY_PATH used
-  GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
-  local LD_LIBRARY_PATH=""
-  sudo LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
-}
+  local ENV_ARG=""
+  if [ "$1" == "preserve_env" ]
+  then
+    ENV_ARG=" -E "
+    shift
+  fi
 
-run_with_sudo_preserve_env() {
-  # As we call the sudo binary of the host we have to make sure we do not change the LD_LIBRARY_PATH used
-  GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
-  local LD_LIBRARY_PATH=""
-  sudo -E LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+  if [ -z "$LD_LIBRARY_PATH" ]
+  then
+    GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+    local LD_LIBRARY_PATH=""
+    sudo "$ENV_ARG" LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+  else
+    sudo "$ENV_ARG" "$@"
+  fi
 }
 
 refresh_opt_in_config() {
@@ -98,7 +103,7 @@ refresh_opt_in_config() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            run_with_sudo_preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
         fi
     fi
 }
@@ -115,7 +120,7 @@ nodes_addon() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            run_with_sudo_preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
         fi
     fi
 }
@@ -134,7 +139,7 @@ skip_opt_in_config() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            run_with_sudo_preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
         fi
     fi
 }
@@ -150,7 +155,7 @@ restart_service() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            run_with_sudo_preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
         fi
     fi
 }
