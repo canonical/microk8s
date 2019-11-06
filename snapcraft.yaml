@@ -388,3 +388,11 @@ parts:
         echo "Skipped"
       fi
 
+slots:
+  juju-info:
+    interface: content
+    content: juju
+    name: microk8s
+    source:
+      read: [$SNAP/.juju-info/juju]
+
