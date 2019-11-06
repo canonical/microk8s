@@ -61,7 +61,7 @@ remove_vxlan_interfaces() {
     if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
     then
       echo "Deleting old ${link} link" >&2
-      sudo $SNAP/sbin/ip link delete ${link}
+      run_with_sudo $SNAP/sbin/ip link delete ${link}
     fi
   done
 }
@@ -90,7 +90,7 @@ refresh_opt_in_config() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+            run_with_sudo "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
         fi
     fi
 }
@@ -107,7 +107,7 @@ nodes_addon() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+            run_with_sudo "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
         fi
     fi
 }
@@ -126,7 +126,7 @@ skip_opt_in_config() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+            run_with_sudo "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
         fi
     fi
 }
@@ -142,7 +142,7 @@ restart_service() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+            run_with_sudo "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
         fi
     fi
 }
@@ -219,7 +219,7 @@ wait_for_service() {
     # Return fail if the service did not start in 30 seconds
     local service_name="$1"
     local TRY_ATTEMPT=0
-    while ! (sudo systemctl is-active --quiet snap.${SNAP_NAME}.daemon-${service_name}) &&
+    while ! (run_with_sudo systemctl is-active --quiet snap.${SNAP_NAME}.daemon-${service_name}) &&
           ! [ ${TRY_ATTEMPT} -eq 30 ]
     do
         TRY_ATTEMPT=$((TRY_ATTEMPT+1))
