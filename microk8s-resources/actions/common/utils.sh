@@ -68,7 +68,7 @@ remove_vxlan_interfaces() {
 
 run_with_sudo() {
   # As we call the sudo binary of the host we have to make sure we do not change the LD_LIBRARY_PATH used
-  if [ -z "$LD_LIBRARY_PATH" ]
+  if [ -n "${LD_LIBRARY_PATH-}" ]
   then
     GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
     local LD_LIBRARY_PATH=""
