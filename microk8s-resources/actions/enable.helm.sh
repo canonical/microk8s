@@ -13,18 +13,18 @@ then
   HELM_VERSION="v2.15.1"
 
   echo "Fetching helm version $HELM_VERSION."
-  sudo mkdir -p "${SNAP_DATA}/tmp/helm"
+  run_with_sudo mkdir -p "${SNAP_DATA}/tmp/helm"
   (cd "${SNAP_DATA}/tmp/helm"
-  sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $SOURCE_URI/helm-$HELM_VERSION-linux-$(arch).tar.gz -o "$SNAP_DATA/tmp/helm/helm.tar.gz"
-  sudo gzip -f -d "$SNAP_DATA/tmp/helm/helm.tar.gz"
-  sudo tar -xf "$SNAP_DATA/tmp/helm/helm.tar")
+  run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $SOURCE_URI/helm-$HELM_VERSION-linux-$(arch).tar.gz -o "$SNAP_DATA/tmp/helm/helm.tar.gz"
+  run_with_sudo gzip -f -d "$SNAP_DATA/tmp/helm/helm.tar.gz"
+  run_with_sudo tar -xf "$SNAP_DATA/tmp/helm/helm.tar")
 
-  sudo mkdir -p "$SNAP_DATA/bin/"
-  sudo mv "$SNAP_DATA/tmp/helm/linux-$(arch)/helm" "$SNAP_DATA/bin/helm"
-  sudo chmod +x "$SNAP_DATA/bin/"
-  sudo chmod +x "$SNAP_DATA/bin/helm"
+  run_with_sudo mkdir -p "$SNAP_DATA/bin/"
+  run_with_sudo mv "$SNAP_DATA/tmp/helm/linux-$(arch)/helm" "$SNAP_DATA/bin/helm"
+  run_with_sudo chmod +x "$SNAP_DATA/bin/"
+  run_with_sudo chmod +x "$SNAP_DATA/bin/helm"
 
-  sudo rm -rf "$SNAP_DATA/tmp/helm"
+  run_with_sudo rm -rf "$SNAP_DATA/tmp/helm"
 fi
 
 echo "Helm is enabled"
