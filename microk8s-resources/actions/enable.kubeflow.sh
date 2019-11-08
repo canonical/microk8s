@@ -79,7 +79,7 @@ def main():
         sys.exit(1)
 
     print("Deploying Kubeflow...")
-    juju("bootstrap", "microk8s", "uk8s")
+    juju("bootstrap", "microk8s", "uk8s", "--config", "juju-no-proxy=10.0.0.1")
     juju("add-model", "kubeflow", "microk8s")
 
     with tempfile.NamedTemporaryFile("w+") as f:
