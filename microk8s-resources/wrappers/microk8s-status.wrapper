@@ -34,6 +34,8 @@ addon[jaeger]="pod/jaeger-operator"
 addon[linkerd]="pod/linkerd-controller"
 addon[cilium]="pod/cilium"
 addon[helm]="${SNAP_DATA}/bin/helm"
+addon[juju]="${SNAP_DATA}/bin/juju"
+addon[kubeflow]="pod/ambassador-operator-0 "
 
 
 function show_help() {
