@@ -115,7 +115,7 @@ class TestUpgrade(object):
         # AMD64 only tests
         if platform.machine() == 'x86_64' and under_time_pressure == 'False':
             '''
-            Prometheus operator on our lxc is chashlooping disabling the test for now.
+            # Prometheus operator on our lxc is chashlooping disabling the test for now.
             try:
                 enable = microk8s_enable("prometheus", timeout_insec=30)
                 assert "Nothing to do for" not in enable
@@ -123,8 +123,10 @@ class TestUpgrade(object):
                 test_matrix['prometheus'] = validate_prometheus
             except:
                 print('Will not test the prometheus')
-            '''
 
+            # The kubeflow deployment is huge. It will not fit comfortably
+            # with the rest of the addons on the same machine during an upgrade
+            # we will need to find another way to test it. 
             try:
                 enable = microk8s_enable("kubeflow", timeout_insec=30)
                 assert "Nothing to do for" not in enable
@@ -132,6 +134,7 @@ class TestUpgrade(object):
                 test_matrix['kubeflow'] = validate_kubeflow
             except:
                 print('Will not test kubeflow')
+            '''
 
             try:
                 enable = microk8s_enable("fluentd", timeout_insec=30)
