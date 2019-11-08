@@ -61,9 +61,33 @@ remove_vxlan_interfaces() {
     if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
     then
       echo "Deleting old ${link} link" >&2
-      sudo $SNAP/sbin/ip link delete ${link}
+      run_with_sudo $SNAP/sbin/ip link delete ${link}
     fi
   done
+}
+
+run_with_sudo() {
+  # As we call the sudo binary of the host we have to make sure we do not change the LD_LIBRARY_PATH used
+  if [ -n "${LD_LIBRARY_PATH-}" ]
+  then
+    GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+    local LD_LIBRARY_PATH=""
+    if [ "$1" == "preserve_env" ]
+    then
+      shift
+      sudo -E LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+    else
+      sudo LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+    fi
+  else
+    if [ "$1" == "preserve_env" ]
+    then
+      shift
+      sudo -E "$@"
+    else
+      sudo "$@"
+    fi
+  fi
 }
 
 refresh_opt_in_config() {
@@ -74,17 +98,17 @@ refresh_opt_in_config() {
     local config_file="$SNAP_DATA/args/$3"
     local replace_line="$opt=$value"
     if $(grep -qE "^$opt=" $config_file); then
-        sudo "$SNAP/bin/sed" -i "s;^$opt=.*;$replace_line;" $config_file
+        run_with_sudo "$SNAP/bin/sed" -i "s;^$opt=.*;$replace_line;" $config_file
     else
-        sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
+        run_with_sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
-        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
         fi
     fi
 }
@@ -98,10 +122,10 @@ nodes_addon() {
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
-        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
         fi
     fi
 }
@@ -113,14 +137,14 @@ skip_opt_in_config() {
     # argument $2 is the configuration file under $SNAP_DATA/args
     local opt="--$1"
     local config_file="$SNAP_DATA/args/$2"
-    sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
+    run_with_sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
-        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
         fi
     fi
 }
@@ -129,14 +153,14 @@ skip_opt_in_config() {
 restart_service() {
     # restart a systemd service
     # argument $1 is the service name
-    sudo systemctl restart "snap.microk8s.daemon-$1.service"
+    run_with_sudo systemctl restart "snap.microk8s.daemon-$1.service"
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
-        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
         fi
     fi
 }
@@ -213,7 +237,7 @@ wait_for_service() {
     # Return fail if the service did not start in 30 seconds
     local service_name="$1"
     local TRY_ATTEMPT=0
-    while ! (sudo systemctl is-active --quiet snap.${SNAP_NAME}.daemon-${service_name}) &&
+    while ! (run_with_sudo systemctl is-active --quiet snap.${SNAP_NAME}.daemon-${service_name}) &&
           ! [ ${TRY_ATTEMPT} -eq 30 ]
     do
         TRY_ATTEMPT=$((TRY_ATTEMPT+1))
