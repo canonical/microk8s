@@ -126,8 +126,8 @@ def update_flannel(etcd, master_ip, master_port, token):
     get_etcd_client_cert(master_ip, master_port, token)
     etcd = etcd.replace("0.0.0.0", master_ip)
     set_arg("--etcd-endpoints", etcd, "flanneld")
-    set_arg("--etcd-cafile", ca_cert_file, "flanneld")
-    set_arg("--etcd-certfile", server_cert_file, "flanneld")
+    set_arg("--etcd-cafile", "${SNAP_DATA}/certs/ca.remote.crt", "flanneld")
+    set_arg("--etcd-certfile", "${SNAP_DATA}/certs/server.remote.crt", "flanneld")
     set_arg("--etcd-keyfile", "${SNAP_DATA}/certs/server.key", "flanneld")
 
     subprocess.check_call("systemctl restart snap.microk8s.daemon-flanneld.service".split())
