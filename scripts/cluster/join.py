@@ -19,10 +19,11 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
+ca_cert_file_via_env = "${SNAP_DATA}/certs/ca.remote.crt"
 ca_cert_file = "{}/certs/ca.remote.crt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
-callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
+server_cert_file_via_env = "${SNAP_DATA}/certs/server.remote.crt"
 server_cert_file = "{}/certs/server.remote.crt".format(snapdata_path)
 
 
@@ -126,8 +127,8 @@ def update_flannel(etcd, master_ip, master_port, token):
     get_etcd_client_cert(master_ip, master_port, token)
     etcd = etcd.replace("0.0.0.0", master_ip)
     set_arg("--etcd-endpoints", etcd, "flanneld")
-    set_arg("--etcd-cafile", ca_cert_file, "flanneld")
-    set_arg("--etcd-certfile", server_cert_file, "flanneld")
+    set_arg("--etcd-cafile", ca_cert_file_via_env, "flanneld")
+    set_arg("--etcd-certfile", server_cert_file_via_env, "flanneld")
     set_arg("--etcd-keyfile", "${SNAP_DATA}/certs/server.key", "flanneld")
 
     subprocess.check_call("systemctl restart snap.microk8s.daemon-flanneld.service".split())
