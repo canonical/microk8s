@@ -22,5 +22,5 @@ then
   exit 2
 else
   exit_if_stopped
-  sudo -E "${SNAP_DATA}/bin/juju" "$@"
+  "${SNAP_DATA}/bin/juju" "$@"
 fi

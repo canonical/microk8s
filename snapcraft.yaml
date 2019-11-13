@@ -167,6 +167,7 @@ parts:
     - coreutils
     - hostname
     - diffutils
+    - squashfs-tools
     - tar
     stage:
     - -sbin/xtables-multi
