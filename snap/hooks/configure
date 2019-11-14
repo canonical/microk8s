@@ -330,3 +330,18 @@ then
   rm -rf $SNAP_DATA/bin/cilium*
   ${SNAP}/microk8s-enable.wrapper cilium
 fi
+
+if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  if grep -e "\-\-etcd-cafile /var/snap/microk8s/.*/ca.remote.crt" ${SNAP_DATA}/args/flanneld
+  then
+    skip_opt_in_config etcd-cafile flanneld
+    refresh_opt_in_config etcd-cafile \${SNAP_DATA}/certs/ca.remote.crt flanneld
+  fi
+
+  if grep -e "\-\-etcd-certfile /var/snap/microk8s/.*/server.remote.crt" ${SNAP_DATA}/args/flanneld
+  then
+    skip_opt_in_config etcd-certfile flanneld
+    refresh_opt_in_config etcd-certfile \${SNAP_DATA}/certs/server.remote.crt flanneld
+  fi
+fi
