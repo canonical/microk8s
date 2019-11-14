@@ -338,10 +338,37 @@ then
     snapctl restart ${SNAP_NAME}.daemon-containerd
 fi
 
+if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  if grep -e "\-\-etcd-cafile /var/snap/microk8s/.*/ca.remote.crt" ${SNAP_DATA}/args/flanneld
+  then
+    skip_opt_in_config etcd-cafile flanneld
+    refresh_opt_in_config etcd-cafile \${SNAP_DATA}/certs/ca.remote.crt flanneld
+  fi
+
+  if grep -e "\-\-etcd-certfile /var/snap/microk8s/.*/server.remote.crt" ${SNAP_DATA}/args/flanneld
+  then
+    skip_opt_in_config etcd-certfile flanneld
+    refresh_opt_in_config etcd-certfile \${SNAP_DATA}/certs/server.remote.crt flanneld
+  fi
+fi
+
 # This patches flanneld conf template by adding cniversion if it doesnt exist.
 if [ -e ${SNAP_DATA}/args/flannel-template.conflist ] && ! grep -e "cniVersion" ${SNAP_DATA}/args/flannel-template.conflist
 then
     "$SNAP/bin/sed" -i 's@"name": "microk8s-flannel-network",@"name": "microk8s-flannel-network",\n    "cniVersion": "0.3.1",@g' ${SNAP_DATA}/args/flannel-template.conflist
     snapctl restart ${SNAP_NAME}.daemon-flanneld
     snapctl restart ${SNAP_NAME}.daemon-containerd
+fi
+
+if [ -e "${SNAP_DATA}/bin/juju" ]
+then
+    mkdir -p "$SNAP_DATA/juju/share/juju" "$SNAP_DATA/juju-home"
+    chmod -R ug+rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"
+    chmod -R o-rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"
+
+    if getent group microk8s >/dev/null 2>&1
+    then
+        chgrp microk8s -R "$SNAP_DATA/juju" "$SNAP_DATA/juju-home" || true
+    fi
 fi
