@@ -58,15 +58,15 @@ def main():
 
     password_overlay = {
         "applications": {
-            "ambassador-auth": {"options": {"password": password}},
             "katib-db": {"options": {"root_password": get_random_pass()}},
+            "kubeflow-gatekeeper": {"options": {"password": password}},
             "modeldb-db": {"options": {"root_password": get_random_pass()}},
-            "pipelines-db": {"options": {"root_password": get_random_pass()}},
             "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
+            "pipelines-db": {"options": {"root_password": get_random_pass()}},
         }
     }
 
-    for service in ["dns", "storage", "dashboard", "rbac", "juju"]:
+    for service in ["dns", "storage", "dashboard", "ingress", "rbac", "juju"]:
         print("Enabling %s..." % service)
         run("microk8s-enable.wrapper", service)
 
@@ -90,7 +90,7 @@ def main():
 
     print("Kubeflow deployed.")
     print("Waiting for operator pods to become ready.")
-    for _ in range(40):
+    for _ in range(80):
         status = json.loads(juju("status", "-m", "uk8s:kubeflow", "--format=json"))
         unready_apps = [
             name
@@ -119,20 +119,46 @@ def main():
     )
 
     juju("config", "ambassador", "juju-external-hostname=localhost")
+    juju("expose", "ambassador")
 
-    status = json.loads(juju("status", "-m", "uk8s:kubeflow", "--format=json"))
-    ambassador_ip = status["applications"]["ambassador"]["address"]
+    # Workaround for https://bugs.launchpad.net/juju/+bug/1849725.
+    # Wait for up to a minute for Juju to finish setting up the Ingress
+    # so that we can patch it, and fail if it takes too long.
+    patch = json.dumps({
+        'kind': 'Ingress',
+        'apiVersion': 'extensions/v1beta1',
+        'metadata': {'name': 'ambassador', 'namespace': 'kubeflow'},
+        'spec': {'tls': [{'hosts': ['localhost'], 'secretName': 'ambassador-tls'}]},
+    }).encode('utf-8')
+
+    env = os.environ.copy()
+    env["PATH"] += ":%s" % os.environ["SNAP"]
+
+    for _ in range(12):
+        try:
+            subprocess.run(
+                ['microk8s-kubectl.wrapper', 'apply', '-f', '-'],
+                input=patch,
+                stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                env=env,
+            ).check_returncode()
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+    else:
+        print("Couldn't set Ambassador up properly")
+        sys.exit(1)
 
     print(
         textwrap.dedent(
             """
     Congratulations, Kubeflow is now available.
-    The dashboard is available at http://%s/
+    The dashboard is available at https://localhost/
     To tear down Kubeflow and associated infrastructure, run:
 
        microk8s.disable kubeflow
     """
-            % ambassador_ip
         )
     )
 
