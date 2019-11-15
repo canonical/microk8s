@@ -75,14 +75,19 @@ def set_arg(key, value, file):
     """
     filename = "{}/args/{}".format(snapdata_path, file)
     filename_remote = "{}/args/{}.remote".format(snapdata_path, file)
+    done = False
     with open(filename_remote, 'w+') as back_fp:
         with open(filename, 'r+') as fp:
             for _, line in enumerate(fp):
                 if line.startswith(key):
+                    done = True
                     if value is not None:
                         back_fp.write("{} {}\n".format(key, value))
                 else:
                     back_fp.write("{}".format(line))
+        if not done and value is not None:
+            back_fp.write("{} {}\n".format(key, value))
+
     shutil.copyfile(filename, "{}.backup".format(filename))
     shutil.copyfile(filename_remote, filename)
     os.remove(filename_remote)
