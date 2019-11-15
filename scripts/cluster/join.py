@@ -170,7 +170,7 @@ def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
             fp.write(config_txt)
 
 
-def update_kubeproxy(token, ca, master_ip, api_port):
+def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
     """
     Configure the kube-proxy
 
@@ -178,9 +178,13 @@ def update_kubeproxy(token, ca, master_ip, api_port):
     :param ca: the ca
     :param master_ip: the master node IP
     :param api_port: the API server port
+    :param hostname_override: the hostname override in case the hostname is not resolvable
     """
     create_kubeconfig(token, ca, master_ip, api_port, "proxy.config", "kubeproxy")
     set_arg("--master", None, "kube-proxy")
+    if hostname_override:
+        set_arg("--hostname-override", hostname_override, "kube-proxy")
+
     subprocess.check_call("systemctl restart snap.microk8s.daemon-proxy.service".split())
 
 
@@ -369,9 +373,13 @@ if __name__ == "__main__":
         callback_token = generate_callback_token()
         info = get_connection_info(master_ip, master_port, token, callback_token)
         store_base_kubelet_args(info["kubelet_args"])
+        hostname_override = None
+        if 'hostname_override' in info:
+            hostname_override = info['hostname_override']
+
         store_remote_ca(info["ca"])
         update_flannel(info["etcd"], master_ip, master_port, token)
-        update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"])
+        update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override)
         update_kubelet(info["kubelet"], info["ca"], master_ip, info["apiport"])
         mark_cluster_node()
     sys.exit(0)
