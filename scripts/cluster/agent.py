@@ -298,7 +298,8 @@ def join_node():
                    kubeproxy=proxy_token,
                    apiport=api_port,
                    kubelet=kubelet_token,
-                   kubelet_args=kubelet_args)
+                   kubelet_args=kubelet_args,
+                   hostname_override=node_addr)
 
 
 @app.route('/{}/sign-cert'.format(CLUSTER_API), methods=['POST'])
