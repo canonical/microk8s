@@ -10,7 +10,6 @@ import time
 
 import requests
 import socket
-import json
 import shutil
 import urllib3
 
@@ -25,6 +24,21 @@ callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 server_cert_file_via_env = "${SNAP_DATA}/certs/server.remote.crt"
 server_cert_file = "{}/certs/server.remote.crt".format(snapdata_path)
+
+
+def try_set_file_permissions(file):
+    """
+    Try setting the ownership group and permission of the file
+
+    :param file: full path and filename
+    """
+
+    os.chmod(file, 0o660)
+    try:
+        shutil.chown(file, group='microk8s')
+    except:
+        # not setting the group means only the current user can access the file
+        pass
 
 
 def get_connection_info(master_ip, master_port, token, callback_token):
@@ -89,7 +103,9 @@ def set_arg(key, value, file):
             back_fp.write("{} {}\n".format(key, value))
 
     shutil.copyfile(filename, "{}.backup".format(filename))
+    try_set_file_permissions("{}.backup".format(filename))
     shutil.copyfile(filename_remote, filename)
+    try_set_file_permissions(filename)
     os.remove(filename_remote)
 
 
@@ -118,6 +134,7 @@ def get_etcd_client_cert(master_ip, master_port, token):
         info = signed.json()
         with open(server_cert_file, "w") as cert_fp:
             cert_fp.write(info["certificate"])
+        try_set_file_permissions(server_cert_file)
 
 
 def update_flannel(etcd, master_ip, master_port, token):
@@ -173,6 +190,7 @@ def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
             config_txt = config_txt.replace("127.0.0.1", master_ip)
             config_txt = config_txt.replace("16443", api_port)
             fp.write(config_txt)
+        try_set_file_permissions(config)
 
 
 def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
@@ -215,6 +233,7 @@ def store_remote_ca(ca):
     """
     with open(ca_cert_file, 'w+') as fp:
         fp.write(ca)
+    try_set_file_permissions(ca_cert_file)
 
 
 def mark_cluster_node():
@@ -238,7 +257,8 @@ def generate_callback_token():
     token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(64))
     with open(callback_token_file, "w") as fp:
         fp.write("{}\n".format(token))
-    os.chmod(callback_token_file, 0o600)
+
+    try_set_file_permissions(callback_token_file)
     return token
 
 
@@ -251,6 +271,7 @@ def store_base_kubelet_args(args_string):
     args_file = "{}/args/kubelet".format(snapdata_path)
     with open(args_file, "w") as fp:
         fp.write(args_string)
+    try_set_file_permissions(args_file)
 
 
 def reset_current_installation():
@@ -304,6 +325,7 @@ def remove_kubelet_token(node):
                     continue
                 back_fp.write("{}".format(line))
 
+    try_set_file_permissions(backup_file)
     shutil.copyfile(backup_file, file)
 
 
@@ -326,6 +348,7 @@ def remove_callback_token(node):
                 else:
                     backup_fp.write(line)
 
+    try_set_file_permissions(tmp_file)
     shutil.move(tmp_file, callback_tokens_file)
 
 
