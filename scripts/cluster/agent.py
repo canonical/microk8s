@@ -9,6 +9,8 @@ import random
 import subprocess
 import sys
 
+from utils import try_set_file_permissions
+
 from flask import Flask, jsonify, request, abort, Response
 
 app = Flask(__name__)
@@ -87,6 +89,7 @@ def store_callback_token(node, callback_token):
         if not found:
             backup_fp.write("{} {}\n".format(node, callback_token))
 
+    try_set_file_permissions(tmp_file)
     shutil.move(tmp_file, callback_tokens_file)
 
 

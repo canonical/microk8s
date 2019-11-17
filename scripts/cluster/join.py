@@ -13,6 +13,8 @@ import socket
 import shutil
 import urllib3
 
+from utils import try_set_file_permissions
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
@@ -24,21 +26,6 @@ callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 server_cert_file_via_env = "${SNAP_DATA}/certs/server.remote.crt"
 server_cert_file = "{}/certs/server.remote.crt".format(snapdata_path)
-
-
-def try_set_file_permissions(file):
-    """
-    Try setting the ownership group and permission of the file
-
-    :param file: full path and filename
-    """
-
-    os.chmod(file, 0o660)
-    try:
-        shutil.chown(file, group='microk8s')
-    except:
-        # not setting the group means only the current user can access the file
-        pass
 
 
 def get_connection_info(master_ip, master_port, token, callback_token):
@@ -180,6 +167,7 @@ def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
     config_template = "{}/microk8s-resources/{}".format(snap_path, "kubelet.config.template")
     config = "{}/credentials/{}".format(snapdata_path, filename)
     shutil.copyfile(config, "{}.backup".format(config))
+    try_set_file_permissions("{}.backup".format(config))
     ca_line = ca_one_line(ca)
     with open(config_template, 'r') as tfp:
         with open(config, 'w+') as fp:
