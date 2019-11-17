@@ -62,6 +62,7 @@ def update_service_argument(service, key, val):
         if not found and val is not None:
             bfp.write("{}={}\n".format(key, val))
 
+    try_set_file_permissions(args_file_tmp)
     shutil.move(args_file_tmp, args_file)
 
 
