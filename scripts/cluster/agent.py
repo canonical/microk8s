@@ -9,7 +9,7 @@ import random
 import subprocess
 import sys
 
-from utils import try_set_file_permissions
+from .common.utils import try_set_file_permissions
 
 from flask import Flask, jsonify, request, abort, Response
 
