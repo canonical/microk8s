@@ -13,7 +13,7 @@ import socket
 import shutil
 import urllib3
 
-from .common.utils import try_set_file_permissions
+from common.utils import try_set_file_permissions
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
