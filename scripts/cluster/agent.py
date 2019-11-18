@@ -9,6 +9,8 @@ import random
 import subprocess
 import sys
 
+from .common.utils import try_set_file_permissions
+
 from flask import Flask, jsonify, request, abort, Response
 
 app = Flask(__name__)
@@ -60,6 +62,7 @@ def update_service_argument(service, key, val):
         if not found and val is not None:
             bfp.write("{}={}\n".format(key, val))
 
+    try_set_file_permissions(args_file_tmp)
     shutil.move(args_file_tmp, args_file)
 
 
@@ -87,6 +90,7 @@ def store_callback_token(node, callback_token):
         if not found:
             backup_fp.write("{} {}\n".format(node, callback_token))
 
+    try_set_file_permissions(tmp_file)
     shutil.move(tmp_file, callback_tokens_file)
 
 
