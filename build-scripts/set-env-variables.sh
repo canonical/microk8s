@@ -16,10 +16,10 @@ export CNI_VERSION="${CNI_VERSION:-v0.7.1}"
 export KNATIVE_SERVING_VERSION="${KNATIVE_SERVING_VERSION:-v0.9.0}"
 export KNATIVE_EVENTING_VERSION="${KNATIVE_EVENTING_VERSION:-v0.9.0}"
 # RUNC commit matching the containerd release commit
-# Tag 1.3.0
-export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-36cf5b690dcc00ff0f34ff7799209050c3d0c59a}"
-# Release v1.0.0~rc8+ with CVE-2019-16884 fix
-export RUNC_COMMIT="${RUNC_COMMIT:-3e425f80a8c931f88e6d94a8c831b9d5aa481657}"
+# Tag 1.2.5
+export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-bb71b10fd8f58240ca47fbb579b9d1028eea7c84}"
+# Release v1.0.0~rc6 with CVE-2019-5736 fix
+export RUNC_COMMIT="${RUNC_COMMIT:-2b18fe1d885ee5083ef9f0838fee39b62d653e30}"
 # Set this to the kubernetes fork you want to build binaries from
 export KUBERNETES_REPOSITORY="${KUBERNETES_REPOSITORY:-}"
 export KUBERNETES_COMMIT="${KUBERNETES_COMMIT:-}"
