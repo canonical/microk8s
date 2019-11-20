@@ -36,6 +36,7 @@ addon[cilium]="pod/cilium"
 addon[helm]="${SNAP_DATA}/bin/helm"
 addon[juju]="${SNAP_DATA}/bin/juju"
 addon[kubeflow]="pod/ambassador-operator-0 "
+addon[metallb]="pod/speaker"
 addon[tekton]="pod/tekton"
 
 
