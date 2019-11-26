@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import json
 import os
 import random
@@ -10,6 +9,7 @@ import sys
 import tempfile
 import textwrap
 import time
+from itertools import count
 
 
 def run(*args, die=True):
@@ -90,7 +90,8 @@ def main():
 
     print("Kubeflow deployed.")
     print("Waiting for operator pods to become ready.")
-    for _ in range(80):
+    wait_seconds = 15
+    for i in count():
         status = json.loads(juju("status", "-m", "uk8s:kubeflow", "--format=json"))
         unready_apps = [
             name
@@ -98,13 +99,13 @@ def main():
             if "message" in app["application-status"]
         ]
         if unready_apps:
-            print("Still waiting for %s operator pods..." % len(unready_apps))
-            time.sleep(15)
+            print(
+                "Waited %ss for operator pods to come up, %s remaining."
+                % (wait_seconds * i, len(unready_apps))
+            )
+            time.sleep(wait_seconds)
         else:
             break
-    else:
-        print("Waited too long for Kubeflow to become ready!")
-        sys.exit(1)
 
     print("Operator pods ready.")
     print("Waiting for service pods to become ready.")
@@ -114,7 +115,7 @@ def main():
         "--namespace=kubeflow",
         "--for=condition=Ready",
         "pod",
-        "--timeout=600s",
+        "--timeout=-1s",
         "--all",
     )
 
@@ -155,10 +156,20 @@ def main():
             """
     Congratulations, Kubeflow is now available.
     The dashboard is available at https://localhost/
+
+        Username: admin
+        Password: %s
+
+    To see these values again, run:
+
+        microk8s.juju config kubeflow-gatekeeper username
+        microk8s.juju config kubeflow-gatekeeper password
+
     To tear down Kubeflow and associated infrastructure, run:
 
        microk8s.disable kubeflow
     """
+            % (password_overlay["applications"]["kubeflow-gatekeeper"]["options"]["password"])
         )
     )
 
