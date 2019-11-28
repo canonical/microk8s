@@ -6,7 +6,6 @@ source $SNAP/actions/common/utils.sh
 
 echo "Enabling Prometheus"
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-$KUBECTL apply -f "${SNAP}/actions/prometheus/resources"
 $KUBECTL apply -f "${SNAP}/actions/prometheus/setup"
 
 n=0

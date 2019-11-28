@@ -9,7 +9,7 @@ spec:
   baseImage: quay.io/prometheus/alertmanager
   nodeSelector:
     kubernetes.io/os: linux
-  replicas: 3
+  replicas: 1
   securityContext:
     fsGroup: 2000
     runAsNonRoot: true
