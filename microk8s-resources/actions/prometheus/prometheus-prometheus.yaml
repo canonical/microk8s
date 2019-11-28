@@ -13,7 +13,8 @@ spec:
       port: web
   baseImage: quay.io/prometheus/prometheus
   nodeSelector:
-    beta.kubernetes.io/os: linux
+    kubernetes.io/os: linux
+  podMonitorSelector: {}
   replicas: 1
   resources:
     requests:
@@ -22,7 +23,11 @@ spec:
     matchLabels:
       prometheus: k8s
       role: alert-rules
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
   serviceAccountName: prometheus-k8s
   serviceMonitorNamespaceSelector: {}
   serviceMonitorSelector: {}
-  version: v2.5.0
+  version: v2.11.0

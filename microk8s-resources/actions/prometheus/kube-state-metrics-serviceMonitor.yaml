@@ -11,6 +11,9 @@ spec:
     honorLabels: true
     interval: 30s
     port: https-main
+    relabelings:
+    - action: labeldrop
+      regex: (pod|service|endpoint|namespace)
     scheme: https
     scrapeTimeout: 30s
     tlsConfig:
