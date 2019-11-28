@@ -394,3 +394,9 @@ parts:
         echo "Skipped"
       fi
 
+slots:
+  microk8s-info:
+    interface: content
+    content: microk8s
+    source:
+      read: [$SNAP/.microk8s-info/microk8s]
