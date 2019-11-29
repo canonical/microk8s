@@ -174,7 +174,7 @@ def add_kubelet_token(hostname):
     uid = ''.join(random.SystemRandom().choice(string.digits) for _ in range(8))
     with open(file, 'a') as fp:
         # TODO double check this format. Why is userid unique?
-        line = "{},system:node:{},kubelet,kubelet-{},\"system:nodes\"".format(token, hostname, uid)
+        line = "{},system:node:{},kubelet-{},\"system:nodes\"".format(token, hostname, uid)
         fp.write(line + os.linesep)
     return token.rstrip()
 
@@ -286,7 +286,7 @@ def join_node():
     etcd_ep = get_arg('--listen-client-urls', 'etcd')
     api_port = get_arg('--secure-port', 'kube-apiserver')
     proxy_token = get_token('kube-proxy')
-    kubelet_token = add_kubelet_token(hostname)
+    kubelet_token = add_kubelet_token(node_addr)
     subprocess.check_call("systemctl restart snap.microk8s.daemon-apiserver.service".split())
     if node_addr != hostname:
         kubelet_args = read_kubelet_args_file(node_addr)
