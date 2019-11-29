@@ -1,3 +1,5 @@
+# Use config version 2 to enable new configuration fields.
+version = 2
 oom_score = 0
 
 [grpc]
@@ -18,50 +20,59 @@ oom_score = 0
 [cgroup]
   path = ""
 
-[plugins]
-  [plugins.cgroups]
-    no_prometheus = false
-  [plugins.cri]
-    stream_server_address = "127.0.0.1"
-    stream_server_port = "0"
-    enable_selinux = false
-    sandbox_image = "k8s.gcr.io/pause:3.1"
-    stats_collect_period = 10
-    systemd_cgroup = false
-    enable_tls_streaming = false
-    max_container_log_line_size = 16384
-    [plugins.cri.containerd]
-      snapshotter = "${SNAPSHOTTER}"
-      no_pivot = false
-      [plugins.cri.containerd.default_runtime]
-        runtime_type = "io.containerd.runtime.v1.linux"
-        runtime_engine = ""
-        runtime_root = ""
-      [plugins.cri.containerd.untrusted_workload_runtime]
-        runtime_type = ""
-        runtime_engine = ""
-        runtime_root = ""
-    [plugins.cri.cni]
-      bin_dir = "${SNAP}/opt/cni/bin"
-      conf_dir = "${SNAP_DATA}/args/cni-network"
-      conf_template = ""
-    [plugins.cri.registry]
-      [plugins.cri.registry.mirrors]
-        [plugins.cri.registry.mirrors."docker.io"]
-          endpoint = ["https://registry-1.docker.io"]
-        [plugins.cri.registry.mirrors."localhost:32000"]
-          endpoint = ["http://localhost:32000"]
-  [plugins.diff-service]
-    default = ["walking"]
-  [plugins.linux]
-    shim = "containerd-shim"
-    runtime = "${RUNTIME}"
-    runtime_root = ""
-    no_shim = false
-    shim_debug = true
-  [plugins.scheduler]
-    pause_threshold = 0.02
-    deletion_threshold = 0
-    mutation_threshold = 100
-    schedule_delay = "0s"
-    startup_delay = "100ms"
+
+# The 'plugins."io.containerd.grpc.v1.cri"' table contains all of the server options.
+[plugins."io.containerd.grpc.v1.cri"]
+
+  stream_server_address = "127.0.0.1"
+  stream_server_port = "0"
+  enable_selinux = false
+  sandbox_image = "k8s.gcr.io/pause:3.1"
+  stats_collect_period = 10
+  enable_tls_streaming = false
+  max_container_log_line_size = 16384
+
+  # 'plugins."io.containerd.grpc.v1.cri".containerd' contains config related to containerd
+  [plugins."io.containerd.grpc.v1.cri".containerd]
+
+    # snapshotter is the snapshotter used by containerd.
+    snapshotter = "${SNAPSHOTTER}"
+
+    # no_pivot disables pivot-root (linux only), required when running a container in a RamDisk with runc.
+    # This only works for runtime type "io.containerd.runtime.v1.linux".
+    no_pivot = false
+
+    # default_runtime_name is the default runtime name to use.
+    default_runtime_name = "${RUNTIME}"
+
+    # 'plugins."io.containerd.grpc.v1.cri".containerd.runtimes' is a map from CRI RuntimeHandler strings, which specify types
+    # of runtime configurations, to the matching configurations.
+    # In this example, 'runc' is the RuntimeHandler string to match.
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+      # runtime_type is the runtime type to use in containerd e.g. io.containerd.runtime.v1.linux
+      runtime_type = "io.containerd.runc.v1"
+
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia-container-runtime]
+      # runtime_type is the runtime type to use in containerd e.g. io.containerd.runtime.v1.linux
+      runtime_type = "io.containerd.runc.v1"
+
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia-container-runtime.options]
+        BinaryName = "nvidia-container-runtime"
+
+  # 'plugins."io.containerd.grpc.v1.cri".cni' contains config related to cni
+  [plugins."io.containerd.grpc.v1.cri".cni]
+    # bin_dir is the directory in which the binaries for the plugin is kept.
+    bin_dir = "${SNAP}/opt/cni/bin"
+
+    # conf_dir is the directory in which the admin places a CNI conf.
+    conf_dir = "${SNAP_DATA}/args/cni-network"
+
+  # 'plugins."io.containerd.grpc.v1.cri".registry' contains config related to the registry
+  [plugins."io.containerd.grpc.v1.cri".registry]
+
+    # 'plugins."io.containerd.grpc.v1.cri".registry.mirrors' are namespace to mirror mapping for all namespaces.
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+        endpoint = ["https://registry-1.docker.io", ]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:32000"]
+        endpoint = ["http://localhost:32000"]        
