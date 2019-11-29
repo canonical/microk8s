@@ -147,7 +147,7 @@ function suggest_fixes {
       printf -- '    "insecure-registries" : ["localhost:32000"] \n'
       printf -- '}\n'
       printf -- 'and then restart docker with: sudo systemctl restart docker\n'
-    # else if the file docker/daemon.json exists 
+    # else if the file docker/daemon.json exists
     else
       # if it doesn't include the registry as insecure, prompt to add the following lines
       if ! grep -qs localhost:32000 /etc/docker/daemon.json
@@ -159,13 +159,13 @@ function suggest_fixes {
         printf -- '}\n'
         printf -- 'and then restart docker with: sudo systemctl restart docker\n'
       fi
-    fi     
+    fi
   fi
 
   # Fedora Specific Checks
   if fedora_release
   then
-    
+
     # Check if appropriate cgroup libraries for Fedora are installed
     if ! rpm -q libcgroup &> /dev/null
     then
@@ -174,11 +174,11 @@ function suggest_fixes {
     fi
 
     # check if cgroups v1 is supported
-    if ! -d "/sys/fs/cgroup/memory"  &> /dev/null
+    if [ ! -d "/sys/fs/cgroup/memory" ] &> /dev/null
     then
       printf -- '\033[31m FAIL: \033[0m Cgroup v1 seems not to be enabled. Please enable it \n'
       printf -- '\tby executing the following command and reboot: \n'
-      printf -- '\tgrubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0 \n'
+      printf -- '\tgrubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0" \n'
     fi
   fi
 }
