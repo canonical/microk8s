@@ -147,7 +147,7 @@ function suggest_fixes {
       printf -- '    "insecure-registries" : ["localhost:32000"] \n'
       printf -- '}\n'
       printf -- 'and then restart docker with: sudo systemctl restart docker\n'
-    # else if the file docker/daemon.json exists 
+    # else if the file docker/daemon.json exists
     else
       # if it doesn't include the registry as insecure, prompt to add the following lines
       if ! grep -qs localhost:32000 /etc/docker/daemon.json
@@ -159,10 +159,39 @@ function suggest_fixes {
         printf -- '}\n'
         printf -- 'and then restart docker with: sudo systemctl restart docker\n'
       fi
-    fi     
+    fi
+  fi
+
+  # Fedora Specific Checks
+  if fedora_release
+  then
+
+    # Check if appropriate cgroup libraries for Fedora are installed
+    if ! rpm -q libcgroup &> /dev/null
+    then
+      printf -- '\033[31m FAIL: \033[0m libcgroup v1 is not installed. Please install it\n'
+      printf -- '\twith: dnf install libcgroup libcgroup-tools \n'
+    fi
+
+    # check if cgroups v1 is supported
+    if [ ! -d "/sys/fs/cgroup/memory" ] &> /dev/null
+    then
+      printf -- '\033[31m FAIL: \033[0m Cgroup v1 seems not to be enabled. Please enable it \n'
+      printf -- '\tby executing the following command and reboot: \n'
+      printf -- '\tgrubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0" \n'
+    fi
   fi
 }
 
+function fedora_release {
+  local RELEASE=`cat /etc/os-release | grep "^NAME=" | cut -f2 -d=`
+  if [ "${RELEASE}" == "Fedora" ]
+  then
+    return 0
+  else
+    return 1
+  fi
+}
 
 function build_report_tarball {
   # Tar and gz the report
