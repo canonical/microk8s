@@ -331,13 +331,6 @@ then
   ${SNAP}/microk8s-enable.wrapper cilium
 fi
 
-# modify the containerd localhost:32000 mirror registry
-if [ -e ${SNAP_DATA}/args/containerd-template.toml ] && grep -e "plugins.cri.registry.mirrors.\"local.insecure-registry.io\"" ${SNAP_DATA}/args/containerd-template.toml
-then
-    "$SNAP/bin/sed" -i 's@plugins.cri.registry.mirrors."local.insecure-registry.io"@plugins.cri.registry.mirrors."localhost:32000"@g' ${SNAP_DATA}/args/containerd-template.toml
-    snapctl restart ${SNAP_NAME}.daemon-containerd
-fi
-
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
   if grep -e "\-\-etcd-cafile /var/snap/microk8s/.*/ca.remote.crt" ${SNAP_DATA}/args/flanneld
