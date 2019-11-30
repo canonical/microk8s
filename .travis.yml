@@ -11,7 +11,8 @@ addons:
      channel: stable
   apt:
     packages:
-      - python3     
+      - python3  
+      - python3-pip   
 
 script:
   - sudo /snap/bin/lxd.migrate -yes
@@ -20,7 +21,7 @@ script:
   - sudo snapcraft --use-lxd
   - sudo apt update
   - sudo snap install *.snap --classic --dangerous
-  - sudo pip install -U pytest
+  - sudo pip3 install -U pytest
   - pwd
   - ps -ef
   - ls -l

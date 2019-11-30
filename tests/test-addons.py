@@ -39,7 +39,7 @@ class TestAddons(object):
         """
         yield
         microk8s_reset()
-
+    
     def test_basic(self):
         """
         Sets up and tests dashboard, dns, storage, registry, ingress.
