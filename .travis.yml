@@ -26,7 +26,7 @@ script:
   - ps -ef
   - ls -l
   - ./tests/smoke-test.sh
-  - export UNDER_TIME_PRESURE="True"
+  - export UNDER_TIME_PRESSURE="True"
   - (cd tests; pytest -s verify-branches.py)
   - (cd tests; sudo pytest -s -rA test-addons.py)
   - sudo microk8s.reset
