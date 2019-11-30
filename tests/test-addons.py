@@ -30,9 +30,6 @@ from utils import (
 )
 from subprocess import Popen, PIPE, STDOUT, CalledProcessError
 
-under_time_pressure = os.environ.get('UNDER_TIME_PRESURE', 'False')
-
-
 class TestAddons(object):
 
     @pytest.fixture(autouse=True)
@@ -84,15 +81,12 @@ class TestAddons(object):
         microk8s_disable("dns")
         '''
 
+    @pytest.mark.skipif(platform.machine() != 'x86_64', reason = "GPU tests are only relevant in x86 architectures")
     def test_gpu(self):
         """
         Sets up nvidia gpu in a gpu capable system. Skip otherwise.
 
         """
-        if platform.machine() != 'x86_64':
-            print("GPU tests are only relevant in x86 architectures")
-            return
-
         try:
             print("Enabling gpu")
             gpu_enable_outcome = microk8s_enable("gpu")
@@ -104,18 +98,13 @@ class TestAddons(object):
         print("Disable gpu")
         microk8s_disable("gpu")
 
+    @pytest.mark.skipif(platform.machine() != 'x86_64', reason = "Istio tests are only relevant in x86 architectures")
+    @pytest.mark.skipif(os.environ.get('UNDER_TIME_PRESSURE') == 'True', reason = "Skipping istio and knative tests as we are under time pressure")    
     def test_knative_istio(self):
         """
         Sets up and validate istio.
 
         """
-        if platform.machine() != 'x86_64':
-            print("Istio tests are only relevant in x86 architectures")
-            return
-
-        if under_time_pressure != 'False':
-            print("Skipping istio and knative tests as we are under time pressure")
-            return
 
         print("Enabling Knative and Istio")
         p = Popen("/snap/bin/microk8s.enable knative".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
@@ -130,18 +119,12 @@ class TestAddons(object):
         print("Disabling Istio")
         microk8s_disable("istio")
 
+    @pytest.mark.skipif(platform.machine() != 'x86_64', reason = "Cilium tests are only relevant in x86 architectures")
+    @pytest.mark.skipif(os.environ.get('UNDER_TIME_PRESSURE') == 'True', reason = "Skipping cilium tests as we are under time pressure")    
     def test_cilium(self):
         """
         Sets up and validates Cilium.
         """
-        if platform.machine() != 'x86_64':
-            print("Cilium tests are only relevant in x86 architectures")
-            return
-
-        if under_time_pressure != 'False':
-            print("Skipping cilium tests as we are under time pressure")
-            return
-
         print("Enabling Cilium")
         p = Popen("/snap/bin/microk8s.enable cilium".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         p.communicate(input=b'N\n')[0]
@@ -162,51 +145,41 @@ class TestAddons(object):
         print("Disabling metrics-server")
         microk8s_disable("metrics-server")
 
+    @pytest.mark.skipif(platform.machine() != 'x86_64', reason = "Fluentd, prometheus, jaeger tests are only relevant in x86 architectures")
+    @pytest.mark.skipif(os.environ.get('UNDER_TIME_PRESSURE') == 'True', reason = "Skipping cilium tests as we are under time pressure")    
     def test_monitoring_addons(self):
         """
         Test jaeger, prometheus and fluentd.
 
         """
-        if platform.machine() != 'x86_64':
-            print("Fluentd, prometheus, jaeger tests are only relevant in x86 architectures")
-            return
 
-        if under_time_pressure == 'False':
-            # Prometheus operator on our lxc is chashlooping disabling the test for now.
-            #print("Enabling prometheus")
-            #microk8s_enable("prometheus")
-            #print("Validating Prometheus")
-            #validate_prometheus()
-            #print("Disabling prometheus")
-            #microk8s_disable("prometheus")
-            print("Enabling fluentd")
-            microk8s_enable("fluentd")
-            print("Enabling jaeger")
-            microk8s_enable("jaeger")
-            print("Validating the Jaeger operator")
-            validate_jaeger()
-            print("Validating the Fluentd")
-            validate_fluentd()
-            print("Disabling jaeger")
-            microk8s_disable("jaeger")
-            print("Disabling fluentd")
-            microk8s_disable("fluentd")
-        else:
-            print('Skipping jaeger, prometheus and fluentd tests')
+        # Prometheus operator on our lxc is chashlooping disabling the test for now.
+        #print("Enabling prometheus")
+        #microk8s_enable("prometheus")
+        #print("Validating Prometheus")
+        #validate_prometheus()
+        #print("Disabling prometheus")
+        #microk8s_disable("prometheus")
+        print("Enabling fluentd")
+        microk8s_enable("fluentd")
+        print("Enabling jaeger")
+        microk8s_enable("jaeger")
+        print("Validating the Jaeger operator")
+        validate_jaeger()
+        print("Validating the Fluentd")
+        validate_fluentd()
+        print("Disabling jaeger")
+        microk8s_disable("jaeger")
+        print("Disabling fluentd")
+        microk8s_disable("fluentd")
 
+    @pytest.mark.skipif(platform.machine() != 'x86_64', reason = "Linkerd tests are only relevant in x86 architectures")
+    @pytest.mark.skipif(os.environ.get('UNDER_TIME_PRESSURE') == 'True', reason = "Skipping Linkerd tests as we are under time pressure")    
     def test_linkerd(self):
         """
         Sets up and validate linkerd
 
         """
-        if platform.machine() != 'x86_64':
-            print("Linkerd tests are only relevant in x86 architectures")
-            return
-
-        if under_time_pressure != 'False':
-            print("Skipping Linkerd tests as we are under time pressure")
-            return
-
         print("Enabling Linkerd")
         microk8s_enable("linkerd")
         print("Validating Linkerd")
@@ -226,21 +199,13 @@ class TestAddons(object):
         print("Disabling RBAC")
         microk8s_disable("rbac")
 
+    @pytest.mark.skipif(platform.machine() != 'x86_64', reason = "Kubeflow tests are only relevant in x86 architectures")
+    @pytest.mark.skipif(os.environ.get('UNDER_TIME_PRESSURE') == 'True', reason = "Skipping kubeflow test as we are under time pressure")
     def test_kubeflow_addon(self):
         """
         Test kubeflow.
 
         """
-        if platform.machine() != 'x86_64':
-            print("Kubeflow tests are only relevant in x86 architectures")
-            return
-
-        if under_time_pressure != 'False':
-            print("Skipping kubeflow test as we are under time pressure")
-            return
-
-        # disabling the kubelfow addon until the new bundle becomes available
-        return
 
         print("Enabling Kubeflow")
         microk8s_enable("kubeflow")
