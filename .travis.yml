@@ -9,6 +9,9 @@ addons:
      confinement: classic
    - name: lxd
      channel: stable
+  apt:
+    packages:
+      - python3     
 
 script:
   - sudo /snap/bin/lxd.migrate -yes
