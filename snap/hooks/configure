@@ -85,6 +85,9 @@ then
   cp ${SNAP}/default-args/kubectl ${SNAP_DATA}/args/kubectl
 fi
 
+# Upgrade containerd configuration to v2
+$SNAP/actions/common/containerd-config-migrate.sh
+
 # Upgrading to containerd
 if [ ! -e ${SNAP_DATA}/args/containerd ] ||
    grep -e "\-\-docker unix://\${SNAP_DATA}/docker.sock" ${SNAP_DATA}/args/kubelet

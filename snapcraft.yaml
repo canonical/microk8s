@@ -179,6 +179,7 @@ parts:
     source: .
     python-packages:
     - flask
+    - toml
     stage-packages:
     - python3-openssl
     - openssl
