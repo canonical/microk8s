@@ -86,6 +86,7 @@ then
 fi
 
 # Upgrade containerd configuration to v2
+chmod +x $SNAP/actions/common/containerd-config-migrate.sh
 $SNAP/actions/common/containerd-config-migrate.sh
 
 # Upgrading to containerd
