@@ -86,8 +86,7 @@ then
 fi
 
 # Upgrade containerd configuration to v2
-chmod +x $SNAP/actions/common/containerd-config-migrate.sh
-$SNAP/actions/common/containerd-config-migrate.sh
+sudo ${SNAP}/usr/bin/python3 ${SNAP}/actions/common/containerd-config-migrate.py
 
 # Upgrading to containerd
 if [ ! -e ${SNAP_DATA}/args/containerd ] ||
