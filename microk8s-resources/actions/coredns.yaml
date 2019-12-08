@@ -20,8 +20,13 @@ data:
   Corefile: |
     .:53 {
         errors
-        health
+        health {
+          lameduck 5s
+        }
         ready
+        log . {
+          class error
+        }
         kubernetes cluster.local in-addr.arpa ip6.arpa {
           pods insecure
           fallthrough in-addr.arpa ip6.arpa
@@ -78,7 +83,7 @@ spec:
               path: Corefile
       containers:
       - name: coredns
-        image: coredns/coredns:1.5.0
+        image: coredns/coredns:1.6.5
         imagePullPolicy: IfNotPresent
         resources:
           limits:
