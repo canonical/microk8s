@@ -55,6 +55,7 @@ def juju(*args, **kwargs):
 def main():
     password = os.environ.get("KUBEFLOW_AUTH_PASSWORD") or get_random_pass()
     channel = os.environ.get("KUBEFLOW_CHANNEL") or "stable"
+    no_proxy = os.environ.get("KUBEFLOW_NO_PROXY") or None
 
     password_overlay = {
         "applications": {
@@ -79,8 +80,14 @@ def main():
         sys.exit(1)
 
     print("Deploying Kubeflow...")
-    juju("bootstrap", "microk8s", "uk8s")
-    juju("add-model", "kubeflow", "microk8s")
+    if no_proxy is not None:
+        juju("bootstrap", "microk8s", "uk8s", "--config=juju-no-proxy=%s" % no_proxy)
+        juju("add-model", "kubeflow", "microk8s")
+        juju("model-config", "-m", "kubeflow", "juju-no-proxy=%s" % no_proxy)
+    else:
+        juju("bootstrap", "microk8s", "uk8s")
+        juju("add-model", "kubeflow", "microk8s")
+
 
     with tempfile.NamedTemporaryFile("w+") as f:
         json.dump(password_overlay, f)
