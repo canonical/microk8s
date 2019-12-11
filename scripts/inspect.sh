@@ -55,6 +55,8 @@ function store_network {
   netstat -pln &> $INSPECT_DUMP/network/netstat
   ifconfig &> $INSPECT_DUMP/network/ifconfig
   iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
+  iptables -S &> $INSPECT_DUMP/network/iptables-S
+  iptables -L &> $INSPECT_DUMP/network/iptables-L
 }
 
 
