@@ -85,6 +85,8 @@ apps:
     command: microk8s-helm3.wrapper
   cilium:
     command: microk8s-cilium.wrapper
+  hubble:
+    command: microk8s-hubble.wrapper
   juju:
     command: microk8s-juju.wrapper
 
@@ -314,6 +316,10 @@ parts:
         # Linkerd support
         rm "actions/enable.linkerd.sh"
         rm "actions/disable.linkerd.sh"
+        # Hubble support
+        rm "actions/enable.hubble.sh"
+        rm "actions/disable.hubble.sh"
+        rm "wrappers/microk8s-hubble.wrapper"
       else
         # Knative support
         echo "Preparing knative"
