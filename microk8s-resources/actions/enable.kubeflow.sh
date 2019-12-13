@@ -93,7 +93,7 @@ def main():
         json.dump(password_overlay, f)
         f.flush()
 
-        juju("deploy", "kubeflow", "--channel", channel, "--overlay", f.name)
+        juju("deploy", "cs:kubeflow", "--channel", channel, "--overlay", f.name)
 
     print("Kubeflow deployed.")
     print("Waiting for operator pods to become ready.")
