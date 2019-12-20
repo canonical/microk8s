@@ -79,13 +79,6 @@ then
 fi
 
 # Upgrading to containerd
-if [ ! -e ${SNAP_DATA}/args/kubectl ]
-then
-  echo "Making sure we have kubectl arguments file"
-  cp ${SNAP}/default-args/kubectl ${SNAP_DATA}/args/kubectl
-fi
-
-# Upgrading to containerd
 if [ ! -e ${SNAP_DATA}/args/containerd ] ||
    grep -e "\-\-docker unix://\${SNAP_DATA}/docker.sock" ${SNAP_DATA}/args/kubelet
 then
