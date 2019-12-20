@@ -19,6 +19,7 @@ from validators import (
     validate_linkerd,
     validate_rbac,
     validate_cilium,
+    validate_hubble,
     validate_kubeflow,
 )
 from utils import (
@@ -132,6 +133,27 @@ class TestAddons(object):
         validate_cilium()
         print("Disabling Cilium")
         microk8s_disable("cilium")
+
+    def test_hubble(self):
+        """
+        Sets up and validates Hubble.
+        """
+        if platform.machine() != 'x86_64':
+            print("Hubble tests are only relevant in x86 architectures")
+            return
+
+        if under_time_pressure != 'False':
+            print("Skipping hubble tests as we are under time pressure")
+            return
+
+        print("Enabling Hubble")
+        p = Popen("/snap/bin/microk8s.enable hubble".split(),
+                  stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        p.communicate(input=b'N\n')[0]
+        print("Validating Hubble")
+        validate_hubble()
+        print("Disabling Hubble")
+        microk8s_disable("hubble")
 
     def test_metrics_server(self):
         """

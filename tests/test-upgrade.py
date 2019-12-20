@@ -14,6 +14,7 @@ from validators import (
     validate_jaeger,
     validate_kubeflow,
     validate_cilium,
+    validate_hubble,
 )
 from subprocess import check_call, CalledProcessError, check_output
 from utils import (
@@ -159,6 +160,14 @@ class TestUpgrade(object):
                 test_matrix['cilium'] = validate_cilium
             except:
                 print('Will not test the cilium addon')
+
+            try:
+                enable = microk8s_enable("hubble", timeout_insec=300)
+                assert "Nothing to do for" not in enable
+                validate_hubble()
+                test_matrix['hubble'] = validate_hubble
+            except BaseException:
+                print('Will not test the hubble addon')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

@@ -387,6 +387,36 @@ def validate_cilium():
     kubectl("delete -f {}".format(manifest))
 
 
+def hubble(cmd, timeout_insec=300, err_out=None):
+    """
+    Do a hubble <cmd>
+    Args:
+        cmd: left part of hubble <left_part> command
+        timeout_insec: timeout for this job
+        err_out: If command fails and this is the output, return.
+
+    Returns: the hubble response in a string
+    """
+    cmd = '/snap/bin/microk8s.hubble ' + cmd
+    return run_until_success(cmd, timeout_insec, err_out)
+
+
+def validate_hubble():
+    """
+    Validate hubble by deploying and checking its status.
+    """
+    if platform.machine() != 'x86_64':
+        print("Cilium tests are only relevant in x86 architectures")
+        return
+
+    wait_for_installation()
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=hubble")
+
+    output = hubble('status')
+    assert "Ok" in output
+    kubectl("delete -f {}".format(manifest))
+
+
 def validate_kubeflow():
     """
     Validate kubeflow
