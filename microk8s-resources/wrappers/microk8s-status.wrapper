@@ -114,9 +114,21 @@ function format_output() {
             echo "microk8s:"
             echo "  running: true"
             echo "addons:"
+            echo "  enabled:"
             for a in "${!addon[@]}"
             do
-              echo "  $a: ${addon[$a]}"
+              if [ "${addon[$a]}" = "enabled" ]
+              then
+                  echo "  - $a"
+               fi
+            done
+            echo "  disabled:"
+            for a in "${!addon[@]}"
+            do
+              if [ "${addon[$a]}" = "disabled" ]
+              then
+                  echo "  - $a"
+               fi
             done
             exit 0
         else
@@ -129,11 +141,29 @@ function format_output() {
         then
             echo "microk8s is running"
             echo "addons:"
+            echo "enabled:"
             for a in "${!addon[@]}"
             do
-              echo "$a: ${addon[$a]}"
+              if [ "${addon[$a]}" = "enabled" ]
+              then
+                  # Cyan - \e[36m color for enabled addons
+                  echo -e "  \e[36m$a\033[0m" 
+               fi
             done |
             sort
+
+            echo ""
+            echo "disabled:"
+            for a in "${!addon[@]}"
+            do
+              if [ "${addon[$a]}" = "disabled" ]
+              then
+                  # Yellow - \e[93m color for disabled addons
+                  echo -e "  \e[93m$a\033[0m"
+               fi
+            done |
+            sort
+
             exit 0
         else
             echo "microk8s is not running. Use microk8s.inspect for a deeper inspection."
