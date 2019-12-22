@@ -17,6 +17,14 @@ Options:
 EOF
 }
 
+disable_addons() {
+  echo "Disabling all addons."
+  actions="$(get_all_addons)"
+  for action in $actions; do
+    microk8s.disable $action || true
+  done
+  echo "All addons disabled."
+}
 
 destroy_storage() {
   echo "Destroying storage"
@@ -132,5 +140,6 @@ exit_if_no_permissions
 if ${destroy_storage_enabled} ; then
   destroy_storage
 fi
+disable_addons
 clean_cluster
 
