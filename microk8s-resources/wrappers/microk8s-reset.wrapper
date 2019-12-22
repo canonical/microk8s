@@ -21,7 +21,7 @@ disable_addons() {
   echo "Disabling all addons."
   actions="$(get_all_addons)"
   for action in $actions; do
-    microk8s.disable $action || true
+    microk8s.disable $action > /dev/null || true
   done
   echo "All addons disabled."
 }
