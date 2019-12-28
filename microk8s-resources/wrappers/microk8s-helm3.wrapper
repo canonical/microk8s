@@ -13,3 +13,7 @@ fi
 
 source $SNAP/actions/common/utils.sh
 "${SNAP_DATA}/bin/helm3" --kubeconfig="${SNAP_DATA}"/credentials/client.config "$@"
+
+
+
+
