@@ -35,11 +35,11 @@ ca_file="$(eval echo $ca_file)"
 # TODO get this from a file
 data="$(cat $SNAP_DATA/args/flannel-network-mgr-config)"
 
-if ! "${SNAP}/etcdctl" --endpoints="${etcd_endpoints}" --cert="${cert_file}" --key="${key_file}" --cacert="${ca_file}" del "/coreos.com/network/config"; then
+if ! "${SNAP}/etcdctl" --endpoint "${etcd_endpoints}" --cert-file "${cert_file}" --key-file "${key_file}" --ca-file "${ca_file}" rm "/coreos.com/network/config"; then
   echo "/coreos.com/network/config is not in etcd. Probably a first time run."
 fi
 
-"${SNAP}/etcdctl" --endpoints="${etcd_endpoints}" --cert="${cert_file}" --key="${key_file}" --cacert="${ca_file}" put "/coreos.com/network/config" "$data"
+"${SNAP}/etcdctl" --endpoint "${etcd_endpoints}" --cert-file "${cert_file}" --key-file "${key_file}" --ca-file "${ca_file}" put "/coreos.com/network/config" "$data"
 
 # This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/flanneld))"
