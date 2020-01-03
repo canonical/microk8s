@@ -30,6 +30,8 @@ key_file="$(cat $SNAP_DATA/args/flanneld | grep "etcd-keyfile" | tr "=" " "| awk
 key_file="$(eval echo $key_file)"
 ca_file="$(cat $SNAP_DATA/args/flanneld | grep "etcd-cafile" | tr "=" " "| awk '{print $2}')"
 ca_file="$(eval echo $ca_file)"
+# flannel requires etcd api v2
+export ETCDCTL_API=2
 
 
 # TODO get this from a file
