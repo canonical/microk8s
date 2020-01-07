@@ -4,20 +4,18 @@ set -eu
 
 source $SNAP/actions/common/utils.sh
 
-
 function get_juju_client () {
   # check if juju cli is already in the system.  Download if it doesn't exist.
   if [ ! -f "${SNAP_DATA}/bin/juju" ]; then
+    JUJU_VERSION="${JUJU_VERSION:-2.7.0}"
+    JUJU_SERIES=$(echo $JUJU_VERSION | sed 's|\.[0-9]\+$||')
+
     run_with_sudo mkdir -p "$SNAP_DATA/bin"
     run_with_sudo mkdir -p "$SNAP_DATA/tmp"
-    run_with_sudo snap download juju --channel edge --target-directory="$SNAP_DATA/tmp"
-    run_with_sudo "$SNAP/usr/bin/unsquashfs" -d "$SNAP_DATA/tmp/juju" $SNAP_DATA/tmp/juju_*.snap bin/juju
-    run_with_sudo cp "$SNAP_DATA/tmp/juju/bin/juju" "$SNAP_DATA/bin"
-    # TODO: Re-enable this method when 2.7 hits stable
-#    sudo "${SNAP}/usr/bin/curl" -L https://launchpad.net/juju/2.6/2.6.4/+download/juju-2.6.4-centos7.tar.gz -o "$SNAP_DATA/tmp/juju.tar.gz"
-#    #sudo "${SNAP}/bin/tar" -zxvf "$SNAP_DATA/tmp/juju.tar.gz" -C "$SNAP_DATA/tmp"
-#    sudo tar -zxvf "$SNAP_DATA/tmp/juju.tar.gz" -C "$SNAP_DATA/tmp"
-#    sudo cp "$SNAP_DATA/tmp/juju-bin/juju" "$SNAP_DATA/bin"
+    run_with_sudo "${SNAP}/usr/bin/curl" -L https://launchpad.net/juju/$JUJU_SERIES/$JUJU_VERSION/+download/juju-$JUJU_VERSION-centos7.tar.gz -o "$SNAP_DATA/tmp/juju.tar.gz"
+    run_with_sudo "${SNAP}/bin/tar" -zxvf "$SNAP_DATA/tmp/juju.tar.gz" -C "$SNAP_DATA/tmp"
+    run_with_sudo tar -zxvf "$SNAP_DATA/tmp/juju.tar.gz" -C "$SNAP_DATA/tmp"
+    run_with_sudo cp "$SNAP_DATA/tmp/juju-bin/juju" "$SNAP_DATA/bin"
     run_with_sudo chmod uo+x "$SNAP_DATA/bin/juju"
     run_with_sudo mkdir -p "$SNAP_DATA/juju/share/juju" "$SNAP_DATA/juju-home"
     run_with_sudo chmod -R ug+rwX "$SNAP_DATA/juju/share/juju" "$SNAP_DATA/juju-home"
