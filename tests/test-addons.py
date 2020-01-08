@@ -239,9 +239,6 @@ class TestAddons(object):
             print("Skipping kubeflow test as we are under time pressure")
             return
 
-        # disabling the kubelfow addon until the new bundle becomes available
-        return
-
         print("Enabling Kubeflow")
         microk8s_enable("kubeflow")
         print("Validating Kubeflow")
