@@ -9,6 +9,10 @@ addons:
      confinement: classic
    - name: lxd
      channel: stable
+  apt:
+    packages:
+      - python3  
+      - python3-pip   
 
 script:
   - sudo /snap/bin/lxd.migrate -yes
@@ -17,14 +21,14 @@ script:
   - sudo snapcraft --use-lxd
   - sudo apt update
   - sudo snap install *.snap --classic --dangerous
-  - sudo pip install -U pytest
+  - sudo pip3 install -U pytest
   - pwd
   - ps -ef
   - ls -l
   - ./tests/smoke-test.sh
-  - export UNDER_TIME_PRESURE="True"
+  - export UNDER_TIME_PRESSURE="True"
   - (cd tests; pytest -s verify-branches.py)
-  - (cd tests; sudo pytest -s test-addons.py)
+  - (cd tests; sudo pytest -s -rA test-addons.py)
   - sudo microk8s.reset
   - sudo snap remove microk8s
   - sudo UPGRADE_MICROK8S_FROM=edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade.py

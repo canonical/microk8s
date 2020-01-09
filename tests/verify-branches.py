@@ -28,7 +28,7 @@ class TestMicrok8sBranches(object):
         print("Current stable is {}. Making sure we have a branch for {}".format(
             major_minor_upstream_version, prev_major_minor_version))
         cmd = "git ls-remote --heads http://github.com/ubuntu/microk8s.git {}".format(prev_major_minor_version)
-        branch = check_output(cmd.split())
+        branch = check_output(cmd.split()).decode("utf-8")
         assert prev_major_minor_version in branch
 
     def _upstream_release(self):
