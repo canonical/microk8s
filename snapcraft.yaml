@@ -181,6 +181,7 @@ parts:
     - flask
     stage-packages:
     - python3-openssl
+    - python3-yaml
     - openssl
     - python3-requests
     - gunicorn3
