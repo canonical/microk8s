@@ -10,6 +10,10 @@ export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
 source $SNAP/actions/common/utils.sh
 
 cp -r ${SNAP}/default-args ${SNAP_DATA}/args
+installed=`${SNAP}/bin/grep '\-\-enable\-v2=true' ${SNAP}/args/etcd | wc -l`
+if [ ${installed} -eq 0 ]; then
+  ${SNAP}/bin/echo '--enable-v2=true' >> ${SNAP}/args/etcd
+fi
 
 # Create the certificates
 mkdir ${SNAP_DATA}/certs
