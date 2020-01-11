@@ -18,24 +18,34 @@ arch_mapping = {
 current_arch = arch_mapping[platform.machine()]
 snap_data = os.environ["SNAP_DATA"]
 snap_dir = os.environ["SNAP"]
-kubeconfig = "--kubeconfig="+ snap_data + "/credentials/client.config"
+kubeconfig = "--kubeconfig="+ os.path.expandvars("${SNAP_DATA}/credentials/client.config")
 console_formatter = "{:>1} {:<20} # {}"
 
 # define the program description
-text = 'Microk8s status check.'
+text = 'Microk8s cluster status check.'
 
 # initiate the parser with a description
 parser = argparse.ArgumentParser(description = text)
-parser.add_argument("-o", "--output", help="Print status, can be in yaml or console", default="console", choices={"console", "yaml"})
-parser.add_argument("-w", "--wait-ready", help="Print status, can be in yaml or console", nargs='?', const=True, type=bool)
-parser.add_argument("-t", "--timeout", help="Print status, can be in yaml or console", type=int, default=0)
+parser.add_argument("-o", "--output", help="Print cluster and addon status, output can be in yaml or console", default="console", choices={"console", "yaml"})
+parser.add_argument("-w", "--wait-ready", help="Wait until the cluster is in ready state", nargs='?', const=True, type=bool)
+parser.add_argument("-t", "--timeout", help="Specify a timeout in seconds when waiting for the cluster to be ready.", type=int, default=0)
 # read arguments from the command line
 args = parser.parse_args()
+
+CYAN = '\033[36m'
+YELLOW = '\033[93m'
+ENDC = '\033[0m'
+
+def cyan_output(message):
+    print(CYAN + message + ENDC)
+
+def yellow_output(message):
+    print(YELLOW + message + ENDC)
 
 def exit_if_no_permission():
     user = getpass.getuser()
     # test if we can access the default kubeconfig
-    clientConfigFile = "$SNAP_DATA/credentials/client.config".replace("${SNAP_DATA}", snap_data)
+    clientConfigFile = os.path.expandvars("${SNAP_DATA}/credentials/client.config")
     if os.access(clientConfigFile, os.R_OK) == False:
         print ("Insufficient permissions to access MicroK8s.")
         print ("You can either try again with sudo or add the user {} to the 'microk8s' group:".format(user))
@@ -48,7 +58,7 @@ addon[helm3]="${SNAP_DATA}/bin/helm3"
 
 
 def is_cluster_locked():
-    clusterLockFile = "${SNAP_DATA}/var/lock/clustered.lock".replace("${SNAP_DATA}", snap_data)
+    clusterLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
     if os.path.isfile(clusterLockFile):
         print("This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.status on the master.")
         exit(0)
@@ -135,7 +145,7 @@ def is_enabled(addon, item):
     if addon in item:
         return True
     else:
-        filePath = addon.replace("${SNAP_DATA}", snap_data)
+        filePath = os.path.expandvars(addon)
         return os.path.isfile(filePath)
     
     return False
@@ -150,11 +160,11 @@ def print_console(isReady, enabled_addons, disabled_addons):
         print("addons:")
         print('{:>2}'.format("enabled:"))
         for enabled in enabled_addons:
-            print(console_formatter.format("", enabled["name"], enabled["description"]))
-            
+            cyan_output(console_formatter.format("", enabled["name"], enabled["description"]))
+        print("")   
         print('{:>2}'.format("disabled:"))
         for disabled in disabled_addons:
-            print(console_formatter.format("", disabled["name"], disabled["description"]))
+            yellow_output(console_formatter.format("", disabled["name"], disabled["description"]))
 
 
 def print_yaml(isReady, enabled_addons, disabled_addons):
