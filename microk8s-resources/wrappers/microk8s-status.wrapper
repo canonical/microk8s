@@ -1,195 +1,225 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+import yaml
+import os
+import subprocess
+import sys
+import time
+import platform
+import argparse
+import getpass
 
+# architecture mapping
+arch_mapping = {
+    'aarch64': 'arm64',
+    'x86_64': 'amd64'
+}
 
-source $SNAP/actions/common/utils.sh
+current_arch = arch_mapping[platform.machine()]
+snap_data = os.environ["SNAP_DATA"]
+snap_dir = os.environ["SNAP"]
+kubeconfig = "--kubeconfig="+ snap_data + "/credentials/client.config"
+console_formatter = "{:>1} {:<20} # {}"
 
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.status on the master."
-  exit 0
-fi
+# define the program description
+text = 'Microk8s status check.'
 
-KUBECTL="$SNAP/kubectl --kubeconfig=$SNAP_DATA/credentials/client.config"
+# initiate the parser with a description
+parser = argparse.ArgumentParser(description = text)
+parser.add_argument("-o", "--output", help="Print status, can be in yaml or console", default="console", choices={"console", "yaml"})
+parser.add_argument("-w", "--wait-ready", help="Print status, can be in yaml or console", nargs='?', const=True, type=bool)
+parser.add_argument("-t", "--timeout", help="Print status, can be in yaml or console", type=int, default=0)
+# read arguments from the command line
+args = parser.parse_args()
 
-# Arrray of what we query per addon
-declare -A addon
-addon[dns]="pod/coredns"
-addon[rbac]="clusterrole.rbac.authorization.k8s.io/cluster-admin"
-addon[dashboard]="pod/kubernetes-dashboard"
-addon[ingress]="pod/nginx-ingress-microk8s-controller"
-addon[storage]="pod/hostpath-provisioner"
-addon[registry]="pod/registry"
-addon[metrics-server]="pod/metrics-server"
-addon[istio]="pod/istio"
-addon[knative]="clusterrole.rbac.authorization.k8s.io/knative"
-addon[gpu]="daemonset.apps/nvidia-device-plugin-daemonset"
-addon[prometheus]="pod/prometheus-k8s-0"
-addon[fluentd]="daemonset.apps/fluentd-es-v2.2.0"
-addon[jaeger]="pod/jaeger-operator"
-addon[linkerd]="pod/linkerd-controller"
-addon[cilium]="pod/cilium"
-addon[helm]="${SNAP_DATA}/bin/helm"
+def exit_if_no_permission():
+    user = getpass.getuser()
+    # test if we can access the default kubeconfig
+    clientConfigFile = "$SNAP_DATA/credentials/client.config".replace("${SNAP_DATA}", snap_data)
+    if os.access(clientConfigFile, os.R_OK) == False:
+        print ("Insufficient permissions to access MicroK8s.")
+        print ("You can either try again with sudo or add the user {} to the 'microk8s' group:".format(user))
+        print ("")
+        print ("    sudo usermod -a -G microk8s {}".format(user))
+        print ("")
+        print ("The new group will be available on the user's next login.")
+        exit(1)  
 addon[helm3]="${SNAP_DATA}/bin/helm3"
-addon[juju]="${SNAP_DATA}/bin/juju"
-addon[kubeflow]="pod/ambassador-operator-0 "
-addon[metallb]="pod/speaker"
 
 
-function show_help() {
-    prog=$(basename -s.wrapper "$0" | tr - .)
-    echo "Usage: $prog [--yaml] [--wait-ready [--timeout <seconds>]]"
-    echo "Show the status of microks8. Use --yaml to get the response in yaml."
-    echo "To wait for microk8s to become ready use the --wait-ready flag and provide a"
-    echo "waiting timeout."
-    echo ""
-    echo "Example: $prog --wait-ready --timeout 60"
-    echo ""
-}
-
-# Parse arguments. The variables yaml, wait_ready and timeout are filled.
-function parse_args() {
-    while [[ "$#" > 0 ]]
-    do
-        case "$1" in
-            "--help") show_help ; exit 0 ;;
-            "--yaml") yaml=1 ;;
-            "--wait-ready") wait_ready=1 ;;
-            "--timeout") timeout=$2 ; shift ;;
-        esac
-        shift
-    done
-}
+def is_cluster_locked():
+    clusterLockFile = "${SNAP_DATA}/var/lock/clustered.lock".replace("${SNAP_DATA}", snap_data)
+    if os.path.isfile(clusterLockFile):
+        print("This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.status on the master.")
+        exit(0)
 
 
-# Wait for the timeout of microk8s to say it has a node. If timeout variable is set this method will not block.
-function wait_for_ready() {
-    start_timer="$(date +%s)"
-    while ! ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null
-    do
-        now="$(date +%s)"
-        if ! [ -z $timeout ] && [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
+def run(*args, die=True):
+    # Add wrappers to $PATH
+    env = os.environ.copy()
+    env["PATH"] += ":%s" % os.environ["SNAP"]
+    result = subprocess.run(
+        args,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env
+    )
+
+    try:
+        result.check_returncode()
+    except subprocess.CalledProcessError as err:
+        if die:
+            if result.stderr:
+                print(result.stderr.decode("utf-8"))
+            print(err)
+            sys.exit(1)
+        else:
+            raise
+
+    return result.stdout.decode("utf-8")
+
+def is_cluster_ready():
+    try:
+        service_output = kubectl_get("all")
+        node_output = kubectl_get("nodes")
+        if "Ready" in node_output and "service/kubernetes" in  service_output:
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+
+def wait_for_ready(wait_ready,timeout):
+    start_time = time.time()
+    isReady = False
+
+    while True :
+        if (timeout >0 and (time.time() > (start_time + timeout))) or isReady:
             break
-        fi
-        sleep 2
-    done
-
-    while ! ($KUBECTL get no | grep -z " Ready") &> /dev/null
-    do
-        now="$(date +%s)"
-        if ! [ -z $timeout ] && [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
-            break
-        fi
-        sleep 2
-    done
-}
+        try:
+            isReady = is_cluster_ready()
+        except Exception:
+            time.sleep(2)
+    
+    return isReady
 
 
-# Format the output based on the yaml variable. The status variable should be set.
-function format_output() {
-    if [ "$status" = "Running" ]
-    then
-      get_all="$($KUBECTL get all --all-namespaces 2>&1)"
-      get_all="$get_all\n$($KUBECTL get clusterroles --show-kind --no-headers 2>&1)"
-      for a in "${!addon[@]}"
-      do
-        if (echo "$get_all" | grep "${addon[$a]}" &> /dev/null) ||
-            [ -f "${addon[$a]}" ]
-        then
-          addon["$a"]="enabled"
-        else
-          addon["$a"]="disabled"
-        fi
-      done
-    fi
-
-    if ! [ -z ${yaml} ]
-    then
-        if [ "$status" = "Running" ]
-        then
-            echo "microk8s:"
-            echo "  running: true"
-            echo "addons:"
-            echo "  enabled:"
-            for a in "${!addon[@]}"
-            do
-              if [ "${addon[$a]}" = "enabled" ]
-              then
-                  echo "  - $a"
-               fi
-            done
-            echo "  disabled:"
-            for a in "${!addon[@]}"
-            do
-              if [ "${addon[$a]}" = "disabled" ]
-              then
-                  echo "  - $a"
-               fi
-            done
-            exit 0
-        else
-            echo "microk8s:"
-            echo "  running: false"
-            exit 1
-        fi
-    else
-        if [ "$status" = "Running" ]
-        then
-            echo "microk8s is running"
-            echo "addons:"
-            echo "enabled:"
-            for a in "${!addon[@]}"
-            do
-              if [ "${addon[$a]}" = "enabled" ]
-              then
-                  # Cyan - \e[36m color for enabled addons
-                  echo -e "  \e[36m$a\033[0m" 
-               fi
-            done |
-            sort
-
-            echo ""
-            echo "disabled:"
-            for a in "${!addon[@]}"
-            do
-              if [ "${addon[$a]}" = "disabled" ]
-              then
-                  # Yellow - \e[93m color for disabled addons
-                  echo -e "  \e[93m$a\033[0m"
-               fi
-            done |
-            sort
-
-            exit 0
-        else
-            echo "microk8s is not running. Use microk8s.inspect for a deeper inspection."
-            exit 1
-        fi
-    fi
-}
+def get_available_addons(arch, addon_dataset):
+    available = []
+    with open(addon_dataset, 'r') as file:
+        # The FullLoader parameter handles the conversion from YAML
+        # scalar values to Python the dictionary format
+        addons = yaml.load(file, Loader=yaml.FullLoader)
+        for addon in addons["microk8s-addons"]["addons"]:
+            if arch in addon["supported_architectures"]:
+               available.append(addon)
+    
+    available = sorted(available, key=lambda k: k['name'])                  
+    return available
 
 
-# See if we have timed out or we are running. Sets the status variable.
-function check_ready() {
-    status="Not running"
-    if ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null &&
-       ($KUBECTL get no | grep -z " Ready") &> /dev/null
-    then
-        status="Running"
-    fi
-}
+def kubectl_get(cmd, namespace="--all-namespaces"):
+    if namespace == "--all-namespaces":
+        return run("kubectl", kubeconfig, "get", cmd, "--all-namespaces", die=False)
+    else:
+        return run("kubectl", kubeconfig, "get", cmd, "-n", namespace, die=False)
 
 
-# Main flow #
-exit_if_no_permissions
-parse_args "$@"
-if ! [ -z ${wait_ready} ]
-then
-    wait_for_ready
-fi
-check_ready
-format_output
+def kubectl_get_clusterroles():
+    return run("kubectl", kubeconfig, "get", "clusterroles", "--show-kind","--no-headers", die=False)
+
+
+def is_enabled(addon, item):
+    if addon in item:
+        return True
+    else:
+        filePath = addon.replace("${SNAP_DATA}", snap_data)
+        return os.path.isfile(filePath)
+    
+    return False
+
+def print_console(isReady, enabled_addons, disabled_addons):
+    if isReady:
+        print("microk8s is running")
+    else:
+        print("microk8s is not running. Use microk8s.inspect for a deeper inspection.")
+
+    if isReady:    
+        print("addons:")
+        print('{:>2}'.format("enabled:"))
+        for enabled in enabled_addons:
+            print(console_formatter.format("", enabled["name"], enabled["description"]))
+            
+        print('{:>2}'.format("disabled:"))
+        for disabled in disabled_addons:
+            print(console_formatter.format("", disabled["name"], disabled["description"]))
+
+
+def print_yaml(isReady, enabled_addons, disabled_addons):
+        
+    print("microk8s:")
+    print("{:>2} {} {}".format("", "running:", isReady))
+
+    if not isReady:
+        print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s.inspect for a deeper inspection."))
+        return
+
+    if isReady:    
+        print("{:>2}".format("addons:"))
+        print('{:>4}{}'.format("", "enabled:"))
+        for enabled in enabled_addons:
+            print("{:>6} name: {:<1}".format("-", enabled["name"]))
+            print("{:>6} description: {:<1}".format("", enabled["description"]))
+            print("{:>6} version: {:<1}".format("", enabled["version"]))
+            
+        print('{:>4}{}'.format("","disabled:"))
+        for disabled in disabled_addons:
+            print("{:>6} name: {:<1}".format("-", disabled["name"]))
+            print("{:>6} description: {:<1}".format("", disabled["description"]))
+            print("{:>6} version: {:<1}".format("", enabled["version"]))
+
+
+def get_status(output, isReady):
+    addon_dataset = snap_dir + "/addon-lists.yaml"
+    enabled = []
+    disabled = []
+    
+    if isReady:
+        available_addons = get_available_addons(current_arch, addon_dataset)
+        kube_output = kubectl_get("all")
+        cluster_output = kubectl_get_clusterroles()
+        kube_output = kube_output + cluster_output
+        for addon in available_addons:
+            found = False
+            for row in kube_output.split('\n'):
+                if is_enabled(addon["check_status"], row) == True:
+                    enabled.append(addon)
+                    found = True
+                    break
+            
+            if found == False:
+                disabled.append(addon)
+    
+    if output == "yaml":
+        print_yaml(isReady, enabled, disabled)
+    else:
+        print_console(isReady, enabled, disabled)
+
+# Start here
+exit_if_no_permission()
+is_cluster_locked()
+
+wait_ready = args.wait_ready
+timeout = args.timeout
+
+if wait_ready == True:
+    isReady = wait_for_ready(wait_ready, timeout )
+else:
+    isReady = is_cluster_ready()
+
+get_status(args.output, isReady)
+
+
+

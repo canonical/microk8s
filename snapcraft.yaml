@@ -181,6 +181,7 @@ parts:
     source: .
     python-packages:
     - flask
+    - PyYAML
     stage-packages:
     - python3-openssl
     - openssl
