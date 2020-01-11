@@ -188,7 +188,7 @@ def print_yaml(isReady, enabled_addons, disabled_addons):
         for disabled in disabled_addons:
             print("{:>6} name: {:<1}".format("-", disabled["name"]))
             print("{:>6} description: {:<1}".format("", disabled["description"]))
-            print("{:>6} version: {:<1}".format("", enabled["version"]))
+            print("{:>6} version: {:<1}".format("", disabled["version"]))
 
 
 def get_status(output, isReady):
@@ -230,6 +230,3 @@ else:
     isReady = is_cluster_ready()
 
 get_status(args.output, isReady)
-
-
-
