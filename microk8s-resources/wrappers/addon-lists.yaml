@@ -34,7 +34,7 @@ microk8s-addons:
       - amd64
     
     - name: "storage"
-      description: "https://hub.docker.com/r/cdkbot/hostpath-provisioner-amd64"
+      description: "Hostpath provisioner CSI. - https://hub.docker.com/r/cdkbot/hostpath-provisioner-amd64"
       version: "1.0.0"
       check_status: "pod/hostpath-provisioner"
       supported_architectures:
