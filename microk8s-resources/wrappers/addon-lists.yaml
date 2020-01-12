@@ -26,7 +26,7 @@ microk8s-addons:
       - amd64
 
     - name: "ingress"
-      description: "NGINX Ingress Controller"
+      description: "NGINX Ingress Controller for Kubernetes"
       version: "0.25.1"
       check_status: "pod/nginx-ingress-microk8s-controller"
       supported_architectures:
@@ -42,7 +42,7 @@ microk8s-addons:
       - amd64
         
     - name: "registry"
-      description: "https://hub.docker.com/r/cdkbot/registry-amd64"
+      description: "An implementation of the Docker Registry HTTP API V2 for use with docker 1.6+. - https://hub.docker.com/r/cdkbot/registry-amd64"
       version: "2.6"
       check_status: "pod/registry"
       supported_architectures:
@@ -65,7 +65,7 @@ microk8s-addons:
       - amd64
 
     - name: "knative"
-      description: "https://knative.dev/docs/"
+      description: "Knative offers scale-to-zero, autoscaling, in-cluster builds, and eventing framework on Kubernetes."
       version: "0.9.0"
       check_status: "clusterrole.rbac.authorization.k8s.io/knative"
       supported_architectures:
@@ -114,18 +114,27 @@ microk8s-addons:
       - amd64
 
     - name: "helm"
-      description: "Helm 2 - Kubernetes package manager"
+      description: "Helm 2: The package manager for Kubernetes"
       version: "2.16.0"
       check_status: "${SNAP_DATA}/bin/helm"
       supported_architectures:
       - amd64
+      - arm64
 
+    - name: "helm3"
+      description: "Helm 3 - Kubernetes package manager"
+      version: "3.0.2"
+      check_status: "${SNAP_DATA}/bin/helm3"
+      supported_architectures:
+      - amd64
+      description: "Juju is an open source application modeling tool developed by Canonical Ltd."
     - name: "juju"
       description: "Juju is an open source application modeling tool developed by Canonical Ltd."
-      version: ""
+      version: "2.7.0"
       check_status: "${SNAP_DATA}/bin/juju"
       supported_architectures:
       - amd64
+      - arm64
 
     - name: "kubeflow"
       description: "The Kubeflow project is dedicated to making deployments of machine learning (ML) workflows on Kubernetes"
@@ -133,6 +142,7 @@ microk8s-addons:
       check_status: "pod/ambassador-operator-0"
       supported_architectures:
       - amd64
+      - arm64
 
     - name: "metallb"
       description: "MetalLB is a load-balancer implementation for bare metal Kubernetes clusters, using standard routing protocols."
@@ -140,3 +150,4 @@ microk8s-addons:
       check_status: "pod/speaker"
       supported_architectures:
       - amd64
+      - arm64
