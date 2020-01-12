@@ -78,6 +78,13 @@ then
   cp ${SNAP}/microk8s-resources/client.config ${SNAP_DATA}/credentials/
 fi
 
+# copy kubectl-env 
+if [ ! -e ${SNAP_DATA}/args/kubectl-env ]
+then
+  echo "Making sure we have kubectl arguments file"
+  cp ${SNAP}/default-args/kubectl-env ${SNAP_DATA}/args/kubectl-env
+fi
+
 # Upgrading to containerd
 if [ ! -e ${SNAP_DATA}/args/containerd ] ||
    grep -e "\-\-docker unix://\${SNAP_DATA}/docker.sock" ${SNAP_DATA}/args/kubelet
