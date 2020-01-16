@@ -9,3 +9,6 @@ microk8s_source.tar.bz2
 tests/__pycache__
 .idea/
 **/tests/*.pyc
+/installer/**/__pycache__
+/installer/dist/
+/installer/build/
