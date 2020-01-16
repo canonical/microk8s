@@ -1,0 +1,1 @@
+MAX_CHARACTERS_WRAP: int = 120

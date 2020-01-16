@@ -10,3 +10,6 @@ tests/__pycache__
 .idea/
 **/tests/*.pyc
 .vscode/
+/installer/**/__pycache__
+/installer/dist/
+/installer/build/
