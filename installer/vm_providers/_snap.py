@@ -19,7 +19,6 @@ import datetime
 import enum
 import logging
 import os
-import tempfile
 from typing import Callable, List, Optional
 from typing import Any, Dict  # noqa: F401
 
@@ -130,25 +129,6 @@ class _SnapManager:
         self.__required_operation = op
         return op
 
-    def push_host_snap(self, *, file_pusher: Callable[..., None]) -> None:
-        # TODO not being able to lock down on a snap revision can lead to races.
-        host_snap_repo = self._get_snap_repo()
-        with tempfile.TemporaryDirectory() as temp_dir:
-            snap_file_path = os.path.join(temp_dir, "{}.snap".format(self.snap_name))
-            assertion_file_path = os.path.join(
-                temp_dir, "{}.assert".format(self.snap_name)
-            )
-            host_snap_repo.local_download(
-                snap_path=snap_file_path, assertion_path=assertion_file_path
-            )
-            # Last item of __install_cmd holds the snap_file_path on the remote.
-            file_pusher(
-                source=snap_file_path, destination=self.get_snap_install_cmd()[-1]
-            )
-            # Last item of __assert_ack_cmd holds the snap_file_path on the remote.
-            file_pusher(
-                source=assertion_file_path, destination=self.get_assertion_ack_cmd()[-1]
-            )
 
     def _set_data(self) -> None:
         op = self.get_op()
@@ -356,27 +336,3 @@ class SnapInjector:
                 inject_from_host=self._inject_from_host,
             )
         )
-
-    def apply(self) -> None:
-        if all((s.get_op() == _SnapOp.NOP for s in self._snaps)):
-            return
-
-        # Allow using snapd from the snapd snap to leverage newer snapd features.
-        if any(s.snap_name == "snapd" for s in self._snaps):
-            self._enable_snapd_snap()
-
-        # Disable refreshes so they do not interfere with installation ops.
-        self._disable_and_wait_for_refreshes()
-
-        # Filter out snaps with no operations.
-        snaps = [snap for snap in self._snaps if snap.get_op() != _SnapOp.NOP]
-
-        # Install snaps and assertions.
-        for snap in snaps:
-            if snap.get_op() == _SnapOp.INJECT:
-                snap.push_host_snap(file_pusher=self._file_pusher)
-                self._runner(snap.get_assertion_ack_cmd())
-            self._runner(snap.get_snap_install_cmd())
-            self._record_revision(snap.snap_name, snap.get_revision())
-
-        _save_registry(self._registry_data, self._registry_filepath)

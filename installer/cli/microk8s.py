@@ -6,7 +6,7 @@ import click
 from cli.echo import Echo
 from common.errors import BaseError
 from vm_providers.factory import get_provider_for
-from vm_providers.errors import ProviderBaseError, ProviderNotFound
+from vm_providers.errors import ProviderNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +79,7 @@ def install() -> None:
             else:
                 raise provider_error
         else:
+            print("Here3")
             raise provider_error
 
     instance = vm_provider_class(echoer=echo)
@@ -122,7 +123,7 @@ def update():
             raise provider_error
 
     instance = vm_provider_class(echoer=echo)
-    commands = instance._run("ls /snap/bin/ -1".split(), True)
+    commands = instance.run("ls /snap/bin/ -1".split(), True)
     print(commands.decode("utf-8").split())
 
 
