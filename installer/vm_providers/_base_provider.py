@@ -23,6 +23,7 @@ from typing import Dict
 from typing import Optional, Sequence
 
 from . import errors
+from ._multipass._instance_info import InstanceInfo
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +87,10 @@ class Provider(abc.ABC):
         This method should be safe to call multiple times and do nothing
         if the instance to destroy is already destroyed.
         """
+
+    @abc.abstractmethod
+    def get_instance_info(self) -> InstanceInfo:
+        """Return the instance info."""
 
     @abc.abstractmethod
     def run(

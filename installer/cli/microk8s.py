@@ -1,5 +1,7 @@
 import logging
+import string
 import traceback
+from typing import List
 
 import click
 
@@ -7,6 +9,7 @@ from cli.echo import Echo
 from common.errors import BaseError
 from vm_providers.factory import get_provider_for
 from vm_providers.errors import ProviderNotFound
+from common import definitions
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +61,18 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  install      Installs MicroK8s
-  uninstall    Removes MicroK8s"""
+  install         Installs MicroK8s
+  uninstall       Removes MicroK8s"""
     click.echo(msg)
+    commands = _get_microk8s_commands()
+    for command in commands:
+        if command in definitions.command_descriptions:
+            click.echo("  {:<15} {}".format(command, definitions.command_descriptions[command]))
+        else:
+            click.echo("  {:<15}".format(command))
+    if len(commands) == 2:
+        click.echo("")
+        click.echo("Install and start MicroK8s to see the full list of commands.")
 
 
 def install() -> None:
@@ -79,7 +91,6 @@ def install() -> None:
             else:
                 raise provider_error
         else:
-            print("Here3")
             raise provider_error
 
     instance = vm_provider_class(echoer=echo)
@@ -87,7 +98,7 @@ def install() -> None:
     echo.info("MicroK8s is up and running. See the available commands with 'microk8s --help'.")
 
 
-def uninstall():
+def uninstall() -> None:
     vm_provider_name = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
     echo = Echo()
@@ -106,25 +117,6 @@ def uninstall():
     instance = vm_provider_class(echoer=echo)
     instance.destroy()
     echo.info("Thank you for using MicroK8s!")
-
-
-def update():
-    vm_provider_name = "multipass"
-    vm_provider_class = get_provider_for(vm_provider_name)
-    echo = Echo()
-    try:
-        vm_provider_class.ensure_provider()
-    except ProviderNotFound as provider_error:
-        if provider_error.prompt_installable:
-            if echo.is_tty_connected():
-                echo.warning("MicroK8s is not running.")
-            return 1
-        else:
-            raise provider_error
-
-    instance = vm_provider_class(echoer=echo)
-    commands = instance.run("ls /snap/bin/ -1".split(), True)
-    print(commands.decode("utf-8").split())
 
 
 def run(cmd):
@@ -146,6 +138,24 @@ def run(cmd):
     command = cmd[0]
     cmd[0] = "microk8s.{}".format(command)
     instance.run(cmd)
+
+
+def _get_microk8s_commands() -> List:
+    vm_provider_name = "multipass"
+    vm_provider_class = get_provider_for(vm_provider_name)
+    echo = Echo()
+    try:
+        vm_provider_class.ensure_provider()
+        instance = vm_provider_class(echoer=echo)
+        instance_info = instance.get_instance_info()
+        if instance_info.is_running():
+            commands = instance.run('ls -1 /snap/bin/'.split(), hide_output=True)
+            mk8s = [c.decode().replace('microk8s.', '') for c in commands.split() if c.decode().startswith('microk8s')]
+            return mk8s
+        else:
+            return ["start", "stop"]
+    except ProviderNotFound as provider_error:
+        return ["start", "stop"]
 
 
 if __name__ == '__main__':

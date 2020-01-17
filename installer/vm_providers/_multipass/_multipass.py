@@ -94,6 +94,19 @@ class Multipass(Provider):
             image=image
         )
 
+    def get_instance_info(self) -> InstanceInfo:
+        try:
+            instance_info = self._get_instance_info();
+            return instance_info
+        except errors.ProviderInfoError as instance_error:
+            # Until we have proper multipass error codes to know if this
+            # was a communication error we should keep this error tracking
+            # and generation here.
+            raise errors.ProviderInstanceNotFoundError(
+                instance_name=self.instance_name
+            ) from instance_error
+
+
     def _start(self):
         try:
             instance_info = self._get_instance_info()
