@@ -1,10 +1,12 @@
 import logging
+import traceback
 
 import click
 
 from cli.echo import Echo
+from common.errors import BaseError
 from vm_providers.factory import get_provider_for
-from vm_providers.errors import ProviderNotFound
+from vm_providers.errors import ProviderBaseError, ProviderNotFound
 
 logger = logging.getLogger(__name__)
 
@@ -16,22 +18,29 @@ logger = logging.getLogger(__name__)
 @click.option('-h', '--help', is_flag=True)
 @click.pass_context
 def cli(ctx, help):
-    if help:
-        show_help()
+    try:
+        if help:
+            show_help()
+            exit(0)
 
-    if len(ctx.args) == 0:
-        show_error()
-        exit(1)
-
-    if ctx.args[0] == 'install':
-        install()
-    elif ctx.args[0] == 'uninstall':
-        uninstall()
-    else:
-        try:
-            run(ctx.args)
-        except Exception:
+        if len(ctx.args) == 0:
             show_error()
+            exit(1)
+
+        if ctx.args[0] == 'install':
+            install()
+        elif ctx.args[0] == 'uninstall':
+            uninstall()
+        else:
+            run(ctx.args)
+    except BaseError as e:
+        Echo.error(str(e))
+        exit(e.get_exit_code())
+    except Exception as e:
+        Echo.error("An unexpected error occurred.")
+        Echo.info(str(e))
+        Echo.info(traceback.print_exc())
+        exit(254)
 
 
 def show_error():
@@ -135,7 +144,7 @@ def run(cmd):
     instance.launch_instance()
     command = cmd[0]
     cmd[0] = "microk8s.{}".format(command)
-    instance._run(cmd)
+    instance.run(cmd)
 
 
 if __name__ == '__main__':

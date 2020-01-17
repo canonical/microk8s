@@ -17,20 +17,11 @@
 from typing import Sequence
 from typing import List
 
+from common.errors import BaseError
 
-class RepoError(Exception):
-    fmt = "Daughter classes should redefine this"
 
-    def __init__(self, **kwargs) -> None:
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-    def __str__(self):
-        return self.fmt.format([], **self.__dict__)
-
-    def get_exit_code(self):
-        """Exit code to use if this exception causes Snapcraft to exit."""
-        return 2
+class RepoError(BaseError):
+    pass
 
 
 class NoNativeBackendError(RepoError):

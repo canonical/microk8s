@@ -63,7 +63,7 @@ class Multipass(Provider):
     def _get_provider_name(cls):
         return "multipass"
 
-    def _run(
+    def run(
         self, command: Sequence[str], hide_output: bool = False
     ) -> Optional[bytes]:
         env_command = self._get_env_command()
@@ -96,7 +96,10 @@ class Multipass(Provider):
 
     def _start(self):
         try:
-            self._get_instance_info()
+            instance_info = self._get_instance_info()
+            if not instance_info.is_running():
+                self._multipass_cmd.start(instance_name=self.instance_name)
+
         except errors.ProviderInfoError as instance_error:
             # Until we have proper multipass error codes to know if this
             # was a communication error we should keep this error tracking
@@ -104,8 +107,6 @@ class Multipass(Provider):
             raise errors.ProviderInstanceNotFoundError(
                 instance_name=self.instance_name
             ) from instance_error
-
-        self._multipass_cmd.start(instance_name=self.instance_name)
 
     def _umount(self, *, mountpoint: str) -> None:
         mount = "{}:{}".format(self.instance_name, mountpoint)
@@ -164,7 +165,7 @@ class Multipass(Provider):
     def shell(self) -> None:
         self._run(command=["/bin/bash"])
 
-    def _get_instance_info(self):
+    def _get_instance_info(self) -> InstanceInfo:
         instance_info_raw = self._multipass_cmd.info(
             instance_name=self.instance_name, output_format="json"
         )

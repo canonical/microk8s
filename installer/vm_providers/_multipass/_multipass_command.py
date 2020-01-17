@@ -227,7 +227,7 @@ class MultipassCommand:
             if hide_output:
                 output = _run_output(cmd)
             else:
-                _run(cmd)
+                _run(cmd, stdin=None)
         except subprocess.CalledProcessError as process_error:
             raise errors.ProviderExecError(
                 provider_name=self.provider_name,
