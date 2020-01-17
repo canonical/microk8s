@@ -92,4 +92,7 @@ class InstanceInfo:
         return mountpoint in self.mounts
 
     def is_stopped(self) -> bool:
-        return self.state == "STOPPED"
+        return self.state.upper() == "STOPPED"
+
+    def is_running(self) -> bool:
+        return self.state.upper() == "RUNNING"

@@ -88,7 +88,7 @@ class Provider(abc.ABC):
         """
 
     @abc.abstractmethod
-    def _run(
+    def run(
         self, command: Sequence[str], hide_output: bool = False
     ) -> Optional[bytes]:
         """Run a command on the instance."""

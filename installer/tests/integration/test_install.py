@@ -4,7 +4,7 @@ import unittest
 
 from click.testing import CliRunner
 
-from cli.microk8s import install
+from cli.microk8s import cli
 
 
 class TestCli(unittest.TestCase):
@@ -12,9 +12,16 @@ class TestCli(unittest.TestCase):
     def test_install(self):
         self._uninstall_multipass()
         runner = CliRunner()
-        result = runner.invoke(install)
-        assert result.exit_code == 0
-        assert result.output == 'Hello Amy!\n'
+
+        # Calling cli without arguments
+        result = runner.invoke(cli)
+        assert result.exit_code == 1
+        assert '--help' in result.output
+
+        # Calling cli without having the VM installed
+        result = runner.invoke(cli, "status")
+        assert result.exit_code == 1
+        assert 'not running' in result.output
 
     def _uninstall_multipass(self):
         # This is for linux for now
