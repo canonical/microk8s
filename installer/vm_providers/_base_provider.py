@@ -142,7 +142,7 @@ class Provider(abc.ABC):
             self._setup_microk8s()
 
     def _setup_microk8s(self) -> None:
-        self._run("snap install microk8s --classic".split())
+        self.run("snap install microk8s --classic".split())
 
     def _get_env_command(self) -> Sequence[str]:
         """Get command sequence for `env` with configured flags."""
