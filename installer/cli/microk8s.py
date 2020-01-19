@@ -1,3 +1,4 @@
+import argparse
 import logging
 import traceback
 from typing import List
@@ -22,20 +23,29 @@ logger = logging.getLogger(__name__)
 @click.pass_context
 def cli(ctx, help):
     try:
-        if help:
+        if help and len(ctx.args) == 0:
             show_help()
             exit(0)
+        elif help:
+            ctx.args.append("--help")
 
         if len(ctx.args) == 0:
             show_error()
             exit(1)
-
         if ctx.args[0] == 'install':
-            install()
+            install(ctx.args[1:])
+            exit(0)
         elif ctx.args[0] == 'uninstall':
             uninstall()
+            exit(0)
+        elif ctx.args[0] == 'stop':
+            run(ctx.args)
+            stop()
+            exit(0)
         else:
             run(ctx.args)
+            exit(0)
+
     except BaseError as e:
         Echo.error(str(e))
         exit(e.get_exit_code())
@@ -61,7 +71,7 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  install         Installs MicroK8s
+  install         Installs MicroK8s. Use --cpu, --mem, --disk to appoint resources.
   uninstall       Removes MicroK8s"""
     click.echo(msg)
     commands = _get_microk8s_commands()
@@ -75,7 +85,26 @@ Commands:
         click.echo("Install and start MicroK8s to see the full list of commands.")
 
 
-def install() -> None:
+def _show_install_help():
+    msg = """Usage: microk8s install OPTIONS
+
+    Options:
+      --help  Show this message and exit.
+      --cpu   Cores used by MicroK8s (default={})
+      --mem   RAM in GB used by MicroK8s (default={})
+      --disk  Maximum volume in GB of the dynamicaly expandable hard disk to be used (default={})"""
+    Echo.info(msg.format(definitions.DEFAULT_CORES, definitions.DEFAULT_MEMORY, definitions.DEFAULT_DISK))
+
+
+def install(args) -> None:
+    if "--help" in args:
+        _show_install_help()
+        return
+    parser = argparse.ArgumentParser("microk8s install")
+    parser.add_argument('--cpu', default=definitions.DEFAULT_CORES, type=int)
+    parser.add_argument('--mem', default=definitions.DEFAULT_MEMORY, type=int)
+    parser.add_argument('--disk', default=definitions.DEFAULT_DISK, type=int)
+    args = parser.parse_args(args)
     vm_provider_name: str = 'multipass'
     vm_provider_class = get_provider_for(vm_provider_name)
     echo = Echo()
@@ -94,7 +123,7 @@ def install() -> None:
             raise provider_error
 
     instance = vm_provider_class(echoer=echo)
-    instance.launch_instance()
+    instance.launch_instance(vars(args))
     echo.info("MicroK8s is up and running. See the available commands with 'microk8s --help'.")
 
 
@@ -119,7 +148,17 @@ def uninstall() -> None:
     echo.info("Thank you for using MicroK8s!")
 
 
-def run(cmd):
+def stop() -> None:
+    vm_provider_name = "multipass"
+    vm_provider_class = get_provider_for(vm_provider_name)
+    vm_provider_class.ensure_provider()
+    instance = vm_provider_class(echoer=Echo())
+    instance_info = instance.get_instance_info()
+    if instance_info.is_running():
+        instance.stop()
+
+
+def run(cmd) -> None:
     vm_provider_name = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
     echo = Echo()
