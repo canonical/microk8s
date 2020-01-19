@@ -99,7 +99,7 @@ class Provider(abc.ABC):
         """Run a command on the instance."""
 
     @abc.abstractmethod
-    def _launch(self):
+    def _launch(self, specs: Dict):
         """Launch the instance."""
 
     @abc.abstractmethod
@@ -137,12 +137,12 @@ class Provider(abc.ABC):
     def shell(self) -> None:
         """Provider steps to provide a shell into the instance."""
 
-    def launch_instance(self) -> None:
+    def launch_instance(self, specs: Dict) -> None:
         try:
             # An ProviderStartError exception here means we need to create
             self._start()
         except errors.ProviderInstanceNotFoundError:
-            self._launch()
+            self._launch(specs)
             # We need to setup MicroK8s and scan for cli commands
             self._setup_microk8s()
 
@@ -203,3 +203,7 @@ class Provider(abc.ABC):
     def _log_run(self, command: Sequence[str]) -> None:
         cmd_string = " ".join([shlex.quote(c) for c in command])
         logger.debug(f"Running: {cmd_string}")
+
+    @abc.abstractmethod
+    def stop(self) -> None:
+        pass

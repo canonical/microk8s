@@ -20,3 +20,6 @@ command_descriptions = {
   'status':          "Displays the status of the cluster",
   'stop':            "Stops the kubernetes cluster"
 }
+DEFAULT_CORES: int = 2
+DEFAULT_MEMORY: int = 4
+DEFAULT_DISK: int = 256

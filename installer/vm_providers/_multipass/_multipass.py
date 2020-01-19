@@ -27,23 +27,6 @@ from ._multipass_command import MultipassCommand
 logger = logging.getLogger(__name__)
 
 
-class _MachineSetting:
-    def __init__(self, *, envvar: str, default: str) -> None:
-        self._default = default
-        self._envvar = envvar
-
-    def get_value(self):
-        value = os.getenv(self._envvar, self._default)
-        if value != self._default:
-            logger.warning(
-                "{!r} was set to {!r} in the environment. "
-                "Changing the default allocation upon user request".format(
-                    self._envvar, value
-                )
-            )
-        return value
-
-
 class Multipass(Provider):
     """A multipass provider for snapcraft to execute its lifecycle."""
 
@@ -76,26 +59,24 @@ class Multipass(Provider):
             instance_name=self.instance_name, command=cmd, hide_output=hide_output
         )
 
-    def _launch(self) -> None:
+    def _launch(self, specs: Dict) -> None:
         image = "18.04"
 
-        cpus = _MachineSetting(envvar="MICROK8S_CPU", default="2")
-        mem = _MachineSetting(envvar="MICROK8S_MEMORY", default="4G")
-        disk = _MachineSetting(
-            envvar="MICROK8S_DISK", default="256G"
-        )
+        cpus = "{}".format(specs['cpu'])
+        mem = "{}G".format(specs['mem'])
+        disk = "{}G".format(specs['disk'])
 
         self._multipass_cmd.launch(
             instance_name=self.instance_name,
-            cpus=cpus.get_value(),
-            mem=mem.get_value(),
-            disk=disk.get_value(),
+            cpus=cpus,
+            mem=mem,
+            disk=disk,
             image=image
         )
 
     def get_instance_info(self) -> InstanceInfo:
         try:
-            instance_info = self._get_instance_info();
+            instance_info = self._get_instance_info()
             return instance_info
         except errors.ProviderInfoError as instance_error:
             # Until we have proper multipass error codes to know if this
@@ -184,3 +165,10 @@ class Multipass(Provider):
         return InstanceInfo.from_json(
             instance_name=self.instance_name, json_info=instance_info_raw.decode()
         )
+
+    def stop(self) -> None:
+        instance_info = self._instance_info = self._get_instance_info()
+        if instance_info.is_stopped():
+            return
+
+        self._multipass_cmd.stop(instance_name=self.instance_name)
