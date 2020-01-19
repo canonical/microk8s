@@ -2,7 +2,7 @@ microk8s-addons:
   description: "List of all addons included in Microk8s."
   addons:
     - name: "dns"
-      description: "CoreDNS is a DNS server/forwarder, written in Go, that chains plugins."
+      description: "CoreDNS"
       version: "1.6.6"
       check_status: "pod/coredns"
       supported_architectures:
@@ -10,7 +10,7 @@ microk8s-addons:
       - arm64
 
     - name: "rbac"
-      description: "Kubernetes Role Based Access Control"
+      description: "Role-Based Access Control for authorisation"
       version: ""
       check_status: "clusterrole.rbac.authorization.k8s.io/cluster-admin"
       supported_architectures:
@@ -18,7 +18,7 @@ microk8s-addons:
       - amd64
 
     - name: "dashboard"
-      description: "Dashboard is a web-based Kubernetes user interface."
+      description: "The Kubernetes dashboard"
       version: "2.0.0-beta5"
       check_status: "pod/kubernetes-dashboard"
       supported_architectures:
@@ -26,7 +26,7 @@ microk8s-addons:
       - amd64
 
     - name: "ingress"
-      description: "NGINX Ingress Controller for Kubernetes"
+      description: "Ingress controller for external access"
       version: "0.25.1"
       check_status: "pod/nginx-ingress-microk8s-controller"
       supported_architectures:
@@ -34,7 +34,7 @@ microk8s-addons:
       - amd64
     
     - name: "storage"
-      description: "Hostpath provisioner CSI. - https://hub.docker.com/r/cdkbot/hostpath-provisioner-amd64"
+      description: "Storage class; allocates storage from host directory"
       version: "1.0.0"
       check_status: "pod/hostpath-provisioner"
       supported_architectures:
@@ -42,7 +42,7 @@ microk8s-addons:
       - amd64
         
     - name: "registry"
-      description: "An implementation of the Docker Registry HTTP API V2 for use with docker 1.6+. - https://hub.docker.com/r/cdkbot/registry-amd64"
+      description: "Private image registry exposed on localhost:32000"
       version: "2.6"
       check_status: "pod/registry"
       supported_architectures:
@@ -50,7 +50,7 @@ microk8s-addons:
       - amd64
 
     - name: "metrics-server"
-      description: "Metrics Server is a cluster-wide aggregator of resource usage data."
+      description: "K8s Metrics Server for API access to service metrics"
       version: "0.2.1"
       check_status: "pod/metrics-server"
       supported_architectures:
@@ -58,56 +58,56 @@ microk8s-addons:
       - amd64
 
     - name: "istio"
-      description: "Service mesh that provides traffic management, policy enforcement, and telemetry collection."
+      description: "Core Istio service mesh services"
       version: "1.3.4"
       check_status: "pod/istio"
       supported_architectures:
       - amd64
 
     - name: "knative"
-      description: "Knative offers scale-to-zero, autoscaling, in-cluster builds, and eventing framework on Kubernetes."
+      description: "The Knative framework on Kubernetes."
       version: "0.9.0"
       check_status: "clusterrole.rbac.authorization.k8s.io/knative"
       supported_architectures:
       - amd64
 
     - name: "gpu"
-      description: "NVIDIA GPU support"
+      description: "Automatic enablement of Nvidia CUDA"
       version: "1.11"
       check_status: "daemonset.apps/nvidia-device-plugin-daemonset"
       supported_architectures:
       - amd64
 
     - name: "prometheus"
-      description: "Prometheus Operator -  https://github.com/coreos/prometheus-operator.git"
+      description: "Prometheus operator for monitoring and logging"
       version: ""
       check_status: "pod/prometheus-k8s-0"
       supported_architectures:
       - amd64
 
     - name: "fluentd"
-      description: "Log forwarder Fluentd with Elasticsearch"
+      description: "Elasticsearch-Fluentd-Kibana logging and monitoring"
       version: ""
       check_status: "daemonset.apps/fluentd-es-v2.2.0"
       supported_architectures:
       - amd64
 
     - name: "jaeger"
-      description: "Jaeger Operator"
+      description: "Kubernetes Jaeger operator with its simple config"
       version: "1.14.0"
       check_status: "pod/jaeger-operator"
       supported_architectures:
       - amd64
 
     - name: "linkerd"
-      description: "Linkerd is a service mesh for Kubernetes and other frameworks."
+      description: "Linkerd is a service mesh for Kubernetes and other frameworks"
       version: "2.6.0"
       check_status: "pod/linkerd-controller"
       supported_architectures:
       - amd64
 
     - name: "cilium"
-      description: "Cilium CNI - https://cilium.readthedocs.io/en/stable/intro/"
+      description: "SDN, fast with full network policy"
       version: "1.6"
       check_status: "pod/cilium"
       supported_architectures:
@@ -122,14 +122,15 @@ microk8s-addons:
       - arm64
 
     - name: "helm3"
-      description: "Helm 3 - Kubernetes package manager"
+      description: "Helm 3: Kubernetes package manager"
       version: "3.0.2"
       check_status: "${SNAP_DATA}/bin/helm3"
       supported_architectures:
       - amd64
-      description: "Juju is an open source application modeling tool developed by Canonical Ltd."
+      - arm64
+
     - name: "juju"
-      description: "Juju is an open source application modeling tool developed by Canonical Ltd."
+      description: "Model-driven operator engine"
       version: "2.7.0"
       check_status: "${SNAP_DATA}/bin/juju"
       supported_architectures:
@@ -137,7 +138,7 @@ microk8s-addons:
       - arm64
 
     - name: "kubeflow"
-      description: "The Kubeflow project is dedicated to making deployments of machine learning (ML) workflows on Kubernetes"
+      description: "Kubeflow for easy ML deployments"
       version: ""
       check_status: "pod/ambassador-operator-0"
       supported_architectures:
@@ -145,7 +146,7 @@ microk8s-addons:
       - arm64
 
     - name: "metallb"
-      description: "MetalLB is a load-balancer implementation for bare metal Kubernetes clusters, using standard routing protocols."
+      description: "Loadbalancer for your Kubernetes cluster"
       version: "0.8.2"
       check_status: "pod/speaker"
       supported_architectures:
