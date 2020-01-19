@@ -1,7 +1,7 @@
 import logging
-import string
 import traceback
 from typing import List
+from sys import exit
 
 import click
 
