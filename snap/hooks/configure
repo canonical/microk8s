@@ -78,11 +78,19 @@ then
   cp ${SNAP}/microk8s-resources/client.config ${SNAP_DATA}/credentials/
 fi
 
-# copy kubectl-env 
-if [ ! -e ${SNAP_DATA}/args/kubectl-env ]
+# copy kubectl-env
+if [ ! -e ${SNAP_DATA}/args/kubectl-env ] && grep -e "\-\-kubeconfig=\${SNAP_DATA}/credentials/client.config" ${SNAP_DATA}/args/kubectl
+then
+  echo "Making sure we have kubectl environment file"
+  cp ${SNAP}/default-args/kubectl-env ${SNAP_DATA}/args/kubectl-env
+  skip_opt_in_config kubeconfig kubectl
+fi
+
+# copy kubectl
+if [ ! -e ${SNAP_DATA}/args/kubectl ]
 then
   echo "Making sure we have kubectl arguments file"
-  cp ${SNAP}/default-args/kubectl-env ${SNAP_DATA}/args/kubectl-env
+  cp ${SNAP}/default-args/kubectl ${SNAP_DATA}/args/kubectl
 fi
 
 # Upgrading to containerd
