@@ -57,9 +57,17 @@ lxc file pull test-build/root/microk8s/microk8s_v1.9.6_amd64.snap .
 ```
 
 #### Installing the snap
+
 ```
-snap install microk8s_latest_amd64.snap --classic --dangerous
+sudo snap install microk8s_latest_amd64.snap --classic --dangerous
 ```
+
+#### Connecting the required interfaces
+
+```
+for i in docker-privileged docker-support k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe kernel-module-control mount-observe hardware-observe system-observe home; do sudo snap connect microk8s:$i; done
+```
+
 
 ## References
 

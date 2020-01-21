@@ -12,81 +12,246 @@ description: |-
  them to MicroK8s on your boxes.
 
 grade: stable
-confinement: classic
-base: core
+confinement: strict
+base: core18
+
+plugs:
+  docker-privileged:
+    interface: docker-support
+    privileged-containers: true
+  k8s-kubelet:
+    interface: kubernetes-support
+    flavor: kubelet
+  k8s-kubeproxy:
+    interface: kubernetes-support
+    flavor: kubeproxy
+  dot-kube:
+    interface: personal-files
+    write:
+      - $HOME/.kube
+
+hooks:
+  configure:
+    plugs:
+    - dot-kube
+  install:
+    plugs:
+    - network-bind
+    - network-control
+    - firewall-control
+  remove:
+    plugs:
+    - k8s-kubelet
+    - mount-observe
+    - network-bind
+    - network-control
+    - firewall-control
 
 apps:
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
+    plugs:
+    - network-bind
   daemon-flanneld:
     command: run-flanneld-with-args
     daemon: simple
+    plugs:
+    - network-bind
+    - network-control
+    - firewall-control
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
+    plugs:
+    - network-bind
+    - docker-support
+    - docker-privileged
+    - firewall-control
+    - kernel-module-control
+    - network-control
+    - mount-observe
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
     daemon: simple
+    plugs:
+    - network-bind
+    - network-observe
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
+    plugs:
+    - network-bind
+    - network-observe
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
+    plugs:
+    - network-bind
+    - network-observe
   daemon-controller-manager:
     command: run-with-config-args kube-controller-manager
     daemon: simple
+    plugs:
+    - network-bind
+    - docker-support
+    - docker-privileged
+    - firewall-control
+    - kernel-module-control
+    - network-control
   daemon-scheduler:
     command: run-with-config-args kube-scheduler
     daemon: simple
+    plugs:
+    - network-bind
   daemon-kubelet:
     command: run-with-config-args kubelet
     daemon: simple
+    plugs:
+    - dot-kube
+    - firewall-control
+    - hardware-observe
+    - k8s-kubelet
+    - mount-observe
+    - network-bind
+    - network-control
+    - process-control
+    - system-observe
   daemon-proxy:
     command: run-with-config-args kube-proxy
     daemon: simple
+    plugs:
+    - network-bind
+    - network-control
+    - network-observe
+    - firewall-control
+    - k8s-kubeproxy
+    - kernel-module-observe
+    - mount-observe
+    - system-observe
+    - kernel-module-control
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
+    plugs:
+    - dot-kube
+    - home
+    - firewall-control
+    - network-bind
+    - k8s-kubelet
+    - hardware-observe
+    - mount-observe
+    - network-control
+    - process-control
+    - system-observe
   add-node:
     command: microk8s-add-node.wrapper
+    plugs:
+    - network
+    - network-bind
+    - network-observe
+    - mount-observe
   join:
     command: microk8s-join.wrapper
+    plugs:
+    - network
+    - mount-observe
   remove-node:
     command: microk8s-remove-node.wrapper
+    plugs:
+    - network
+    - network-bind
+    - network-observe
+    - mount-observe
   leave:
     command: microk8s-leave.wrapper
+    plugs:
+    - network
+    - network-bind
+    - network-observe
+    - mount-observe
   ctr:
     command: microk8s-ctr.wrapper
-  inspect:
-    command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    plugs:
+    - dot-kube
+    - home
+    - firewall-control
+    - network-bind
+    - k8s-kubelet
+    - hardware-observe
+    - mount-observe
+    - network-control
+    - process-control
+    - system-observe
   enable:
     command: microk8s-enable.wrapper
+    plugs:
+    - network
+    - network-control
   disable:
     command: microk8s-disable.wrapper
+    plugs:
+    - network
+    - network-control
   start:
     command: microk8s-start.wrapper
+    plugs:
+    - network
   stop:
     command: microk8s-stop.wrapper
+    plugs:
+    - network
   status:
     command: microk8s-status.wrapper
+    plugs:
+    - network
   config:
     command: microk8s-config.wrapper
   reset:
     command: microk8s-reset.wrapper
+    plugs:
+    - network
   istioctl:
     command: microk8s-istioctl.wrapper
+    plugs:
+    - network
   linkerd:
     command: microk8s-linkerd.wrapper
+    plugs:
+    - network
   helm:
     command: microk8s-helm.wrapper
+    plugs:
+    - network
   helm3:
-    command: microk8s-helm3.wrapper
+    command: microk8s-helm.wrapper
+    plugs:
+    - network
   cilium:
     command: microk8s-cilium.wrapper
+    plugs:
+    - network
   juju:
     command: microk8s-juju.wrapper
+    plugs:
+    - network
+
+passthrough:
+  system-usernames:
+    snap_daemon: shared
+  layout:
+    /usr/libexec:
+      symlink: $SNAP_COMMON/usr/libexec
+    /var/lib/cni:
+      bind: $SNAP_COMMON/var/lib/cni
+    /var/log/pods:
+      bind: $SNAP_COMMON/var/log/pods
+    /var/log/containers:
+      bind: $SNAP_COMMON/var/log/containers
+    /var/lib/kubelet:
+      bind: $SNAP_DATA/kubelet
+    /var/lib/kube-proxy:
+      bind: $SNAP_DATA/kube-proxy
 
 parts:
   libnftnl:
