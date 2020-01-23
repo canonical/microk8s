@@ -28,7 +28,7 @@ remove_vxlan_interfaces
 
 if grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
   echo "Restarting containerd"
-  run_with_sudo "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP}/opt;bin_dir = "${SNAP_DATA}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
+  "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP}/opt;bin_dir = "${SNAP_DATA}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
   snapctl restart "${SNAP_NAME}.daemon-containerd"
 fi
 
@@ -51,18 +51,18 @@ else
   NAMESPACE=kube-system
 
   echo "Fetching cilium version $CILIUM_VERSION."
-  run_with_sudo mkdir -p "${SNAP_DATA}/tmp/cilium"
+  mkdir -p "${SNAP_DATA}/tmp/cilium"
   (cd "${SNAP_DATA}/tmp/cilium"
-  run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $SOURCE_URI/$CILIUM_VERSION.tar.gz -o "$SNAP_DATA/tmp/cilium/cilium.tar.gz"
-  if ! run_with_sudo gzip -f -d "$SNAP_DATA/tmp/cilium/cilium.tar.gz"; then
+  "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $SOURCE_URI/$CILIUM_VERSION.tar.gz -o "$SNAP_DATA/tmp/cilium/cilium.tar.gz"
+  if ! gzip -f -d "$SNAP_DATA/tmp/cilium/cilium.tar.gz"; then
     echo "Invalid version \"$CILIUM_VERSION\". Must be a branch on https://github.com/cilium/cilium."
     exit 1
   fi
-  run_with_sudo tar -xf "$SNAP_DATA/tmp/cilium/cilium.tar" "$CILIUM_DIR/install" "$CILIUM_DIR/$CILIUM_CNI_CONF")
+  tar -xf "$SNAP_DATA/tmp/cilium/cilium.tar" "$CILIUM_DIR/install" "$CILIUM_DIR/$CILIUM_CNI_CONF")
 
-  run_with_sudo mv "$SNAP_DATA/args/cni-network/cni.conf" "$SNAP_DATA/args/cni-network/10-kubenet.conf" 2>/dev/null || true
-  run_with_sudo mv "$SNAP_DATA/args/cni-network/flannel.conflist" "$SNAP_DATA/args/cni-network/20-flanneld.conflist" 2>/dev/null || true
-  run_with_sudo cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF" "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
+  mv "$SNAP_DATA/args/cni-network/cni.conf" "$SNAP_DATA/args/cni-network/10-kubenet.conf" 2>/dev/null || true
+  mv "$SNAP_DATA/args/cni-network/flannel.conflist" "$SNAP_DATA/args/cni-network/20-flanneld.conflist" 2>/dev/null || true
+  cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF" "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
 
   # Generate the YAMLs for Cilium and apply them
   (cd "${SNAP_DATA}/tmp/cilium/$CILIUM_DIR/install/kubernetes"
@@ -73,11 +73,11 @@ else
       --set global.cni.customConf=true \
       --set global.containerRuntime.integration="containerd" \
       --set global.containerRuntime.socketPath="$SNAP_COMMON/run/containerd.sock" \
-      | run_with_sudo tee cilium.yaml >/dev/null)
+      | tee cilium.yaml >/dev/null)
 
-  run_with_sudo mkdir -p "$SNAP_DATA/actions/cilium/"
-  run_with_sudo cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/install/kubernetes/cilium.yaml" "$SNAP_DATA/actions/cilium.yaml"
-  run_with_sudo sed -i 's;path: \(/var/run/cilium\);path: '"$SNAP_DATA"'\1;g' "$SNAP_DATA/actions/cilium.yaml"
+  mkdir -p "$SNAP_DATA/actions/cilium/"
+  cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/install/kubernetes/cilium.yaml" "$SNAP_DATA/actions/cilium.yaml"
+  sed -i 's;path: \(/var/run/cilium\);path: '"$SNAP_DATA"'\1;g' "$SNAP_DATA/actions/cilium.yaml"
 
   ${SNAP}/microk8s-status.wrapper --wait-ready >/dev/null
   echo "Deploying $SNAP_DATA/actions/cilium.yaml. This may take several minutes."
@@ -88,13 +88,13 @@ else
   CILIUM_POD=$("$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" -n $NAMESPACE get pod -l $CILIUM_LABELS -o jsonpath="{.items[0].metadata.name}")
   CILIUM_BIN=$(mktemp)
   "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" -n $NAMESPACE cp $CILIUM_POD:/usr/bin/cilium $CILIUM_BIN >/dev/null
-  run_with_sudo mkdir -p "$SNAP_DATA/bin/"
-  run_with_sudo mv $CILIUM_BIN "$SNAP_DATA/bin/cilium-$CILIUM_ERSION"
-  run_with_sudo chmod +x "$SNAP_DATA/bin/"
-  run_with_sudo chmod +x "$SNAP_DATA/bin/cilium-$CILIUM_ERSION"
-  run_with_sudo ln -s $SNAP_DATA/bin/cilium-$CILIUM_ERSION $SNAP_DATA/bin/cilium
+  mkdir -p "$SNAP_DATA/bin/"
+  mv $CILIUM_BIN "$SNAP_DATA/bin/cilium-$CILIUM_ERSION"
+  chmod +x "$SNAP_DATA/bin/"
+  chmod +x "$SNAP_DATA/bin/cilium-$CILIUM_ERSION"
+  ln -s $SNAP_DATA/bin/cilium-$CILIUM_ERSION $SNAP_DATA/bin/cilium
 
-  run_with_sudo rm -rf "$SNAP_DATA/tmp/cilium"
+  rm -rf "$SNAP_DATA/tmp/cilium"
 fi
 
 echo "Cilium is enabled"

@@ -10,7 +10,7 @@ then
   use_manifest gpu delete
 fi
 
-run_with_sudo rm -rf ${SNAP_DATA}/var/lock/gpu
+rm -rf ${SNAP_DATA}/var/lock/gpu
 
 snapctl restart "${SNAP_NAME}.daemon-containerd"
 containerd_up=$(wait_for_service containerd)

@@ -12,11 +12,11 @@ argz=("${ARGUMENTS[@]/#/--}")
 if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
   LINKERD_VERSION="${LINKERD_VERSION:-v2.6.0}"
   echo "Fetching Linkerd2 version $LINKERD_VERSION."
-  run_with_sudo mkdir -p "$SNAP_DATA/bin"
+  mkdir -p "$SNAP_DATA/bin"
   LINKERD_VERSION=$(echo $LINKERD_VERSION | sed 's/v//g')
   echo "$LINKERD_VERSION"
-  run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/linkerd/linkerd2/releases/download/stable-${LINKERD_VERSION}/linkerd2-cli-stable-${LINKERD_VERSION}-linux -o "$SNAP_DATA/bin/linkerd"
-  run_with_sudo chmod uo+x "$SNAP_DATA/bin/linkerd"
+  "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/linkerd/linkerd2/releases/download/stable-${LINKERD_VERSION}/linkerd2-cli-stable-${LINKERD_VERSION}-linux -o "$SNAP_DATA/bin/linkerd"
+  chmod uo+x "$SNAP_DATA/bin/linkerd"
 fi
 
 echo "Enabling Linkerd2"
