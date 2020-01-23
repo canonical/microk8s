@@ -17,7 +17,7 @@ Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
 OutputBaseFilename=microk8s-installer
-OutputDir=.\dist
+OutputDir=..\dist
 ChangesEnvironment=yes
 
 [Languages]
