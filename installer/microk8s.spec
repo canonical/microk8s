@@ -4,10 +4,13 @@ block_cipher = None
 
 
 a = Analysis(['microk8s.py'],
-             pathex=['/home/jackal/workspace/charms/microk8s/installer'],
+             pathex=[],
              binaries=[],
              datas=[],
-             hiddenimports=[],
+             hiddenimports=[
+                 "click",
+                 "responses",
+             ],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -30,4 +33,5 @@ exe = EXE(pyz,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
+          icon="windows/microk8s.ico",
           console=True )
