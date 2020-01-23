@@ -30,7 +30,7 @@ build_script:
     cd installer
     echo "Building microk8s.exe..."
     venv\Scripts\activate.bat
-    pyinstaller.exe --onefile microk8s.spec
+    pyinstaller.exe -i windows\microk8s.ico --onefile microk8s.py
     venv\Scripts\deactivate.bat
 
     echo "Test signing microk8s.exe..."
