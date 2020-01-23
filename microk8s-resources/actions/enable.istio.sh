@@ -51,6 +51,6 @@ else
 fi
 
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-run_with_sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+snapctl restart "${SNAP_NAME}.daemon-apiserver"
 
 echo "Istio is starting"
