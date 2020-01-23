@@ -16,6 +16,7 @@ build: off
 
 install:
 - cmd: |
+    python -m pip install pyinstaller
     cd installer
     %PYTHON%\python.exe -m venv venv
     venv\Scripts\activate.bat
