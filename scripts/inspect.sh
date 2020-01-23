@@ -13,7 +13,7 @@ function print_help {
 
 
 function check_service {
-  # Chec the service passed as the firsr argument is up and running and collect its logs.
+  # Check the service passed as the firsr argument is up and running and collect its logs.
   local service=$1
   mkdir -p $INSPECT_DUMP/$service
   journalctl -n $JOURNALCTL_LIMIT -u $service &> $INSPECT_DUMP/$service/journal.log

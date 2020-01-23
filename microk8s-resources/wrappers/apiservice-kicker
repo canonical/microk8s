@@ -28,18 +28,18 @@ do
     sleep 3
     if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
        ip route | grep default &> /dev/null &&
-       systemctl is-active --quiet snap.microk8s.daemon-apiserver.service
+       snapctl services microk8s.daemon-apiserver | grep active &> /dev/null
     then
         csr_modified="$(produce_certs)"
         if [[ "$csr_modified" -eq "1" ]];
         then
             echo "CSR change detected. Reconfiguring the kube-apiserver"
             rm -rf .srl
-            systemctl restart snap.microk8s.daemon-etcd.service
-            systemctl restart snap.microk8s.daemon-containerd.service
-            systemctl restart snap.microk8s.daemon-apiserver.service
-            systemctl restart snap.microk8s.daemon-proxy.service
-            systemctl restart snap.microk8s.daemon-kubelet.service
+            snapctl restart microk8s.daemon-etcd.service
+            snapctl restart microk8s.daemon-containerd.service
+            snapctl restart microk8s.daemon-apiserver.service
+            snapctl restart microk8s.daemon-proxy.service
+            snapctl restart microk8s.daemon-kubelet.service
             restart_attempt=$[$restart_attempt+1]
         else
             restart_attempt=0
