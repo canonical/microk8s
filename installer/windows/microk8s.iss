@@ -27,7 +27,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: modifypath; Description: "Add MicroK8s to the current user's PATH (Recommended)"
 
 [Files]
-Source: ".\dist\microk8s.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\microk8s.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Code]
 const
