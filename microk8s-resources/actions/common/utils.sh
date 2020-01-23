@@ -22,6 +22,10 @@ exit_if_stopped() {
   fi
 }
 
+is_stopped() {
+  [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
+}
+
 exit_if_service_not_expected_to_start() {
   # exit if a lock is available for the service
   local service="$1"
