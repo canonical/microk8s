@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['microk8s.py'],
-             pathex=[],
+             pathex=[''],
              binaries=[],
              datas=[],
              hiddenimports=[
