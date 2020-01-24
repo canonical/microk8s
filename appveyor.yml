@@ -16,11 +16,11 @@ build: off
 
 install:
 - cmd: |
-    %PYTHON%\python.exe -m pip install pyinstaller
     %PYTHON%\python.exe -m venv venv
     venv\Scripts\activate.bat
-    python -c "import sys; print(sys.executable)"
-    python -m pip install -r installer\requirements.txt
+    %PYTHON%\python.exe -c "import sys; print(sys.executable)"
+    %PYTHON%\python.exe -m pip install -r installer\requirements.txt
+    %PYTHON%\python.exe -m pip install pyinstaller
     venv\Scripts\deactivate.bat
 
 build_script:
