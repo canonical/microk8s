@@ -30,7 +30,7 @@ build_script:
     cd installer
     echo "Building microk8s.exe..."
     pyinstaller.exe --onefile microk8s.spec
-    ..<venv\Scripts\deactivate.bat
+    ..\venv\Scripts\deactivate.bat
 
     echo "Test signing microk8s.exe..."
     powershell.exe windows\generate-self-signed-cert.ps1
