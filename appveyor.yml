@@ -22,7 +22,6 @@ install:
     python -c "import sys; print(sys.executable)"
     python -m pip install -r installer\requirements.txt
     venv\Scripts\deactivate.bat
-    cd ..
 
 build_script:
 - cmd: |
