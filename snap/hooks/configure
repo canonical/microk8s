@@ -319,7 +319,7 @@ then
   need_api_restart=true
 fi
 
-if [ "${need_api_restart}" ]
+if ${need_api_restart}
 then
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
