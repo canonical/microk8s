@@ -3,7 +3,6 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 
 ARCH=$(arch)
 if ! [ "${ARCH}" = "amd64" ]; then
@@ -53,7 +52,7 @@ else
   echo "Fetching cilium version $CILIUM_VERSION."
   mkdir -p "${SNAP_DATA}/tmp/cilium"
   (cd "${SNAP_DATA}/tmp/cilium"
-  "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $SOURCE_URI/$CILIUM_VERSION.tar.gz -o "$SNAP_DATA/tmp/cilium/cilium.tar.gz"
+  curl -L $SOURCE_URI/$CILIUM_VERSION.tar.gz -o "$SNAP_DATA/tmp/cilium/cilium.tar.gz"
   if ! gzip -f -d "$SNAP_DATA/tmp/cilium/cilium.tar.gz"; then
     echo "Invalid version \"$CILIUM_VERSION\". Must be a branch on https://github.com/cilium/cilium."
     exit 1

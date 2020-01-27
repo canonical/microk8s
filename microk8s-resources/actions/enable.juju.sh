@@ -17,7 +17,7 @@ function get_juju_client () {
   else
     mkdir -p "$SNAP_DATA/bin"
     mkdir -p "$SNAP_DATA/tmp"
-    "${SNAP}/usr/bin/curl" -L https://launchpad.net/juju/$JUJU_SERIES/$JUJU_VERSION/+download/juju-$JUJU_VERSION-centos7.tar.gz -o "$SNAP_DATA/tmp/juju.tar.gz"
+    curl -L https://launchpad.net/juju/$JUJU_SERIES/$JUJU_VERSION/+download/juju-$JUJU_VERSION-centos7.tar.gz -o "$SNAP_DATA/tmp/juju.tar.gz"
     "${SNAP}/bin/tar" -zxvf "$SNAP_DATA/tmp/juju.tar.gz" -C "$SNAP_DATA/tmp"
     tar -zxf "$SNAP_DATA/tmp/juju.tar.gz" -C "$SNAP_DATA/tmp"
     cp "$SNAP_DATA/tmp/juju-bin/juju" "$SNAP_DATA/bin"

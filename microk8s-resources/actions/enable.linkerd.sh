@@ -3,7 +3,6 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 
 read -ra ARGUMENTS <<< "$1"
 argz=("${ARGUMENTS[@]/#/--}")
@@ -15,7 +14,7 @@ if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
   mkdir -p "$SNAP_DATA/bin"
   LINKERD_VERSION=$(echo $LINKERD_VERSION | sed 's/v//g')
   echo "$LINKERD_VERSION"
-  "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/linkerd/linkerd2/releases/download/stable-${LINKERD_VERSION}/linkerd2-cli-stable-${LINKERD_VERSION}-linux -o "$SNAP_DATA/bin/linkerd"
+  curl -L https://github.com/linkerd/linkerd2/releases/download/stable-${LINKERD_VERSION}/linkerd2-cli-stable-${LINKERD_VERSION}-linux -o "$SNAP_DATA/bin/linkerd"
   chmod uo+x "$SNAP_DATA/bin/linkerd"
 fi
 
