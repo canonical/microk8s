@@ -15,7 +15,7 @@ then
   (cd "${SNAP_DATA}/tmp/istio"
   curl -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux.tar.gz -o "$SNAP_DATA/tmp/istio/istio.tar.gz"
   gzip -d "$SNAP_DATA/tmp/istio/istio.tar.gz"
-  tar -xvf "$SNAP_DATA/tmp/istio/istio.tar")
+  tar -xvf "$SNAP_DATA/tmp/istio/istio.tar" --no-same-owner)
   mkdir -p "$SNAP_DATA/bin/"
   mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/bin/istioctl" "$SNAP_DATA/bin/"
   chmod +x "$SNAP_DATA/bin/"
