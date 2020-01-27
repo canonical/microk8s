@@ -84,6 +84,7 @@ apps:
     plugs:
     - network-bind
     - network-observe
+    - network-control
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
