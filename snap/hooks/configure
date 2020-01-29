@@ -4,6 +4,7 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
+
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
 # and make sure the respective services use them.
@@ -371,4 +372,39 @@ then
     then
         chgrp microk8s -R "$SNAP_DATA/juju" "$SNAP_DATA/juju-home" || true
     fi
+fi
+
+# Set up a bridge with a known IP address that services can bind to instead of
+# whatever IP gets handed out by their router. Doesn't affect services that bind
+# to 127.0.0.1.
+API_IP="$(snapctl get api.ip)"
+if [[ "$API_IP" == "" ]]
+then
+  API_IP="10.5.2.1"
+  snapctl set api.ip="${API_IP}"
+fi
+
+if ADDR_INFO="$(sudo ip -j a show uk8s0 2>/dev/null)"; then
+  CURRENT_IP="$(echo $ADDR_INFO | jq -r '.[0].addr_info[] | select(.family == "inet").local')"
+
+  if [[ "$API_IP" != "$CURRENT_IP" ]]; then
+    $SNAP/sbin/ip link delete uk8s0
+    $SNAP/sbin/ip link add uk8s0 type bridge
+    $SNAP/sbin/ip address add $API_IP/24 dev uk8s0
+    $SNAP/sbin/ip link set uk8s0 up
+
+    for conf in client controller kubelet proxy scheduler; do
+      $SNAP/bin/sed -i 's/IP/'"${API_IP}"'/g' ${SNAP_DATA}/credentials/${conf}.config
+      $SNAP/bin/sed -i 's|server: .*|server: https://'"${API_IP}"':16443|g' ${SNAP_DATA}/credentials/${conf}.config
+    done
+
+    $SNAP/bin/sed -i "s/.*microk8s.local/${API_IP}\tmicrok8s.local/g" /etc/hosts
+
+    snapctl restart ${SNAP_NAME}
+  fi
+else
+  $SNAP/sbin/ip link add uk8s0 type bridge
+  $SNAP/sbin/ip address add $API_IP/24 dev uk8s0
+  $SNAP/sbin/ip link set uk8s0 up
+  $SNAP/bin/echo "${API_IP}\tmicrok8s.local" >> /etc/hosts
 fi

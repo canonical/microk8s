@@ -130,7 +130,7 @@ def main():
         "--all",
     )
 
-    juju("config", "ambassador", "juju-external-hostname=localhost")
+    juju("config", "ambassador", "juju-external-hostname=microk8s.local")
     juju("expose", "ambassador")
 
     # Workaround for https://bugs.launchpad.net/juju/+bug/1849725.
@@ -166,7 +166,7 @@ def main():
         textwrap.dedent(
             """
     Congratulations, Kubeflow is now available.
-    The dashboard is available at https://localhost/
+    The dashboard is available at https://microk8s.local/
 
         Username: admin
         Password: %s

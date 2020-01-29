@@ -23,11 +23,13 @@ mkdir ${SNAP_DATA}/credentials
 admin_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
 echo "${admin_token},admin,admin,\"system:masters\"" > ${SNAP_DATA}/credentials/basic_auth.csv
 ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
+API_IP="10.5.2.1"
 
 # Create the client kubeconfig
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
 $SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
 $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
+$SNAP/bin/sed -i 's/IP/'"${API_IP}"'/g' ${SNAP_DATA}/credentials/client.config
 $SNAP/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
 $SNAP/bin/sed -i 's/AUTHTYPE/password/g' ${SNAP_DATA}/credentials/client.config
 $SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
@@ -47,6 +49,7 @@ echo "${scheduler_token},system:kube-scheduler,scheduler" >> ${SNAP_DATA}/creden
 # Create the client kubeconfig for the controller
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/controller.config
 $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/controller.config
+$SNAP/bin/sed -i 's/IP/'"${API_IP}"'/g' ${SNAP_DATA}/credentials/controller.config
 $SNAP/bin/sed -i 's/NAME/controller/g' ${SNAP_DATA}/credentials/controller.config
 $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/controller.config
 $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/controller.config
@@ -55,6 +58,7 @@ $SNAP/bin/sed -i 's/PASSWORD/'"${controller_token}"'/g' ${SNAP_DATA}/credentials
 # Create the client kubeconfig for the scheduler
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/scheduler.config
 $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/scheduler.config
+$SNAP/bin/sed -i 's/IP/'"${API_IP}"'/g' ${SNAP_DATA}/credentials/scheduler.config
 $SNAP/bin/sed -i 's/NAME/scheduler/g' ${SNAP_DATA}/credentials/scheduler.config
 $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/scheduler.config
 $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/scheduler.config
@@ -64,6 +68,7 @@ $SNAP/bin/sed -i 's/PASSWORD/'"${scheduler_token}"'/g' ${SNAP_DATA}/credentials/
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/kubelet.config
 $SNAP/bin/sed -i 's/NAME/kubelet/g' ${SNAP_DATA}/credentials/kubelet.config
 $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/kubelet.config
+$SNAP/bin/sed -i 's/IP/'"${API_IP}"'/g' ${SNAP_DATA}/credentials/kubelet.config
 $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/kubelet.config
 $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/kubelet.config
 $SNAP/bin/sed -i 's/PASSWORD/'"${kubelet_token}"'/g' ${SNAP_DATA}/credentials/kubelet.config
@@ -71,6 +76,7 @@ $SNAP/bin/sed -i 's/PASSWORD/'"${kubelet_token}"'/g' ${SNAP_DATA}/credentials/ku
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/proxy.config
 $SNAP/bin/sed -i 's/NAME/kubeproxy/g' ${SNAP_DATA}/credentials/proxy.config
 $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/proxy.config
+$SNAP/bin/sed -i 's/IP/'"${API_IP}"'/g' ${SNAP_DATA}/credentials/proxy.config
 $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/proxy.config
 $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/proxy.config
 $SNAP/bin/sed -i 's/PASSWORD/'"${proxy_token}"'/g' ${SNAP_DATA}/credentials/proxy.config
