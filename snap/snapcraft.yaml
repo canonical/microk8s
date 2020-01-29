@@ -72,6 +72,7 @@ apps:
     - network-control
     - mount-observe
     - kubernetes-support
+    - opengl
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
     daemon: simple
@@ -119,6 +120,7 @@ apps:
     - network-control
     - process-control
     - system-observe
+    - opengl
   daemon-proxy:
     command: run-with-config-args kube-proxy
     daemon: simple
@@ -190,6 +192,7 @@ apps:
     plugs:
     - network
     - network-control
+    - kernel-module-observe
   disable:
     command: microk8s-disable.wrapper
     plugs:
