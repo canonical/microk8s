@@ -11,4 +11,5 @@
 --eviction-hard="memory.available<100Mi,nodefs.available<1Gi,imagefs.available<1Gi"
 --container-runtime=remote
 --container-runtime-endpoint=${SNAP_COMMON}/run/containerd.sock
+--containerd=${SNAP_COMMON}/run/containerd.sock
 --node-labels="microk8s.io/cluster=true"
