@@ -9,16 +9,6 @@ source $SNAP/actions/common/utils.sh
 
 app=$1
 
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  if [ "${app}" = "kube-apiserver" ] || [ "${app}" = "kube-controller-manager" ] || [ "${app}" = "kube-scheduler" ]
-  then
-    echo "${app} will not run on a cluster node"
-    exit 0
-  fi
-fi
-
-
 if [ "${app}" = "kubelet" ]
 then
   pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"

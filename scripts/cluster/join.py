@@ -14,7 +14,7 @@ import shutil
 import urllib3
 
 from common.utils import try_set_file_permissions
-
+import yaml
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
@@ -22,6 +22,10 @@ snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 ca_cert_file_via_env = "${SNAP_DATA}/certs/ca.remote.crt"
 ca_cert_file = "{}/certs/ca.remote.crt".format(snapdata_path)
+cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
+cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
+cluster_key_file = "{}/cluster.key".format(cluster_dir)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 server_cert_file_via_env = "${SNAP_DATA}/certs/server.remote.crt"
@@ -224,6 +228,21 @@ def store_remote_ca(ca):
     try_set_file_permissions(ca_cert_file)
 
 
+def store_cluster_certs(cluster_cert, cluster_key):
+    """
+    Store the cluster certs
+
+    :param cluster_cert: the cluster certificate
+    :param cluster_key: the cluster certificate key
+    """
+    with open(cluster_cert_file, 'w+') as fp:
+        fp.write(cluster_cert)
+    try_set_file_permissions(cluster_cert_file)
+    with open(cluster_key_file, 'w+') as fp:
+        fp.write(cluster_key)
+    try_set_file_permissions(cluster_key_file)
+
+
 def mark_cluster_node():
     """
     Mark a node as being part of a cluster by creating a var/lock/clustered.lock
@@ -356,6 +375,23 @@ def remove_node(node):
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+def update_dqlite(cluster_cert, cluster_key, clusrt_ip, cluster_port):
+    subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
+    shutil.rmtree(cluster_backup_dir, ignore_errors=True)
+    shutil.move(cluster_dir, cluster_backup_dir)
+    store_cluster_certs(cluster_cert, cluster_key)
+    shutil.copy("{}/info.yaml".format(cluster_backup_dir), "{}/info.yaml".format(cluster_backup_dir))
+    with open("{}/info.yaml".format(cluster_backup_dir)) as f:
+        data = yaml.load(f)
+
+    data['Cluster'] = ['{}:{}'.format(clusrt_ip, cluster_port)]
+    with open("{}/info.yaml".format(cluster_backup_dir), 'w') as f:
+        yaml.dump(data, f)
+
+    subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
+    pass
+
+
 if __name__ == "__main__":
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "h", ["help"])
@@ -389,14 +425,21 @@ if __name__ == "__main__":
         master_port = master_ep[1]
         callback_token = generate_callback_token()
         info = get_connection_info(master_ip, master_port, token, callback_token)
+
+        if "cluster_key" not in info:
+            print("The cluster you are attempting to join is incompatible with the current MicroK8s instance.")
+            print("Please, either reinstall the node from a pre v1.18 track with "
+                  "(sudo snap install microk8s --classic --channel=1.17/stable) "
+                  "or update the cluster to a version newer than v1.17.")
+            sys.exit(5)
+
         store_base_kubelet_args(info["kubelet_args"])
         hostname_override = None
         if 'hostname_override' in info:
             hostname_override = info['hostname_override']
 
         store_remote_ca(info["ca"])
+        update_dqlite(info["cluster_cert"], info["cluster_key"], master_ip, info["cluster_port"])
         update_flannel(info["etcd"], master_ip, master_port, token)
-        update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override)
-        update_kubelet(info["kubelet"], info["ca"], master_ip, info["apiport"])
         mark_cluster_node()
     sys.exit(0)
