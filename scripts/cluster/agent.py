@@ -195,6 +195,22 @@ def getCA():
     return ca
 
 
+def get_cluster_certs():
+    """
+    Return the cluster certificates
+
+    :returns: the cluster certificate files
+    """
+    file = "{}/var/kubernetes/backend/cluster.crt".format(snapdata_path)
+    with open(file) as fp:
+        cluster_cert = fp.read()
+    file = "{}/var/kubernetes/backend/cluster.key".format(snapdata_path)
+    with open(file) as fp:
+        cluster_key = fp.read()
+
+    return cluster_cert, cluster_key
+
+
 def get_arg(key, file):
     """
     Get an argument from an arguments file
@@ -292,6 +308,7 @@ def join_node():
     store_callback_token(node_ep, callback_token)
 
     ca = getCA()
+    cluster_cert, cluster_key = get_cluster_certs()
     etcd_ep = get_arg('--listen-client-urls', 'etcd')
     api_port = get_arg('--secure-port', 'kube-apiserver')
     proxy_token = get_token('kube-proxy')
@@ -303,6 +320,9 @@ def join_node():
         kubelet_args = read_kubelet_args_file()
 
     return jsonify(ca=ca,
+                   cluster_cert=cluster_cert,
+                   cluster_key=cluster_key,
+                   cluster_port='19001',
                    etcd=etcd_ep,
                    kubeproxy=proxy_token,
                    apiport=api_port,
