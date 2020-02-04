@@ -101,6 +101,8 @@ parts:
     source: https://github.com/canonical/raft
     source-type: git
     plugin: autotools
+    stage-packages:
+    - libuv1
     organize:
       usr/lib/: lib/
     prime:
@@ -236,6 +238,7 @@ parts:
     source: .
     python-packages:
     - flask
+    - pyyaml
     stage-packages:
     - python3-openssl
     - openssl
