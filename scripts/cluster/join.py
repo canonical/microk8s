@@ -379,6 +379,7 @@ def update_dqlite(cluster_cert, cluster_key, clusrt_ip, cluster_port):
     subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
     shutil.move(cluster_dir, cluster_backup_dir)
+    os.mkdir(cluster_dir)
     store_cluster_certs(cluster_cert, cluster_key)
     shutil.copy("{}/info.yaml".format(cluster_backup_dir), "{}/info.yaml".format(cluster_backup_dir))
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
