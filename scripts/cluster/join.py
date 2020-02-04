@@ -384,12 +384,11 @@ def update_dqlite(cluster_cert, cluster_key, clusrt_ip, cluster_port):
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
         data = yaml.load(f)
 
-    data['Cluster'] = ['{}:{}'.format(clusrt_ip, cluster_port)]
-    with open("{}/info.yaml".format(cluster_backup_dir), 'w') as f:
-        yaml.dump(data, f)
+    init_data = {'Cluster': ['{}:{}'.format(clusrt_ip, cluster_port)], 'Address': data['Address']}
+    with open("{}/init.yaml".format(cluster_dir), 'w') as f:
+        yaml.dump(init_data, f)
 
     subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
-    pass
 
 
 if __name__ == "__main__":
