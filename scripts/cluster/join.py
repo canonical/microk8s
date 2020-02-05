@@ -377,19 +377,49 @@ def remove_node(node):
 
 def update_dqlite(cluster_cert, cluster_key, clusrt_ip, cluster_port):
     subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
+    time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
     shutil.move(cluster_dir, cluster_backup_dir)
     os.mkdir(cluster_dir)
     store_cluster_certs(cluster_cert, cluster_key)
-    shutil.copy("{}/info.yaml".format(cluster_backup_dir), "{}/info.yaml".format(cluster_backup_dir))
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
-        data = yaml.load(f)
+        data = yaml.load(f, Loader=yaml.FullLoader)
 
     init_data = {'Cluster': ['{}:{}'.format(clusrt_ip, cluster_port)], 'Address': data['Address']}
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
     subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
+
+    waits = 10
+    print("Waiting for node to join the cluster.", end=" ", flush=True)
+    while waits > 0:
+        try:
+            out = subprocess.check_output("curl https://{}/cluster --cacert {} --key {} --cert {} -k -s"
+                                    .format(data['Address'], cluster_cert_file, cluster_key_file,
+                                            cluster_cert_file).split());
+            if data['Address'] in out.decode():
+                break
+            else:
+                print(".", end=" ", flush=True)
+                time.sleep(5)
+                waits -= 1
+
+        except subprocess.CalledProcessError:
+            print("..", end=" ", flush=True)
+            time.sleep(5)
+            waits -= 1
+    print(" ")
+
+    subprocess.check_call("{}/microk8s-stop.wrapper".format(snap_path).split())
+    waits = 10
+    while waits > 0:
+        try:
+            subprocess.check_call("{}/microk8s-start.wrapper".format(snap_path).split())
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+            waits -= 1
 
 
 if __name__ == "__main__":
@@ -433,13 +463,11 @@ if __name__ == "__main__":
                   "or update the cluster to a version newer than v1.17.")
             sys.exit(5)
 
-        store_base_kubelet_args(info["kubelet_args"])
         hostname_override = None
         if 'hostname_override' in info:
             hostname_override = info['hostname_override']
 
-        store_remote_ca(info["ca"])
-        update_dqlite(info["cluster_cert"], info["cluster_key"], master_ip, info["cluster_port"])
         update_flannel(info["etcd"], master_ip, master_port, token)
-        mark_cluster_node()
+        update_dqlite(info["cluster_cert"], info["cluster_key"], master_ip, info["cluster_port"])
+
     sys.exit(0)
