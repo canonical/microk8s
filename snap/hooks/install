@@ -81,7 +81,7 @@ do
   chmod -R o-rwX ${dir}
 done
 
-for link in cni0 cilium_vxlan
+for link in cni0
 do
   if $SNAP/sbin/ip link show ${link}
   then
@@ -90,3 +90,5 @@ do
 done
 
 init_cluster
+
+

@@ -42,7 +42,7 @@ oom_score = 0
         runtime_engine = ""
         runtime_root = ""
     [plugins.cri.cni]
-      bin_dir = "${SNAP}/opt/cni/bin"
+      bin_dir = "${SNAP_DATA}/opt/cni/bin"
       conf_dir = "${SNAP_DATA}/args/cni-network"
       conf_template = ""
     [plugins.cri.registry]

@@ -12,10 +12,6 @@ app=$1
 if [ "${app}" = "kubelet" ]
 then
   pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
-  if [ -z "$pod_cidr" ]
-  then
-    pod_cidr="$(jq .Network $SNAP_DATA/args/flannel-network-mgr-config | tr -d '\"')"
-  fi
   if ! [ -z "$pod_cidr" ]
   then
     if ! iptables -C FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT

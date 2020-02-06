@@ -10,11 +10,7 @@
 --kubelet-client-key=${SNAP_DATA}/certs/server.key
 --secure-port=16443
 --token-auth-file=${SNAP_DATA}/credentials/known_tokens.csv
---token-auth-file=${SNAP_DATA}/credentials/known_tokens.csv
-#--etcd-servers='https://127.0.0.1:12379'
-#--etcd-cafile=${SNAP_DATA}/certs/ca.crt
-#--etcd-certfile=${SNAP_DATA}/certs/server.crt
-#--etcd-keyfile=${SNAP_DATA}/certs/server.key
+--allow-privileged=true
 --insecure-port=0
 
 --storage-dir ${SNAP_DATA}/var/kubernetes/backend/

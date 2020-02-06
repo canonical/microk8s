@@ -16,12 +16,6 @@ confinement: classic
 base: core
 
 apps:
-  daemon-etcd:
-    command: run-etcd-with-args
-    daemon: simple
-  daemon-flanneld:
-    command: run-flanneld-with-args
-    daemon: simple
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
@@ -304,16 +298,8 @@ parts:
       mkdir -p opt/cni/bin/
       cp $KUBE_SNAP_BINS/cni/* opt/cni/bin/
 
-      echo "Preparing flanneld"
-      mkdir -p opt/cni/bin/
-      cp $KUBE_SNAP_BINS/flanneld/flanneld opt/cni/bin/
-
       echo "Preparing containerd"
       cp $KUBE_SNAP_ROOT/microk8s-resources/containerd-profile .
-
-      echo "Preparing etcd"
-      cp $KUBE_SNAP_BINS/etcd/etcd .
-      cp $KUBE_SNAP_BINS/etcd/etcdctl .
 
       echo "Preparing kube-apiserver"
       cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-apiserver .

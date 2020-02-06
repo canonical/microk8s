@@ -458,3 +458,38 @@ get_all_addons() {
     actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
     echo $actions
 }
+
+cilium_running() {
+    if ${SNAP}/sbin/ip link show type vxlan | $SNAP/bin/grep -E 'cilium_vxlan' &> /dev/null
+    then
+        echo "installed"
+    else
+        echo "missing"
+    fi
+}
+
+configure_cilium_cni() {
+    cilium_already_available="$(cilium_running)"
+    if [ "${cilium_already_available}" == installed ]
+    then
+        # Check version. Handle updates.
+        echo "Cilium already available"
+        return
+    fi
+
+    start_timer="$(date +%s)"
+    # Wait up to two minutes for the apiserver to come up.
+    timeout="120"
+    KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
+    while ! ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null
+    do
+        now="$(date +%s)"
+        if [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
+            break
+        fi
+        sleep 2
+    done
+
+    remove_vxlan_interfaces
+    $KUBECTL apply -f ${SNAP_DATA}/args/cilium.yaml
+}

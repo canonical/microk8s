@@ -7,10 +7,6 @@ snapctl stop ${SNAP_NAME}.daemon-kubelet 2>&1 || true
 snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
 
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
-if [ -z "$pod_cidr" ]
-then
-  pod_cidr="$(jq .Network $SNAP_DATA/args/flannel-network-mgr-config | tr -d '\"')"
-fi
 if ! [ -z "$pod_cidr" ]
 then
   iptables -D FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
