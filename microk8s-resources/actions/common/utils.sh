@@ -477,9 +477,6 @@ configure_cilium_cni() {
         return
     fi
 
-    mkdir -p $SNAP_DATA/opt/cni/bin
-    cp $SNAP/opt/cni/bin/* $SNAP_DATA/opt/cni/bin/
-
     start_timer="$(date +%s)"
     # Wait up to two minutes for the apiserver to come up.
     timeout="120"
