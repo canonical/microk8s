@@ -89,6 +89,9 @@ do
   fi
 done
 
+mkdir -p $SNAP_DATA/opt/cni/bin
+cp $SNAP/opt/cni/bin/* $SNAP_DATA/opt/cni/bin/
+
 init_cluster
 
 
