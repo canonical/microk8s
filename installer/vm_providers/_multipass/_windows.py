@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 _MULTIPASS_RELEASES_API_URL = (
     "https://api.github.com/repos/CanonicalLtd/multipass/releases/latest"
 )
-_MULTIPASS_DL_VERSION = "0.8.0"
+_MULTIPASS_DL_VERSION = "1.0.0"
 _MULTIPASS_DL_NAME = "multipass-{version}+win-win64.exe".format(
     version=_MULTIPASS_DL_VERSION
 )
