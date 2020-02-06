@@ -491,5 +491,5 @@ configure_cilium_cni() {
     done
 
     remove_vxlan_interfaces
-    $KUBECTL apply -f ${SNAP_DATA}/args/cilium.yaml
+    $KUBECTL apply -f ${SNAP_DATA}/args/cni-network/cilium.yaml
 }

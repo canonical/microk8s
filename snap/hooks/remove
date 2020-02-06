@@ -30,7 +30,10 @@ rm -rf ${SNAP_COMMON}/run/containerd/* || true
 (cat /proc/mounts | grep ${SNAP_COMMON}/var/lib/docker | cut -d ' ' -f 2 | xargs umount -l) || true
 (cat /proc/mounts | grep ${SNAP_COMMON}/var/run/docker | cut -d ' ' -f 2 | xargs umount) || true
 
-if $SNAP/sbin/ip link show cni0
-then
-  $SNAP/sbin/ip link delete cni0
-fi
+for link in cni0 cilium_vxlan
+do
+  if $SNAP/sbin/ip link show ${link}
+  then
+    $SNAP/sbin/ip link delete ${link}
+  fi
+done
