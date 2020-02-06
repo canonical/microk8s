@@ -483,11 +483,11 @@ configure_cilium_cni() {
     KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
     while ! ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null
     do
+        sleep 15
         now="$(date +%s)"
         if [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
             break
         fi
-        sleep 2
     done
 
     remove_vxlan_interfaces
