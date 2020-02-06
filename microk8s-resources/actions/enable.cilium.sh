@@ -11,7 +11,7 @@ if ! [ "${ARCH}" = "amd64" ]; then
   exit 1
 fi
 
-"$SNAP/microk8s-enable.wrapper" helm
+"$SNAP/microk8s-enable.wrapper" helm3
 
 echo "Restarting kube-apiserver"
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
@@ -66,7 +66,7 @@ else
 
   # Generate the YAMLs for Cilium and apply them
   (cd "${SNAP_DATA}/tmp/cilium/$CILIUM_DIR/install/kubernetes"
-  ${SNAP_DATA}/bin/helm template cilium \
+  ${SNAP_DATA}/bin/helm3 template cilium \
       --namespace $NAMESPACE \
       --set global.cni.confPath="$SNAP_DATA/args/cni-network" \
       --set global.cni.binPath="$SNAP_DATA/opt/cni/bin" \
