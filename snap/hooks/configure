@@ -296,37 +296,6 @@ then
   chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ || true
 fi
 
-if ! [ -f "${SNAP_DATA}/args/flanneld" ]
-then
-  mkdir -p ${SNAP_DATA}/args/cni-network/
-  cp -r ${SNAP}/default-args/cni-network/flannel.conflist ${SNAP_DATA}/args/cni-network/
-  cp ${SNAP}/default-args/flanneld ${SNAP_DATA}/args/
-  cp ${SNAP}/default-args/flannel-template.conflist ${SNAP_DATA}/args/
-  cp ${SNAP}/default-args/flannel-network-mgr-config ${SNAP_DATA}/args/
-  snapctl restart ${SNAP_NAME}.daemon-etcd
-  snapctl restart ${SNAP_NAME}.daemon-containerd
-  snapctl restart ${SNAP_NAME}.daemon-flanneld
-fi
-
-if grep -e "etcd.socket:2379" ${SNAP_DATA}/args/etcd
-then
-  echo "Using a port for etcd"
-  # TODO: Do something smart in selecting a port
-  refresh_opt_in_config advertise-client-urls https://\${DEFAULT_INTERFACE_IP_ADDR}:12379 etcd
-  refresh_opt_in_config listen-client-urls https://0.0.0.0:12379 etcd
-  refresh_opt_in_config client-cert-auth true etcd
-  refresh_opt_in_config trusted-ca-file \${SNAP_DATA}/certs/ca.crt etcd
-  refresh_opt_in_config cert-file \${SNAP_DATA}/certs/server.crt etcd
-  refresh_opt_in_config key-file \${SNAP_DATA}/certs/server.key etcd
-  snapctl restart ${SNAP_NAME}.daemon-etcd
-
-  refresh_opt_in_config etcd-servers https://127.0.0.1:12379 kube-apiserver
-  refresh_opt_in_config etcd-cafile \${SNAP_DATA}/certs/ca.crt kube-apiserver
-  refresh_opt_in_config etcd-certfile \${SNAP_DATA}/certs/server.crt kube-apiserver
-  refresh_opt_in_config etcd-keyfile \${SNAP_DATA}/certs/server.key kube-apiserver
-  need_api_restart=true
-fi
-
 if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
 then
   refresh_opt_in_config enable-v2 true etcd
@@ -338,40 +307,10 @@ then
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
-if [ -L "${SNAP_DATA}/bin/cilium" ]
-then
-  echo "Cilium is enabled we need to reconfigure it."
-  rm -rf $SNAP_DATA/bin/cilium*
-  ${SNAP}/actions/enable.cilium.sh
-fi
-
 # modify the containerd localhost:32000 mirror registry
 if [ -e ${SNAP_DATA}/args/containerd-template.toml ] && grep -e "plugins.cri.registry.mirrors.\"local.insecure-registry.io\"" ${SNAP_DATA}/args/containerd-template.toml
 then
     "$SNAP/bin/sed" -i 's@plugins.cri.registry.mirrors."local.insecure-registry.io"@plugins.cri.registry.mirrors."localhost:32000"@g' ${SNAP_DATA}/args/containerd-template.toml
-    snapctl restart ${SNAP_NAME}.daemon-containerd
-fi
-
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  if grep -e "\-\-etcd-cafile /var/snap/microk8s/.*/ca.remote.crt" ${SNAP_DATA}/args/flanneld
-  then
-    skip_opt_in_config etcd-cafile flanneld
-    refresh_opt_in_config etcd-cafile \${SNAP_DATA}/certs/ca.remote.crt flanneld
-  fi
-
-  if grep -e "\-\-etcd-certfile /var/snap/microk8s/.*/server.remote.crt" ${SNAP_DATA}/args/flanneld
-  then
-    skip_opt_in_config etcd-certfile flanneld
-    refresh_opt_in_config etcd-certfile \${SNAP_DATA}/certs/server.remote.crt flanneld
-  fi
-fi
-
-# This patches flanneld conf template by adding cniversion if it doesnt exist.
-if [ -e ${SNAP_DATA}/args/flannel-template.conflist ] && ! grep -e "cniVersion" ${SNAP_DATA}/args/flannel-template.conflist
-then
-    "$SNAP/bin/sed" -i 's@"name": "microk8s-flannel-network",@"name": "microk8s-flannel-network",\n    "cniVersion": "0.3.1",@g' ${SNAP_DATA}/args/flannel-template.conflist
-    snapctl restart ${SNAP_NAME}.daemon-flanneld
     snapctl restart ${SNAP_NAME}.daemon-containerd
 fi
 
@@ -383,3 +322,5 @@ if getent group microk8s >/dev/null 2>&1
 then
     chgrp microk8s -R "$SNAP_DATA/juju" "$SNAP_DATA/juju-home" || true
 fi
+
+configure_cilium_cni

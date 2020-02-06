@@ -35,7 +35,6 @@ do
         then
             echo "CSR change detected. Reconfiguring the kube-apiserver"
             rm -rf .srl
-            systemctl restart snap.microk8s.daemon-etcd.service
             systemctl restart snap.microk8s.daemon-containerd.service
             systemctl restart snap.microk8s.daemon-apiserver.service
             systemctl restart snap.microk8s.daemon-proxy.service
