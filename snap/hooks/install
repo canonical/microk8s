@@ -75,7 +75,7 @@ $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/proxy.config
 $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/proxy.config
 $SNAP/bin/sed -i 's/PASSWORD/'"${proxy_token}"'/g' ${SNAP_DATA}/credentials/proxy.config
 
-for dir in "${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/"
+for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
