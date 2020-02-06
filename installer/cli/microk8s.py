@@ -173,7 +173,6 @@ def run(cmd) -> None:
             raise provider_error
 
     instance = vm_provider_class(echoer=echo)
-    instance.launch_instance()
     command = cmd[0]
     cmd[0] = "microk8s.{}".format(command)
     instance.run(cmd)
