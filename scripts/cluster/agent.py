@@ -309,7 +309,6 @@ def join_node():
 
     ca = getCA()
     cluster_cert, cluster_key = get_cluster_certs()
-    etcd_ep = get_arg('--listen-client-urls', 'etcd')
     api_port = get_arg('--secure-port', 'kube-apiserver')
     proxy_token = get_token('kube-proxy')
     kubelet_token = add_kubelet_token(node_addr)
@@ -323,7 +322,6 @@ def join_node():
                    cluster_cert=cluster_cert,
                    cluster_key=cluster_key,
                    cluster_port='19001',
-                   etcd=etcd_ep,
                    kubeproxy=proxy_token,
                    apiport=api_port,
                    kubelet=kubelet_token,

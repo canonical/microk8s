@@ -100,53 +100,6 @@ def set_arg(key, value, file):
     os.remove(filename_remote)
 
 
-def get_etcd_client_cert(master_ip, master_port, token):
-    """
-    Get a signed cert to access etcd
-
-    :param master_ip: master ip
-    :param master_port: master port
-    :param token: token to contact the master with
-    """
-    cer_req_file = "{}/certs/server.remote.csr".format(snapdata_path)
-    cmd_cert = "openssl req -new -sha256 -key {SNAP_DATA}/certs/server.key -out {csr} " \
-               "-config {SNAP_DATA}/certs/csr.conf".format(SNAP_DATA=snapdata_path, csr=cer_req_file)
-    subprocess.check_call(cmd_cert.split())
-    with open(cer_req_file) as fp:
-        csr = fp.read()
-        req_data = {'token': token, 'request': csr}
-        # TODO: enable ssl verification
-        signed = requests.post("https://{}:{}/{}/sign-cert".format(master_ip, master_port, CLUSTER_API),
-                               json=req_data,
-                               verify=False)
-        if signed.status_code != 200:
-            print("Failed to sign certificate. {}".format(signed.json()["error"]))
-            exit(1)
-        info = signed.json()
-        with open(server_cert_file, "w") as cert_fp:
-            cert_fp.write(info["certificate"])
-        try_set_file_permissions(server_cert_file)
-
-
-def update_flannel(etcd, master_ip, master_port, token):
-    """
-    Configure flannel
-
-    :param etcd: etcd endpoint
-    :param master_ip: master ip
-    :param master_port: master port
-    :param token: token to contact the master with
-    """
-    get_etcd_client_cert(master_ip, master_port, token)
-    etcd = etcd.replace("0.0.0.0", master_ip)
-    set_arg("--etcd-endpoints", etcd, "flanneld")
-    set_arg("--etcd-cafile", ca_cert_file_via_env, "flanneld")
-    set_arg("--etcd-certfile", server_cert_file_via_env, "flanneld")
-    set_arg("--etcd-keyfile", "${SNAP_DATA}/certs/server.key", "flanneld")
-
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-flanneld.service".split())
-
-
 def ca_one_line(ca):
     """
     The CA in one line
@@ -243,18 +196,6 @@ def store_cluster_certs(cluster_cert, cluster_key):
     try_set_file_permissions(cluster_key_file)
 
 
-def mark_cluster_node():
-    """
-    Mark a node as being part of a cluster by creating a var/lock/clustered.lock
-    """
-    lock_file = "{}/var/lock/clustered.lock".format(snapdata_path)
-    open(lock_file, 'a').close()
-    os.chmod(lock_file, 0o700)
-    services = ['etcd', 'apiserver', 'apiserver-kicker', 'controller-manager', 'scheduler']
-    for service in services:
-        subprocess.check_call("systemctl restart snap.microk8s.daemon-{}.service".format(service).split())
-
-
 def generate_callback_token():
     """
     Generate a token and store it in the callback token file
@@ -295,7 +236,7 @@ def reset_current_installation():
     os.remove(callback_token_file)
     os.remove(server_cert_file)
 
-    for config_file in ["kubelet", "flanneld", "kube-proxy"]:
+    for config_file in ["kubelet", "kube-proxy"]:
         shutil.copyfile("{}/default-args/{}".format(snap_path, config_file),
                         "{}/args/{}".format(snapdata_path, config_file))
 
@@ -467,7 +408,6 @@ if __name__ == "__main__":
         if 'hostname_override' in info:
             hostname_override = info['hostname_override']
 
-        update_flannel(info["etcd"], master_ip, master_port, token)
         update_dqlite(info["cluster_cert"], info["cluster_key"], master_ip, info["cluster_port"])
 
     sys.exit(0)
