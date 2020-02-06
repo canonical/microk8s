@@ -487,7 +487,7 @@ spec:
       volumes:
         # To keep state between restarts / upgrades
       - hostPath:
-          path: /var/snap/microk8s/1038/var/run/cilium
+          path: /var/snap/microk8s/current/var/run/cilium
           type: DirectoryOrCreate
         name: cilium-run
         # To keep state between restarts / upgrades for bpf maps
@@ -502,12 +502,12 @@ spec:
         name: containerd-socket
       # To install cilium cni plugin in the host
       - hostPath:
-          path:  /var/snap/microk8s/1038/opt/cni/bin
+          path:  /var/snap/microk8s/current/opt/cni/bin
           type: DirectoryOrCreate
         name: cni-path
         # To install cilium cni configuration in the host
       - hostPath:
-          path: /var/snap/microk8s/1038/args/cni-network
+          path: /var/snap/microk8s/current/args/cni-network
           type: DirectoryOrCreate
         name: etc-cni-netd
         # To be able to load kernel modules
