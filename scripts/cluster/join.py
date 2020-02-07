@@ -159,7 +159,7 @@ def create_admin_kubeconfig(ca):
             config_txt = config_txt.replace("CADATA", ca_line)
             config_txt = config_txt.replace("NAME", "admin")
             config_txt = config_txt.replace("AUTHTYPE", "password")
-            config_txt = config_txt.replace("TOKEN", token)
+            config_txt = config_txt.replace("PASSWORD", token)
             fp.write(config_txt)
         try_set_file_permissions(config)
 

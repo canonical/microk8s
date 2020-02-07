@@ -479,6 +479,7 @@ configure_cilium_cni() {
 
     start_timer="$(date +%s)"
     # Wait up to two minutes for the apiserver to come up.
+    # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
     timeout="120"
     KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
     while ! ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null
