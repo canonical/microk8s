@@ -45,7 +45,7 @@ _MULTIPASS_DL_VERSION = "1.0.0"
 _MULTIPASS_DL_NAME = "multipass-{version}+win-win64.exe".format(
     version=_MULTIPASS_DL_VERSION
 )
-_MULTIPASS_DL_SHA3_384 = "a1ac2eeb77b2a98fe5dee198be70dbf1a985d94b9707ce33ea0d3828dbc90d07fccb9662b7c97a3cfa194895b4f56676"  # noqa: E501
+_MULTIPASS_DL_SHA3_384 = "8be346251ad4f1b7401137d9e0d8af64db08f1850280fd7ed6d85299645c74cd874bc3de7c1f0b29332401722c559059"  # noqa: E501
 
 
 def windows_reload_multipass_path_env():
