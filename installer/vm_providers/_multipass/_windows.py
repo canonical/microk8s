@@ -149,12 +149,13 @@ def _fetch_installer_url() -> str:
             )
         )
 
-    for asset in data.get("assets", list()):
-        # Find matching name.
-        if asset.get("name") != _MULTIPASS_DL_NAME:
-            continue
+    for assets in data:
+        for asset in assets.get("assets", list()):
+            # Find matching name.
+            if asset.get("name") != _MULTIPASS_DL_NAME:
+                continue
 
-        return asset.get("browser_download_url")
+            return asset.get("browser_download_url")
 
     # Something changed we don't know about - we will simply categorize
     # all possible events as an updated version we do not yet know about.
