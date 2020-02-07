@@ -316,6 +316,22 @@ def remove_node(node):
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+def get_token(name):
+    """
+    Get token from known_tokens file
+
+    :param name: the name of the node
+    :returns: the token or None(if name doesn't exist)
+    """
+    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
+    with open(file) as fp:
+        line = fp.readline()
+        if name in line:
+            parts = line.split(',')
+            return parts[0].rstrip()
+    return None
+
+
 def update_dqlite(cluster_cert, cluster_key, clusrt_ip, cluster_port):
     subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
     time.sleep(10)
@@ -363,6 +379,8 @@ def update_dqlite(cluster_cert, cluster_key, clusrt_ip, cluster_port):
             waits -= 1
 
 
+
+
 if __name__ == "__main__":
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "h", ["help"])
@@ -407,6 +425,16 @@ if __name__ == "__main__":
         hostname_override = None
         if 'hostname_override' in info:
             hostname_override = info['hostname_override']
+
+        store_remote_ca(info["ca"])
+        # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
+        for component in [("kube-proxy", "kubeproxy", "proxy.config"),
+                          ("kubelet", "kubelet", "kubelet.config"),
+                          ("kube-controller-manager", "controller", "controller.config"),
+                          ("kube-scheduler", "scheduler", "scheduler.config")]:
+            token = get_token(component[0])
+            # TODO make this configurable
+            create_kubeconfig(token, info["ca"], "127.0.0.1", "16443", component[2], component[1])
 
         update_dqlite(info["cluster_cert"], info["cluster_key"], master_ip, info["cluster_port"])
 
