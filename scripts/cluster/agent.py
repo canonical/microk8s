@@ -94,6 +94,21 @@ def store_callback_token(node, callback_token):
     shutil.move(tmp_file, callback_tokens_file)
 
 
+def get_callback_tokens(this_node):
+    """
+    Return all callback tokens
+
+    :param this_node: the node
+    :param this_callback_token: the token
+    """
+    with open(callback_token_file) as fp:
+        this_callback_token = fp.read()
+    with open(callback_tokens_file) as fp:
+        tokens = fp.read()
+    all_tokens = "{}{} {}\n".format(tokens, this_node, this_callback_token)
+    return all_tokens
+
+
 def sign_client_cert(cert_request, token):
     """
     Sign a certificate request
@@ -335,6 +350,7 @@ def join_node():
 
     node_addr = get_node_ep(hostname, request.remote_addr)
     node_ep = "{}:{}".format(node_addr, port)
+    callback_tokens = get_callback_tokens(node_addr)
     store_callback_token(node_ep, callback_token)
 
     ca, ca_key = getCA()
@@ -358,6 +374,7 @@ def join_node():
                    cluster_cert=cluster_cert,
                    cluster_key=cluster_key,
                    cluster_port='19001',
+                   callback_tokens=callback_tokens,
                    kubeproxy=proxy_token,
                    apiport=api_port,
                    kubelet=kubelet_token,
