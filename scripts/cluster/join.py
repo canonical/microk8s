@@ -277,6 +277,13 @@ def store_base_kubelet_args(args_string):
     try_set_file_permissions(args_file)
 
 
+def store_callback_tokens(tokens):
+    callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
+    with open(callback_tokens_file, "w") as fp:
+        fp.write(tokens)
+    try_set_file_permissions(callback_tokens_file)
+
+
 def reset_current_installation():
     """
     Take a node out of a cluster
@@ -436,8 +443,6 @@ def update_dqlite(cluster_cert, cluster_key, clusrt_ip, cluster_port):
             waits -= 1
 
 
-
-
 if __name__ == "__main__":
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "h", ["help"])
@@ -497,6 +502,7 @@ if __name__ == "__main__":
             create_kubeconfig(token, info["ca"], "127.0.0.1", "16443", component[2], component[1])
         create_admin_kubeconfig(info["ca"])
         store_base_kubelet_args(info["kubelet_args"])
+        store_callback_tokens(info["callback_tokens"])
 
         update_dqlite(info["cluster_cert"], info["cluster_key"], master_ip, info["cluster_port"])
 
