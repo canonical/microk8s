@@ -346,10 +346,7 @@ def join_node():
     proxy_token = get_token('kube-proxy')
     kubelet_token = add_kubelet_token(node_addr)
     subprocess.check_call("systemctl restart snap.microk8s.daemon-apiserver.service".split())
-    if node_addr != hostname:
-        kubelet_args = read_kubelet_args_file(node_addr)
-    else:
-        kubelet_args = read_kubelet_args_file()
+    kubelet_args = read_kubelet_args_file()
 
     return jsonify(ca=ca,
                    ca_key=ca_key,
