@@ -217,6 +217,18 @@ def store_cluster_certs(cluster_cert, cluster_key):
     try_set_file_permissions(cluster_key_file)
 
 
+def store_front_proxy_certs(cert, cert_key):
+    cert_file = "{}/certs/front-proxy-client.crt".format(snapdata_path)
+    cert_key_file = "{}/certs/front-proxy-client.key".format(snapdata_path)
+    with open(cert_file, 'w+') as fp:
+        fp.write(cert)
+    try_set_file_permissions(cert_file)
+    with open(cert_key_file, 'w+') as fp:
+        fp.write(cert_key)
+    try_set_file_permissions(cert_key_file)
+
+
+
 def generate_callback_token():
     """
     Generate a token and store it in the callback token file
@@ -451,6 +463,7 @@ if __name__ == "__main__":
         store_remote_ca(info["ca"], info["ca_key"])
         store_remote_server_cert(info["server_cert"], info["server_cert_key"])
         store_remote_service_account_key(info["service_account_key"])
+        store_front_proxy_certs(info["proxy_cert"], info["proxy_cert_key"])
         # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
         for component in [("kube-proxy", "kubeproxy", "proxy.config"),
                           ("kubelet", "kubelet", "kubelet.config"),
