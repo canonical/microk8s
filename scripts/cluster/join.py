@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 import base64
-import random
-import string
 import subprocess
 import os
 import getopt
@@ -13,7 +11,7 @@ import socket
 import shutil
 import urllib3
 
-from .common.utils import try_set_file_permissions, get_callback_token
+from common.utils import try_set_file_permissions, get_callback_token
 import yaml
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
