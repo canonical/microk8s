@@ -9,7 +9,7 @@ import string
 import subprocess
 import sys
 
-from .common.utils import try_set_file_permissions
+from .common.utils import try_set_file_permissions, get_callback_token
 
 from flask import Flask, jsonify, request, abort, Response
 
@@ -345,6 +345,7 @@ def join_node():
         error_msg={"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
+    get_callback_token()
     add_token_to_certs_request(token)
     remove_token_from_file(token, cluster_tokens_file)
 

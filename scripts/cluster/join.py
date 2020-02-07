@@ -13,7 +13,7 @@ import socket
 import shutil
 import urllib3
 
-from common.utils import try_set_file_permissions
+from .common.utils import try_set_file_permissions, get_callback_token
 import yaml
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -251,20 +251,6 @@ def store_front_proxy_certs(cert, cert_key):
     try_set_file_permissions(cert_key_file)
 
 
-def generate_callback_token():
-    """
-    Generate a token and store it in the callback token file
-
-    :return: the token
-    """
-    token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(64))
-    with open(callback_token_file, "w") as fp:
-        fp.write("{}\n".format(token))
-
-    try_set_file_permissions(callback_token_file)
-    return token
-
-
 def store_base_kubelet_args(args_string):
     """
     Create a kubelet args file from the set of args provided
@@ -474,7 +460,7 @@ if __name__ == "__main__":
         master_ep = connection_parts[0].split(":")
         master_ip = master_ep[0]
         master_port = master_ep[1]
-        callback_token = generate_callback_token()
+        callback_token = get_callback_token()
         info = get_connection_info(master_ip, master_port, token, callback_token)
 
         if "cluster_key" not in info:
