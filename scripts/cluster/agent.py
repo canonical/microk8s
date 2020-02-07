@@ -192,7 +192,27 @@ def getCA():
     ca_file = "{}/certs/ca.crt".format(snapdata_path)
     with open(ca_file) as fp:
         ca = fp.read()
-    return ca
+    ca_key_file = "{}/certs/ca.key".format(snapdata_path)
+    with open(ca_key_file) as fp:
+        ca_key = fp.read()
+    return ca, ca_key
+
+
+def get_server_cert():
+    server_cert_file = "{}/certs/server.crt".format(snapdata_path)
+    with open(server_cert_file) as fp:
+        server_cert = fp.read()
+    server_cert_key_file = "{}/certs/server.key".format(snapdata_path)
+    with open(server_cert_key_file) as fp:
+        server_cert_key = fp.read()
+    return server_cert, server_cert_key
+
+
+def get_service_account_key():
+    key_file = "{}/certs/serviceaccount.key".format(snapdata_path)
+    with open(key_file) as fp:
+        key = fp.read()
+    return key
 
 
 def get_cluster_certs():
@@ -307,7 +327,9 @@ def join_node():
     node_ep = "{}:{}".format(node_addr, port)
     store_callback_token(node_ep, callback_token)
 
-    ca = getCA()
+    ca, ca_key = getCA()
+    server_cert, server_cert_key = get_server_cert()
+    service_account_key = get_service_account_key()
     cluster_cert, cluster_key = get_cluster_certs()
     api_port = get_arg('--secure-port', 'kube-apiserver')
     proxy_token = get_token('kube-proxy')
@@ -319,6 +341,10 @@ def join_node():
         kubelet_args = read_kubelet_args_file()
 
     return jsonify(ca=ca,
+                   ca_key=ca_key,
+                   server_cert=server_cert,
+                   server_cert_key=server_cert_key,
+                   service_account_key=service_account_key,
                    cluster_cert=cluster_cert,
                    cluster_key=cluster_key,
                    cluster_port='19001',
