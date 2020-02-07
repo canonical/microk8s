@@ -10,12 +10,16 @@ import tempfile
 import textwrap
 import time
 from itertools import count
+from distutils.util import strtobool
 
 
-def run(*args, die=True):
+def run(*args, die=True, debug=False):
     # Add wrappers to $PATH
     env = os.environ.copy()
     env["PATH"] += ":%s" % os.environ["SNAP"]
+
+    if debug:
+        print("Running `%s`" % ' '.join(args))
 
     result = subprocess.run(
         args,
@@ -29,6 +33,7 @@ def run(*args, die=True):
         result.check_returncode()
     except subprocess.CalledProcessError as err:
         if die:
+            print("Kubeflow could not be enabled:")
             if result.stderr:
                 print(result.stderr.decode("utf-8"))
             print(err)
@@ -46,8 +51,8 @@ def get_random_pass():
 
 
 def juju(*args, **kwargs):
-    if "KUBEFLOW_DEBUG" in os.environ:
-        return run("microk8s-juju.wrapper", "--debug", *args, **kwargs)
+    if strtobool(os.environ.get("KUBEFLOW_DEBUG") or 'false'):
+        return run("microk8s-juju.wrapper", "--debug", *args, debug=True, **kwargs)
     else:
         return run("microk8s-juju.wrapper", *args, **kwargs)
 
@@ -87,7 +92,6 @@ def main():
     else:
         juju("bootstrap", "microk8s", "uk8s")
         juju("add-model", "kubeflow", "microk8s")
-
 
     with tempfile.NamedTemporaryFile("w+") as f:
         json.dump(password_overlay, f)
