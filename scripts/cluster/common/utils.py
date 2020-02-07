@@ -1,7 +1,7 @@
 import os
 import shutil
 import string
-from random import random
+import random
 
 
 def try_set_file_permissions(file):
