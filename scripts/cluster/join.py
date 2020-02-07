@@ -140,6 +140,30 @@ def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
         try_set_file_permissions(config)
 
 
+def create_admin_kubeconfig(ca):
+    """
+    Create a kubeconfig file. The file in stored under credentials named after the admin
+
+    :param ca: the ca
+    """
+    snap_path = os.environ.get('SNAP')
+    token = get_token("admin", "basic_auth.csv")
+    config_template = "{}/microk8s-resources/{}".format(snap_path, "client.config.template")
+    config = "{}/credentials/client.config".format(snapdata_path)
+    shutil.copyfile(config, "{}.backup".format(config))
+    try_set_file_permissions("{}.backup".format(config))
+    ca_line = ca_one_line(ca)
+    with open(config_template, 'r') as tfp:
+        with open(config, 'w+') as fp:
+            config_txt = tfp.read()
+            config_txt = config_txt.replace("CADATA", ca_line)
+            config_txt = config_txt.replace("NAME", "admin")
+            config_txt = config_txt.replace("AUTHTYPE", "password")
+            config_txt = config_txt.replace("TOKEN", token)
+            fp.write(config_txt)
+        try_set_file_permissions(config)
+
+
 def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
     """
     Configure the kube-proxy
@@ -170,7 +194,6 @@ def update_kubelet(token, ca, master_ip, api_port):
     create_kubeconfig(token, ca, master_ip, api_port, "kubelet.config", "kubelet")
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
     subprocess.check_call("systemctl restart snap.microk8s.daemon-kubelet.service".split())
-
 
 
 def store_remote_server_cert(cert, cert_key):
@@ -226,7 +249,6 @@ def store_front_proxy_certs(cert, cert_key):
     with open(cert_key_file, 'w+') as fp:
         fp.write(cert_key)
     try_set_file_permissions(cert_key_file)
-
 
 
 def generate_callback_token():
@@ -348,16 +370,17 @@ def remove_node(node):
     subprocess.check_call("{}/microk8s-kubectl.wrapper delete no {}".format(snap_path, node).split(),
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+
 # TODO eliminate duplicata code
 # TODO check we do not have a bug in the other get_token (no for loop)
-def get_token(name):
+def get_token(name, tokens_file="known_tokens.csv"):
     """
     Get token from known_tokens file
 
     :param name: the name of the node
     :returns: the token or None(if name doesn't exist)
     """
-    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
+    file = "{}/credentials/{}".format(snapdata_path, tokens_file)
     with open(file) as fp:
         for line in fp:
             if name in line:
@@ -472,6 +495,7 @@ if __name__ == "__main__":
             token = get_token(component[0])
             # TODO make this configurable
             create_kubeconfig(token, info["ca"], "127.0.0.1", "16443", component[2], component[1])
+        create_admin_kubeconfig(info["ca"])
 
         update_dqlite(info["cluster_cert"], info["cluster_key"], master_ip, info["cluster_port"])
 
