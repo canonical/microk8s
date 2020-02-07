@@ -21,15 +21,17 @@ CLUSTER_API = "cluster/api/v1.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 ca_cert_file_via_env = "${SNAP_DATA}/certs/ca.remote.crt"
-ca_cert_file = "{}/certs/ca.remote.crt".format(snapdata_path)
+ca_cert_file = "{}/certs/ca.crt".format(snapdata_path)
+ca_cert_key_file = "{}/certs/ca.key".format(snapdata_path)
+server_cert_file = "{}/certs/server.crt".format(snapdata_path)
+server_cert_key_file = "{}/certs/server.key".format(snapdata_path)
+service_account_key_file = "{}/certs/serviceaccount.key".format(snapdata_path)
 cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
 cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
 cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
 cluster_key_file = "{}/cluster.key".format(cluster_dir)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
-server_cert_file_via_env = "${SNAP_DATA}/certs/server.remote.crt"
-server_cert_file = "{}/certs/server.remote.crt".format(snapdata_path)
 
 
 def get_connection_info(master_ip, master_port, token, callback_token):
@@ -170,7 +172,23 @@ def update_kubelet(token, ca, master_ip, api_port):
     subprocess.check_call("systemctl restart snap.microk8s.daemon-kubelet.service".split())
 
 
-def store_remote_ca(ca):
+
+def store_remote_server_cert(cert, cert_key):
+    with open(server_cert_file, 'w+') as fp:
+        fp.write(cert)
+    try_set_file_permissions(server_cert_file)
+    with open(server_cert_key_file, 'w+') as fp:
+        fp.write(cert_key)
+    try_set_file_permissions(server_cert_key_file)
+
+
+def store_remote_service_account_key(key):
+    with open(service_account_key_file, 'w+') as fp:
+        fp.write(key)
+    try_set_file_permissions(service_account_key_file)
+
+
+def store_remote_ca(ca, ca_key):
     """
     Store the remote ca
 
@@ -179,6 +197,9 @@ def store_remote_ca(ca):
     with open(ca_cert_file, 'w+') as fp:
         fp.write(ca)
     try_set_file_permissions(ca_cert_file)
+    with open(ca_cert_key_file, 'w+') as fp:
+        fp.write(ca_key)
+    try_set_file_permissions(ca_cert_key_file)
 
 
 def store_cluster_certs(cluster_cert, cluster_key):
@@ -315,7 +336,8 @@ def remove_node(node):
     subprocess.check_call("{}/microk8s-kubectl.wrapper delete no {}".format(snap_path, node).split(),
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-
+# TODO eliminate duplicata code
+# TODO check we do not have a bug in the other get_token (no for loop)
 def get_token(name):
     """
     Get token from known_tokens file
@@ -325,10 +347,10 @@ def get_token(name):
     """
     file = "{}/credentials/known_tokens.csv".format(snapdata_path)
     with open(file) as fp:
-        line = fp.readline()
-        if name in line:
-            parts = line.split(',')
-            return parts[0].rstrip()
+        for line in fp:
+            if name in line:
+                parts = line.split(',')
+                return parts[0].rstrip()
     return None
 
 
@@ -426,7 +448,9 @@ if __name__ == "__main__":
         if 'hostname_override' in info:
             hostname_override = info['hostname_override']
 
-        store_remote_ca(info["ca"])
+        store_remote_ca(info["ca"], info["ca_key"])
+        store_remote_server_cert(info["server_cert"], info["server_cert_key"])
+        store_remote_service_account_key(info["service_account_key"])
         # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
         for component in [("kube-proxy", "kubeproxy", "proxy.config"),
                           ("kubelet", "kubelet", "kubelet.config"),
