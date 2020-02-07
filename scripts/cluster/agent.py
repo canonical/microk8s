@@ -208,6 +208,16 @@ def get_server_cert():
     return server_cert, server_cert_key
 
 
+def get_proxy_cert():
+    proxy_cert_file = "{}/certs/front-proxy-client.crt".format(snapdata_path)
+    with open(proxy_cert_file) as fp:
+        proxy_cert = fp.read()
+    proxy_cert_key_file = "{}/certs/front-proxy-client.key".format(snapdata_path)
+    with open(proxy_cert_key_file) as fp:
+        proxy_cert_key = fp.read()
+    return proxy_cert, proxy_cert_key
+
+
 def get_service_account_key():
     key_file = "{}/certs/serviceaccount.key".format(snapdata_path)
     with open(key_file) as fp:
@@ -329,6 +339,7 @@ def join_node():
 
     ca, ca_key = getCA()
     server_cert, server_cert_key = get_server_cert()
+    proxy_cert, proxy_cert_key = get_proxy_cert()
     service_account_key = get_service_account_key()
     cluster_cert, cluster_key = get_cluster_certs()
     api_port = get_arg('--secure-port', 'kube-apiserver')
@@ -345,6 +356,8 @@ def join_node():
                    server_cert=server_cert,
                    server_cert_key=server_cert_key,
                    service_account_key=service_account_key,
+                   proxy_cert=proxy_cert,
+                   proxy_cert_key=proxy_cert_key,
                    cluster_cert=cluster_cert,
                    cluster_key=cluster_key,
                    cluster_port='19001',
