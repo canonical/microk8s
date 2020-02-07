@@ -103,8 +103,11 @@ def get_callback_tokens(this_node):
     """
     with open(callback_token_file) as fp:
         this_callback_token = fp.read()
-    with open(callback_tokens_file) as fp:
-        tokens = fp.read()
+    if os.path.exists(callback_tokens_file):
+        with open(callback_tokens_file) as fp:
+            tokens = fp.read()
+    else:
+        tokens = ""
     all_tokens = "{}{} {}\n".format(tokens, this_node, this_callback_token)
     return all_tokens
 
