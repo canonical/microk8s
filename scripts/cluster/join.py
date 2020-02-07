@@ -496,6 +496,7 @@ if __name__ == "__main__":
             # TODO make this configurable
             create_kubeconfig(token, info["ca"], "127.0.0.1", "16443", component[2], component[1])
         create_admin_kubeconfig(info["ca"])
+        store_base_kubelet_args(info["kubelet_args"])
 
         update_dqlite(info["cluster_cert"], info["cluster_key"], master_ip, info["cluster_port"])
 
