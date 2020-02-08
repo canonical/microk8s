@@ -78,7 +78,15 @@ then
   cp ${SNAP}/microk8s-resources/client.config ${SNAP_DATA}/credentials/
 fi
 
-# Upgrading to containerd
+# copy kubectl-env
+if [ ! -e ${SNAP_DATA}/args/kubectl-env ] && grep -e "\-\-kubeconfig=\${SNAP_DATA}/credentials/client.config" ${SNAP_DATA}/args/kubectl
+then
+  echo "Making sure we have kubectl environment file"
+  cp ${SNAP}/default-args/kubectl-env ${SNAP_DATA}/args/kubectl-env
+  skip_opt_in_config kubeconfig kubectl
+fi
+
+# copy kubectl
 if [ ! -e ${SNAP_DATA}/args/kubectl ]
 then
   echo "Making sure we have kubectl arguments file"
@@ -319,7 +327,7 @@ then
   need_api_restart=true
 fi
 
-if [ "${need_api_restart}" ]
+if ${need_api_restart}
 then
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi

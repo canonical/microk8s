@@ -26,7 +26,7 @@ from utils import (
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
 # Have UPGRADE_MICROK8S_TO point to a file to upgrade to that file
 upgrade_to = os.environ.get('UPGRADE_MICROK8S_TO', 'edge')
-under_time_pressure = os.environ.get('UNDER_TIME_PRESURE', 'False')
+under_time_pressure = os.environ.get('UNDER_TIME_PRESSURE', 'False')
 
 
 class TestUpgrade(object):

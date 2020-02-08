@@ -17,6 +17,15 @@ if echo "$*" | grep -v -q -- '--kubeconfig'; then
   exit_if_no_permissions
 fi
 
+if [ -e $SNAP_DATA/args/kubectl-env ]
+then
+  source $SNAP_DATA/args/kubectl-env
+fi
 
 declare -a args="($(cat $SNAP_DATA/args/kubectl))"
-"${SNAP}/kubectl" "${args[@]}" "$@"
+if [ -n "${args[@]-}" ]
+then
+  "${SNAP}/kubectl" "${args[@]}" "$@"
+else
+  "${SNAP}/kubectl" "$@"
+fi

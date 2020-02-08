@@ -81,6 +81,8 @@ apps:
     command: microk8s-linkerd.wrapper
   helm:
     command: microk8s-helm.wrapper
+  helm3:
+    command: microk8s-helm3.wrapper
   cilium:
     command: microk8s-cilium.wrapper
   juju:
@@ -394,3 +396,9 @@ parts:
         echo "Skipped"
       fi
 
+slots:
+  microk8s-info:
+    interface: content
+    content: microk8s
+    source:
+      read: [$SNAP/.microk8s-info/microk8s]
