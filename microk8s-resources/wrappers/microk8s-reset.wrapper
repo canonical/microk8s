@@ -22,17 +22,15 @@ disable_addons() {
   actions="$(get_all_addons)"
   for action in $actions; do
     echo "Disabling addon : $action"
+    addon_arguments=""
+    if [ "$action" = "storage" ] && [ ${destroy_storage_enabled} ]
+    then
+       microk8s.disable $action:destroy-storage > /dev/null 2>&1 || true
+    fi
     microk8s.disable $action > /dev/null 2>&1 || true
   done
   echo "All addons disabled."
 }
-
-destroy_storage() {
-  echo "Destroying storage"
-  microk8s.enable storage && microk8s.disable storage \
-      || echo "Ignoring storage destroying issue"
-}
-
 
 clean_cluster() {
   echo "Calling clean_cluster"
@@ -141,9 +139,6 @@ done
 exit_if_stopped
 exit_if_no_permissions
 
-if ${destroy_storage_enabled} ; then
-  destroy_storage
-fi
 disable_addons
 clean_cluster
 
