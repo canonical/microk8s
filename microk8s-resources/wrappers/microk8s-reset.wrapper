@@ -26,8 +26,9 @@ disable_addons() {
     if [ "$action" = "storage" ] && [ ${destroy_storage_enabled} ]
     then
        microk8s.disable $action:destroy-storage > /dev/null 2>&1 || true
+    else
+       microk8s.disable $action > /dev/null 2>&1 || true
     fi
-    microk8s.disable $action > /dev/null 2>&1 || true
   done
   echo "All addons disabled."
 }
