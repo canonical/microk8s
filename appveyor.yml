@@ -92,8 +92,11 @@ for:
   - pyinstaller --onefile microk8s.spec
   - deactivate
 
+  after_build:
+  - tar -czf microk8s.tgz -C installer/dist microk8s
+
   test_script:
   - echo "Running select unit tests..."
 
   artifacts:
-  - path: installer/dist/microk8s
+  - path: microk8s.tgz
