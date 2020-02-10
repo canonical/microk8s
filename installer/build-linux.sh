@@ -1,8 +1,9 @@
 #!/bin/bash
 
 
-python3 -m venv .
+virtualenv -p python3 .venv
 source ./bin/activate
 pip install -r requirements.txt
 pyinstaller ./microk8s.spec
 deactivate
+rm -rf .venv

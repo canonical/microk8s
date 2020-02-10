@@ -29,3 +29,5 @@ toml==0.10.0
 #launchpadlib==1.10.6
 #lazr.restfulclient==0.14.2
 #mypy-extensions==0.4.3
+wheel
+pyinstaller
