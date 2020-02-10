@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import getopt
 import subprocess
+import yaml
 
 import requests
 import urllib3
@@ -11,7 +12,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
-callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
+callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 
 
 def do_op(remote_op):
@@ -20,17 +21,16 @@ def do_op(remote_op):
     
     :param remote_op: the operation json string
     """
-    with open(callback_tokens_file, "r+") as fp:
-        for _, line in enumerate(fp):
-            parts = line.split()
-            node_ep = parts[0]
-            host = node_ep.split(":")[0]
-            print("Applying to node {}.".format(host))
-            try:
-                # Make sure this node exists
-                subprocess.check_call("{}/microk8s-kubectl.wrapper get no {}".format(snap_path, host).split(),
-                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                token = parts[1]
+    with open(callback_token_file, "r+") as fp:
+        token = fp.read()
+        try:
+            # Make sure this node exists
+            node_yaml = subprocess.check_call("{}/microk8s-kubectl.wrapper get no -o yaml".format(snap_path).split())
+            nodes_info = yaml.safe_load(node_yaml)
+            for node_info in nodes_info["items"]:
+                node = node_info['metadata']['name']
+                # TODO: make port configurable
+                node_ep = "{}:{}".format(node, '25000')
                 remote_op["callback"] = token
                 # TODO: handle ssl verification
                 res = requests.post("https://{}/{}/configure".format(node_ep, CLUSTER_API),
@@ -38,8 +38,8 @@ def do_op(remote_op):
                                     verify=False)
                 if res.status_code != 200:
                     print("Failed to perform a {} on node {}".format(remote_op["action_str"], node_ep))
-            except subprocess.CalledProcessError:
-                print("Node {} not present".format(host))
+        except subprocess.CalledProcessError:
+            print("Node {} not present".format(host))
 
 
 def restart(service):
@@ -133,7 +133,7 @@ def usage():
 
 
 if __name__ == "__main__":
-    if not os.path.isfile(callback_tokens_file):
+    if not os.path.isfile(callback_token_file):
         print("No callback tokens file.")
         exit(1)
 
