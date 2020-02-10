@@ -327,6 +327,12 @@ then
   need_api_restart=true
 fi
 
+if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
+then
+  refresh_opt_in_config enable-v2 true etcd
+  snapctl restart ${SNAP_NAME}.daemon-etcd
+fi
+
 if ${need_api_restart}
 then
   snapctl restart ${SNAP_NAME}.daemon-apiserver

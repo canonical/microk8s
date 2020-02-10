@@ -435,3 +435,9 @@ uncordon_node() {
         $KUBECTL uncordon $node || true
     fi
 }
+
+get_all_addons() {
+    actions="$(find "$SNAP/actions" -maxdepth 1 ! -name 'coredns.yaml' -name '*.yaml' -or -name 'enable.*.sh')"
+    actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
+    echo $actions
+}

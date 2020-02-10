@@ -22,7 +22,7 @@ snapcraft --use-lxd
 
 ## Building a custom MicroK8s package
 
-To produce a custom build with specific component versions we need to
+To produce a custom build with specific component versions we cannot use the snapcraft build process on the host OS. We need to
 [prepare an LXC](https://forum.snapcraft.io/t/how-to-create-a-lxd-container-for-snap-development/4658)
 container with Ubuntu 16:04 and snapcraft:
 ```
