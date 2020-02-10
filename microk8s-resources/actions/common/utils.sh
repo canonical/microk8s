@@ -103,13 +103,9 @@ refresh_opt_in_config() {
         run_with_sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
 
-    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    if [ -e "${SNAP_DATA}/credentials/callback-token.txt" ]
     then
-        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
-        if [[ "$tokens" -ge "0" ]]
-        then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
-        fi
+        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
     fi
 }
 
@@ -120,13 +116,9 @@ nodes_addon() {
     local addon="$1"
     local state="$2"
 
-    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    if [ -e "${SNAP_DATA}/credentials/callback-token.txt" ]
     then
-        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
-        if [[ "$tokens" -ge "0" ]]
-        then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
-        fi
+        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
     fi
 }
 
@@ -139,13 +131,9 @@ skip_opt_in_config() {
     local config_file="$SNAP_DATA/args/$2"
     run_with_sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
 
-    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    if [ -e "${SNAP_DATA}/credentials/callback-token.txt" ]
     then
-        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
-        if [[ "$tokens" -ge "0" ]]
-        then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
-        fi
+        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
     fi
 }
 
@@ -155,13 +143,9 @@ restart_service() {
     # argument $1 is the service name
     run_with_sudo systemctl restart "snap.microk8s.daemon-$1.service"
 
-    if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
+    if [ -e "${SNAP_DATA}/credentials/callback-token.txt" ]
     then
-        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
-        if [[ "$tokens" -ge "0" ]]
-        then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
-        fi
+        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
     fi
 }
 
