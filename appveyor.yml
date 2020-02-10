@@ -79,7 +79,7 @@ for:
   build: off
 
   install:
-  - python -m pip install virtualenv
+  - brew install python
   - python -m venv venv
   - source venv/bin/activate
   - python -m pip install -r installer/requirements.txt
