@@ -79,7 +79,8 @@ for:
   build: off
 
   install:
-  - brew install python
+  - brew upgrade python
+  - brew link --overwrite python
   - python -m venv venv
   - source venv/bin/activate
   - python -m pip install -r installer/requirements.txt
