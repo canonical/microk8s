@@ -81,9 +81,11 @@ for:
   install:
   - brew upgrade python
   - brew link --overwrite python
-  - python -m venv venv
+  - which python
+  - which python3
+  - python3 -m venv venv
   - source venv/bin/activate
-  - python -m pip install -r installer/requirements.txt
+  - python3 -m pip install -r installer/requirements.txt
   - deactivate
 
   build_script:
