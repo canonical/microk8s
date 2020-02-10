@@ -96,4 +96,4 @@ for:
   - echo "Running select unit tests..."
 
   artifacts:
-  - path: installer\dist\microk8s
+  - path: installer/dist/microk8s
