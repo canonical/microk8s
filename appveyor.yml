@@ -91,9 +91,9 @@ for:
   - cd installer
   - pyinstaller --onefile microk8s.spec
   - deactivate
+  - cd ..
 
   after_build:
-  - cd ..
   - tar -czf microk8s.tgz -C installer/dist microk8s
 
   test_script:
