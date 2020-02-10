@@ -32,14 +32,13 @@ callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 
 
-def get_connection_info(master_ip, master_port, token, callback_token):
+def get_connection_info(master_ip, master_port, token):
     """
     Contact the master and get all connection information
 
     :param master_ip: the master IP
     :param master_port: the master port
     :param token: the token to contact the master with
-    :param callback_token: the token to provide to the master for callbacks
     :return: the json response of the master
     """
     cluster_agent_port = 25000
@@ -53,8 +52,7 @@ def get_connection_info(master_ip, master_port, token, callback_token):
 
     req_data = {"token": token,
                 "hostname": socket.gethostname(),
-                "port": cluster_agent_port,
-                "callback": callback_token}
+                "port": cluster_agent_port}
 
     # TODO: enable ssl verification
     connection_info = requests.post("https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API),
@@ -261,11 +259,11 @@ def store_base_kubelet_args(args_string):
     try_set_file_permissions(args_file)
 
 
-def store_callback_tokens(tokens):
-    callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
-    with open(callback_tokens_file, "w") as fp:
-        fp.write(tokens)
-    try_set_file_permissions(callback_tokens_file)
+def store_callback_token(token):
+    callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
+    with open(callback_token_file, "w") as fp:
+        fp.write(token)
+    try_set_file_permissions(callback_token_file)
 
 
 def reset_current_installation():
@@ -458,8 +456,7 @@ if __name__ == "__main__":
         master_ep = connection_parts[0].split(":")
         master_ip = master_ep[0]
         master_port = master_ep[1]
-        callback_token = get_callback_token()
-        info = get_connection_info(master_ip, master_port, token, callback_token)
+        info = get_connection_info(master_ip, master_port, token)
 
         if "cluster_key" not in info:
             print("The cluster you are attempting to join is incompatible with the current MicroK8s instance.")
@@ -486,7 +483,7 @@ if __name__ == "__main__":
             create_kubeconfig(token, info["ca"], "127.0.0.1", "16443", component[2], component[1])
         create_admin_kubeconfig(info["ca"])
         store_base_kubelet_args(info["kubelet_args"])
-        store_callback_tokens(info["callback_tokens"])
+        store_callback_token(info["callback_token"])
 
         update_dqlite(info["cluster_cert"], info["cluster_key"], master_ip, info["cluster_port"])
 

@@ -18,7 +18,6 @@ CLUSTER_API="cluster/api/v1.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
-callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 certs_request_tokens_file = "{}/credentials/certs-request-tokens.txt".format(snapdata_path)
 default_port = 25000
@@ -64,52 +63,6 @@ def update_service_argument(service, key, val):
 
     try_set_file_permissions(args_file_tmp)
     shutil.move(args_file_tmp, args_file)
-
-
-def store_callback_token(node, callback_token):
-    """
-    Store a callback token
-
-    :param node: the node
-    :param callback_token: the token
-    """
-    tmp_file = "{}.tmp".format(callback_tokens_file)
-    if not os.path.isfile(callback_tokens_file):
-        open(callback_tokens_file, 'a+')
-        os.chmod(callback_tokens_file, 0o600)
-    with open(tmp_file, "w") as backup_fp:
-        os.chmod(tmp_file, 0o600)
-        found = False
-        with open(callback_tokens_file, 'r+') as callback_fp:
-            for _, line in enumerate(callback_fp):
-                if line.startswith(node):
-                    backup_fp.write("{} {}\n".format(node, callback_token))
-                    found = True
-                else:
-                    backup_fp.write(line)
-        if not found:
-            backup_fp.write("{} {}\n".format(node, callback_token))
-
-    try_set_file_permissions(tmp_file)
-    shutil.move(tmp_file, callback_tokens_file)
-
-
-def get_callback_tokens(this_node):
-    """
-    Return all callback tokens
-
-    :param this_node: the node
-    :param this_callback_token: the token
-    """
-    with open(callback_token_file) as fp:
-        this_callback_token = fp.read()
-    if os.path.exists(callback_tokens_file):
-        with open(callback_tokens_file) as fp:
-            tokens = fp.read()
-    else:
-        tokens = ""
-    all_tokens = "{}{} {}\n".format(tokens, this_node, this_callback_token)
-    return all_tokens
 
 
 def sign_client_cert(cert_request, token):
@@ -337,26 +290,19 @@ def join_node():
         token = request.json['token']
         hostname = request.json['hostname']
         port = request.json['port']
-        callback_token = request.json['callback']
     else:
         token = request.form['token']
         hostname = request.form['hostname']
         port = request.form['port']
-        callback_token = request.form['callback']
 
     if not is_valid(token):
         error_msg={"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
-    get_callback_token()
+    callback_token = get_callback_token()
     add_token_to_certs_request(token)
     remove_token_from_file(token, cluster_tokens_file)
-
     node_addr = get_node_ep(hostname, request.remote_addr)
-    node_ep = "{}:{}".format(node_addr, port)
-    callback_tokens = get_callback_tokens(node_addr)
-    store_callback_token(node_ep, callback_token)
-
     ca, ca_key = getCA()
     server_cert, server_cert_key = get_server_cert()
     proxy_cert, proxy_cert_key = get_proxy_cert()
@@ -378,7 +324,7 @@ def join_node():
                    cluster_cert=cluster_cert,
                    cluster_key=cluster_key,
                    cluster_port='19001',
-                   callback_tokens=callback_tokens,
+                   callback_token=callback_token,
                    kubeproxy=proxy_token,
                    apiport=api_port,
                    kubelet=kubelet_token,
