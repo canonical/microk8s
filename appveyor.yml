@@ -7,7 +7,6 @@ for:
   matrix:
     only:
       - image: Visual Studio 2019
-    PYTHON: C:\Python37-x64
 
   clone_depth: 1
   cache:
@@ -16,6 +15,7 @@ for:
   build: off
 
   environment:
+    PYTHON: C:\Python37-x64
     INNOCC: C:\Program Files (x86)\Inno Setup 6\iscc.exe
     MAKEAPPX: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe
     SIGNTOOL: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe
