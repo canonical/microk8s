@@ -2,13 +2,6 @@ image:
   - Visual Studio 2019
   - macOS
 
-environment:
-  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-    INNOCC: C:\Program Files (x86)\Inno Setup 6\iscc.exe
-    MAKEAPPX: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe
-    SIGNTOOL: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe
-    MICROK8S_INSTALLED_EXE: C:\Program Files (x86)\MicroK8s for Windows\microk8s.exe
-
 for:
 -  # Windows build.
   matrix:
@@ -21,6 +14,12 @@ for:
   - '%LOCALAPPDATA%\pip\Cache\http'
   - '%LOCALAPPDATA%\pip\Cache\wheels'
   build: off
+
+  environment:
+    INNOCC: C:\Program Files (x86)\Inno Setup 6\iscc.exe
+    MAKEAPPX: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe
+    SIGNTOOL: C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe
+    MICROK8S_INSTALLED_EXE: C:\Program Files (x86)\MicroK8s for Windows\microk8s.exe
 
   install:
   - cmd: |
