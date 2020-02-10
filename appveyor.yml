@@ -80,22 +80,19 @@ for:
   build: off
 
   install:
-  - cmd: |
-    python -m venv venv
-    source venv/bin/activate
-    python -m pip install -r installer/requirements.txt
-    deactivate
+  - python -m venv venv
+  - source venv/bin/activate
+  - python -m pip install -r installer/requirements.txt
+  - deactivate
 
   build_script:
-  - cmd: |
-    source venv/bin/activate
-    cd installer
-    pyinstaller --onefile microk8s.spec
-    deactivate
+  - source venv/bin/activate
+  - cd installer
+  - pyinstaller --onefile microk8s.spec
+  - deactivate
 
   test_script:
-  - cmd: |
-      echo "Running select unit tests..."
+  - echo "Running select unit tests..."
 
   artifacts:
   - path: installer\dist\microk8s
