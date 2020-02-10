@@ -67,6 +67,7 @@ for:
 
   artifacts:
   - path: installer\dist\microk8s.exe
+    name: Windows-Release
   - path: installer\dist\microk8s-installer.exe
   - path: installer\dist\microk8s-installer.msix
 
@@ -101,3 +102,4 @@ for:
 
   artifacts:
   - path: microk8s.tgz
+    name: MacOS-Release
