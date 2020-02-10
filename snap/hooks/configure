@@ -310,12 +310,8 @@ fi
 
 if grep -e "etcd.socket:2379" ${SNAP_DATA}/args/etcd
 then
-  # TODO: Do something smart in selecting a port
-  installed=`${SNAP}/bin/grep '\-\-enable\-v2=true' ${SNAP}/args/etcd | wc -l`
-  if [ ${installed} -eq 0 ]; then
-    refresh_opt_in_config enable-v2 true etcd
-  fi
   echo "Using a port for etcd"
+  # TODO: Do something smart in selecting a port
   refresh_opt_in_config advertise-client-urls https://\${DEFAULT_INTERFACE_IP_ADDR}:12379 etcd
   refresh_opt_in_config listen-client-urls https://0.0.0.0:12379 etcd
   refresh_opt_in_config client-cert-auth true etcd
@@ -329,6 +325,12 @@ then
   refresh_opt_in_config etcd-certfile \${SNAP_DATA}/certs/server.crt kube-apiserver
   refresh_opt_in_config etcd-keyfile \${SNAP_DATA}/certs/server.key kube-apiserver
   need_api_restart=true
+fi
+
+if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
+then
+  refresh_opt_in_config enable-v2 true etcd
+  snapctl restart ${SNAP_NAME}.daemon-etcd
 fi
 
 if ${need_api_restart}
