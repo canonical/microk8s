@@ -7,6 +7,8 @@ import requests
 import urllib3
 import os
 import sys
+import socket
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
@@ -23,21 +25,28 @@ def do_op(remote_op):
     """
     with open(callback_token_file, "r+") as fp:
         token = fp.read()
+        hostname = socket.gethostname()
         try:
             # Make sure this node exists
             node_yaml = subprocess.check_output("{}/microk8s-kubectl.wrapper get no -o yaml".format(snap_path).split())
             nodes_info = yaml.load(node_yaml, Loader=yaml.FullLoader)
             for node_info in nodes_info["items"]:
                 node = node_info['metadata']['name']
+                # TODO: What if the user has set a hostname override in the kubelet args?
+                if node == hostname:
+                    continue
+                print("Configuring node {}".format(node))
                 # TODO: make port configurable
                 node_ep = "{}:{}".format(node, '25000')
-                remote_op["callback"] = token
+                remote_op["callback"] = token.rstrip()
                 # TODO: handle ssl verification
                 res = requests.post("https://{}/{}/configure".format(node_ep, CLUSTER_API),
                                     json=remote_op,
                                     verify=False)
                 if res.status_code != 200:
-                    print("Failed to perform a {} on node {}".format(remote_op["action_str"], node_ep))
+                    print("Failed to perform a {} on node {} ()".format(remote_op["action_str"],
+                                                                        node_ep,
+                                                                        res.status_code))
         except subprocess.CalledProcessError:
             print("Node {} not present".format(host))
 
