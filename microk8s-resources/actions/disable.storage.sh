@@ -17,6 +17,7 @@ then
   run_with_sudo rm -rf "$SNAP_COMMON/default-storage"
   echo "Storage space reclaimed"
 else
-  echo "Storage space preserved"
+  read -p "Remove PVC storage at $SNAP_COMMON/default-storage ? (Y/N): " confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
+  run_with_sudo rm -rf "$SNAP_COMMON/default-storage"
+  echo "Storage space reclaimed"
 fi
-
