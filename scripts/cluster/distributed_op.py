@@ -25,8 +25,8 @@ def do_op(remote_op):
         token = fp.read()
         try:
             # Make sure this node exists
-            node_yaml = subprocess.check_call("{}/microk8s-kubectl.wrapper get no -o yaml".format(snap_path).split())
-            nodes_info = yaml.safe_load(node_yaml)
+            node_yaml = subprocess.check_output("{}/microk8s-kubectl.wrapper get no -o yaml".format(snap_path).split())
+            nodes_info = yaml.load(node_yaml, Loader=yaml.FullLoader)
             for node_info in nodes_info["items"]:
                 node = node_info['metadata']['name']
                 # TODO: make port configurable
