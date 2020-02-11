@@ -19,8 +19,8 @@ export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-bb71b10fd8f58240ca47fbb579b9d1028
 # Release v1.0.0~rc6 with CVE-2019-5736 fix
 export RUNC_COMMIT="${RUNC_COMMIT:-2b18fe1d885ee5083ef9f0838fee39b62d653e30}"
 # Set this to the kubernetes fork you want to build binaries from
-export KUBERNETES_REPOSITORY="${KUBERNETES_REPOSITORY:-}"
-export KUBERNETES_COMMIT="${KUBERNETES_COMMIT:-}"
+export KUBERNETES_REPOSITORY="${KUBERNETES_REPOSITORY:-github.com/ktsakalozos/kubernetes-dqlite}"
+export KUBERNETES_COMMIT="${KUBERNETES_COMMIT:-dae65a3f0c30f23b24e8f0d5f2e290317962707e}"
 
 export KUBE_TRACK="${KUBE_TRACK:-}"
 
