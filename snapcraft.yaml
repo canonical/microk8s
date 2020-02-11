@@ -239,7 +239,7 @@ parts:
     - python3-requests
     - gunicorn3
   microk8s:
-    after: [containerd]
+    after: [containerd, dqlite]
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
