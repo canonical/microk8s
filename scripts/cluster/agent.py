@@ -16,7 +16,7 @@ from flask import Flask, jsonify, request, abort, Response
 app = Flask(__name__)
 CLUSTER_API="cluster/api/v1.0"
 snapdata_path = os.environ.get('SNAP_DATA')
-snap_path = os.environ.get('SNAP_DATA')
+snap_path = os.environ.get('SNAP')
 cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
