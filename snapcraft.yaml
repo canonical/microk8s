@@ -284,7 +284,7 @@ parts:
         fi
         echo "Downloading binaries"
         . build-scripts/fetch-other-binaries.sh
-        if [ -z "${KUBERNETES_COMMIT}" ]; then
+        if [ -z "${KUBERNETES_TAG}" ]; then
           echo "Downloading k8s binaries from upstream"
           . build-scripts/fetch-k8s-binaries.sh
         else
