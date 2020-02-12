@@ -13,8 +13,13 @@ mkdir -p $GOPATH
 go get -d $KUBERNETES_REPOSITORY || true
 
 (cd $GOPATH/src/$KUBERNETES_REPOSITORY
-  git checkout $KUBERNETES_COMMIT
-  ls "${SNAPCRAFT_STAGE}/usr/include/"
+  git checkout $KUBERNETES_TAG
+  for patch in `ls "{$KUBE_SNAP_ROOT}/build-scripts/patches"`
+  do
+    echo "Applying patch $patch"
+    git am < $patch
+  done
+
   rm -rf $GOPATH/src/$KUBERNETES_REPOSITORY/_output/
   make clean
   for app in ${path_apps}
