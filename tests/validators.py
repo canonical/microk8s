@@ -353,40 +353,6 @@ def validate_rbac():
     assert "yes" in output
 
 
-def cilium(cmd, timeout_insec=300, err_out=None):
-    """
-    Do a cilium <cmd>
-    Args:
-        cmd: left part of cilium <left_part> command
-        timeout_insec: timeout for this job
-        err_out: If command fails and this is the output, return.
-
-    Returns: the cilium response in a string
-    """
-    cmd = '/snap/bin/microk8s.cilium ' + cmd
-    return run_until_success(cmd, timeout_insec, err_out)
-
-
-def validate_cilium():
-    """
-    Validate cilium by deploying the bookinfo app.
-    """
-    if platform.machine() != 'x86_64':
-        print("Cilium tests are only relevant in x86 architectures")
-        return
-
-    wait_for_installation()
-    wait_for_pod_state("", "kube-system", "running", label="k8s-app=cilium")
-
-    here = os.path.dirname(os.path.abspath(__file__))
-    manifest = os.path.join(here, "templates", "nginx-pod.yaml")
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=nginx")
-    output = cilium('endpoint list -o json')
-    assert "nginx" in output
-    kubectl("delete -f {}".format(manifest))
-
-
 def validate_kubeflow():
     """
     Validate kubeflow
