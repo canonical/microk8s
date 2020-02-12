@@ -18,7 +18,6 @@ from validators import (
     validate_jaeger,
     validate_linkerd,
     validate_rbac,
-    validate_cilium,
     validate_kubeflow,
 )
 from utils import (
