@@ -12,8 +12,7 @@ from validators import (
     validate_prometheus,
     validate_fluentd,
     validate_jaeger,
-    validate_kubeflow,
-    validate_cilium,
+    validate_kubeflow
 )
 from subprocess import check_call, CalledProcessError, check_output
 from utils import (
