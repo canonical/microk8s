@@ -128,7 +128,7 @@ def create_admin_kubeconfig(ca):
 
 
 def store_cert(filename, payload):
-    file_with_path = "{}/certs/{}".format(snap_path, filename)
+    file_with_path = "{}/certs/{}".format(snapdata_path, filename)
     backup_file_with_path = "{}.backup".format(file_with_path)
     shutil.copyfile(file_with_path, backup_file_with_path)
     try_set_file_permissions(backup_file_with_path)
