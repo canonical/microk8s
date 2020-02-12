@@ -104,7 +104,7 @@ def install(args) -> None:
     parser.add_argument('--cpu', default=definitions.DEFAULT_CORES, type=int)
     parser.add_argument('--mem', default=definitions.DEFAULT_MEMORY, type=int)
     parser.add_argument('--disk', default=definitions.DEFAULT_DISK, type=int)
-    parser.add_argument('--assume-yes', action='store_true', default=definitions.DEFAULT_ASSUME, type=bool)
+    parser.add_argument('--assume-yes', action='store_true', default=definitions.DEFAULT_ASSUME)
     args = parser.parse_args(args)
     vm_provider_name: str = 'multipass'
     vm_provider_class = get_provider_for(vm_provider_name)
