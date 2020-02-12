@@ -96,7 +96,7 @@ parts:
     source-type: git
     plugin: autotools
     stage-packages:
-    - libuv1
+      - libuv1
     organize:
       usr/lib/: lib/
       include/: usr/include/
