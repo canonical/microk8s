@@ -99,8 +99,10 @@ parts:
     - libuv1
     organize:
       usr/lib/: lib/
+      include/: usr/include/
     prime:
       - lib/libraft*so*
+      - usr/include/
   sqlite:
     source: https://github.com/canonical/sqlite
     source-type: git
@@ -120,9 +122,12 @@ parts:
 
       set +ex
       snapcraftctl build
+    organize:
+      include/: usr/include/
     prime:
       - bin/sqlite3
       - lib/libsqlite3*so*
+      - usr/include/
   dqlite:
     after:
       - libco
@@ -137,9 +142,11 @@ parts:
       - libuv1-dev
     organize:
       usr/lib/: lib/
+      include/: usr/include/
     prime:
       - lib/libdqlite*so*
       - lib/*/libuv*
+      - usr/include/
   libnftnl:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
@@ -173,7 +180,7 @@ parts:
     - btrfs-tools
     - libseccomp-dev
     override-build: |
-      set -eu
+      set -eux
       . $SNAPCRAFT_PROJECT_DIR/build-scripts/set-env-variables.sh
 
       go version

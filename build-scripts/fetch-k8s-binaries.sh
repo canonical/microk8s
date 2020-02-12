@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -eux
 
 apps="kubectl kube-apiserver kube-controller-manager kube-scheduler kubelet kube-proxy"
 mkdir -p $KUBE_SNAP_BINS

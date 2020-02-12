@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu
+set -eux
 
 export ARCH="${KUBE_ARCH:-`dpkg --print-architecture`}"
 KUBE_ARCH=${ARCH}
