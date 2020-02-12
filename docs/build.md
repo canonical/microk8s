@@ -43,7 +43,7 @@ We can then set the following environment variables prior to building:
  - RUNC_COMMIT: the commit hash from which to build runc
  - CONTAINERD_COMMIT: the commit hash from which to build containerd
  - KUBERNETES_REPOSITORY: build the kubernetes binaries from this repository instead of getting them from upstream
- - KUBERNETES_COMMIT: commit to be used from KUBERNETES_REPOSITORY for building the kubernetes banaries
+ - KUBERNETES_TAG: tag to be used from KUBERNETES_REPOSITORY for building the kubernetes banaries
 
 
 For building we prepend the variables we need as well as `SNAPCRAFT_BUILD_ENVIRONMENT=host` so the current LXC container is used. For example to build the MicroK8s snap for Kubernetes v1.9.6 we:
