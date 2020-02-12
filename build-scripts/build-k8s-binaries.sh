@@ -14,7 +14,7 @@ go get -d $KUBERNETES_REPOSITORY || true
 
 (cd $GOPATH/src/$KUBERNETES_REPOSITORY
   git checkout $KUBERNETES_TAG
-  for patch in `ls "{$KUBE_SNAP_ROOT}/build-scripts/patches"`
+  for patch in `ls "${SNAPCRAFT_PROJECT_DIR}/build-scripts/patches"`
   do
     echo "Applying patch $patch"
     git am < $patch
