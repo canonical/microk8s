@@ -5,7 +5,6 @@ import os
 import random
 import shutil
 import socket
-import string
 import subprocess
 import sys
 
@@ -19,7 +18,6 @@ snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
-certs_request_tokens_file = "{}/credentials/certs-request-tokens.txt".format(snapdata_path)
 default_port = 25000
 default_listen_interface = "0.0.0.0"
 
@@ -85,84 +83,16 @@ def remove_token_from_file(token, file):
     shutil.copyfile(backup_file, file)
 
 
-def get_token(name):
+def get_cert(certificate):
     """
-    Get token from known_tokens file
+    Return the data of the certificate
 
-    :param name: the name of the node
-    :returns: the token or None(if name doesn't exist)
+    :returns: the certificate file contents
     """
-    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
-    with open(file) as fp:
-        line = fp.readline()
-        if name in line:
-            parts = line.split(',')
-            return parts[0].rstrip()
-    return None
-
-
-def add_kubelet_token(hostname):
-    """
-    Add a token for a node in the known tokens
-
-    :param hostname: the name of the node
-    :returns: the token added
-    """
-    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
-    old_token = get_token("system:node:{}".format(hostname))
-    if old_token:
-        return old_token.rstrip()
-
-    alpha = string.ascii_letters + string.digits
-    token = ''.join(random.SystemRandom().choice(alpha) for _ in range(32))
-    uid = ''.join(random.SystemRandom().choice(string.digits) for _ in range(8))
-    with open(file, 'a') as fp:
-        # TODO double check this format. Why is userid unique?
-        line = "{},system:node:{},kubelet-{},\"system:nodes\"".format(token, hostname, uid)
-        fp.write(line + os.linesep)
-    return token.rstrip()
-
-
-def getCA():
-    """
-    Return the CA
-    
-    :returns: the CA file contents
-    """
-    ca_file = "{}/certs/ca.crt".format(snapdata_path)
-    with open(ca_file) as fp:
-        ca = fp.read()
-    ca_key_file = "{}/certs/ca.key".format(snapdata_path)
-    with open(ca_key_file) as fp:
-        ca_key = fp.read()
-    return ca, ca_key
-
-
-def get_server_cert():
-    server_cert_file = "{}/certs/server.crt".format(snapdata_path)
-    with open(server_cert_file) as fp:
-        server_cert = fp.read()
-    server_cert_key_file = "{}/certs/server.key".format(snapdata_path)
-    with open(server_cert_key_file) as fp:
-        server_cert_key = fp.read()
-    return server_cert, server_cert_key
-
-
-def get_proxy_cert():
-    proxy_cert_file = "{}/certs/front-proxy-client.crt".format(snapdata_path)
-    with open(proxy_cert_file) as fp:
-        proxy_cert = fp.read()
-    proxy_cert_key_file = "{}/certs/front-proxy-client.key".format(snapdata_path)
-    with open(proxy_cert_key_file) as fp:
-        proxy_cert_key = fp.read()
-    return proxy_cert, proxy_cert_key
-
-
-def get_service_account_key():
-    key_file = "{}/certs/serviceaccount.key".format(snapdata_path)
-    with open(key_file) as fp:
-        key = fp.read()
-    return key
+    cert_file = "{}/certs/{}".format(snapdata_path, certificate)
+    with open(cert_file) as fp:
+        cert = fp.read()
+    return cert
 
 
 def get_cluster_certs():
@@ -271,31 +201,24 @@ def join_node():
     callback_token = get_callback_token()
     remove_token_from_file(token, cluster_tokens_file)
     node_addr = get_node_ep(hostname, request.remote_addr)
-    ca, ca_key = getCA()
-    server_cert, server_cert_key = get_server_cert()
-    proxy_cert, proxy_cert_key = get_proxy_cert()
-    service_account_key = get_service_account_key()
-    cluster_cert, cluster_key = get_cluster_certs()
+
     api_port = get_arg('--secure-port', 'kube-apiserver')
-    proxy_token = get_token('kube-proxy')
-    kubelet_token = add_kubelet_token(node_addr)
     subprocess.check_call("systemctl restart snap.microk8s.daemon-apiserver.service".split())
     kubelet_args = read_kubelet_args_file()
+    cluster_cert, cluster_key = get_cluster_certs()
 
-    return jsonify(ca=ca,
-                   ca_key=ca_key,
-                   server_cert=server_cert,
-                   server_cert_key=server_cert_key,
-                   service_account_key=service_account_key,
-                   proxy_cert=proxy_cert,
-                   proxy_cert_key=proxy_cert_key,
+    return jsonify(ca=get_cert("ca.crt"),
+                   ca_key=get_cert("ca.key"),
+                   server_cert=get_cert("server.crt"),
+                   server_cert_key=get_cert("server.key"),
+                   service_account_key=get_cert("serviceaccount.key"),
+                   proxy_cert=get_cert("front-proxy-client.crt"),
+                   proxy_cert_key=get_cert("front-proxy-client.key"),
                    cluster_cert=cluster_cert,
                    cluster_key=cluster_key,
                    cluster_port='19001',
                    callback_token=callback_token,
-                   kubeproxy=proxy_token,
                    apiport=api_port,
-                   kubelet=kubelet_token,
                    kubelet_args=kubelet_args,
                    hostname_override=node_addr)
 

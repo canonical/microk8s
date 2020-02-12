@@ -18,7 +18,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
-ca_cert_file_via_env = "${SNAP_DATA}/certs/ca.remote.crt"
 ca_cert_file = "{}/certs/ca.crt".format(snapdata_path)
 ca_cert_key_file = "{}/certs/ca.key".format(snapdata_path)
 server_cert_file = "{}/certs/server.crt".format(snapdata_path)
@@ -67,36 +66,6 @@ def usage():
     print("Join a cluster: microk8s.join <master>:<port>/<token>")
 
 
-def set_arg(key, value, file):
-    """
-    Set an arguement to a file
-
-    :param key: argument name
-    :param value: value
-    :param file: the arguments file
-    """
-    filename = "{}/args/{}".format(snapdata_path, file)
-    filename_remote = "{}/args/{}.remote".format(snapdata_path, file)
-    done = False
-    with open(filename_remote, 'w+') as back_fp:
-        with open(filename, 'r+') as fp:
-            for _, line in enumerate(fp):
-                if line.startswith(key):
-                    done = True
-                    if value is not None:
-                        back_fp.write("{} {}\n".format(key, value))
-                else:
-                    back_fp.write("{}".format(line))
-        if not done and value is not None:
-            back_fp.write("{} {}\n".format(key, value))
-
-    shutil.copyfile(filename, "{}.backup".format(filename))
-    try_set_file_permissions("{}.backup".format(filename))
-    shutil.copyfile(filename_remote, filename)
-    try_set_file_permissions(filename)
-    os.remove(filename_remote)
-
-
 def ca_one_line(ca):
     """
     The CA in one line
@@ -141,7 +110,6 @@ def create_admin_kubeconfig(ca):
 
     :param ca: the ca
     """
-    snap_path = os.environ.get('SNAP')
     token = get_token("admin", "basic_auth.csv")
     config_template = "{}/microk8s-resources/{}".format(snap_path, "client.config.template")
     config = "{}/credentials/client.config".format(snapdata_path)
@@ -159,65 +127,14 @@ def create_admin_kubeconfig(ca):
         try_set_file_permissions(config)
 
 
-def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
-    """
-    Configure the kube-proxy
-
-    :param token: the token to be in the kubeconfig
-    :param ca: the ca
-    :param master_ip: the master node IP
-    :param api_port: the API server port
-    :param hostname_override: the hostname override in case the hostname is not resolvable
-    """
-    create_kubeconfig(token, ca, master_ip, api_port, "proxy.config", "kubeproxy")
-    set_arg("--master", None, "kube-proxy")
-    if hostname_override:
-        set_arg("--hostname-override", hostname_override, "kube-proxy")
-
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-proxy.service".split())
-
-
-def update_kubelet(token, ca, master_ip, api_port):
-    """
-    Configure the kubelet
-
-    :param token: the token to be in the kubeconfig
-    :param ca: the ca
-    :param master_ip: the master node IP
-    :param api_port: the API server port
-    """
-    create_kubeconfig(token, ca, master_ip, api_port, "kubelet.config", "kubelet")
-    set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-kubelet.service".split())
-
-
-def store_remote_server_cert(cert, cert_key):
-    with open(server_cert_file, 'w+') as fp:
-        fp.write(cert)
-    try_set_file_permissions(server_cert_file)
-    with open(server_cert_key_file, 'w+') as fp:
-        fp.write(cert_key)
-    try_set_file_permissions(server_cert_key_file)
-
-
-def store_remote_service_account_key(key):
-    with open(service_account_key_file, 'w+') as fp:
-        fp.write(key)
-    try_set_file_permissions(service_account_key_file)
-
-
-def store_remote_ca(ca, ca_key):
-    """
-    Store the remote ca
-
-    :param ca: the CA
-    """
-    with open(ca_cert_file, 'w+') as fp:
-        fp.write(ca)
-    try_set_file_permissions(ca_cert_file)
-    with open(ca_cert_key_file, 'w+') as fp:
-        fp.write(ca_key)
-    try_set_file_permissions(ca_cert_key_file)
+def store_cert(filename, payload):
+    file_with_path = "{}/certs/{}".format(snap_path, filename)
+    backup_file_with_path = "{}.backup".format(file_with_path)
+    shutil.copyfile(file_with_path, backup_file_with_path)
+    try_set_file_permissions(backup_file_with_path)
+    with open(file_with_path, 'w+') as fp:
+        fp.write(payload)
+    try_set_file_permissions(file_with_path)
 
 
 def store_cluster_certs(cluster_cert, cluster_key):
@@ -233,17 +150,6 @@ def store_cluster_certs(cluster_cert, cluster_key):
     with open(cluster_key_file, 'w+') as fp:
         fp.write(cluster_key)
     try_set_file_permissions(cluster_key_file)
-
-
-def store_front_proxy_certs(cert, cert_key):
-    cert_file = "{}/certs/front-proxy-client.crt".format(snapdata_path)
-    cert_key_file = "{}/certs/front-proxy-client.key".format(snapdata_path)
-    with open(cert_file, 'w+') as fp:
-        fp.write(cert)
-    try_set_file_permissions(cert_file)
-    with open(cert_key_file, 'w+') as fp:
-        fp.write(cert_key)
-    try_set_file_permissions(cert_key_file)
 
 
 def store_base_kubelet_args(args_string):
@@ -265,6 +171,7 @@ def store_callback_token(token):
     try_set_file_permissions(callback_token_file)
 
 
+# TODO implement the removal
 def reset_current_installation():
     """
     Take a node out of a cluster
@@ -299,27 +206,7 @@ def reset_current_installation():
             waits -= 1
 
 
-def remove_kubelet_token(node):
-    """
-    Remove a token for a node in the known tokens
-
-    :param node: the name of the node
-    """
-    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
-    backup_file = "{}.backup".format(file)
-    token = "system:node:{}".format(node)
-    # That is a critical section. We need to protect it.
-    with open(backup_file, 'w') as back_fp:
-        with open(file, 'r') as fp:
-            for _, line in enumerate(fp):
-                if token in line:
-                    continue
-                back_fp.write("{}".format(line))
-
-    try_set_file_permissions(backup_file)
-    shutil.copyfile(backup_file, file)
-
-
+# TODO implement the removal
 def remove_node(node):
     try:
         # Make sure this node exists
@@ -443,10 +330,13 @@ if __name__ == "__main__":
         if 'hostname_override' in info:
             hostname_override = info['hostname_override']
 
-        store_remote_ca(info["ca"], info["ca_key"])
-        store_remote_server_cert(info["server_cert"], info["server_cert_key"])
-        store_remote_service_account_key(info["service_account_key"])
-        store_front_proxy_certs(info["proxy_cert"], info["proxy_cert_key"])
+        store_cert("ca.crt", info["ca"])
+        store_cert("ca.key", info["ca_key"])
+        store_cert("server.crt", info["server_cert"])
+        store_cert("server.key", info["server_cert_key"])
+        store_cert("serviceaccount.key", info["service_account_key"])
+        store_cert("front-proxy-client.crt", info["proxy_cert"])
+        store_cert("front-proxy-client.key", info["proxy_cert_key"])
         # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
         for component in [("kube-proxy", "kubeproxy", "proxy.config"),
                           ("kubelet", "kubelet", "kubelet.config"),
