@@ -65,41 +65,10 @@ def update_service_argument(service, key, val):
     shutil.move(args_file_tmp, args_file)
 
 
-def sign_client_cert(cert_request, token):
-    """
-    Sign a certificate request
-    
-    :param cert_request: the request
-    :param token: a token acting as a request uuid
-    :returns: the certificate
-    """
-    req_file = "{}/certs/request.{}.csr".format(snapdata_path, token)
-    sign_cmd = "openssl x509 -req -in {csr} -CA {SNAP_DATA}/certs/ca.crt -CAkey" \
-               " {SNAP_DATA}/certs/ca.key -CAcreateserial -out {SNAP_DATA}/certs/server.{token}.crt" \
-               " -days 100000".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
-
-    with open(req_file, 'w') as fp:
-        fp.write(cert_request)
-    subprocess.check_call(sign_cmd.split())
-    with open("{SNAP_DATA}/certs/server.{token}.crt".format(SNAP_DATA=snapdata_path, token=token)) as fp:
-        cert = fp.read()
-    return cert
-
-
-def add_token_to_certs_request(token):
-    """
-    Add a token to the file holding the nodes we expect a certificate request from
-    
-    :param token: the token
-    """
-    with open(certs_request_tokens_file, "a+") as fp:
-        fp.write("{}\n".format(token))
-
-
 def remove_token_from_file(token, file):
     """
     Remove a token from the valid tokens set
-    
+
     :param token: the token to be removed
     :param file: the file to be removed from
     """
@@ -300,7 +269,6 @@ def join_node():
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
     callback_token = get_callback_token()
-    add_token_to_certs_request(token)
     remove_token_from_file(token, cluster_tokens_file)
     node_addr = get_node_ep(hostname, request.remote_addr)
     ca, ca_key = getCA()
@@ -332,28 +300,7 @@ def join_node():
                    hostname_override=node_addr)
 
 
-@app.route('/{}/sign-cert'.format(CLUSTER_API), methods=['POST'])
-def sign_cert():
-    """
-    Web call to sign a certificate
-    """
-    if request.headers['Content-Type'] == 'application/json':
-        token = request.json['token']
-        cert_request = request.json['request']
-    else:
-        token = request.form['token']
-        cert_request = request.form['request']
-
     token = token.strip()
-    if not is_valid(token, certs_request_tokens_file):
-        error_msg={"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
-
-    remove_token_from_file(token, certs_request_tokens_file)
-    signed_cert = sign_client_cert(cert_request, token)
-    return jsonify(certificate=signed_cert)
-
-
 @app.route('/{}/configure'.format(CLUSTER_API), methods=['POST'])
 def configure():
     """
