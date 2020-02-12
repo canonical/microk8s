@@ -126,13 +126,9 @@ def _requests_exception_hint(e: requests.RequestException) -> str:
 
 
 def _fetch_installer_url() -> str:
-    """Fetch latest installer executable from github.
-
-    If the latest release on github is newer than what snapcraft knows
-    about in _MULTIPASS_DL_NAME_*, we skip the download and inform the
-    user to go download it manually.  This way we will only ever directly
-    execute whitelisted executables on behalf of the user.  Verify the
-    installer using a SHA3-384 digest.
+    """Verify version set is a valid
+    ref in GitHub and return the full
+    URL.
     """
 
     try:
@@ -160,7 +156,7 @@ def _fetch_installer_url() -> str:
     # Something changed we don't know about - we will simply categorize
     # all possible events as an updated version we do not yet know about.
     raise ProviderMultipassDownloadFailed(
-        "an updated version is available that snapcraft does not yet know about"
+        "ref specified is not a valid ref in GitHub"
     )
 
 

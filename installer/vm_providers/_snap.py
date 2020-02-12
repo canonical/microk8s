@@ -36,18 +36,9 @@ class _SnapOp(enum.Enum):
     REFRESH = 3
 
 
-def _get_snap_channel(snap_name: str) -> storeapi.channels.Channel:
+def _get_snap_channel() -> storeapi.channels.Channel:
     """Returns the channel to use for snap_name."""
-    env_channel = os.getenv("SNAPCRAFT_BUILD_ENVIRONMENT_CHANNEL_SNAPCRAFT", None)
-    if env_channel is not None and snap_name == "snapcraft":
-        channel = env_channel
-        logger.warning(
-            "SNAPCRAFT_BUILD_ENVIRONMENT_CHANNEL_SNAPCRAFT is set: installing "
-            "snapcraft from {}".format(channel)
-        )
-    else:
-        channel = "latest/stable"
-
+    channel = "latest/stable"
     return storeapi.channels.Channel(channel)
 
 
@@ -165,7 +156,7 @@ class _SnapManager:
 
         elif op == _SnapOp.INSTALL or op == _SnapOp.REFRESH:
             install_cmd = ["snap", op.name.lower()]
-            snap_channel = _get_snap_channel(self.snap_name)
+            snap_channel = _get_snap_channel()
             store_snap_info = storeapi.StoreClient().cpi.get_info(self.snap_name)
             snap_channel_map = store_snap_info.get_channel_mapping(
                 risk=snap_channel.risk, track=snap_channel.track, arch=self._snap_arch

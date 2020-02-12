@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class Multipass(Provider):
-    """A multipass provider for snapcraft to execute its lifecycle."""
+    """A multipass provider for MicroK8s to execute its lifecycle."""
 
     @classmethod
     def ensure_provider(cls):
