@@ -296,12 +296,6 @@ then
   chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ || true
 fi
 
-if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
-then
-  refresh_opt_in_config enable-v2 true etcd
-  snapctl restart ${SNAP_NAME}.daemon-etcd
-fi
-
 if ${need_api_restart}
 then
   snapctl restart ${SNAP_NAME}.daemon-apiserver
