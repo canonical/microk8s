@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -eux
 
 mkdir certs
 openssl genrsa -out ./certs/serviceaccount.key 2048
