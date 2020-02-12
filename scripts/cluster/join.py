@@ -29,7 +29,6 @@ cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
 cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
 cluster_key_file = "{}/cluster.key".format(cluster_dir)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
-callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 
 
 def get_connection_info(master_ip, master_port, token):
@@ -321,30 +320,6 @@ def remove_kubelet_token(node):
     shutil.copyfile(backup_file, file)
 
 
-def remove_callback_token(node):
-    """
-    Remove a callback token
-
-    :param node: the node
-    """
-    tmp_file = "{}.tmp".format(callback_tokens_file)
-    if not os.path.isfile(callback_tokens_file):
-        open(callback_tokens_file, 'a+')
-        os.chmod(callback_tokens_file, 0o600)
-    with open(tmp_file, "w") as backup_fp:
-        os.chmod(tmp_file, 0o600)
-        with open(callback_tokens_file, 'r+') as callback_fp:
-            for _, line in enumerate(callback_fp):
-                parts = line.split()
-                if parts[0] == node:
-                    continue
-                else:
-                    backup_fp.write(line)
-
-    try_set_file_permissions(tmp_file)
-    shutil.move(tmp_file, callback_tokens_file)
-
-
 def remove_node(node):
     try:
         # Make sure this node exists
@@ -355,7 +330,6 @@ def remove_node(node):
         exit(1)
 
     remove_kubelet_token(node)
-    remove_callback_token(node)
     subprocess.check_call("{}/microk8s-kubectl.wrapper delete no {}".format(snap_path, node).split(),
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
