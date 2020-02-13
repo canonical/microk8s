@@ -17,7 +17,7 @@ go get -d $KUBERNETES_REPOSITORY || true
   for patch in "${SNAPCRAFT_PROJECT_DIR}"/build-scripts/patches/*.patch
   do
     echo "Applying patch $patch"
-    git am < "${SNAPCRAFT_PROJECT_DIR}/build-scripts/patches/$patch"
+    git am < "$patch"
   done
 
   rm -rf $GOPATH/src/$KUBERNETES_REPOSITORY/_output/
