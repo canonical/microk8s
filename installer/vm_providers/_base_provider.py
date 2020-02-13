@@ -110,15 +110,6 @@ class Provider(abc.ABC):
     def _push_file(self, *, source: str, destination: str) -> None:
         """Push a file into the instance."""
 
-    def clean(self, part_names: Sequence[str]) -> None:
-        self._run(command=["snapcraft", "clean"] + list(part_names))
-
-    def pack_project(self, *, output: Optional[str] = None) -> None:
-        command = ["snapcraft", "snap"]
-        if output:
-            command.extend(["--output", output])
-        self._run(command=command)
-
     @abc.abstractmethod
     def pull_file(self, name: str, destination: str, delete: bool = False) -> None:
         """
@@ -153,10 +144,6 @@ class Provider(abc.ABC):
         """Get command sequence for `env` with configured flags."""
 
         env_list = ["env"]
-
-        # Configure SNAPCRAFT_HAS_TTY.
-        has_tty = str(sys.stdout.isatty())
-        env_list.append(f"SNAPCRAFT_HAS_TTY={has_tty}")
 
         # Pass through configurable environment variables.
         for key in ["http_proxy", "https_proxy"]:

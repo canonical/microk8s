@@ -39,13 +39,13 @@ logger = logging.getLogger(__name__)
 
 
 _MULTIPASS_RELEASES_API_URL = (
-    "https://api.github.com/repos/CanonicalLtd/multipass/releases/latest"
+    "https://api.github.com/repos/CanonicalLtd/multipass/releases"
 )
-_MULTIPASS_DL_VERSION = "0.8.0"
+_MULTIPASS_DL_VERSION = "1.0.0"
 _MULTIPASS_DL_NAME = "multipass-{version}+win-win64.exe".format(
     version=_MULTIPASS_DL_VERSION
 )
-_MULTIPASS_DL_SHA3_384 = "a1ac2eeb77b2a98fe5dee198be70dbf1a985d94b9707ce33ea0d3828dbc90d07fccb9662b7c97a3cfa194895b4f56676"  # noqa: E501
+_MULTIPASS_DL_SHA3_384 = "e7c22f8aeaa205c9343535b0cd846709c00ce65d523a0c41d2ae8f830bd39291cad5b3645b0daf24a92d0dba6759183e"  # noqa: E501
 
 
 def windows_reload_multipass_path_env():
@@ -126,13 +126,9 @@ def _requests_exception_hint(e: requests.RequestException) -> str:
 
 
 def _fetch_installer_url() -> str:
-    """Fetch latest installer executable from github.
-
-    If the latest release on github is newer than what snapcraft knows
-    about in _MULTIPASS_DL_NAME_*, we skip the download and inform the
-    user to go download it manually.  This way we will only ever directly
-    execute whitelisted executables on behalf of the user.  Verify the
-    installer using a SHA3-384 digest.
+    """Verify version set is a valid
+    ref in GitHub and return the full
+    URL.
     """
 
     try:
@@ -149,17 +145,18 @@ def _fetch_installer_url() -> str:
             )
         )
 
-    for asset in data.get("assets", list()):
-        # Find matching name.
-        if asset.get("name") != _MULTIPASS_DL_NAME:
-            continue
+    for assets in data:
+        for asset in assets.get("assets", list()):
+            # Find matching name.
+            if asset.get("name") != _MULTIPASS_DL_NAME:
+                continue
 
-        return asset.get("browser_download_url")
+            return asset.get("browser_download_url")
 
     # Something changed we don't know about - we will simply categorize
     # all possible events as an updated version we do not yet know about.
     raise ProviderMultipassDownloadFailed(
-        "an updated version is available that snapcraft does not yet know about"
+        "ref specified is not a valid ref in GitHub"
     )
 
 

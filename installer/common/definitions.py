@@ -23,3 +23,4 @@ command_descriptions = {
 DEFAULT_CORES: int = 2
 DEFAULT_MEMORY: int = 4
 DEFAULT_DISK: int = 256
+DEFAULT_ASSUME: bool = False

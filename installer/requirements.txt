@@ -1,31 +1,12 @@
 click~=7.0
-# click-config-file==0.5.0
-# configparser==3.5.0
 jsonschema==2.5.1
 progressbar33==2.4
 https://pyyaml.org/download/pyyaml/PyYAML-3.13-cp37-cp37m-win_amd64.whl; sys_platform == 'win32'
-PyYAML==3.13; sys_platform != 'win32'
-# pyxdg==0.26
 requests==2.20.0
 requests_unixsocket==0.1.5
-#https://launchpad.net/ubuntu/+archive/primary/+files/python-apt_1.1.0~beta1build1.tar.xz; sys_platform == 'linux'
-#https://launchpad.net/python-distutils-extra/trunk/2.39/+download/python-distutils-extra-2.39.tar.gz
-#requests-toolbelt==0.8.0
-#responses==0.5.1
-#petname==1.12
-#pyelftools==0.24
-#pylxd==2.2.9
-#pymacaroons==0.9.2; sys_platform != 'win32'
-#pymacaroons-pynacl==0.9.3; sys_platform == 'win32'
 pysha3==1.0.2; python_version < '3.6'
-#raven==6.5.0
 simplejson==3.8.2
-#tabulate==0.7.5
 toml==0.10.0
-#python-debian==0.1.28
-#chardet==3.0.4
-#https://files.pythonhosted.org/packages/16/4a/b085a04d6dad79aa5c00c65c9b2bbcb2c6c22e5ac341e7968e0ad2c57e2f/lxml-4.3.0.tar.gz; sys_platform != 'win32'
-#lxml==4.3.0; sys_platform == 'win32'
-#launchpadlib==1.10.6
-#lazr.restfulclient==0.14.2
-#mypy-extensions==0.4.3
+wheel
+pyinstaller
+setuptools<45.0.0  # https://github.com/pypa/setuptools/issues/1963
