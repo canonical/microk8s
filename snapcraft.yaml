@@ -207,6 +207,7 @@ parts:
     source: .
     prime:
       - -README*
+      - -installer*
       - -tests*
       - -docs*
       - -build*

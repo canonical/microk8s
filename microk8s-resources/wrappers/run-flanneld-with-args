@@ -30,6 +30,8 @@ key_file="$(cat $SNAP_DATA/args/flanneld | grep "etcd-keyfile" | tr "=" " "| awk
 key_file="$(eval echo $key_file)"
 ca_file="$(cat $SNAP_DATA/args/flanneld | grep "etcd-cafile" | tr "=" " "| awk '{print $2}')"
 ca_file="$(eval echo $ca_file)"
+# flannel requires etcd api v2
+export ETCDCTL_API=2
 
 
 # TODO get this from a file
@@ -39,7 +41,7 @@ if ! "${SNAP}/etcdctl" --endpoint "${etcd_endpoints}" --cert-file "${cert_file}"
   echo "/coreos.com/network/config is not in etcd. Probably a first time run."
 fi
 
-"${SNAP}/etcdctl" --endpoint "${etcd_endpoints}"  --cert-file "${cert_file}" --key-file "${key_file}" --ca-file "${ca_file}" set "/coreos.com/network/config" "$data"
+"${SNAP}/etcdctl" --endpoint "${etcd_endpoints}" --cert-file "${cert_file}" --key-file "${key_file}" --ca-file "${ca_file}" set "/coreos.com/network/config" "$data"
 
 # This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/flanneld))"

@@ -14,7 +14,7 @@ command_descriptions = {
   'kubectl':         "The kubernetes client",
   'leave':           "Disconnects this node from any cluster it has joined",
   'linkerd':         "The linkerd client",
-  'remove-node':     "Removes a mnode from the cluster",
+  'remove-node':     "Removes a node from the cluster",
   'reset':           "Cleans the cluster from all workloads",
   'start':           "Starts the kubernetes cluster",
   'status':          "Displays the status of the cluster",
@@ -23,3 +23,4 @@ command_descriptions = {
 DEFAULT_CORES: int = 2
 DEFAULT_MEMORY: int = 4
 DEFAULT_DISK: int = 256
+DEFAULT_ASSUME: bool = False

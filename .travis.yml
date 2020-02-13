@@ -21,6 +21,7 @@ script:
   - sudo snapcraft --use-lxd
   - sudo apt update
   - sudo snap install *.snap --classic --dangerous
+  - sudo pip3 install --upgrade pip
   - sudo pip3 install -U pytest
   - pwd
   - ps -ef

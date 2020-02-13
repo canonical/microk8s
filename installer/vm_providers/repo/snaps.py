@@ -37,9 +37,6 @@ _CHANNEL_RISKS = ["stable", "candidate", "beta", "edge"]
 logger = logging.getLogger(__name__)
 
 
-# TODO https://bugs.launchpad.net/snapcraft/+bug/1786868
-
-
 class SnapPackage:
     """SnapPackage acts as a mediator to install or refresh a snap.
 
