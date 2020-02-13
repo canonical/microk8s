@@ -8,12 +8,6 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 source $SNAP/actions/common/utils.sh
 
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.enable on the master."
-  exit 0
-fi
-
 if echo "$*" | grep -q -- '--help'; then
     prog=$(basename -s.wrapper "$0" | tr - .)
     echo "Usage: $prog ADDON..."
