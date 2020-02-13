@@ -19,12 +19,6 @@ fi
 exit_if_stopped
 exit_if_no_permissions
 
-if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "This MicroK8s deployment is not acting as a node in a cluster."
-  exit 1
-fi
-
 if [ "$#" -ne "0" ]
 then
   echo "This command will remove the node from the cluster. No arguments are needed."

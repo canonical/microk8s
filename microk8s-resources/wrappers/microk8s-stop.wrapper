@@ -6,12 +6,6 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 
 source $SNAP/actions/common/utils.sh
 
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.stop on the master."
-  exit 0
-fi
-
 FORCE=false
 PARSED=$(getopt --options=lho: --longoptions=force,help,output: --name "$@" -- "$@")
 eval set -- "$PARSED"

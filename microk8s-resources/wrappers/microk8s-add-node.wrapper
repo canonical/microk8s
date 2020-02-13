@@ -9,12 +9,6 @@ export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
 
 source $SNAP/actions/common/utils.sh
 
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.add-node on the master."
-  exit 1
-fi
-
 if echo "$*" | grep -q -- 'help'; then
   echo "Usage: microk8s.add-node"
   echo ""

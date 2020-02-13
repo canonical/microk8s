@@ -9,12 +9,6 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 source $SNAP/actions/common/utils.sh
 
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "api service kicker will not run on a cluster node"
-  exit 0
-fi
-
 restart_attempt=0
 while true
 do
