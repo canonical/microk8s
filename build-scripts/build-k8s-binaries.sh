@@ -16,7 +16,6 @@ go get -d $KUBERNETES_REPOSITORY || true
   git checkout $KUBERNETES_TAG
   for patch in "${SNAPCRAFT_PROJECT_DIR}"/build-scripts/patches/*.patch
   do
-    [[ -e "$patch" ]] || break
     echo "Applying patch $patch"
     git am < "${SNAPCRAFT_PROJECT_DIR}/build-scripts/patches/$patch"
   done
