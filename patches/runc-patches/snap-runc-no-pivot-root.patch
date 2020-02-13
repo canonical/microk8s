@@ -1,0 +1,26 @@
+diff -Naur runc.orig/libcontainer/rootfs_linux.go runc/libcontainer/rootfs_linux.go
+--- runc.orig/libcontainer/rootfs_linux.go	2020-01-28 18:15:40.741907200 +0000
++++ runc/libcontainer/rootfs_linux.go	2020-01-28 23:09:28.050395249 +0000
+@@ -98,6 +98,9 @@
+ 		return newSystemErrorWithCausef(err, "changing dir to %q", config.Rootfs)
+ 	}
+ 
++	// don't use pivot_root in container setup under snapd since it has
++	// problems with AppArmor
++	/*
+ 	if config.NoPivotRoot {
+ 		err = msMoveRoot(config.Rootfs)
+ 	} else if config.Namespaces.Contains(configs.NEWNS) {
+@@ -105,6 +108,12 @@
+ 	} else {
+ 		err = chroot(config.Rootfs)
+ 	}
++	*/
++	if config.NoPivotRoot {
++		err = msMoveRoot(config.Rootfs)
++	} else {
++		err = chroot(config.Rootfs)
++	}
+ 	if err != nil {
+ 		return newSystemErrorWithCause(err, "jailing process inside rootfs")
+ 	}

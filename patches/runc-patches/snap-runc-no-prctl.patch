@@ -1,0 +1,34 @@
+diff --git a/libcontainer/setns_init_linux.go b/libcontainer/setns_init_linux.go
+index 888981f5..50d6b93c 100644
+--- a/libcontainer/setns_init_linux.go
++++ b/libcontainer/setns_init_linux.go
+@@ -58,9 +58,9 @@ func (l *linuxSetnsInit) Init() error {
+ 		}
+ 	}
+ 	if l.config.NoNewPrivileges {
+-		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+-			return err
+-		}
++		// if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
++		// 	return err
++		// }
+ 	}
+ 	if err := label.SetProcessLabel(l.config.ProcessLabel); err != nil {
+ 		return err
+diff --git a/libcontainer/standard_init_linux.go b/libcontainer/standard_init_linux.go
+index 4e03b8bc..7516f17b 100644
+--- a/libcontainer/standard_init_linux.go
++++ b/libcontainer/standard_init_linux.go
+@@ -136,9 +136,9 @@ func (l *linuxStandardInit) Init() error {
+ 		return errors.Wrap(err, "get pdeath signal")
+ 	}
+ 	if l.config.NoNewPrivileges {
+-		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+-			return errors.Wrap(err, "set nonewprivileges")
+-		}
++		// if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
++		// 	return errors.Wrap(err, "set nonewprivileges")
++		// }
+ 	}
+ 	// Tell our parent that we're ready to Execv. This must be done before the
+ 	// Seccomp rules have been applied, because we need to be able to read and

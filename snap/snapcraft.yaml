@@ -12,83 +12,340 @@ description: |-
  them to MicroK8s on your boxes.
 
 grade: stable
-confinement: classic
-base: core
+confinement: strict
+base: core18
+
+plugs:
+  docker-privileged:
+    interface: docker-support
+    privileged-containers: true
+  k8s-kubelet:
+    interface: kubernetes-support
+    flavor: kubelet
+  k8s-kubeproxy:
+    interface: kubernetes-support
+    flavor: kubeproxy
+  dot-kube:
+    interface: personal-files
+    write:
+      - $HOME/.kube
+
+hooks:
+  configure:
+    plugs:
+    - dot-kube
+  install:
+    plugs:
+    - network-bind
+    - network-control
+    - firewall-control
+  remove:
+    plugs:
+    - k8s-kubelet
+    - mount-observe
+    - network-bind
+    - network-control
+    - firewall-control
 
 apps:
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
+    plugs:
+    - network-bind
   daemon-flanneld:
     command: run-flanneld-with-args
     daemon: simple
+    plugs:
+    - network-bind
+    - network-control
+    - firewall-control
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
+    plugs:
+    - network-bind
+    - docker-support
+    - docker-privileged
+    - firewall-control
+    - kernel-module-control
+    - network-control
+    - mount-observe
+    - kubernetes-support
+    - opengl
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
     daemon: simple
+    plugs:
+    - network-bind
+    - network-observe
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
+    plugs:
+    - network-bind
+    - network-observe
+    - network-control
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
+    plugs:
+    - network-bind
+    - network-observe
   daemon-controller-manager:
     command: run-with-config-args kube-controller-manager
     daemon: simple
+    plugs:
+    - network-bind
+    - docker-support
+    - docker-privileged
+    - firewall-control
+    - kernel-module-control
+    - network-control
   daemon-scheduler:
     command: run-with-config-args kube-scheduler
     daemon: simple
+    plugs:
+    - network-bind
   daemon-kubelet:
     command: run-with-config-args kubelet
     daemon: simple
+    plugs:
+    - dot-kube
+    - firewall-control
+    - hardware-observe
+    - k8s-kubelet
+    - mount-observe
+    - network-bind
+    - network-control
+    - process-control
+    - system-observe
+    - opengl
   daemon-proxy:
     command: run-with-config-args kube-proxy
     daemon: simple
+    plugs:
+    - network-bind
+    - network-control
+    - network-observe
+    - firewall-control
+    - k8s-kubeproxy
+    - kernel-module-observe
+    - mount-observe
+    - system-observe
+    - kernel-module-control
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
+    plugs:
+    - dot-kube
+    - home
+    - firewall-control
+    - network-bind
+    - k8s-kubelet
+    - hardware-observe
+    - mount-observe
+    - network-control
+    - process-control
+    - system-observe
   add-node:
     command: microk8s-add-node.wrapper
+    plugs:
+    - network
+    - network-bind
+    - network-observe
+    - mount-observe
   join:
     command: microk8s-join.wrapper
+    plugs:
+    - network
+    - mount-observe
   remove-node:
     command: microk8s-remove-node.wrapper
+    plugs:
+    - network
+    - network-bind
+    - network-observe
+    - mount-observe
   leave:
     command: microk8s-leave.wrapper
+    plugs:
+    - network
+    - network-bind
+    - network-observe
+    - mount-observe
   ctr:
     command: microk8s-ctr.wrapper
-  inspect:
-    command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    plugs:
+    - dot-kube
+    - home
+    - firewall-control
+    - network-bind
+    - k8s-kubelet
+    - hardware-observe
+    - mount-observe
+    - network-control
+    - process-control
+    - system-observe
   enable:
     command: microk8s-enable.wrapper
+    plugs:
+    - network
+    - network-control
+    - kernel-module-observe
+    - opengl
   disable:
     command: microk8s-disable.wrapper
+    plugs:
+    - network
+    - network-control
   start:
     command: microk8s-start.wrapper
+    plugs:
+    - network
   stop:
     command: microk8s-stop.wrapper
+    plugs:
+    - network
   status:
     command: microk8s-status.wrapper
+    plugs:
+    - network
   config:
     command: microk8s-config.wrapper
   reset:
     command: microk8s-reset.wrapper
+    plugs:
+    - network
   istioctl:
     command: microk8s-istioctl.wrapper
+    plugs:
+    - network
   linkerd:
     command: microk8s-linkerd.wrapper
+    plugs:
+    - network
   helm:
     command: microk8s-helm.wrapper
+    plugs:
+    - network
   helm3:
-    command: microk8s-helm3.wrapper
+    command: microk8s-helm.wrapper
+    plugs:
+    - network
   cilium:
     command: microk8s-cilium.wrapper
+    plugs:
+    - network
   juju:
     command: microk8s-juju.wrapper
+    plugs:
+    - network
+
+passthrough:
+  system-usernames:
+    snap_daemon: shared
+  layout:
+    /usr/libexec:
+      symlink: $SNAP_COMMON/usr/libexec
+    /var/lib/cni:
+      bind: $SNAP_COMMON/var/lib/cni
+    /var/log/pods:
+      bind: $SNAP_COMMON/var/log/pods
+    /var/log/containers:
+      bind: $SNAP_COMMON/var/log/containers
+    /var/lib/kubelet:
+      bind: $SNAP_DATA/kubelet
+    /var/lib/kube-proxy:
+      bind: $SNAP_DATA/kube-proxy
+    /usr/lib/x86_64-linux-gnu/libnvidia-tls.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-tls.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvcuvid.so:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so
+    /usr/lib/x86_64-linux-gnu/libnvcuvid.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so.1
+    /usr/lib/x86_64-linux-gnu/libnvcuvid.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so
+    /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so.1
+    /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-compiler.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-compiler.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-eglcore.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-eglcore.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-encode.so:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-encode.so
+    /usr/lib/x86_64-linux-gnu/libnvidia-encode.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-encode.so.1
+    /usr/lib/x86_64-linux-gnu/libnvidia-encode.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-encode.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-fatbinaryloader.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fatbinaryloader.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fbc.so
+    /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fbc.so.1
+    /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fbc.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-glcore.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glcore.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-glsi.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glsi.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-glvkspirv.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glvkspirv.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-ifr.so:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ifr.so
+    /usr/lib/x86_64-linux-gnu/libnvidia-ifr.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ifr.so.1
+    /usr/lib/x86_64-linux-gnu/libnvidia-ifr.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ifr.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-ml.so:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ml.so
+    /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ml.so.1
+    /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ml.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opencl.so.1
+    /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opencl.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ptxjitcompiler.so
+    /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ptxjitcompiler.so.1
+    /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ptxjitcompiler.so.435.21
+    /usr/lib/x86_64-linux-gnu/libcuda.so:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libcuda.so
+    /usr/lib/x86_64-linux-gnu/libcuda.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libcuda.so.1
+    /usr/lib/x86_64-linux-gnu/libcuda.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libcuda.so.435.21
+    /usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.0:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libEGL_nvidia.so.0
+    /usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libEGL_nvidia.so.435.21
+    /usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.0:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLX_nvidia.so.0
+    /usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLX_nvidia.so.435.21
+    /usr/lib/x86_64-linux-gnu/libGLESv1_CM_nvidia.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv1_CM_nvidia.so.1
+    /usr/lib/x86_64-linux-gnu/libGLESv1_CM_nvidia.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv1_CM_nvidia.so.435.21
+    /usr/lib/x86_64-linux-gnu/libGLESv2_nvidia.so.2:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv2_nvidia.so.2
+    /usr/lib/x86_64-linux-gnu/libGLESv2_nvidia.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv2_nvidia.so.435.21
 
 parts:
+  patches:
+    plugin: dump
+    source: patches/
+    prime: ["-*"]
   libnftnl:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
@@ -113,7 +370,7 @@ parts:
     prime: [ -bin/iptables-xml ]
   containerd:
     build-snaps: [go]
-    after: [iptables]
+    after: [iptables, patches]
     source: https://github.com/containerd/containerd
     source-type: git
     plugin: go
@@ -145,6 +402,13 @@ parts:
       (
         cd $GOPATH/src/github.com/opencontainers/runc
         git checkout ${RUNC_COMMIT}
+
+        for patch in "$SNAPCRAFT_STAGE"/runc-patches/*.patch; do
+          echo "Applying $(basename "$patch") ..."
+          git apply --ignore-space-change --ignore-whitespace "$patch"
+          echo
+        done
+
         make BUILDTAGS='seccomp apparmor'
       )
       cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
@@ -343,7 +607,7 @@ parts:
   # b) the version dependencies of each package is met.
   nvidia-runtime:
     plugin: dump
-    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime_2.0.0+docker18.06.1-1_amd64.deb
+    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/amd64/nvidia-container-runtime_2.0.0+docker18.06.1-1_amd64.deb
     source-type: deb
     override-build: |
       set -eu
@@ -357,7 +621,7 @@ parts:
 
   nvidia-runtime-hook:
     plugin: dump
-    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime-hook_1.4.0-1_amd64.deb
+    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/amd64/nvidia-container-runtime-hook_1.4.0-1_amd64.deb
     source-type: deb
     override-build: |
       set -eu
@@ -371,7 +635,7 @@ parts:
 
   libnvidia:
     plugin: dump
-    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container1_1.0.0-1_amd64.deb
+    source: https://nvidia.github.io/libnvidia-container/ubuntu18.04/amd64/libnvidia-container1_1.0.0-1_amd64.deb
     source-type: deb
     override-build: |
       set -eu
@@ -385,7 +649,7 @@ parts:
 
   libnvidia-tools:
     plugin: dump
-    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container-tools_1.0.0-1_amd64.deb
+    source: https://nvidia.github.io/libnvidia-container/ubuntu18.04/amd64/libnvidia-container-tools_1.0.0-1_amd64.deb
     source-type: deb
     override-build: |
       set -eu
