@@ -19,7 +19,7 @@ def run(*args, die=True, debug=False):
     env["PATH"] += ":%s" % os.environ["SNAP"]
 
     if debug:
-        print("Running `%s`" % ' '.join(args))
+        print("Running `%s`" % " ".join(args))
 
     result = subprocess.run(
         args,
@@ -51,7 +51,7 @@ def get_random_pass():
 
 
 def juju(*args, **kwargs):
-    if strtobool(os.environ.get("KUBEFLOW_DEBUG") or 'false'):
+    if strtobool(os.environ.get("KUBEFLOW_DEBUG") or "false"):
         return run("microk8s-juju.wrapper", "--debug", *args, debug=True, **kwargs)
     else:
         return run("microk8s-juju.wrapper", *args, **kwargs)
@@ -61,6 +61,7 @@ def main():
     password = os.environ.get("KUBEFLOW_AUTH_PASSWORD") or get_random_pass()
     channel = os.environ.get("KUBEFLOW_CHANNEL") or "stable"
     no_proxy = os.environ.get("KUBEFLOW_NO_PROXY") or None
+    hostname = os.environ.get("KUBEFLOW_HOSTNAME") or "localhost"
 
     password_overlay = {
         "applications": {
@@ -130,43 +131,50 @@ def main():
         "--all",
     )
 
-    juju("config", "ambassador", "juju-external-hostname=localhost")
-    juju("expose", "ambassador")
-
     # Workaround for https://bugs.launchpad.net/juju/+bug/1849725.
-    # Wait for up to a minute for Juju to finish setting up the Ingress
-    # so that we can patch it, and fail if it takes too long.
-    patch = json.dumps({
-        'kind': 'Ingress',
-        'apiVersion': 'extensions/v1beta1',
-        'metadata': {'name': 'ambassador', 'namespace': 'kubeflow'},
-        'spec': {'tls': [{'hosts': ['localhost'], 'secretName': 'ambassador-tls'}]},
-    }).encode('utf-8')
+    ingress = json.dumps(
+        {
+            "apiVersion": "extensions/v1beta1",
+            "kind": "Ingress",
+            "metadata": {"name": "ambassador-ingress", "namespace": "kubeflow"},
+            "spec": {
+                "rules": [
+                    {
+                        "host": hostname,
+                        "http": {
+                            "paths": [
+                                {
+                                    "backend": {
+                                        "serviceName": "ambassador",
+                                        "servicePort": 80,
+                                    },
+                                    "path": "/",
+                                }
+                            ]
+                        },
+                    }
+                ],
+                "tls": [{"hosts": [hostname], "secretName": "dummy-tls"}],
+            },
+        }
+    ).encode("utf-8")
 
     env = os.environ.copy()
     env["PATH"] += ":%s" % os.environ["SNAP"]
 
-    for _ in range(12):
-        try:
-            subprocess.run(
-                ['microk8s-kubectl.wrapper', 'apply', '-f', '-'],
-                input=patch,
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                env=env,
-            ).check_returncode()
-            break
-        except subprocess.CalledProcessError:
-            time.sleep(5)
-    else:
-        print("Couldn't set Ambassador up properly")
-        sys.exit(1)
+    subprocess.run(
+        ["microk8s-kubectl.wrapper", "apply", "-f", "-"],
+        input=ingress,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        env=env,
+    ).check_returncode()
 
     print(
         textwrap.dedent(
             """
     Congratulations, Kubeflow is now available.
-    The dashboard is available at https://localhost/
+    The dashboard is available at https://%s/
 
         Username: admin
         Password: %s
@@ -180,7 +188,7 @@ def main():
 
        microk8s.disable kubeflow
     """
-            % (password_overlay["applications"]["kubeflow-gatekeeper"]["options"]["password"])
+            % (hostname, password)
         )
     )
 
