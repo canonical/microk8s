@@ -227,7 +227,7 @@ def get_token(name, tokens_file="known_tokens.csv"):
     return None
 
 
-def update_dqlite(cluster_cert, cluster_key, clusrt_ip, cluster_port):
+def update_dqlite(cluster_cert, cluster_key, voters):
     subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
@@ -237,7 +237,7 @@ def update_dqlite(cluster_cert, cluster_key, clusrt_ip, cluster_port):
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
 
-    init_data = {'Cluster': ['{}:{}'.format(clusrt_ip, cluster_port)], 'Address': data['Address']}
+    init_data = {'Cluster': voters, 'Address': data['Address']}
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
@@ -337,6 +337,6 @@ if __name__ == "__main__":
         store_base_kubelet_args(info["kubelet_args"])
         store_callback_token(info["callback_token"])
 
-        update_dqlite(info["cluster_cert"], info["cluster_key"], master_ip, info["cluster_port"])
+        update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"])
 
     sys.exit(0)

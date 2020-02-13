@@ -8,6 +8,8 @@ import socket
 import subprocess
 import sys
 
+import yaml
+
 from .common.utils import try_set_file_permissions, get_callback_token
 
 from flask import Flask, jsonify, request, abort, Response
@@ -180,6 +182,26 @@ def get_node_ep(hostname, remote_addr):
     return remote_addr
 
 
+def get_dqlite_voters():
+    snapdata_path = "/var/snap/microk8s/current"
+    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+    cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
+    cluster_key_file = "{}/cluster.key".format(cluster_dir)
+
+    with open("{}/info.yaml".format(cluster_dir)) as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+
+    out = subprocess.check_output("curl https://{}/cluster --cacert {} --key {} --cert {} -k -s"
+                                  .format(data['Address'], cluster_cert_file,
+                                          cluster_key_file, cluster_cert_file).split());
+    nodes = yaml.safe_load(out)
+    voters = []
+    for n in nodes:
+        if n["Role"] == 0:
+            voters.append(n["Address"])
+    return voters
+
+
 @app.route('/{}/join'.format(CLUSTER_API), methods=['POST'])
 def join_node():
     """
@@ -201,7 +223,7 @@ def join_node():
     callback_token = get_callback_token()
     remove_token_from_file(token, cluster_tokens_file)
     node_addr = get_node_ep(hostname, request.remote_addr)
-
+    voters = get_dqlite_voters()
     api_port = get_arg('--secure-port', 'kube-apiserver')
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
@@ -215,7 +237,7 @@ def join_node():
                    proxy_cert_key=get_cert("front-proxy-client.key"),
                    cluster_cert=cluster_cert,
                    cluster_key=cluster_key,
-                   cluster_port='19001',
+                   voters=voters,
                    callback_token=callback_token,
                    apiport=api_port,
                    kubelet_args=kubelet_args,
