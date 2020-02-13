@@ -171,54 +171,26 @@ def store_callback_token(token):
     try_set_file_permissions(callback_token_file)
 
 
-# TODO implement the removal
 def reset_current_installation():
     """
     Take a node out of a cluster
     """
-    lock_file = "{}/var/lock/clustered.lock".format(snapdata_path)
-    if not os.path.isfile(lock_file):
-        print("Not in clustering mode.")
-        exit(2)
+    subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
+    time.sleep(10)
+    shutil.rmtree(cluster_backup_dir, ignore_errors=True)
+    shutil.move(cluster_dir, cluster_backup_dir)
+    os.mkdir(cluster_dir)
+    shutil.copy("{}/cluster.crt".format(cluster_backup_dir),  "{}/cluster.crt".format(cluster_dir))
+    shutil.copy("{}/cluster.key".format(cluster_backup_dir),  "{}/cluster.key".format(cluster_dir))
 
-    os.remove(lock_file)
-    os.remove(ca_cert_file)
-    os.remove(callback_token_file)
-    os.remove(server_cert_file)
+    with open("{}/info.yaml".format(cluster_backup_dir)) as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
 
-    for config_file in ["kubelet", "kube-proxy"]:
-        shutil.copyfile("{}/default-args/{}".format(snap_path, config_file),
-                        "{}/args/{}".format(snapdata_path, config_file))
+    init_data = {'Address': data['Address']}
+    with open("{}/init.yaml".format(cluster_dir), 'w') as f:
+        yaml.dump(init_data, f)
 
-    for user in ["proxy", "kubelet"]:
-        config = "{}/credentials/{}.config".format(snapdata_path, user)
-        shutil.copyfile("{}.backup".format(config), config)
-
-    subprocess.check_call("{}/microk8s-stop.wrapper".format(snap_path).split())
-    waits = 10
-    while waits > 0:
-        try:
-            subprocess.check_call("{}/microk8s-start.wrapper".format(snap_path).split())
-            break
-        except subprocess.CalledProcessError:
-            print("Services not ready to start. Waiting...")
-            time.sleep(5)
-            waits -= 1
-
-
-# TODO implement the removal
-def remove_node(node):
-    try:
-        # Make sure this node exists
-        subprocess.check_call("{}/microk8s-kubectl.wrapper get no {}".format(snap_path, node).split(),
-                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except subprocess.CalledProcessError:
-        print("Node {} does not exist.".format(node))
-        exit(1)
-
-    remove_kubelet_token(node)
-    subprocess.check_call("{}/microk8s-kubectl.wrapper delete no {}".format(snap_path, node).split(),
-                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
 
 
 # TODO eliminate duplicata code
@@ -302,10 +274,7 @@ if __name__ == "__main__":
             sys.exit(1)
 
     if args[0] == "reset":
-        if len(args) > 1:
-            remove_node(args[1])
-        else:
-            reset_current_installation()
+        reset_current_installation()
     else:
         if len(args) <= 0:
             print("Please provide a connection string.")

@@ -48,8 +48,10 @@ apps:
     command: microk8s-add-node.wrapper
   join:
     command: microk8s-join.wrapper
-  remove-node:
-    command: microk8s-remove-node.wrapper
+  # Currently there is no way to remove a member from a dqlite cluster. Removing a node is not supported.
+  # The node will have to leave by itself
+  # remove-node:
+  #  command: microk8s-remove-node.wrapper
   leave:
     command: microk8s-leave.wrapper
   ctr:
