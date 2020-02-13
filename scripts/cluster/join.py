@@ -192,6 +192,21 @@ def reset_current_installation():
 
     subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
 
+    waits = 10
+    print("Waiting for node to start.", end=" ", flush=True)
+    time.sleep(10)
+    while waits > 0:
+        try:
+            subprocess.check_call("{}/microk8s-kubectl.wrapper get service/kubernetes".format(snap_path).split())
+            subprocess.check_call("{0}/microk8s-kubectl.wrapper apply -f get {0}/args/cni-network/cilium.yaml"
+                                  .format(snap_path).split())
+            break
+        except subprocess.CalledProcessError:
+            print(".", end=" ", flush=True)
+            time.sleep(5)
+            waits -= 1
+    print(" ")
+
 
 # TODO eliminate duplicata code
 # TODO check we do not have a bug in the other get_token (no for loop)
