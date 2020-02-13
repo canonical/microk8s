@@ -197,8 +197,8 @@ def reset_current_installation():
     time.sleep(10)
     while waits > 0:
         try:
-            subprocess.check_call("{}/microk8s-kubectl.wrapper get service/kubernetes".format(snap_path).split())
-            subprocess.check_call("{}/microk8s-kubectl.wrapper apply -f get {}/args/cni-network/cilium.yaml"
+            subprocess.check_outpu("{}/microk8s-kubectl.wrapper get service/kubernetes".format(snap_path).split())
+            subprocess.check_outpu("{}/microk8s-kubectl.wrapper apply -f {}/args/cni-network/cilium.yaml"
                                   .format(snap_path, snapdata_path).split())
             break
         except subprocess.CalledProcessError:
@@ -206,6 +206,7 @@ def reset_current_installation():
             time.sleep(5)
             waits -= 1
     print(" ")
+    restart_all_services()
 
 
 # TODO eliminate duplicata code
@@ -261,7 +262,10 @@ def update_dqlite(cluster_cert, cluster_key, clusrt_ip, cluster_port):
             time.sleep(5)
             waits -= 1
     print(" ")
+    restart_all_services()
 
+
+def restart_all_services():
     subprocess.check_call("{}/microk8s-stop.wrapper".format(snap_path).split())
     waits = 10
     while waits > 0:

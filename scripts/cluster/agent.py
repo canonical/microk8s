@@ -203,7 +203,6 @@ def join_node():
     node_addr = get_node_ep(hostname, request.remote_addr)
 
     api_port = get_arg('--secure-port', 'kube-apiserver')
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-apiserver.service".split())
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
 
