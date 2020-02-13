@@ -198,8 +198,8 @@ def reset_current_installation():
     while waits > 0:
         try:
             subprocess.check_call("{}/microk8s-kubectl.wrapper get service/kubernetes".format(snap_path).split())
-            subprocess.check_call("{0}/microk8s-kubectl.wrapper apply -f get {0}/args/cni-network/cilium.yaml"
-                                  .format(snap_path).split())
+            subprocess.check_call("{}/microk8s-kubectl.wrapper apply -f get {}/args/cni-network/cilium.yaml"
+                                  .format(snap_path, snapdata_path).split())
             break
         except subprocess.CalledProcessError:
             print(".", end=" ", flush=True)
