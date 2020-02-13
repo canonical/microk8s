@@ -271,6 +271,7 @@ parts:
       - -tests*
       - -docs*
       - -build*
+      - -go*
     override-build: |
       set -eux
       . build-scripts/set-env-variables.sh
