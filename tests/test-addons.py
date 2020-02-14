@@ -79,6 +79,7 @@ class TestAddons(object):
         microk8s_disable("dns")
         '''
 
+    @pytest.mark.skipif(os.environ.get('UNDER_TIME_PRESSURE') == 'True', reason = "Skipping istio and knative tests as we are under time pressure")
     @pytest.mark.skipif(platform.machine() != 'x86_64', reason = "GPU tests are only relevant in x86 architectures")
     def test_gpu(self):
         """
