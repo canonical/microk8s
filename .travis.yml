@@ -32,4 +32,5 @@ script:
   - (cd tests; sudo -E pytest -s -ra test-addons.py)
   - sudo microk8s.reset
   - sudo snap remove microk8s
-  - sudo -E UPGRADE_MICROK8S_FROM=edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade.py
+# There is no upgrade path for now we are going to a new epoch. We should reenable thi after the first release.
+#  - sudo -E UPGRADE_MICROK8S_FROM=edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade.py
