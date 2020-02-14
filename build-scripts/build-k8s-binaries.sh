@@ -14,6 +14,8 @@ go get -d $KUBERNETES_REPOSITORY || true
 
 (cd $GOPATH/src/$KUBERNETES_REPOSITORY
   git checkout $KUBERNETES_TAG
+  git config user.email "microk8s-builder-bot@ubuntu.com"
+  git config user.name "MicroK8s builder bot"
   for patch in "${SNAPCRAFT_PROJECT_DIR}"/build-scripts/patches/*.patch
   do
     echo "Applying patch $patch"
