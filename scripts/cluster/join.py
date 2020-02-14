@@ -177,8 +177,7 @@ def reset_current_installation():
     """
     subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
     time.sleep(10)
-    shutil.rmtree(cluster_backup_dir, ignore_errors=True)
-    shutil.move(cluster_dir, cluster_backup_dir)
+    shutil.rmtree(cluster_dir, ignore_errors=True)
     os.mkdir(cluster_dir)
     shutil.copy("{}/cluster.crt".format(cluster_backup_dir),  "{}/cluster.crt".format(cluster_dir))
     shutil.copy("{}/cluster.key".format(cluster_backup_dir),  "{}/cluster.key".format(cluster_dir))

@@ -25,4 +25,4 @@ then
   exit 1
 fi
 
-${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset
+sudo -E  LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset
