@@ -280,20 +280,19 @@ parts:
 
       REMOVE_KUBE_SNAP_BINS=false
       echo "Reached here"
+      # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
+      # if "${KUBE_SNAP_BINS}" does not exist but it is set we will put the k8s binaries there
+      # if "${KUBE_SNAP_BINS}" does not exist and it is not set we do not need to keep the created binaries
       if [ ! -e "${KUBE_SNAP_BINS}" ]; then
         if [ -z "${KUBE_SNAP_BINS}" ]; then
+          # "${KUBE_SNAP_BINS}" not set, we will remoove the binaries after we build them.
           REMOVE_KUBE_SNAP_BINS=true
           . build-scripts/set-env-binaries-location.sh
         fi
         echo "Downloading binaries"
         . build-scripts/fetch-other-binaries.sh
-        if [ -z "${KUBERNETES_TAG}" ]; then
-          echo "Downloading k8s binaries from upstream"
-          . build-scripts/fetch-k8s-binaries.sh
-        else
-          echo "Building k8s binaries"
-          . build-scripts/build-k8s-binaries.sh
-        fi
+        echo "Building k8s binaries"
+        . build-scripts/build-k8s-binaries.sh
       else
         echo "Binaries provided in $KUBE_SNAP_BINS"
       fi
