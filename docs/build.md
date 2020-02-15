@@ -34,7 +34,6 @@ lxc exec test-build -- git clone https://github.com/ubuntu/microk8s
 
 We can then set the following environment variables prior to building:
  - KUBE_VERSION: kubernetes release to package. Defaults to latest stable.
- - ETCD_VERSION: version of etcd.
  - CNI_VERSION: version of CNI tools.
  - KUBE_TRACK: kubernetes release series (e.g., 1.10) to package. Defaults to latest stable.
  - ISTIO_VERSION: istio release.
@@ -43,7 +42,6 @@ We can then set the following environment variables prior to building:
  - RUNC_COMMIT: the commit hash from which to build runc
  - CONTAINERD_COMMIT: the commit hash from which to build containerd
  - KUBERNETES_REPOSITORY: build the kubernetes binaries from this repository instead of getting them from upstream
- - KUBERNETES_TAG: tag to be used from KUBERNETES_REPOSITORY for building the kubernetes banaries
 
 
 For building we prepend the variables we need as well as `SNAPCRAFT_BUILD_ENVIRONMENT=host` so the current LXC container is used. For example to build the MicroK8s snap for Kubernetes v1.9.6 we:

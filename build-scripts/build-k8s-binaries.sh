@@ -6,6 +6,7 @@ apps="kubectl kube-apiserver kube-controller-manager kube-scheduler kubelet kube
 path_apps="cmd/kubectl cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-scheduler cmd/kubelet cmd/kube-proxy"
 export KUBE_SNAP_BINS="build/kube_bins/$KUBE_VERSION"
 mkdir -p $KUBE_SNAP_BINS/$KUBE_ARCH
+echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
 
 export GOPATH=$SNAPCRAFT_PART_INSTALL/go
 mkdir -p $GOPATH
