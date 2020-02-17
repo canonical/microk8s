@@ -6,13 +6,29 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 
-if [ ! -f "${SNAP_DATA}/bin/cilium" ]; then
-  echo "Cilium not available, try enabling it with 'microk8s.enable cilium'" >&2
-  exit 0
-fi
-
 source $SNAP/actions/common/utils.sh
 exit_if_stopped
+
+if [ ! -f "${SNAP_DATA}/bin/cilium" ]; then
+  NAMESPACE=kube-system
+  "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" -n $NAMESPACE rollout status ds/cilium
+  CILIUM_LABELS="k8s-app=cilium"
+  # Fetch the Cilium CLI binary and install
+  CILIUM_POD=$("$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" -n $NAMESPACE get pod -l $CILIUM_LABELS -o jsonpath="{.items[0].metadata.name}")
+  CILIUM_BIN=$(mktemp)
+  "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" -n $NAMESPACE cp $CILIUM_POD:/usr/bin/cilium $CILIUM_BIN >/dev/null
+
+  run_with_sudo mv $CILIUM_BIN "$SNAP_DATA/bin/cilium"
+  run_with_sudo mkdir -p "$SNAP_DATA/bin/"
+  run_with_sudo chmod ug+x "$SNAP_DATA/bin/"
+  run_with_sudo chmod ug+x "$SNAP_DATA/bin/cilium"
+
+  if getent group microk8s >/dev/null 2>&1
+  then
+    run_with_sudo chgrp microk8s -R "$SNAP_DATA/bin" || true
+  fi
+fi
+
 export CILIUM_MONITOR_SOCK="$SNAP_DATA/var/run/cilium/monitor1_2.sock"
 export CILIUM_HEALTH_SOCK="$SNAP_DATA/var/run/cilium/health.sock"
 "${SNAP_DATA}/bin/cilium" -H "unix:///var/snap/microk8s/current/var/run/cilium/cilium.sock" "$@"
