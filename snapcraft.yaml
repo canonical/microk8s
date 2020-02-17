@@ -285,7 +285,7 @@ parts:
       # if "${KUBE_SNAP_BINS}" does not exist and it is not set we do not need to keep the created binaries
       if [ ! -e "${KUBE_SNAP_BINS}" ]; then
         if [ -z "${KUBE_SNAP_BINS}" ]; then
-          # "${KUBE_SNAP_BINS}" not set, we will remoove the binaries after we build them.
+          # "${KUBE_SNAP_BINS}" not set, we will remove the binaries after we build them.
           REMOVE_KUBE_SNAP_BINS=true
           . build-scripts/set-env-binaries-location.sh
         fi
