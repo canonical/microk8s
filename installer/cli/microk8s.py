@@ -92,7 +92,8 @@ def _show_install_help():
       --help  Show this message and exit.
       --cpu   Cores used by MicroK8s (default={})
       --mem   RAM in GB used by MicroK8s (default={})
-      --disk  Maximum volume in GB of the dynamicaly expandable hard disk to be used (default={})"""
+      --disk  Maximum volume in GB of the dynamicaly expandable hard disk to be used (default={})
+       -y, --assume-yes  Automatic yes to prompts"""
     Echo.info(msg.format(definitions.DEFAULT_CORES, definitions.DEFAULT_MEMORY, definitions.DEFAULT_DISK))
 
 
@@ -104,7 +105,7 @@ def install(args) -> None:
     parser.add_argument('--cpu', default=definitions.DEFAULT_CORES, type=int)
     parser.add_argument('--mem', default=definitions.DEFAULT_MEMORY, type=int)
     parser.add_argument('--disk', default=definitions.DEFAULT_DISK, type=int)
-    parser.add_argument('--assume-yes', action='store_true', default=definitions.DEFAULT_ASSUME)
+    parser.add_argument('-y', '--assume-yes', action='store_true', default=definitions.DEFAULT_ASSUME)
     args = parser.parse_args(args)
     vm_provider_name: str = 'multipass'
     vm_provider_class = get_provider_for(vm_provider_name)
