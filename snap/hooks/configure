@@ -342,7 +342,7 @@ if [ -L "${SNAP_DATA}/bin/cilium" ]
 then
   echo "Cilium is enabled we need to reconfigure it."
   rm -rf $SNAP_DATA/bin/cilium*
-  ${SNAP}/microk8s-enable.wrapper cilium
+  ${SNAP}/actions/enable.cilium.sh
 fi
 
 # modify the containerd localhost:32000 mirror registry
