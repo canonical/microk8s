@@ -305,13 +305,13 @@ get_ips() {
 gen_server_cert() (
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
     ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 825 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 gen_proxy_client_cert() (
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
     ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
-    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 825 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 produce_certs() {
@@ -325,24 +325,24 @@ produce_certs() {
 
     # Generate apiserver CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -days 825 -out ${SNAP_DATA}/certs/ca.crt
     fi
 
     # Generate front proxy CA
     if ! [ -f ${SNAP_DATA}/certs/front-proxy-ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -days 10000 -out ${SNAP_DATA}/certs/front-proxy-ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -days 825 -out ${SNAP_DATA}/certs/front-proxy-ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.
     # The file csr.conf.rendered is compared with csr.conf to determine if a regeneration of the certs must be done.
     #
-    # Returns 
+    # Returns
     #  0 if no change
-    #  1 otherwise. 
+    #  1 otherwise.
 
     render_csr_conf
     if ! [ -f "${SNAP_DATA}/certs/csr.conf" ]; then
-        echo "changeme" >  "${SNAP_DATA}/certs/csr.conf" 
+        echo "changeme" >  "${SNAP_DATA}/certs/csr.conf"
     fi
 
     local force
