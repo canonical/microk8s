@@ -36,7 +36,7 @@ result=1
 for addon in "$@"; do
   # Making sure the cluster is up and running befor each addon
   STATUS=$(${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30)
-  if echo $STATUS | grep "$addon: enabled"
+  if echo $STATUS | grep "$addon: enabled" >/dev/null
   then
     echo "$addon is already enabled"
     result=0
