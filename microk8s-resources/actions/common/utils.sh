@@ -157,11 +157,8 @@ arch() {
 
 init_cluster() {
   mkdir -p ${SNAP_DATA}/var/kubernetes/backend
-  IP=$(get_default_ip)
-  if [ "$IP" == "none" ]
-  then
-    IP="0.0.0.0"
-  fi
+  IP="127.0.0.1"
+  # TODO: make the port configurable
   echo "Address: $IP:19001" > ${SNAP_DATA}/var/kubernetes/backend/init.yaml
   DNS=$($SNAP/bin/hostname)
   mkdir -p $SNAP_DATA/var/tmp/

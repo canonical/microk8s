@@ -226,7 +226,7 @@ def get_token(name, tokens_file="known_tokens.csv"):
     return None
 
 
-def update_dqlite(cluster_cert, cluster_key, voters):
+def update_dqlite(cluster_cert, cluster_key, voters, host):
     subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
@@ -236,7 +236,8 @@ def update_dqlite(cluster_cert, cluster_key, voters):
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
 
-    init_data = {'Cluster': voters, 'Address': data['Address']}
+    # TODO make port configurable
+    init_data = {'Cluster': voters, 'Address': "{}:19001".format(host)}
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
@@ -313,9 +314,7 @@ if __name__ == "__main__":
                   "or update the cluster to a version newer than v1.17.")
             sys.exit(5)
 
-        hostname_override = None
-        if 'hostname_override' in info:
-            hostname_override = info['hostname_override']
+        hostname_override = info['hostname_override']
 
         store_cert("ca.crt", info["ca"])
         store_cert("ca.key", info["ca_key"])
@@ -336,6 +335,6 @@ if __name__ == "__main__":
         store_base_kubelet_args(info["kubelet_args"])
         store_callback_token(info["callback_token"])
 
-        update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"])
+        update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
 
     sys.exit(0)

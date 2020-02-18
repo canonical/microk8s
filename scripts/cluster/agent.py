@@ -7,6 +7,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import time
 
 import yaml
 
@@ -193,13 +194,26 @@ def get_dqlite_voters():
 
     out = subprocess.check_output("curl https://{}/cluster --cacert {} --key {} --cert {} -k -s"
                                   .format(data['Address'], cluster_cert_file,
-                                          cluster_key_file, cluster_cert_file).split());
+                                          cluster_key_file, cluster_cert_file).split())
     nodes = yaml.safe_load(out)
     voters = []
     for n in nodes:
         if n["Role"] == 0:
             voters.append(n["Address"])
     return voters
+
+
+def update_dqlite_ip(host):
+
+    subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
+    time.sleep(10)
+
+    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+    # TODO make the port configurable
+    update_data = {'Address': "{}:19001".format(host)}
+    with open("{}/update.yaml".format(cluster_dir), 'w') as f:
+        yaml.dump(update_data, f)
+    subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
 
 
 @app.route('/{}/join'.format(CLUSTER_API), methods=['POST'])
@@ -220,10 +234,14 @@ def join_node():
         error_msg={"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
+    voters = get_dqlite_voters()
+    # Check if we need to set dqlite with external IP
+    if len(voters) == 1 and voters[0].startsWith("127.0.0.1"):
+        update_dqlite_ip(request.host.split(":")[0])
+        voters = get_dqlite_voters()
     callback_token = get_callback_token()
     remove_token_from_file(token, cluster_tokens_file)
     node_addr = get_node_ep(hostname, request.remote_addr)
-    voters = get_dqlite_voters()
     api_port = get_arg('--secure-port', 'kube-apiserver')
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
