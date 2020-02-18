@@ -189,12 +189,29 @@ def get_dqlite_voters():
     cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
     cluster_key_file = "{}/cluster.key".format(cluster_dir)
 
-    with open("{}/info.yaml".format(cluster_dir)) as f:
-        data = yaml.load(f, Loader=yaml.FullLoader)
+    waits = 10
+    print("Waiting for access to cluster.", end=" ", flush=True)
+    while waits > 0:
+        try:
+            with open("{}/info.yaml".format(cluster_dir)) as f:
+                data = yaml.load(f, Loader=yaml.FullLoader)
+                out = subprocess.check_output("curl https://{}/cluster --cacert {} --key {} --cert {} -k -s"
+                                              .format(data['Address'], cluster_cert_file,
+                                                      cluster_key_file, cluster_cert_file).split())
+                if data['Address'] in out.decode():
+                    break
+                else:
+                    print(".", end=" ", flush=True)
+                    time.sleep(5)
+                    waits -= 1
+        except subprocess.CalledProcessError:
+            print("..", end=" ", flush=True)
+            time.sleep(5)
+            waits -= 1
+    print(" ")
+    if waits == 0:
+        raise Exception("Could not get cluster info")
 
-    out = subprocess.check_output("curl https://{}/cluster --cacert {} --key {} --cert {} -k -s"
-                                  .format(data['Address'], cluster_cert_file,
-                                          cluster_key_file, cluster_cert_file).split())
     nodes = yaml.safe_load(out)
     voters = []
     for n in nodes:
@@ -236,7 +253,7 @@ def join_node():
 
     voters = get_dqlite_voters()
     # Check if we need to set dqlite with external IP
-    if len(voters) == 1 and voters[0].startsWith("127.0.0.1"):
+    if len(voters) == 1 and voters[0].startswith("127.0.0.1"):
         update_dqlite_ip(request.host.split(":")[0])
         voters = get_dqlite_voters()
     callback_token = get_callback_token()
