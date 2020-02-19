@@ -167,7 +167,7 @@ spec:
     spec:
       containers:
         - name: kubernetes-dashboard
-          image: kubernetesui/dashboard:v2.0.0-beta5
+          image: kubernetesui/dashboard:v2.0.0-rc5
           imagePullPolicy: Always
           ports:
             - containerPort: 8443
@@ -175,10 +175,6 @@ spec:
           args:
             - --auto-generate-certificates
             - --namespace=kube-system
-            # Uncomment the following line to manually specify Kubernetes API server Host
-            # If not specified, Dashboard will attempt to auto discover the API server and connect
-            # to it. Uncomment only if the default does not work.
-            # - --apiserver-host=http://my-address:port
           volumeMounts:
             - name: kubernetes-dashboard-certs
               mountPath: /certs
