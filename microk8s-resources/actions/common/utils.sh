@@ -304,14 +304,14 @@ get_ips() {
 
 gen_server_cert() (
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
-    ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/server.key -sha256 -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 825 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 825 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 gen_proxy_client_cert() (
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
-    ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -sha256 -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
-    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 825 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
+    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 825 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 produce_certs() {
@@ -323,14 +323,23 @@ produce_certs() {
         fi
     done
 
+    render_ca_conf
+    if ! [ -f "${SNAP_DATA}/certs/ca.conf" ]; then
+        echo "changeme" >  "${SNAP_DATA}/certs/ca.conf"
+    fi
+
+    if ! "${SNAP}/usr/bin/cmp" -s "${SNAP_DATA}/certs/ca.conf.rendered" "${SNAP_DATA}/certs/ca.conf"; then
+        cp ${SNAP_DATA}/certs/ca.conf.rendered ${SNAP_DATA}/certs/ca.conf
+    fi
+
     # Generate apiserver CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -sha256 -out ${SNAP_DATA}/certs/ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt -config ${SNAP_DATA}/certs/ca.conf
     fi
 
     # Generate front proxy CA
     if ! [ -f ${SNAP_DATA}/certs/front-proxy-ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -sha256 -out ${SNAP_DATA}/certs/front-proxy-ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt -config ${SNAP_DATA}/certs/ca.conf
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.
@@ -363,6 +372,26 @@ produce_certs() {
         echo "1"
     else
         echo "0"
+    fi
+}
+
+render_ca_conf() {
+    # Render ca.conf.template to csr.conf.rendered
+
+    local IP_ADDRESSES="$(get_ips)"
+
+    cp ${SNAP_DATA}/certs/ca.conf.template ${SNAP_DATA}/certs/ca.conf.rendered
+    if ! [ "$IP_ADDRESSES" == "127.0.0.1" ] && ! [ "$IP_ADDRESSES" == "none" ]
+    then
+        local ips='' sep=''
+        local -i i=3
+        for IP_ADDR in $(echo "$IP_ADDRESSES"); do
+            ips+="${sep}IP.$((i++)) = ${IP_ADDR}"
+            sep='\n'
+        done
+        "$SNAP/bin/sed" -i "s/#MOREIPS/${ips}/g" ${SNAP_DATA}/certs/ca.conf.rendered
+    else
+        "$SNAP/bin/sed" -i 's/#MOREIPS//g' ${SNAP_DATA}/certs/ca.conf.rendered
     fi
 }
 
