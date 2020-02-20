@@ -2,9 +2,9 @@
 
 export $(grep -v '^#' /etc/environment | xargs)
 
-# Attempting to address https://forum.snapcraft.io/t/lxd-refresh-cause-container-socket-error/8698
-# if core is to be installed by microk8s it fails
-snap install core
 apt-get update
 apt-get install python3-pip docker.io -y
 pip3 install -U pytest requests pyyaml
+# Attempting to address https://forum.snapcraft.io/t/lxd-refresh-cause-container-socket-error/8698
+# if core is to be installed by microk8s it fails
+snap install core
