@@ -128,6 +128,12 @@ def create_admin_kubeconfig(ca):
 
 
 def store_cert(filename, payload):
+    """
+    Store a certificate
+
+    :param filename: where to store the certificate
+    :param payload: certificate payload
+    """
     file_with_path = "{}/certs/{}".format(snapdata_path, filename)
     backup_file_with_path = "{}.backup".format(file_with_path)
     shutil.copyfile(file_with_path, backup_file_with_path)
@@ -139,7 +145,7 @@ def store_cert(filename, payload):
 
 def store_cluster_certs(cluster_cert, cluster_key):
     """
-    Store the cluster certs
+    Store the dqlite cluster certs
 
     :param cluster_cert: the cluster certificate
     :param cluster_key: the cluster certificate key
@@ -165,6 +171,11 @@ def store_base_kubelet_args(args_string):
 
 
 def store_callback_token(token):
+    """
+    Store the callback token
+
+    :param stoken: the callback token
+    """
     callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
     with open(callback_token_file, "w") as fp:
         fp.write(token)
@@ -208,13 +219,12 @@ def reset_current_installation():
     restart_all_services()
 
 
-# TODO eliminate duplicata code
-# TODO check we do not have a bug in the other get_token (no for loop)
 def get_token(name, tokens_file="known_tokens.csv"):
     """
     Get token from known_tokens file
 
     :param name: the name of the node
+    :param tokens_file: the file where the tokens should go
     :returns: the token or None(if name doesn't exist)
     """
     file = "{}/credentials/{}".format(snapdata_path, tokens_file)
@@ -227,6 +237,14 @@ def get_token(name, tokens_file="known_tokens.csv"):
 
 
 def update_dqlite(cluster_cert, cluster_key, voters, host):
+    """
+    Configure the dqlite cluster
+
+    :param cluster_cert: the dqlite cluster cert
+    :param cluster_key: the dqlite cluster key
+    :param voters: the dqlite voters
+    :param host: the hostname others see of this node
+    """
     subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
@@ -266,6 +284,9 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
 
 
 def restart_all_services():
+    """
+    Restart all services
+    """
     subprocess.check_call("{}/microk8s-stop.wrapper".format(snap_path).split())
     waits = 10
     while waits > 0:

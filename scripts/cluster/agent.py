@@ -184,6 +184,11 @@ def get_node_ep(hostname, remote_addr):
 
 
 def get_dqlite_voters():
+    """
+    Get the voting members of the dqlite cluster
+
+    :param : the list with the voting members
+    """
     snapdata_path = "/var/snap/microk8s/current"
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
     cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
@@ -221,7 +226,11 @@ def get_dqlite_voters():
 
 
 def update_dqlite_ip(host):
+    """
+    Update dqlite so it listens on the default interface and not on localhost
 
+    :param : the host others see for this node
+    """
     subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
     time.sleep(10)
 
