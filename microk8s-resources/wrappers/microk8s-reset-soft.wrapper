@@ -37,7 +37,7 @@ clean_cluster() {
   echo "Calling clean_cluster"
   # Clean the cluster
 
-  NSES=$($KUBECTL get ns -o=name | awk -F/ '{if ($2 !~ /^(kube-system|kube-node-lease)$/) print}' | paste -s --delimiters=' ')
+  NSES=$($KUBECTL get ns -o=name | awk -F/ '{if ($2 !~ /^(kube-system|kube-node-lease)$/) print $2}' | paste -s --delimiters=' ')
   for NS in $NSES
   do
     echo "Cleaning resources in namespace $NS"
@@ -73,12 +73,9 @@ clean_cluster() {
   n=0
   until [ $n -ge 10 ]
   do
-    nses=$($KUBECTL get po --all-namespaces | wc -l)
+    nses=`$KUBECTL get ns | wc -l`
     # The five lines we expect: are the 4 namespaces default|kube-public|kube-system|kube-node-lease and the title
-    if [ $nses == '5' ]
-    then
-      break
-    if
+    [ "$nses" -eq 5 ] && break
     n=$[$n+1]
     sleep 20
   done
