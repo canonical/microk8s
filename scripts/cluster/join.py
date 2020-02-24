@@ -190,13 +190,28 @@ def reset_current_installation():
     time.sleep(10)
     shutil.rmtree(cluster_dir, ignore_errors=True)
     os.mkdir(cluster_dir)
-    shutil.copy("{}/cluster.crt".format(cluster_backup_dir),  "{}/cluster.crt".format(cluster_dir))
-    shutil.copy("{}/cluster.key".format(cluster_backup_dir),  "{}/cluster.key".format(cluster_dir))
+    if os.path.isfile("{}/cluster.crt".format(cluster_backup_dir)):
+        # reuse the certificates we had before the cluster formation
+        shutil.copy("{}/cluster.crt".format(cluster_backup_dir), "{}/cluster.crt".format(cluster_dir))
+        shutil.copy("{}/cluster.key".format(cluster_backup_dir), "{}/cluster.key".format(cluster_dir))
+    else:
+        # This nod never joined a cluster. A cluster was formed around it.
+        hostname = socket.gethostname()
+        ip = '127.0.0.1'
+        shutil.copy('{}/microk8s-resources/certs/csr-dqlite.conf.template'.format(snap_path),
+                    '{}/var/tmp/csr-dqlite.conf'.format(snapdata_path))
+        subprocess.check_call("{}/bin/sed -i 's/HOSTNAME/{}/g' {}/var/tmp/csr-dqlite.conf"
+                              .format(snap_path, hostname, snapdata_path).split())
+        subprocess.check_call("{}/bin/sed -i 's/IP/{}/g'  {}/var/tmp/csr-dqlite.conf"
+                              .format(snap_path, ip, snapdata_path).split())
+        subprocess.check_call('{0}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes'
+                              '-keyout {1}/var/kubernetes/backend/cluster.key'
+                              '-out {1}/var/kubernetes/backend/cluster.crt'
+                              '-subj "/CN=k8s" -config {1}/var/tmp/csr-dqlite.conf -extensions v3_ext'
+                              .format(snap_path, snapdata_path).split())
 
-    with open("{}/info.yaml".format(cluster_backup_dir)) as f:
-        data = yaml.load(f, Loader=yaml.FullLoader)
-
-    init_data = {'Address': data['Address']}
+    # TODO make this port configurable
+    init_data = {'Address': '127.0.0.1:19001'}
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
