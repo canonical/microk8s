@@ -200,13 +200,13 @@ def reset_current_installation():
         ip = '127.0.0.1'
         shutil.copy('{}/microk8s-resources/certs/csr-dqlite.conf.template'.format(snap_path),
                     '{}/var/tmp/csr-dqlite.conf'.format(snapdata_path))
-        subprocess.check_call("{}/bin/sed -i 's/HOSTNAME/{}/g' {}/var/tmp/csr-dqlite.conf"
+        subprocess.check_call("{}/bin/sed -i s/HOSTNAME/{}/g {}/var/tmp/csr-dqlite.conf"
                               .format(snap_path, hostname, snapdata_path).split())
-        subprocess.check_call("{}/bin/sed -i 's/IP/{}/g'  {}/var/tmp/csr-dqlite.conf"
+        subprocess.check_call("{}/bin/sed -i s/HOSTIP/{}/g  {}/var/tmp/csr-dqlite.conf"
                               .format(snap_path, ip, snapdata_path).split())
-        subprocess.check_call('{0}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes'
-                              '-keyout {1}/var/kubernetes/backend/cluster.key'
-                              '-out {1}/var/kubernetes/backend/cluster.crt'
+        subprocess.check_call('{0}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes '
+                              '-keyout {1}/var/kubernetes/backend/cluster.key '
+                              '-out {1}/var/kubernetes/backend/cluster.crt '
                               '-subj "/CN=k8s" -config {1}/var/tmp/csr-dqlite.conf -extensions v3_ext'
                               .format(snap_path, snapdata_path).split())
 
