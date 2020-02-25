@@ -50,7 +50,4 @@ else
   run_with_sudo touch "$SNAP_USER_COMMON/istio.lock"
 fi
 
-refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-run_with_sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
-
 echo "Istio is starting"
