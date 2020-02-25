@@ -37,7 +37,7 @@ clean_cluster() {
   echo "Calling clean_cluster"
   # Clean the cluster
 
-  NSES=$($KUBECTL get ns -o=name | awk -F/ '{if ($2 !~ /^(kube-system|kube-node-lease)$/) print $2}' | paste -s --delimiters=' ')
+  NSES=$($KUBECTL get ns -o=name | awk -F/ '{if ($2 !~ /^(kube-system|kube-node-lease|default)$/) print $2}' | paste -s --delimiters=' ')
   for NS in $NSES
   do
     echo "Cleaning resources in namespace $NS"
