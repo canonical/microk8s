@@ -82,6 +82,16 @@ clean_cluster() {
 }
 
 
+apply_cni() {
+  echo "Setting up the CNI"
+
+  if [ -e "${SNAP_DATA}/args/cni-network/cilium.yaml" ]
+  then
+    $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cilium.yaml"
+  fi
+}
+
+
 destroy_storage_enabled=false
 while getopts ':h-:' opt; do
   case $opt in
@@ -119,3 +129,4 @@ exit_if_no_permissions
 
 disable_addons
 clean_cluster
+apply_cni
