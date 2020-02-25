@@ -72,8 +72,6 @@ apps:
     command: microk8s-config.wrapper
   reset:
     command: microk8s-reset.wrapper
-  reset-soft:
-    command: microk8s-reset-soft.wrapper
   istioctl:
     command: microk8s-istioctl.wrapper
   linkerd:
