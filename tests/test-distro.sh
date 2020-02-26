@@ -22,6 +22,14 @@ function create_machine() {
   cat tests/lxc/microk8s.profile | lxc profile edit microk8s
 
   lxc launch -p default -p microk8s $DISTRO $NAME
+
+  # Allow for the machine to boot and get an IP
+  sleep 20
+  tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /var/tmp
+  lxc exec $NAME -- /bin/bash "/var/tmp/tests/lxc/install-deps/$DISTRO"
+  lxc exec $NAME -- reboot
+  sleep 20
+
   trap "lxc delete ${NAME} --force || true" EXIT
   if [ "$#" -ne 1 ]
   then
@@ -30,13 +38,6 @@ function create_machine() {
     lxc exec $NAME -- reboot
     sleep 20
   fi
-
-  # Allow for the machine to boot and get an IP
-  sleep 20
-  tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /var/tmp
-  lxc exec $NAME -- /bin/bash "/var/tmp/tests/lxc/install-deps/$DISTRO"
-  lxc exec $NAME -- reboot
-  sleep 20
 }
 
 set -uex
