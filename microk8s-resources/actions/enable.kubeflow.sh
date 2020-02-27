@@ -13,13 +13,13 @@ from itertools import count
 from distutils.util import strtobool
 
 
-def run(*args, die=True, debug=False):
+def run(*args, die=True, debug=False, stdout=True):
     # Add wrappers to $PATH
     env = os.environ.copy()
     env["PATH"] += ":%s" % os.environ["SNAP"]
 
-    if debug:
-        print("Running `%s`" % " ".join(args))
+    if debug and stdout:
+        print("\033[;1;32m+ %s\033[;0;0m" % " ".join(args))
 
     result = subprocess.run(
         args,
@@ -41,7 +41,14 @@ def run(*args, die=True, debug=False):
         else:
             raise
 
-    return result.stdout.decode("utf-8")
+    result_stdout = result.stdout.decode('utf-8')
+
+    if debug and stdout:
+        print(result_stdout)
+        if result.stderr:
+            print(result.stderr.decode('utf-8'))
+
+    return result_stdout
 
 
 def get_random_pass():
@@ -52,9 +59,9 @@ def get_random_pass():
 
 def juju(*args, **kwargs):
     if strtobool(os.environ.get("KUBEFLOW_DEBUG") or "false"):
-        return run("microk8s-juju.wrapper", "--debug", *args, debug=True, **kwargs)
+        return run('microk8s-juju.wrapper', "--debug", *args, debug=True, **kwargs)
     else:
-        return run("microk8s-juju.wrapper", *args, **kwargs)
+        return run('microk8s-juju.wrapper', *args, **kwargs)
 
 
 def main():
@@ -73,12 +80,14 @@ def main():
         }
     }
 
-    for service in ["dns", "storage", "dashboard", "ingress", "rbac", "juju"]:
+    for service in ["dns", "storage", "dashboard", "ingress", "rbac"]:
         print("Enabling %s..." % service)
         run("microk8s-enable.wrapper", service)
 
+    run("microk8s-status.wrapper", '--wait-ready')
+
     try:
-        juju("show-controller", "uk8s", die=False)
+        juju("show-controller", "uk8s", die=False, stdout=False)
     except subprocess.CalledProcessError:
         pass
     else:
@@ -104,7 +113,7 @@ def main():
     print("Waiting for operator pods to become ready.")
     wait_seconds = 15
     for i in count():
-        status = json.loads(juju("status", "-m", "uk8s:kubeflow", "--format=json"))
+        status = json.loads(juju("status", "-m", "uk8s:kubeflow", "--format=json", stdout=False))
         unready_apps = [
             name
             for name, app in status["applications"].items()
