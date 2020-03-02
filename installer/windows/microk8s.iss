@@ -54,4 +54,4 @@ begin
 end;
 
 [Run]
-Filename: "{app}\microk8s.exe"; Parameters: "install --assume-yes"; StatusMsg: "Setting up MicroK8s for the first time"; Description: "Setup and start MicroK8s?"; Flags: StatusMsg
+Filename: "{app}\microk8s.exe"; Parameters: "install --assume-yes"; StatusMsg: "Setting up MicroK8s for the first time"; Description: "Setup and start MicroK8s?"; Flags: postinstall
