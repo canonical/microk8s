@@ -59,7 +59,7 @@ lxc file pull test-build/root/microk8s/microk8s_v1.9.6_amd64.snap .
 #### Installing the snap
 
 ```
-sudo snap install microk8s_latest_amd64.snap --classic --dangerous
+sudo snap install microk8s_latest_amd64.snap --dangerous
 ```
 
 #### Connecting the required interfaces
