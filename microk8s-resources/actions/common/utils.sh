@@ -323,23 +323,14 @@ produce_certs() {
         fi
     done
 
-    render_ca_conf
-    if ! [ -f "${SNAP_DATA}/certs/ca.conf" ]; then
-        echo "changeme" >  "${SNAP_DATA}/certs/ca.conf"
-    fi
-
-    if ! "${SNAP}/usr/bin/cmp" -s "${SNAP_DATA}/certs/ca.conf.rendered" "${SNAP_DATA}/certs/ca.conf"; then
-        cp ${SNAP_DATA}/certs/ca.conf.rendered ${SNAP_DATA}/certs/ca.conf
-    fi
-
     # Generate apiserver CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt -config ${SNAP_DATA}/certs/ca.conf
+        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt
     fi
 
     # Generate front proxy CA
     if ! [ -f ${SNAP_DATA}/certs/front-proxy-ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt -config ${SNAP_DATA}/certs/ca.conf
+        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.
@@ -372,26 +363,6 @@ produce_certs() {
         echo "1"
     else
         echo "0"
-    fi
-}
-
-render_ca_conf() {
-    # Render ca.conf.template to csr.conf.rendered
-
-    local IP_ADDRESSES="$(get_ips)"
-
-    cp ${SNAP_DATA}/certs/ca.conf.template ${SNAP_DATA}/certs/ca.conf.rendered
-    if ! [ "$IP_ADDRESSES" == "127.0.0.1" ] && ! [ "$IP_ADDRESSES" == "none" ]
-    then
-        local ips='' sep=''
-        local -i i=3
-        for IP_ADDR in $(echo "$IP_ADDRESSES"); do
-            ips+="${sep}IP.$((i++)) = ${IP_ADDR}"
-            sep='\n'
-        done
-        "$SNAP/bin/sed" -i "s/#MOREIPS/${ips}/g" ${SNAP_DATA}/certs/ca.conf.rendered
-    else
-        "$SNAP/bin/sed" -i 's/#MOREIPS//g' ${SNAP_DATA}/certs/ca.conf.rendered
     fi
 }
 

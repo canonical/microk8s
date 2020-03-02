@@ -13,8 +13,6 @@ cp -r ${SNAP}/default-args ${SNAP_DATA}/args
 
 # Create the certificates
 mkdir ${SNAP_DATA}/certs
-# Allow the ability to add external IPs to the csr, by moving the ca.conf.template to SNAP_DATA
-cp ${SNAP}/certs/ca.conf.template ${SNAP_DATA}/certs/ca.conf.template
 # Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
 cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
 produce_certs

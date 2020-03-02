@@ -23,7 +23,7 @@ fi
 
 exit_if_no_permissions
 
-subject=$(openssl x509 -noout -subject -in "$SNAP_DATA/certs/ca.crt")
+subject=$(openssl x509 -sha256 -days 825 -noout -subject -in "$SNAP_DATA/certs/ca.crt")
 if [[ $subject == *"127.0.0.1"* ]]; then
   echo "Clustering requires a fresh MicroK8s installation. Reinstall with:"
   echo "sudo snap remove microk8s"
