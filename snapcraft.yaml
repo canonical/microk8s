@@ -315,6 +315,12 @@ parts:
         # Linkerd support
         rm "actions/enable.linkerd.sh"
         rm "actions/disable.linkerd.sh"
+        # Juju support
+        rm "actions/enable.juju.sh"
+        rm "actions/disable.juju.sh"
+        # Kubeflow support
+        rm "actions/enable.kubeflow.sh"
+        rm "actions/disable.kubeflow.sh"
       else
         # Knative support
         echo "Preparing knative"
