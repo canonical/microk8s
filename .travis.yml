@@ -20,9 +20,10 @@ script:
   - sudo /snap/bin/lxd init --auto
   - sudo snapcraft --use-lxd
   - sudo apt update
+  - sudo apt install locales
   - sudo snap install *.snap --classic --dangerous
   - sudo pip3 install --upgrade pip
-  - sudo pip3 install -U pytest
+  - sudo pip3 install --upgrade pytest
   - pwd
   - ps -ef
   - ls -l
