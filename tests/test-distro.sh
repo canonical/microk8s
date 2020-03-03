@@ -22,14 +22,6 @@ function create_machine() {
   cat tests/lxc/microk8s.profile | lxc profile edit microk8s
 
   lxc launch -p default -p microk8s $DISTRO $NAME
-  trap "lxc delete ${NAME} --force || true" EXIT
-  if [ "$#" -ne 1 ]
-  then
-    lxc exec $NAME -- /bin/bash -c "echo HTTPS_PROXY=$2 >> /etc/environment"
-    lxc exec $NAME -- /bin/bash -c "echo https_proxy=$2 >> /etc/environment"
-    lxc exec $NAME -- reboot
-    sleep 20
-  fi
 
   # Allow for the machine to boot and get an IP
   sleep 20
@@ -38,6 +30,15 @@ function create_machine() {
   lxc exec $NAME -- /bin/bash "/var/tmp/tests/lxc/install-deps/$DISTRO_DEPS"
   lxc exec $NAME -- reboot
   sleep 20
+
+  trap "lxc delete ${NAME} --force || true" EXIT
+  if [ "$#" -ne 1 ]
+  then
+    lxc exec $NAME -- /bin/bash -c "echo HTTPS_PROXY=$2 >> /etc/environment"
+    lxc exec $NAME -- /bin/bash -c "echo https_proxy=$2 >> /etc/environment"
+    lxc exec $NAME -- reboot
+    sleep 20
+  fi
 }
 
 set -uex
@@ -93,18 +94,6 @@ else
 fi
 lxc exec $VM1_NAME -- /var/tmp/tests/patch-kube-proxy.sh
 lxc exec $VM2_NAME -- /var/tmp/tests/patch-kube-proxy.sh
-
-if lxc exec $VM1_NAME -- ls /snap/bin/microk8s.token
-then
-  GENERATE_TOKEN=$(lxc exec $VM1_NAME -- sudo /snap/bin/microk8s.token generate)
-  TOKEN=$(echo $GENERATE_TOKEN | awk '{print $7}')
-  MASTER_IP=$(lxc info $VM1_NAME | grep eth0 | head -n 1 | awk '{print $3}')
-  lxc exec $VM2_NAME -- sudo /snap/bin/microk8s.join $MASTER_IP:25000 --token $TOKEN
-
-  # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-  lxc exec $VM1_NAME -- script -e -c "pytest -s /var/tmp/tests/test-cluster.py"
-  lxc exec $VM1_NAME -- microk8s.reset
-fi
 
 lxc delete $VM1_NAME --force
 lxc delete $VM2_NAME --force

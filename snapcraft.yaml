@@ -315,6 +315,12 @@ parts:
         # Linkerd support
         rm "actions/enable.linkerd.sh"
         rm "actions/disable.linkerd.sh"
+        # Juju support
+        rm "actions/enable.juju.sh"
+        rm "actions/disable.juju.sh"
+        # Kubeflow support
+        rm "actions/enable.kubeflow.sh"
+        rm "actions/disable.kubeflow.sh"
       else
         # Knative support
         echo "Preparing knative"
@@ -396,6 +402,15 @@ parts:
       else
         echo "Skipped"
       fi
+
+  juju:
+    plugin: dump
+    source: https://launchpad.net/juju/2.7/2.7.3/+download/juju-2.7.3-k8s.tar.xz
+    source-type: tar
+    organize:
+      juju: bin/juju
+    prime:
+      - bin/juju
 
 slots:
   microk8s-info:
