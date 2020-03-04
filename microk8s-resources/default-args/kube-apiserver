@@ -12,7 +12,6 @@
 --token-auth-file=${SNAP_DATA}/credentials/known_tokens.csv
 --allow-privileged=true
 --insecure-port=8080
---profile
 --storage-dir ${SNAP_DATA}/var/kubernetes/backend/
 --storage-backend=dqlite
 
