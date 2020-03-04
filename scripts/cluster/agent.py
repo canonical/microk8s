@@ -138,7 +138,7 @@ def remove_token_from_file(token, file):
     with open(backup_file, 'w') as back_fp:
         with open(file, 'r') as fp:
             for _, line in enumerate(fp):
-                if line.rstrip() == token:
+                if line.strip() == token:
                     continue
                 back_fp.write("{}".format(line))
 
@@ -221,15 +221,14 @@ def is_valid(token_line, token_type=cluster_tokens_file):
     :param token_type: the type of token (bootstrap or signature)
     :returns: True for a valid token, False otherwise
     """
-    token = token_line.rstrip()
+    token = token_line.strip()
     # Ensure token is not empty
     if not token:
         return False
 
     with open(token_type) as fp:
         for _, line in enumerate(fp):
-            item = line.rstrip()
-            if token == item:
+            if token == line.strip():
                 return True
     return False
 
@@ -324,7 +323,7 @@ def sign_cert():
         token = request.form['token']
         cert_request = request.form['request']
 
-    token = token.rstrip()
+    token = token.strip()
     if not is_valid(token, certs_request_tokens_file):
         error_msg={"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
@@ -346,7 +345,7 @@ def configure():
         callback_token = request.form['callback']
         configuration = json.loads(request.form['configuration'])
 
-    callback_token = callback_token.rstrip()
+    callback_token = callback_token.strip()
     if not is_valid(callback_token, callback_token_file):
         error_msg={"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
