@@ -105,7 +105,7 @@ def sign_client_cert(cert_request, token):
     req_file = "{}/certs/request.{}.csr".format(snapdata_path, token)
     sign_cmd = "openssl x509 -sha256 -req -in {csr} -CA {SNAP_DATA}/certs/ca.crt -CAkey" \
                " {SNAP_DATA}/certs/ca.key -CAcreateserial -out {SNAP_DATA}/certs/server.{token}.crt" \
-               " -days 365".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
+               " -days 825".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
 
     with open(req_file, 'w') as fp:
         fp.write(cert_request)
