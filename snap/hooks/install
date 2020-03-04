@@ -92,6 +92,12 @@ done
 mkdir -p $SNAP_DATA/opt/cni/bin
 cp $SNAP/opt/cni/bin/* $SNAP_DATA/opt/cni/bin/
 
+if [ -f "$SNAP_USER_COMMON/istio-auth.lock" ] || [ -f "$SNAP_USER_COMMON/istio-auth.lock" ]
+then
+  rm -rf "$SNAP_USER_COMMON/istio-auth.lock"
+  rm -rf "$SNAP_USER_COMMON/istio.lock"
+fi
+
 init_cluster
 
 
