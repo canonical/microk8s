@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -eux
 
 source $SNAP/actions/common/utils.sh
 
@@ -25,9 +25,9 @@ disable_addons() {
     addon_arguments=""
     if [ "$action" = "storage" ] && [ ${destroy_storage_enabled} ]
     then
-       microk8s.disable $action:destroy-storage > /dev/null 2>&1 || true
+       microk8s.disable $action:destroy-storage || true
     else
-       microk8s.disable $action > /dev/null 2>&1 || true
+       microk8s.disable $action  || true
     fi
   done
   echo "All addons disabled."

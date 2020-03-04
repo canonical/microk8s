@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 source $SNAP/actions/common/utils.sh
 CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
