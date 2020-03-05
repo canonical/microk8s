@@ -321,7 +321,8 @@ def remove_callback_token(node):
         os.chmod(tmp_file, 0o600)
         with open(callback_tokens_file, 'r+') as callback_fp:
             for _, line in enumerate(callback_fp):
-                if line.startswith(node):
+                parts = line.split()
+                if parts[0] == node:
                     continue
                 else:
                     backup_fp.write(line)
