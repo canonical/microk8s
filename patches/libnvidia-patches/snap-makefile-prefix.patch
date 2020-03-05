@@ -7,7 +7,7 @@ index 0070ada..45b8591 100644
  ##### Global definitions #####
  
 -export prefix      = /usr/local
-+export prefix      = $(SNAPCRAFT_PART_INSTALL)/usr/local
++export prefix      = $(SNAPCRAFT_PART_INSTALL)/usr
  export exec_prefix = $(prefix)
  export bindir      = $(exec_prefix)/bin
  export libdir      = $(exec_prefix)/lib
