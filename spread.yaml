@@ -1,0 +1,29 @@
+project: spread-demo
+
+environment:
+    PROJECT_PATH: /root/spread
+
+backends:
+    lxd:
+        systems:
+            - ubuntu-16.04:
+            - ubuntu-18.04:
+
+path: /root/spread
+
+kill-timeout: 5m
+
+suites:
+    tests/spread-tests/:
+        summary: Some tests
+        prepare: |
+            echo "Prearing the test suite"
+            case "$SPREAD_SYSTEM" in
+                ubuntu-18.04)
+                    . $PROJECT_PATH/tests/lxc/install-deps/ubuntu_18.04
+                    ;;
+                ubuntu-16.04)
+                    . $PROJECT_PATH/tests/lxc/install-deps/ubuntu_16.04
+                    ;;
+            esac
+

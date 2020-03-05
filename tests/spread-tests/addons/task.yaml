@@ -1,0 +1,14 @@
+summary: Run addons tests
+
+systems: [ubuntu-16.04, ubuntu-18.04]
+
+environment:
+   SNAP_CHANNEL: '$(HOST: echo "${SNAP_CHANNEL:-edge}")'
+
+execute: |
+   echo "pytest MicroK8s of channel $SNAP_CHANNEL"
+   snap install microk8s --channel=${SNAP_CHANNEL} --classic
+   script -e -c "pytest -s $PROJECT_PATH/tests/test-addons.py"
+
+restore:
+   microk8s.reset

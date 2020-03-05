@@ -1,0 +1,6 @@
+summary: Run tests
+
+systems: [ubuntu-16.04, ubuntu-18.04]
+
+execute: |
+   echo "pytest should run here"
