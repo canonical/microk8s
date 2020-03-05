@@ -640,18 +640,27 @@ parts:
       fi
 
   libnvidia:
-    plugin: dump
-    source: https://nvidia.github.io/libnvidia-container/ubuntu18.04/amd64/libnvidia-container1_1.0.0-1_amd64.deb
-    source-type: deb
+    after: [libnvidia-tools, patches]
+    plugin: nil
+    build-packages:
+      - gcc
+      - make
+      - bmake
+      - m4
+      - pkg-config
+      - libcap-dev
+      - libseccomp-dev
+    source: https://github.com/NVIDIA/libnvidia-container
+    source-type: git
+    source-tag: v1.0.6
     override-build: |
-      set -eu
-      ARCH=$(dpkg --print-architecture)
-      if ! [ "${ARCH}" = "arm64" ]
-      then
-        snapcraftctl build
-      else
-        echo "Skipped"
-      fi
+      for patch in "$SNAPCRAFT_STAGE"/libnvidia-patches/*.patch; do
+        echo "Applying $(basename "$patch") ..."
+        git apply --ignore-space-change --ignore-whitespace "$patch"
+        echo
+      done
+      make
+      make install
 
   libnvidia-tools:
     plugin: dump
