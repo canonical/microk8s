@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index 0070ada..45b8591 100644
+--- a/Makefile
++++ b/Makefile
+@@ -13,7 +13,7 @@ WITH_SECCOMP ?= yes
+ 
+ ##### Global definitions #####
+ 
+-export prefix      = /usr/local
++export prefix      = $(SNAPCRAFT_PART_INSTALL)/usr/local
+ export exec_prefix = $(prefix)
+ export bindir      = $(exec_prefix)/bin
+ export libdir      = $(exec_prefix)/lib
