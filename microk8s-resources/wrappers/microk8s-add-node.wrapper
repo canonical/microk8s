@@ -34,8 +34,10 @@ fi
 
 exit_if_stopped
 
+# We throw away some randomness by only selecting bytes in the A-Za-z range and taking the first 32 such bytes,
+# so instead of 32*8 = 256 bits of randomness you get approx 182 bits. This is good enough for this short lived tokens.
 token=$(< /dev/urandom tr -dc A-Za-z | head -c32;echo;)
-echo ${token} | tee -a $SNAP_DATA/credentials/cluster-tokens.txt > /dev/null
+echo ${token} >> $SNAP_DATA/credentials/cluster-tokens.txt
 
 port="25000"
 if grep -e port "${SNAP_DATA}"/args/cluster-agent &> /dev/null
