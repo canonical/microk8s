@@ -28,6 +28,7 @@ def do_op(remote_op):
         hostname = socket.gethostname()
         try:
             # Make sure this node exists
+            subprocess.check_output("{}/microk8s-status.wrapper --wait-ready --timeout=60".format(snap_path).split())
             node_yaml = subprocess.check_output("{}/microk8s-kubectl.wrapper get no -o yaml".format(snap_path).split())
             nodes_info = yaml.load(node_yaml, Loader=yaml.FullLoader)
             for node_info in nodes_info["items"]:
@@ -48,7 +49,7 @@ def do_op(remote_op):
                                                                         node_ep,
                                                                         res.status_code))
         except subprocess.CalledProcessError:
-            print("Node {} not present".format(host))
+            print("Node not present")
 
 
 def restart(service):
