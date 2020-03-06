@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 source $SNAP/actions/common/utils.sh
 
@@ -12,6 +12,6 @@ NODENAME="$($KUBECTL get no -o yaml | grep " name:"| awk '{print $2}')"
 
 $KUBECTL label nodes "$NODENAME" beta.kubernetes.io/fluentd-ds-ready- || true
 
-$KUBECTL delete -f "${SNAP}/actions/fluentd"
+$KUBECTL delete --wait=false -f "${SNAP}/actions/fluentd"
 
 echo "Fluentd-Elasticsearch is disabled"

@@ -197,7 +197,12 @@ use_manifest() {
     do
         "$SNAP/bin/sed" -i 's@'$i'@'"${items[$i]}"'@g' "${tmp_manifest}"
     done
-    "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" "$action" -f "${tmp_manifest}"
+    if [ "$action" = "delete" ]
+    then
+        "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" "$action" "--wait=false" -f "${tmp_manifest}"
+    else
+        "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" "$action" -f "${tmp_manifest}"
+    fi
     use_manifest_result="$?"
     rm "${tmp_manifest}"
 }
