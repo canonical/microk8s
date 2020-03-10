@@ -6,11 +6,11 @@ req_extensions = req_ext
 distinguished_name = dn
 
 [ dn ]
-C = "US"
-ST = "Isles of Blessed"
-L = "Arkadia"
-O = acme
-OU = dev
+C = GB
+ST = Canonical
+L = Canonical
+O = Canonical
+OU = Canonical
 CN = 127.0.0.1
 
 [ req_ext ]

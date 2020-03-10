@@ -24,7 +24,7 @@ then
   snapctl restart ${SNAP_NAME}.daemon-controller-manager
 fi
 
-#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA 
+#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
 if [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
 then
    cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
