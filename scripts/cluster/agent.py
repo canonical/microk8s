@@ -1,6 +1,7 @@
 #!flask/bin/python
 import getopt
 import json
+import yaml
 import os
 import random
 import shutil
@@ -11,7 +12,7 @@ import sys
 
 from .common.utils import try_set_file_permissions
 
-from flask import Flask, jsonify, request, abort, Response
+from flask import Flask, jsonify, request, abort, Response, make_response
 
 app = Flask(__name__)
 CLUSTER_API="cluster/api/v1.0"
@@ -420,6 +421,29 @@ def configure():
 
     resp_date = {"result": "ok"}
     resp = Response(json.dumps(resp_date), status=200, mimetype='application/json')
+    return resp
+
+
+@app.route('/{}/status'.format(CLUSTER_API), methods=['POST'])
+def status():
+    """
+    Web call to get the microk8s status
+    """
+    print("status called")
+    if request.headers['Content-Type'] == 'application/json':
+        print("Here {}".format(request.json))
+        callback_token = request.json['callback']
+    else:
+        callback_token = request.form['callback']
+
+    if not is_valid(callback_token, callback_token_file):
+        error_msg={"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+
+    output = subprocess.check_output("{}/microk8s-status.wrapper --yaml --timeout 60".format(snap_path).split())
+    json_output = yaml.load(output)
+
+    resp = app.response_class(response=json.dumps(json_output), status=200, mimetype='application/json')
     return resp
 
 
