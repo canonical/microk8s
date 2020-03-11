@@ -4,7 +4,6 @@ import re
 import requests
 import platform
 import yaml
-import pprint
 
 from utils import (
     kubectl,
