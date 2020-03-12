@@ -96,9 +96,8 @@ helm template cilium \
    --set global.cni.binPath="$SNAP_DATA/opt/cni/bin" \
    --set global.cni.customConf=true \
    --set global.containerRuntime.integration="containerd" \
+   --set global.daemon.runPath="$SNAP_DATA/var/run/cilium"
    --set global.containerRuntime.socketPath="$SNAP_COMMON/run/containerd.sock" > $SNAP_DATA/args/cni-network/cilium.yaml
-
-sed -i 's;path: \(/var/run/cilium\);path: '"$SNAP_DATA"'\1;g' "$SNAP_DATA/args/cni-network/cilium.yaml"
 ```
   
 
