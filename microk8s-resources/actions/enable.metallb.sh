@@ -14,6 +14,15 @@ fi
 
 echo "Enabling MetalLB"
 
+ALLOWESCALATION=false
+if grep  -e ubuntu /proc/version | grep 16.04 &> /dev/null
+then
+  ALLOWESCALATION=true
+fi
+declare -A map
+map[\$ALLOWESCALATION]="$ALLOWESCALATION"
+use_manifest metallb apply "$(declare -p map)"
+
 read -ra ARGUMENTS <<< "$1"
 if [ -z "${ARGUMENTS[@]}" ]
 then

@@ -13,7 +13,7 @@ metadata:
   name: speaker
   namespace: metallb-system
 spec:
-  allowPrivilegeEscalation: false
+  allowPrivilegeEscalation: $ALLOWESCALATION
   allowedCapabilities:
   - NET_ADMIN
   - NET_RAW
@@ -223,7 +223,7 @@ spec:
             cpu: 100m
             memory: 100Mi
         securityContext:
-          allowPrivilegeEscalation: false
+          allowPrivilegeEscalation: $ALLOWESCALATION
           capabilities:
             add:
             - NET_ADMIN
@@ -279,7 +279,7 @@ spec:
             cpu: 100m
             memory: 100Mi
         securityContext:
-          allowPrivilegeEscalation: false
+          allowPrivilegeEscalation: $ALLOWESCALATION
           capabilities:
             drop:
             - all
