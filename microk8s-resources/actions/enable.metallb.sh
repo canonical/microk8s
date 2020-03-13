@@ -14,6 +14,12 @@ fi
 
 echo "Enabling MetalLB"
 
+ALLOWESCALATION=false
+if grep  -e ubuntu /proc/version | grep 16.04 &> /dev/null
+then
+  ALLOWESCALATION=true
+fi
+
 read -ra ARGUMENTS <<< "$1"
 if [ -z "${ARGUMENTS[@]}" ]
 then
@@ -32,7 +38,7 @@ REGEX_IP_RANGE='^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*-[0-9][0-9]*\
 if [[ $ip_range =~ $REGEX_IP_RANGE ]]
 then
   echo "Applying registry manifest"
-  cat $SNAP/actions/metallb.yaml | $SNAP/bin/sed "s/{{ip_range}}/$ip_range/g" | $KUBECTL apply -f -
+  cat $SNAP/actions/metallb.yaml | $SNAP/bin/sed "s/{{allow_escalation}}/$ALLOWESCALATION/g" | $SNAP/bin/sed "s/{{ip_range}}/$ip_range/g" | $KUBECTL apply -f -
   echo "MetalLB is enabled"
 else
   echo "You input value ($ip_range) is not a valid IP Range"
