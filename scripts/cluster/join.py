@@ -58,6 +58,11 @@ def get_connection_info(master_ip, master_port, token):
                                     json=req_data,
                                     verify=False)
     if connection_info.status_code != 200:
+        message = "Error code {}.".format(connection_info.status_code)
+        if connection_info.headers.get('content-type') == 'application/json':
+            res_data = connection_info.json()
+            if 'error' in res_data:
+                message = "{} {}".format(message, res_data["error"])
         print("Failed to join cluster. {}".format(connection_info.json()["error"]))
         exit(1)
     return connection_info.json()
