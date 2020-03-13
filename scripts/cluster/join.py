@@ -16,6 +16,7 @@ import yaml
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
+CLUSTER_API_V2="cluster/api/v2.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 ca_cert_file = "{}/certs/ca.crt".format(snapdata_path)
@@ -53,7 +54,7 @@ def get_connection_info(master_ip, master_port, token):
                 "port": cluster_agent_port}
 
     # TODO: enable ssl verification
-    connection_info = requests.post("https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API),
+    connection_info = requests.post("https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API_V2),
                                     json=req_data,
                                     verify=False)
     if connection_info.status_code != 200:

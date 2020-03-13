@@ -2,7 +2,6 @@
 import getopt
 import json
 import os
-import random
 import shutil
 import socket
 import subprocess
@@ -17,12 +16,35 @@ from flask import Flask, jsonify, request, abort, Response
 
 app = Flask(__name__)
 CLUSTER_API="cluster/api/v1.0"
+CLUSTER_API_V2="cluster/api/v2.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 default_port = 25000
 default_listen_interface = "0.0.0.0"
+
+
+@app.route('/{}/sign-cert'.format(CLUSTER_API), methods=['POST'])
+def sign_cert_v1():
+    """
+    Version 1 of web call to sign a certificate
+    Not implemented in this version of MicroK8s.
+    Available in pre-1.18 versions.
+    """
+    error_msg = {"error": "Not possible to sign certs. Try a pre-1.18 version."}
+    return Response(json.dumps(error_msg), mimetype='application/json', status=501)
+
+
+@app.route('/{}/join'.format(CLUSTER_API), methods=['POST'])
+def join_node_v1():
+    """
+    Version 1 of web call to join a node to the cluster.
+    Not implemented in this version of MicroK8s.
+    Available in pre-1.18 versions.
+    """
+    error_msg = {"error": "Not possible to join cluster. Try a pre-1.18 version."}
+    return Response(json.dumps(error_msg), mimetype='application/json', status=501)
 
 
 def get_service_name(service):
@@ -242,7 +264,7 @@ def update_dqlite_ip(host):
     subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
 
 
-@app.route('/{}/join'.format(CLUSTER_API), methods=['POST'])
+@app.route('/{}/join'.format(CLUSTER_API_V2), methods=['POST'])
 def join_node():
     """
     Web call to join a node to the cluster
@@ -288,7 +310,6 @@ def join_node():
                    hostname_override=node_addr)
 
 
-    token = token.strip()
 @app.route('/{}/configure'.format(CLUSTER_API), methods=['POST'])
 def configure():
     """
