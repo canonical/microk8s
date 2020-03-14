@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 import getopt
 import subprocess
+from typing import Tuple, List
+
 import yaml
 
 import requests
-import urllib3
+import urllib3  # type: ignore
 import os
 import sys
 import socket
@@ -17,42 +19,42 @@ snap_path = os.environ.get('SNAP')
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 
 
-def do_op(remote_op):
+def do_op(remote_op) -> None:
     """
     Perform an operation on a remote node
     
     :param remote_op: the operation json string
     """
     with open(callback_token_file, "r+") as fp:
-        token = fp.read()
-        hostname = socket.gethostname()
+        token: str = fp.read()
+        hostname: str = socket.gethostname()
         try:
             # Make sure this node exists
             subprocess.check_output("{}/microk8s-status.wrapper --wait-ready --timeout=60".format(snap_path).split())
             node_yaml = subprocess.check_output("{}/microk8s-kubectl.wrapper get no -o yaml".format(snap_path).split())
             nodes_info = yaml.load(node_yaml, Loader=yaml.FullLoader)
             for node_info in nodes_info["items"]:
-                node = node_info['metadata']['name']
+                node: str = node_info['metadata']['name']
                 # TODO: What if the user has set a hostname override in the kubelet args?
                 if node == hostname:
                     continue
                 print("Configuring node {}".format(node))
                 # TODO: make port configurable
-                node_ep = "{}:{}".format(node, '25000')
+                node_ep: str = "{}:{}".format(node, '25000')
                 remote_op["callback"] = token.rstrip()
                 # TODO: handle ssl verification
-                res = requests.post("https://{}/{}/configure".format(node_ep, CLUSTER_API),
-                                    json=remote_op,
-                                    verify=False)
+                res: requests.models.Response = requests.post("https://{}/{}/configure".format(node_ep, CLUSTER_API),
+                                                                json=remote_op,
+                                                                verify=False)
                 if res.status_code != 200:
-                    print("Failed to perform a {} on node {} ()".format(remote_op["action_str"],
+                    print("Failed to perform a {} on node {} {}".format(remote_op["action_str"],
                                                                         node_ep,
                                                                         res.status_code))
         except subprocess.CalledProcessError:
             print("Node not present")
 
 
-def restart(service):
+def restart(service: str) -> None:
     """
     Restart service on all nodes
     
@@ -71,7 +73,7 @@ def restart(service):
     do_op(remote_op)
 
 
-def update_argument(service, key, value):
+def update_argument(service: str, key: str, value: str) -> None:
     """
     Configure an argument on all nodes
 
@@ -94,7 +96,7 @@ def update_argument(service, key, value):
     do_op(remote_op)
 
 
-def remove_argument(service, key):
+def remove_argument(service: str, key: str):
     """
     Drop an argument from all nodes
 
@@ -114,7 +116,7 @@ def remove_argument(service, key):
     do_op(remote_op)
 
 
-def set_addon(addon, state):
+def set_addon(addon: str, state: str) -> None:
     """
     Enable or disable an add-on across all nodes
 
@@ -137,7 +139,7 @@ def set_addon(addon, state):
         do_op(remote_op)
 
 
-def usage():
+def usage() -> None:
     print("usage: dist_refresh_opt [OPERATION] [SERVICE] (ARGUMENT) (value)")
     print("OPERATION is one of restart, update_argument, remove_argument, set_addon")
 
@@ -148,7 +150,10 @@ if __name__ == "__main__":
         exit(1)
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
+        params: Tuple[List[Tuple[str, str]], List[str]]
+        params = getopt.getopt(sys.argv[1:], "h", ["help"])
+        opts: List[Tuple[str, str]] = params[0]
+        args: List[str] = params[1]
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -161,8 +166,8 @@ if __name__ == "__main__":
         else:
             assert False, "unhandled option"
 
-    operation = args[0]
-    service = args[1]
+    operation: str = args[0]
+    service: str = args[1]
     if operation == "restart":
         restart(service)
     if operation == "update_argument":

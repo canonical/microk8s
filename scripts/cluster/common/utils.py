@@ -4,7 +4,7 @@ import string
 import random
 
 
-def try_set_file_permissions(file):
+def try_set_file_permissions(file: str) -> None:
     """
     Try setting the ownership group and permission of the file
 
@@ -19,7 +19,7 @@ def try_set_file_permissions(file):
         pass
 
 
-def get_callback_token():
+def get_callback_token() -> str:
     """
     Generate a token and store it in the callback token file
 

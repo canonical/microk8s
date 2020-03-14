@@ -8,6 +8,7 @@
 microk8s_source.tar.bz2
 tests/__pycache__
 .idea/
+.mypy_cache/
 **/tests/*.pyc
 /installer/**/__pycache__
 /installer/dist/

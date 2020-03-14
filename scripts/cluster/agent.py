@@ -7,26 +7,28 @@ import socket
 import subprocess
 import sys
 import time
+from typing import Optional, Tuple, List
 
 import yaml
 
-from .common.utils import try_set_file_permissions, get_callback_token
+from .common.utils import try_set_file_permissions, get_callback_token  # type: ignore
 
-from flask import Flask, jsonify, request, abort, Response
+from flask import Flask, jsonify, request, Response, wrappers
+
 
 app = Flask(__name__)
-CLUSTER_API="cluster/api/v1.0"
-CLUSTER_API_V2="cluster/api/v2.0"
-snapdata_path = os.environ.get('SNAP_DATA')
-snap_path = os.environ.get('SNAP')
-cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
-callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
-default_port = 25000
-default_listen_interface = "0.0.0.0"
+CLUSTER_API: str = "cluster/api/v1.0"
+CLUSTER_API_V2: str = "cluster/api/v2.0"
+snapdata_path: Optional[str] = os.environ.get('SNAP_DATA')
+snap_path: Optional[str] = os.environ.get('SNAP')
+cluster_tokens_file: str = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
+callback_token_file: str = "{}/credentials/callback-token.txt".format(snapdata_path)
+default_port: str = "25000"
+default_listen_interface: str = "0.0.0.0"
 
 
 @app.route('/{}/sign-cert'.format(CLUSTER_API), methods=['POST'])
-def sign_cert_v1():
+def sign_cert_v1() -> wrappers.Response:
     """
     Version 1 of web call to sign a certificate
     Not implemented in this version of MicroK8s.
@@ -37,7 +39,7 @@ def sign_cert_v1():
 
 
 @app.route('/{}/join'.format(CLUSTER_API), methods=['POST'])
-def join_node_v1():
+def join_node_v1() -> wrappers.Response:
     """
     Version 1 of web call to join a node to the cluster.
     Not implemented in this version of MicroK8s.
@@ -47,7 +49,7 @@ def join_node_v1():
     return Response(json.dumps(error_msg), mimetype='application/json', status=501)
 
 
-def get_service_name(service):
+def get_service_name(service: str) -> str:
     """
     Returns the service name from its configuration file name.
 
@@ -55,12 +57,12 @@ def get_service_name(service):
     :returns: the service name
     """
     if service in ["kube-proxy", "kube-apiserver", "kube-scheduler", "kube-controller-manager"]:
-        return service[len("kube-"), :]
+        return service[len("kube-"):]
     else:
         return service
 
 
-def update_service_argument(service, key, val):
+def update_service_argument(service: str, key: str, val: Optional[str]) -> None:
     """
     Adds an argument to the arguments file of the service.
 
@@ -69,9 +71,9 @@ def update_service_argument(service, key, val):
     :param val: the value for the argument
     """
 
-    args_file = "{}/args/{}".format(snapdata_path, service)
-    args_file_tmp = "{}/args/{}.tmp".format(snapdata_path, service)
-    found = False
+    args_file: str = "{}/args/{}".format(snapdata_path, service)
+    args_file_tmp: str = "{}/args/{}.tmp".format(snapdata_path, service)
+    found: bool = False
     with open(args_file_tmp, "w+") as bfp:
         with open(args_file, "r+") as fp:
             for _, line in enumerate(fp):
@@ -88,14 +90,14 @@ def update_service_argument(service, key, val):
     shutil.move(args_file_tmp, args_file)
 
 
-def remove_token_from_file(token, file):
+def remove_token_from_file(token: str, file: str) -> None:
     """
     Remove a token from the valid tokens set
 
     :param token: the token to be removed
     :param file: the file to be removed from
     """
-    backup_file = "{}.backup".format(file)
+    backup_file: str = "{}.backup".format(file)
     # That is a critical section. We need to protect it.
     # We are safe for now because flask serves one request at a time.
     with open(backup_file, 'w') as back_fp:
@@ -108,25 +110,25 @@ def remove_token_from_file(token, file):
     shutil.copyfile(backup_file, file)
 
 
-def get_cert(certificate):
+def get_cert(certificate: str) -> str:
     """
     Return the data of the certificate
 
     :returns: the certificate file contents
     """
-    cert_file = "{}/certs/{}".format(snapdata_path, certificate)
+    cert_file: str = "{}/certs/{}".format(snapdata_path, certificate)
     with open(cert_file) as fp:
-        cert = fp.read()
+        cert: str = fp.read()
     return cert
 
 
-def get_cluster_certs():
+def get_cluster_certs() -> Tuple[str, str]:
     """
     Return the cluster certificates
 
     :returns: the cluster certificate files
     """
-    file = "{}/var/kubernetes/backend/cluster.crt".format(snapdata_path)
+    file: str = "{}/var/kubernetes/backend/cluster.crt".format(snapdata_path)
     with open(file) as fp:
         cluster_cert = fp.read()
     file = "{}/var/kubernetes/backend/cluster.key".format(snapdata_path)
@@ -136,7 +138,7 @@ def get_cluster_certs():
     return cluster_cert, cluster_key
 
 
-def get_arg(key, file):
+def get_arg(key: str, file: str) -> Optional[str]:
     """
     Get an argument from an arguments file
 
@@ -144,17 +146,17 @@ def get_arg(key, file):
     :param file: the arguments file to search in
     :returns: the value of the argument or None(if the key doesn't exist)
     """
-    filename = "{}/args/{}".format(snapdata_path, file)
+    filename: str = "{}/args/{}".format(snapdata_path, file)
     with open(filename) as fp:
         for _, line in enumerate(fp):
             if line.startswith(key):
-                args = line.split(' ')
+                args: List[str] = line.split(' ')
                 args = args[-1].split('=')
                 return args[-1].rstrip()
     return None
 
 
-def is_valid(token_line, token_type=cluster_tokens_file):
+def is_valid(token_line: str, token_type: str = cluster_tokens_file) -> bool:
     """
     Check whether a token is valid
 
@@ -174,7 +176,7 @@ def is_valid(token_line, token_type=cluster_tokens_file):
     return False
 
 
-def read_kubelet_args_file(node=None):
+def read_kubelet_args_file(node: Optional[str] = None) -> Optional[str]:
     """
     Return the contents of the kubelet arguments file
     
@@ -189,7 +191,7 @@ def read_kubelet_args_file(node=None):
         return args
 
 
-def get_node_ep(hostname, remote_addr):
+def get_node_ep(hostname: str, remote_addr: str) -> str:
     """
     Return the endpoint to be used for the node based by trying to resolve the hostname provided
     
@@ -205,18 +207,18 @@ def get_node_ep(hostname, remote_addr):
     return remote_addr
 
 
-def get_dqlite_voters():
+def get_dqlite_voters() -> List[str]:
     """
     Get the voting members of the dqlite cluster
 
     :param : the list with the voting members
     """
-    snapdata_path = "/var/snap/microk8s/current"
-    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
-    cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
-    cluster_key_file = "{}/cluster.key".format(cluster_dir)
+    snapdata_path: str = "/var/snap/microk8s/current"
+    cluster_dir: str = "{}/var/kubernetes/backend".format(snapdata_path)
+    cluster_cert_file: str = "{}/cluster.crt".format(cluster_dir)
+    cluster_key_file: str = "{}/cluster.key".format(cluster_dir)
 
-    waits = 10
+    waits: int = 10
     print("Waiting for access to cluster.", end=" ", flush=True)
     while waits > 0:
         try:
@@ -240,14 +242,14 @@ def get_dqlite_voters():
         raise Exception("Could not get cluster info")
 
     nodes = yaml.safe_load(out)
-    voters = []
+    voters: List[str] = []
     for n in nodes:
         if n["Role"] == 0:
             voters.append(n["Address"])
     return voters
 
 
-def update_dqlite_ip(host):
+def update_dqlite_ip(host: str) -> None:
     """
     Update dqlite so it listens on the default interface and not on localhost
 
@@ -265,33 +267,33 @@ def update_dqlite_ip(host):
 
 
 @app.route('/{}/join'.format(CLUSTER_API_V2), methods=['POST'])
-def join_node():
+def join_node() -> wrappers.Response:
     """
     Web call to join a node to the cluster
     """
     if request.headers['Content-Type'] == 'application/json':
-        token = request.json['token']
-        hostname = request.json['hostname']
-        port = request.json['port']
+        token: str = request.json['token']
+        hostname: str = request.json['hostname']
+        port: str = request.json['port']
     else:
         token = request.form['token']
         hostname = request.form['hostname']
         port = request.form['port']
 
     if not is_valid(token):
-        error_msg={"error": "Invalid token"}
+        error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
-    voters = get_dqlite_voters()
+    voters: List[str] = get_dqlite_voters()
     # Check if we need to set dqlite with external IP
     if len(voters) == 1 and voters[0].startswith("127.0.0.1"):
         update_dqlite_ip(request.host.split(":")[0])
         voters = get_dqlite_voters()
-    callback_token = get_callback_token()
+    callback_token: str = get_callback_token()
     remove_token_from_file(token, cluster_tokens_file)
-    node_addr = get_node_ep(hostname, request.remote_addr)
-    api_port = get_arg('--secure-port', 'kube-apiserver')
-    kubelet_args = read_kubelet_args_file()
+    node_addr: str = get_node_ep(hostname, request.remote_addr)
+    api_port: Optional[str] = get_arg('--secure-port', 'kube-apiserver')
+    kubelet_args: Optional[str] = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
 
     return jsonify(ca=get_cert("ca.crt"),
@@ -311,12 +313,12 @@ def join_node():
 
 
 @app.route('/{}/configure'.format(CLUSTER_API), methods=['POST'])
-def configure():
+def configure() -> wrappers.Response:
     """
     Web call to configure the node
     """
     if request.headers['Content-Type'] == 'application/json':
-        callback_token = request.json['callback']
+        callback_token: str = request.json['callback']
         configuration = request.json
     else:
         callback_token = request.form['callback']
@@ -400,23 +402,26 @@ def configure():
     return resp
 
 
-def usage():
+def usage() -> None:
     print("Agent responsible for setting up a cluster. Arguments:")
     print("-l, --listen:   interfaces to listen to (defaults to {})".format(default_listen_interface))
     print("-p, --port:     port to listen to (default {})".format(default_port))
 
 
 if __name__ == '__main__':
-    server_cert = "{SNAP_DATA}/certs/server.crt".format(SNAP_DATA=snapdata_path)
-    server_key = "{SNAP_DATA}/certs/server.key".format(SNAP_DATA=snapdata_path)
+    server_cert: str = "{SNAP_DATA}/certs/server.crt".format(SNAP_DATA=snapdata_path)
+    server_key: str = "{SNAP_DATA}/certs/server.key".format(SNAP_DATA=snapdata_path)
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "hl:p:", ["help", "listen=", "port="])
+        params: Tuple[List[Tuple[str, str]], List[str]]
+        params = getopt.gnu_getopt(sys.argv[1:], "hl:p:", ["help", "listen=", "port="])
+        opts: List[Tuple[str, str]] = params[0]
+        args: List[str] = params[1]
     except getopt.GetoptError as err:
         print(err)  # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
-    port = default_port
-    listen = default_listen_interface
+    port: str = default_port
+    listen: str = default_listen_interface
     for o, a in opts:
         if o in ("-l", "--listen"):
             listen = a
