@@ -5,33 +5,34 @@ import os
 import getopt
 import sys
 import time
+from typing import Dict, Optional, List, Tuple
 
 import requests
 import socket
 import shutil
-import urllib3
+import urllib3  # type: ignore
 
 from common.utils import try_set_file_permissions, get_callback_token
 import yaml
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-CLUSTER_API = "cluster/api/v1.0"
-CLUSTER_API_V2="cluster/api/v2.0"
-snapdata_path = os.environ.get('SNAP_DATA')
-snap_path = os.environ.get('SNAP')
-ca_cert_file = "{}/certs/ca.crt".format(snapdata_path)
-ca_cert_key_file = "{}/certs/ca.key".format(snapdata_path)
-server_cert_file = "{}/certs/server.crt".format(snapdata_path)
-server_cert_key_file = "{}/certs/server.key".format(snapdata_path)
-service_account_key_file = "{}/certs/serviceaccount.key".format(snapdata_path)
-cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
-cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
-cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
-cluster_key_file = "{}/cluster.key".format(cluster_dir)
-callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
+CLUSTER_API: str = "cluster/api/v1.0"
+CLUSTER_API_V2: str="cluster/api/v2.0"
+snapdata_path: Optional[str] = os.environ.get('SNAP_DATA')
+snap_path: Optional[str] = os.environ.get('SNAP')
+ca_cert_file: str = "{}/certs/ca.crt".format(snapdata_path)
+ca_cert_key_file: str = "{}/certs/ca.key".format(snapdata_path)
+server_cert_file: str = "{}/certs/server.crt".format(snapdata_path)
+server_cert_key_file: str = "{}/certs/server.key".format(snapdata_path)
+service_account_key_file: str = "{}/certs/serviceaccount.key".format(snapdata_path)
+cluster_dir: str = "{}/var/kubernetes/backend".format(snapdata_path)
+cluster_backup_dir: str = "{}/var/kubernetes/backend.backup".format(snapdata_path)
+cluster_cert_file: str = "{}/cluster.crt".format(cluster_dir)
+cluster_key_file: str = "{}/cluster.key".format(cluster_dir)
+callback_token_file: str = "{}/credentials/callback-token.txt".format(snapdata_path)
 
 
-def get_connection_info(master_ip, master_port, token):
+def get_connection_info(master_ip: str, master_port: str, token: str) -> Dict[str, str]:
     """
     Contact the master and get all connection information
 
@@ -40,39 +41,39 @@ def get_connection_info(master_ip, master_port, token):
     :param token: the token to contact the master with
     :return: the json response of the master
     """
-    cluster_agent_port = 25000
-    filename = "{}/args/cluster-agent".format(snapdata_path)
+    cluster_agent_port: str = "25000"
+    filename: str = "{}/args/cluster-agent".format(snapdata_path)
     with open(filename) as fp:
         for _, line in enumerate(fp):
             if line.startswith("--port"):
-                cluster_agent_port = line.split(' ')
-                cluster_agent_port = cluster_agent_port[-1].split('=')
-                cluster_agent_port = cluster_agent_port[0].rstrip()
+                port_parse: List[str] = line.split(' ')
+                port_parse = port_parse[-1].split('=')
+                cluster_agent_port = port_parse[0].rstrip()
 
-    req_data = {"token": token,
-                "hostname": socket.gethostname(),
-                "port": cluster_agent_port}
+    req_data: Dict[str, str] = {"token": token,
+                                "hostname": socket.gethostname(),
+                                "port": cluster_agent_port}
 
     # TODO: enable ssl verification
-    connection_info = requests.post("https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API_V2),
+    connection_info: requests.models.Response = requests.post("https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API_V2),
                                     json=req_data,
                                     verify=False)
     if connection_info.status_code != 200:
-        message = "Error code {}.".format(connection_info.status_code)
+        message: str = "Error code {}.".format(connection_info.status_code)
         if connection_info.headers.get('content-type') == 'application/json':
-            res_data = connection_info.json()
+            res_data: Dict[str, str] = connection_info.json()
             if 'error' in res_data:
                 message = "{} {}".format(message, res_data["error"])
-        print("Failed to join cluster. {}".format(connection_info.json()["error"]))
+        print("Failed to join cluster. {}".format(message))
         exit(1)
     return connection_info.json()
 
 
-def usage():
+def usage() -> None:
     print("Join a cluster: microk8s.join <master>:<port>/<token>")
 
 
-def ca_one_line(ca):
+def ca_one_line(ca: str) -> str:
     """
     The CA in one line
     :param ca: the ca
@@ -81,7 +82,7 @@ def ca_one_line(ca):
     return base64.b64encode(ca.encode('utf-8')).decode('utf-8')
 
 
-def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
+def create_kubeconfig(token: str, ca: str, master_ip: str, api_port: str, filename: str, user: str) -> None:
     """
     Create a kubeconfig file. The file in stored under credentials named after the user
 
@@ -92,15 +93,15 @@ def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
     :param filename: the name of the config file
     :param user: the user to use al login
     """
-    snap_path = os.environ.get('SNAP')
-    config_template = "{}/microk8s-resources/{}".format(snap_path, "kubelet.config.template")
-    config = "{}/credentials/{}".format(snapdata_path, filename)
+    snap_path: Optional[str] = os.environ.get('SNAP')
+    config_template: str = "{}/microk8s-resources/{}".format(snap_path, "kubelet.config.template")
+    config: str = "{}/credentials/{}".format(snapdata_path, filename)
     shutil.copyfile(config, "{}.backup".format(config))
     try_set_file_permissions("{}.backup".format(config))
-    ca_line = ca_one_line(ca)
+    ca_line: str = ca_one_line(ca)
     with open(config_template, 'r') as tfp:
         with open(config, 'w+') as fp:
-            config_txt = tfp.read()
+            config_txt: str = tfp.read()
             config_txt = config_txt.replace("CADATA", ca_line)
             config_txt = config_txt.replace("NAME", user)
             config_txt = config_txt.replace("TOKEN", token)
@@ -110,21 +111,25 @@ def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
         try_set_file_permissions(config)
 
 
-def create_admin_kubeconfig(ca):
+def create_admin_kubeconfig(ca: str) ->  None:
     """
     Create a kubeconfig file. The file in stored under credentials named after the admin
 
     :param ca: the ca
     """
-    token = get_token("admin", "basic_auth.csv")
-    config_template = "{}/microk8s-resources/{}".format(snap_path, "client.config.template")
-    config = "{}/credentials/client.config".format(snapdata_path)
+    token: Optional[str] = get_token("admin", "basic_auth.csv")
+    if not token:
+        print("Error, could not locate admin token. Joining cluster failed.")
+        exit(2)
+    assert token is not None
+    config_template: str = "{}/microk8s-resources/{}".format(snap_path, "client.config.template")
+    config: str = "{}/credentials/client.config".format(snapdata_path)
     shutil.copyfile(config, "{}.backup".format(config))
     try_set_file_permissions("{}.backup".format(config))
-    ca_line = ca_one_line(ca)
+    ca_line: str = ca_one_line(ca)
     with open(config_template, 'r') as tfp:
         with open(config, 'w+') as fp:
-            config_txt = tfp.read()
+            config_txt: str = tfp.read()
             config_txt = config_txt.replace("CADATA", ca_line)
             config_txt = config_txt.replace("NAME", "admin")
             config_txt = config_txt.replace("AUTHTYPE", "password")
@@ -133,15 +138,15 @@ def create_admin_kubeconfig(ca):
         try_set_file_permissions(config)
 
 
-def store_cert(filename, payload):
+def store_cert(filename: str, payload: str) -> None:
     """
     Store a certificate
 
     :param filename: where to store the certificate
     :param payload: certificate payload
     """
-    file_with_path = "{}/certs/{}".format(snapdata_path, filename)
-    backup_file_with_path = "{}.backup".format(file_with_path)
+    file_with_path: str = "{}/certs/{}".format(snapdata_path, filename)
+    backup_file_with_path: str = "{}.backup".format(file_with_path)
     shutil.copyfile(file_with_path, backup_file_with_path)
     try_set_file_permissions(backup_file_with_path)
     with open(file_with_path, 'w+') as fp:
@@ -149,7 +154,7 @@ def store_cert(filename, payload):
     try_set_file_permissions(file_with_path)
 
 
-def store_cluster_certs(cluster_cert, cluster_key):
+def store_cluster_certs(cluster_cert: str, cluster_key: str) -> None:
     """
     Store the dqlite cluster certs
 
@@ -164,31 +169,31 @@ def store_cluster_certs(cluster_cert, cluster_key):
     try_set_file_permissions(cluster_key_file)
 
 
-def store_base_kubelet_args(args_string):
+def store_base_kubelet_args(args_string: str) -> None:
     """
     Create a kubelet args file from the set of args provided
 
     :param args_string: the arguments provided
     """
-    args_file = "{}/args/kubelet".format(snapdata_path)
+    args_file: str = "{}/args/kubelet".format(snapdata_path)
     with open(args_file, "w") as fp:
         fp.write(args_string)
     try_set_file_permissions(args_file)
 
 
-def store_callback_token(token):
+def store_callback_token(token: str) -> None:
     """
     Store the callback token
 
     :param stoken: the callback token
     """
-    callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
+    callback_token_file: str = "{}/credentials/callback-token.txt".format(snapdata_path)
     with open(callback_token_file, "w") as fp:
         fp.write(token)
     try_set_file_permissions(callback_token_file)
 
 
-def reset_current_installation():
+def reset_current_installation() -> None:
     """
     Take a node out of a cluster
     """
@@ -202,8 +207,8 @@ def reset_current_installation():
         shutil.copy("{}/cluster.key".format(cluster_backup_dir), "{}/cluster.key".format(cluster_dir))
     else:
         # This nod never joined a cluster. A cluster was formed around it.
-        hostname = socket.gethostname()
-        ip = '127.0.0.1'
+        hostname: str = socket.gethostname()
+        ip: str = '127.0.0.1'
         shutil.copy('{}/microk8s-resources/certs/csr-dqlite.conf.template'.format(snap_path),
                     '{}/var/tmp/csr-dqlite.conf'.format(snapdata_path))
         subprocess.check_call("{}/bin/sed -i s/HOSTNAME/{}/g {}/var/tmp/csr-dqlite.conf"
@@ -217,13 +222,13 @@ def reset_current_installation():
                               .format(snap_path, snapdata_path).split())
 
     # TODO make this port configurable
-    init_data = {'Address': '127.0.0.1:19001'}
+    init_data: Dict[str, str] = {'Address': '127.0.0.1:19001'}
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
     subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
 
-    waits = 10
+    waits: int = 10
     print("Waiting for node to start.", end=" ", flush=True)
     time.sleep(10)
     while waits > 0:
@@ -240,7 +245,7 @@ def reset_current_installation():
     restart_all_services()
 
 
-def get_token(name, tokens_file="known_tokens.csv"):
+def get_token(name: str, tokens_file: str = "known_tokens.csv") -> Optional[str]:
     """
     Get token from known_tokens file
 
@@ -248,7 +253,7 @@ def get_token(name, tokens_file="known_tokens.csv"):
     :param tokens_file: the file where the tokens should go
     :returns: the token or None(if name doesn't exist)
     """
-    file = "{}/credentials/{}".format(snapdata_path, tokens_file)
+    file: str = "{}/credentials/{}".format(snapdata_path, tokens_file)
     with open(file) as fp:
         for line in fp:
             if name in line:
@@ -257,7 +262,7 @@ def get_token(name, tokens_file="known_tokens.csv"):
     return None
 
 
-def update_dqlite(cluster_cert, cluster_key, voters, host):
+def update_dqlite(cluster_cert: str, cluster_key: str, voters: str, host) -> None:
     """
     Configure the dqlite cluster
 
@@ -304,12 +309,12 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     restart_all_services()
 
 
-def restart_all_services():
+def restart_all_services() -> None:
     """
     Restart all services
     """
     subprocess.check_call("{}/microk8s-stop.wrapper".format(snap_path).split())
-    waits = 10
+    waits: int = 10
     while waits > 0:
         try:
             subprocess.check_call("{}/microk8s-start.wrapper".format(snap_path).split())
@@ -321,7 +326,10 @@ def restart_all_services():
 
 if __name__ == "__main__":
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "h", ["help"])
+        params: Tuple[List[Tuple[str, str]], List[str]]
+        params = getopt.gnu_getopt(sys.argv[1:], "h", ["help"])
+        opts: List[Tuple[str, str]] = params[0]
+        args: List[str] = params[1]
     except getopt.GetoptError as err:
         print(err)  # will print something like "option -a not recognized"
         usage()
@@ -342,12 +350,12 @@ if __name__ == "__main__":
             usage()
             sys.exit(4)
 
-        connection_parts = args[0].split("/")
-        token = connection_parts[1]
-        master_ep = connection_parts[0].split(":")
-        master_ip = master_ep[0]
-        master_port = master_ep[1]
-        info = get_connection_info(master_ip, master_port, token)
+        connection_parts: List[str] = args[0].split("/")
+        token: str = connection_parts[1]
+        master_ep: List[str] = connection_parts[0].split(":")
+        master_ip: str = master_ep[0]
+        master_port: str = master_ep[1]
+        info: Dict[str, str] = get_connection_info(master_ip, master_port, token)
 
         if "cluster_key" not in info:
             print("The cluster you are attempting to join is incompatible with the current MicroK8s instance.")
@@ -370,9 +378,13 @@ if __name__ == "__main__":
                           ("kubelet", "kubelet", "kubelet.config"),
                           ("kube-controller-manager", "controller", "controller.config"),
                           ("kube-scheduler", "scheduler", "scheduler.config")]:
-            token = get_token(component[0])
+            component_token: Optional[str] = get_token(component[0])
+            if not component_token:
+                print("Error, could not locate {} token. Joining cluster failed.".format(component[0]))
+                exit(3)
+            assert token is not None
             # TODO make this configurable
-            create_kubeconfig(token, info["ca"], "127.0.0.1", "16443", component[2], component[1])
+            create_kubeconfig(component_token, info["ca"], "127.0.0.1", "16443", component[2], component[1])
         create_admin_kubeconfig(info["ca"])
         store_base_kubelet_args(info["kubelet_args"])
         store_callback_token(info["callback_token"])
