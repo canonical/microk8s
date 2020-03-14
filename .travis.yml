@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 language: bash
 sudo: required
 
@@ -15,14 +15,15 @@ addons:
       - python3-pip   
 
 script:
+  - sudo pip3 install --upgrade pip
+  - sudo pip3 install -U pytest flask mypy
+  - sudo mypy scripts/cluster/agent.py scripts/cluster/join.py scripts/cluster/distributed_op.py
   - sudo /snap/bin/lxd.migrate -yes
   - sudo /snap/bin/lxd waitready
   - sudo /snap/bin/lxd init --auto
   - sudo snapcraft --use-lxd
   - sudo apt update
   - sudo snap install *.snap --classic --dangerous
-  - sudo pip3 install --upgrade pip
-  - sudo pip3 install -U pytest
   - pwd
   - ps -ef
   - ls -l
