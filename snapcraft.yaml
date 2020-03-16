@@ -181,6 +181,7 @@ parts:
     source: .
     python-packages:
     - flask
+    - flask_swagger_ui
     stage-packages:
     - python3-openssl
     - python3-yaml
