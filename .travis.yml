@@ -17,7 +17,7 @@ addons:
 script:
   - sudo pip3 install --upgrade pip
   - sudo pip3 install -U pytest flask mypy
-  - sudo mypy scripts/cluster/agent.py scripts/cluster/join.py scripts/cluster/distributed_op.py
+  - sudo mypy --python-version 3.5 scripts/cluster/agent.py scripts/cluster/join.py scripts/cluster/distributed_op.py scripts/cluster/common/utils.py
   - sudo /snap/bin/lxd.migrate -yes
   - sudo /snap/bin/lxd waitready
   - sudo /snap/bin/lxd init --auto

@@ -17,14 +17,14 @@ from flask import Flask, jsonify, request, Response, wrappers
 
 
 app = Flask(__name__)
-CLUSTER_API: str = "cluster/api/v1.0"
-CLUSTER_API_V2: str = "cluster/api/v2.0"
-snapdata_path: Optional[str] = os.environ.get('SNAP_DATA')
-snap_path: Optional[str] = os.environ.get('SNAP')
-cluster_tokens_file: str = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
-callback_token_file: str = "{}/credentials/callback-token.txt".format(snapdata_path)
-default_port: str = "25000"
-default_listen_interface: str = "0.0.0.0"
+CLUSTER_API = "cluster/api/v1.0"  # type: str
+CLUSTER_API_V2 = "cluster/api/v2.0"  # type: str
+snapdata_path = os.environ.get('SNAP_DATA')  # type:  Optional[str]
+snap_path = os.environ.get('SNAP')  # type:  Optional[str]
+cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)  # type: str
+callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)  # type: str
+default_port = "25000"  # type: str
+default_listen_interface = "0.0.0.0"  # type: str
 
 
 @app.route('/{}/sign-cert'.format(CLUSTER_API), methods=['POST'])
@@ -71,9 +71,9 @@ def update_service_argument(service: str, key: str, val: Optional[str]) -> None:
     :param val: the value for the argument
     """
 
-    args_file: str = "{}/args/{}".format(snapdata_path, service)
-    args_file_tmp: str = "{}/args/{}.tmp".format(snapdata_path, service)
-    found: bool = False
+    args_file = "{}/args/{}".format(snapdata_path, service)  # type:  str
+    args_file_tmp = "{}/args/{}.tmp".format(snapdata_path, service)  # type:  str
+    found = False  # type:  bool
     with open(args_file_tmp, "w+") as bfp:
         with open(args_file, "r+") as fp:
             for _, line in enumerate(fp):
@@ -97,7 +97,7 @@ def remove_token_from_file(token: str, file: str) -> None:
     :param token: the token to be removed
     :param file: the file to be removed from
     """
-    backup_file: str = "{}.backup".format(file)
+    backup_file = "{}.backup".format(file)  # type:  str
     # That is a critical section. We need to protect it.
     # We are safe for now because flask serves one request at a time.
     with open(backup_file, 'w') as back_fp:
@@ -116,9 +116,9 @@ def get_cert(certificate: str) -> str:
 
     :returns: the certificate file contents
     """
-    cert_file: str = "{}/certs/{}".format(snapdata_path, certificate)
+    cert_file = "{}/certs/{}".format(snapdata_path, certificate)  # type: str
     with open(cert_file) as fp:
-        cert: str = fp.read()
+        cert = fp.read()  # type: str
     return cert
 
 
@@ -128,7 +128,7 @@ def get_cluster_certs() -> Tuple[str, str]:
 
     :returns: the cluster certificate files
     """
-    file: str = "{}/var/kubernetes/backend/cluster.crt".format(snapdata_path)
+    file = "{}/var/kubernetes/backend/cluster.crt".format(snapdata_path)  # type:  str
     with open(file) as fp:
         cluster_cert = fp.read()
     file = "{}/var/kubernetes/backend/cluster.key".format(snapdata_path)
@@ -146,11 +146,11 @@ def get_arg(key: str, file: str) -> Optional[str]:
     :param file: the arguments file to search in
     :returns: the value of the argument or None(if the key doesn't exist)
     """
-    filename: str = "{}/args/{}".format(snapdata_path, file)
+    filename = "{}/args/{}".format(snapdata_path, file)  # type:  str
     with open(filename) as fp:
         for _, line in enumerate(fp):
             if line.startswith(key):
-                args: List[str] = line.split(' ')
+                args = line.split(' ')  # type: List[str]
                 args = args[-1].split('=')
                 return args[-1].rstrip()
     return None
@@ -213,12 +213,12 @@ def get_dqlite_voters() -> List[str]:
 
     :param : the list with the voting members
     """
-    snapdata_path: str = "/var/snap/microk8s/current"
-    cluster_dir: str = "{}/var/kubernetes/backend".format(snapdata_path)
-    cluster_cert_file: str = "{}/cluster.crt".format(cluster_dir)
-    cluster_key_file: str = "{}/cluster.key".format(cluster_dir)
+    snapdata_path = "/var/snap/microk8s/current"  # type:  str
+    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)  # type:  str
+    cluster_cert_file = "{}/cluster.crt".format(cluster_dir)  # type:  str
+    cluster_key_file = "{}/cluster.key".format(cluster_dir)  # type:  str
 
-    waits: int = 10
+    waits = 10  # type:  int
     print("Waiting for access to cluster.", end=" ", flush=True)
     while waits > 0:
         try:
@@ -242,7 +242,7 @@ def get_dqlite_voters() -> List[str]:
         raise Exception("Could not get cluster info")
 
     nodes = yaml.safe_load(out)
-    voters: List[str] = []
+    voters = []  # type: List[str]
     for n in nodes:
         if n["Role"] == 0:
             voters.append(n["Address"])
@@ -272,9 +272,9 @@ def join_node() -> wrappers.Response:
     Web call to join a node to the cluster
     """
     if request.headers['Content-Type'] == 'application/json':
-        token: str = request.json['token']
-        hostname: str = request.json['hostname']
-        port: str = request.json['port']
+        token = request.json['token']  # type: str
+        hostname = request.json['hostname']  # type: str
+        port = request.json['port']  # type: str
     else:
         token = request.form['token']
         hostname = request.form['hostname']
@@ -284,16 +284,16 @@ def join_node() -> wrappers.Response:
         error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
-    voters: List[str] = get_dqlite_voters()
+    voters = get_dqlite_voters()  # type: List[str]
     # Check if we need to set dqlite with external IP
     if len(voters) == 1 and voters[0].startswith("127.0.0.1"):
         update_dqlite_ip(request.host.split(":")[0])
         voters = get_dqlite_voters()
-    callback_token: str = get_callback_token()
+    callback_token = get_callback_token()  # type: str
     remove_token_from_file(token, cluster_tokens_file)
-    node_addr: str = get_node_ep(hostname, request.remote_addr)
-    api_port: Optional[str] = get_arg('--secure-port', 'kube-apiserver')
-    kubelet_args: Optional[str] = read_kubelet_args_file()
+    node_addr = get_node_ep(hostname, request.remote_addr)  # type: str
+    api_port = get_arg('--secure-port', 'kube-apiserver')  # type: Optional[str]
+    kubelet_args = read_kubelet_args_file()  # type: Optional[str]
     cluster_cert, cluster_key = get_cluster_certs()
 
     return jsonify(ca=get_cert("ca.crt"),
@@ -318,7 +318,7 @@ def configure() -> wrappers.Response:
     Web call to configure the node
     """
     if request.headers['Content-Type'] == 'application/json':
-        callback_token: str = request.json['callback']
+        callback_token = request.json['callback']  # type: str
         configuration = request.json
     else:
         callback_token = request.form['callback']
@@ -409,19 +409,19 @@ def usage() -> None:
 
 
 if __name__ == '__main__':
-    server_cert: str = "{SNAP_DATA}/certs/server.crt".format(SNAP_DATA=snapdata_path)
-    server_key: str = "{SNAP_DATA}/certs/server.key".format(SNAP_DATA=snapdata_path)
+    server_cert = "{SNAP_DATA}/certs/server.crt".format(SNAP_DATA=snapdata_path)  # type: str
+    server_key = "{SNAP_DATA}/certs/server.key".format(SNAP_DATA=snapdata_path)  # type: str
     try:
-        params: Tuple[List[Tuple[str, str]], List[str]]
+        # params: Tuple[List[Tuple[str, str]], List[str]]
         params = getopt.gnu_getopt(sys.argv[1:], "hl:p:", ["help", "listen=", "port="])
-        opts: List[Tuple[str, str]] = params[0]
-        args: List[str] = params[1]
+        opts = params[0]  # type: List[Tuple[str, str]]
+        args = params[1]  # type: List[str]
     except getopt.GetoptError as err:
         print(err)  # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
-    port: str = default_port
-    listen: str = default_listen_interface
+    port = default_port  # type: str
+    listen = default_listen_interface  # type: str
     for o, a in opts:
         if o in ("-l", "--listen"):
             listen = a
