@@ -72,15 +72,24 @@ def main():
 
     password_overlay = {
         "applications": {
+            "dex-auth": {
+                "options": {
+                    "public-url": hostname,
+                    "static-username": "admin",
+                    "static-password": password,
+                }
+            },
             "katib-db": {"options": {"root_password": get_random_pass()}},
-            "kubeflow-gatekeeper": {"options": {"password": password}},
             "modeldb-db": {"options": {"root_password": get_random_pass()}},
+            "oidc-gatekeeper": {
+                "options": {"public-url": hostname, "client-secret": get_random_pass()}
+            },
             "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
             "pipelines-db": {"options": {"root_password": get_random_pass()}},
         }
     }
 
-    for service in ["dns", "storage", "dashboard", "ingress", "rbac"]:
+    for service in ["dns", "storage", "rbac", "dashboard", "ingress", "metallb:10.64.140.43-10.64.140.49"]:
         print("Enabling %s..." % service)
         run("microk8s-enable.wrapper", service)
 
@@ -109,11 +118,51 @@ def main():
 
         juju("deploy", "cs:kubeflow", "--channel", channel, "--overlay", f.name)
 
+    for _ in range(240):
+        try:
+            juju(
+                'kubectl',
+                'wait',
+                '--for=condition=ready',
+                'pod/cert-manager-webhook-operator-0',
+                die=False,
+            )
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+    else:
+        print("Waited too long for cert manager webhook operator pod to appear.")
+        sys.exit(1)
+
+    run(
+        "microk8s-kubectl.wrapper",
+        'patch',
+        'role',
+        '-n',
+        'kubeflow',
+        'cert-manager-webhook-operator',
+        '-p',
+        json.dumps(
+            {
+                'apiVersion': 'rbac.authorization.k8s.io/v1',
+                'kind': 'Role',
+                'metadata': {'name': 'cert-manager-webhook-operator'},
+                'rules': [
+                    {'apiGroups': [''], 'resources': ['pods'], 'verbs': ['get', 'list']},
+                    {'apiGroups': [''], 'resources': ['pods/exec'], 'verbs': ['create']},
+                    {'apiGroups': [''], 'resources': ['secrets'], 'verbs': ['get', 'list']},
+                ],
+            }
+        ),
+    )
+
     print("Kubeflow deployed.")
     print("Waiting for operator pods to become ready.")
     wait_seconds = 15
     for i in count():
-        status = json.loads(juju("status", "-m", "uk8s:kubeflow", "--format=json", stdout=False))
+        status = json.loads(
+            juju("status", "-m", "uk8s:kubeflow", "--format=json", stdout=False)
+        )
         unready_apps = [
             name
             for name, app in status["applications"].items()
@@ -183,15 +232,15 @@ def main():
         textwrap.dedent(
             """
     Congratulations, Kubeflow is now available.
-    The dashboard is available at https://%s/
+    The dashboard is available at http://%s/
 
         Username: admin
         Password: %s
 
     To see these values again, run:
 
-        microk8s.juju config kubeflow-gatekeeper username
-        microk8s.juju config kubeflow-gatekeeper password
+        microk8s.juju config dex-auth static-username
+        microk8s.juju config dex-auth static-password
 
     To tear down Kubeflow and associated infrastructure, run:
 
