@@ -7,6 +7,7 @@ exit_if_no_permissions() {
     echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:" >&2
     echo "" >&2
     echo "    sudo usermod -a -G microk8s $USER" >&2
+    echo "    sudo chown -f -R $USER ~/.kube" >&2
     echo "" >&2
     echo "The new group will be available on the user's next login." >&2
     exit 1
