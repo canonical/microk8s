@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "description": "Various endpoints to get information and manage your MicorK8s",
+    "description": "Various endpoints to get information and manage your MicroK8s",
     "version": "1.0.0",
     "title": "MicroK8s REST API"
   },
@@ -22,10 +22,10 @@
         "tags": [
           "MicroK8s"
         ],
-        "summary": "Returns MicroK8s version installed",
+        "summary": "Returns the installed version of MicroK8s",
 
         "requestBody": {
-          "description": "Get the installed version for your running MicroK8s",
+          "description": "Provide the token saved in callback-token file",
           "required": true,
           "content": {
             "application/json": {
@@ -55,7 +55,7 @@
         ],
         "summary": "Start MicroK8s",
         "requestBody": {
-          "description": " Provide the token saved in callback-token file",
+          "description": "Provide the token saved in callback-token file",
           "required": true,
           "content": {
             "application/json": {
