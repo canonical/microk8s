@@ -36,7 +36,7 @@
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -60,13 +60,13 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/addon"
+                "$ref": "#/components/schemas/callback"
               }
             }
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -90,13 +90,13 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/addon"
+                "$ref": "#/components/schemas/callback"
               }
             }
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -156,7 +156,7 @@
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -186,7 +186,7 @@
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -218,7 +218,7 @@
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -279,7 +279,7 @@
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -310,7 +310,7 @@
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -340,7 +340,7 @@
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -370,7 +370,7 @@
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -400,7 +400,7 @@
           }
         },
         "produces": [
-          "application/json"
+          "text/plain; charset=utf-8"
         ],
         "responses": {
           "200": {
@@ -441,7 +441,7 @@
           }
         }
       }
-    },
+    }
   },
   "components": {
     "schemas": {
@@ -465,7 +465,7 @@
             "type": "string",
             "format": "string"
           }
-        },
+        }
       },
       "addon": {
         "type": "object",
@@ -478,7 +478,7 @@
             "type": "string",
             "format": "string"
           }
-        },
+        }
       },
       "logs": {
         "type": "object",
