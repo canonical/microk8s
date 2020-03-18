@@ -25,6 +25,9 @@ plugs:
   k8s-kubeproxy:
     interface: kubernetes-support
     flavor: kubeproxy
+  k8s-journald:
+    interface: kubernetes-support
+    flavor: autobind-unix
   dot-kube:
     interface: personal-files
     write:
@@ -79,6 +82,7 @@ apps:
     plugs:
     - network-bind
     - network-observe
+    - k8s-journald
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
@@ -107,6 +111,7 @@ apps:
     daemon: simple
     plugs:
     - network-bind
+    - k8s-journald
   daemon-kubelet:
     command: run-with-config-args kubelet
     daemon: simple
@@ -115,6 +120,7 @@ apps:
     - firewall-control
     - hardware-observe
     - k8s-kubelet
+    - k8s-journald
     - mount-observe
     - network-bind
     - network-control
@@ -602,45 +608,57 @@ parts:
       fi
       snapcraftctl build
 
-  # Unfortunately we cannot add package repositories to our snaps
-  # https://forum.snapcraft.io/t/proposal-additional-package-sources/2199
-  # We handpick the debs we need.
-  # To update these debs add the repository
-  # Follow the instructions in https://github.com/NVIDIA/nvidia-docker and
-  # install the https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list repo.
-  # Use apt-cache show <package> to make sure
-  # a) the dockerd we ship in this snap is supported by nvidia-container-runtime
-  # b) the version dependencies of each package is met.
   nvidia-runtime:
-    plugin: dump
-    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/amd64/nvidia-container-runtime_2.0.0+docker18.06.1-1_amd64.deb
-    source-type: deb
+    plugin: nil
+    build-packages:
+      - gcc
+      - make
+      - pkg-config
+    build-snaps:
+      - go
+    source: https://github.com/NVIDIA/nvidia-container-runtime
+    source-type: git
+    source-tag: "3.1.0"
     override-build: |
       set -eu
-      ARCH=$(dpkg --print-architecture)
-      if ! [ "${ARCH}" = "arm64" ]
-      then
-        snapcraftctl build
-      else
-        echo "Skipped"
-      fi
+      mkdir go
+      export GOPATH="$(pwd)/go"
+      export PATH="${GOPATH}/bin:${PATH}"
+      cd runtime/src/
+      go get -u github.com/pelletier/go-toml
+      go get -u github.com/opencontainers/runtime-spec/specs-go
+      make
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/bin/
+      cp nvidia-container-runtime $SNAPCRAFT_PART_INSTALL/usr/bin/nvidia-container-runtime
+      # cd ../../hook/nvidia-container-runtime-hook
+      # go get -u github.com/BurntSushi/toml
+      # go build
+      # cp nvidia-container-runtime-hook $SNAPCRAFT_PART_INSTALL/usr/bin/nvidia-container-runtime-hook
 
-  nvidia-runtime-hook:
-    plugin: dump
-    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu18.04/amd64/nvidia-container-runtime-hook_1.4.0-1_amd64.deb
-    source-type: deb
+  nvidia-runtime-toolkit:
+    plugin: nil
+    build-packages:
+      - gcc
+      - make
+      - pkg-config
+    build-snaps:
+      - go
+    source: https://github.com/NVIDIA/container-toolkit
+    source-type: git
     override-build: |
       set -eu
-      ARCH=$(dpkg --print-architecture)
-      if ! [ "${ARCH}" = "arm64" ]
-      then
-        snapcraftctl build
-      else
-        echo "Skipped"
-      fi
+      mkdir go
+      export GOPATH="$(pwd)/go"
+      export PATH="${GOPATH}/bin:${PATH}"
+      cd nvidia-container-toolkit/
+      go get -u github.com/BurntSushi/toml
+      go build
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/bin/
+      cp nvidia-container-toolkit $SNAPCRAFT_PART_INSTALL/usr/bin/nvidia-container-toolkit
+      cp nvidia-container-toolkit $SNAPCRAFT_PART_INSTALL/usr/bin/nvidia-container-runtime-hook
 
   libnvidia:
-    after: [libnvidia-tools, patches]
+    after: [patches]
     plugin: nil
     build-packages:
       - gcc
@@ -661,20 +679,6 @@ parts:
       done
       make
       make install
-
-  libnvidia-tools:
-    plugin: dump
-    source: https://nvidia.github.io/libnvidia-container/ubuntu18.04/amd64/libnvidia-container-tools_1.0.0-1_amd64.deb
-    source-type: deb
-    override-build: |
-      set -eu
-      ARCH=$(dpkg --print-architecture)
-      if ! [ "${ARCH}" = "arm64" ]
-      then
-        snapcraftctl build
-      else
-        echo "Skipped"
-      fi
 
   juju:
     plugin: dump
