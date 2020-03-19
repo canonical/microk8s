@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ -z "$HOME" ]
+then
+  mkdir -p $SNAP_DATA/var/tmp/
+  export HOME=$SNAP_DATA/var/tmp/
+fi
+
 set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
