@@ -16,8 +16,7 @@ def is_enabled(addon, item):
     return False
 
 
-def print_console(isReady, enabled_addons, disabled_addons):
-    console_formatter = "{:>1} {:<30} # {}"
+def print_short(isReady, enabled_addons, disabled_addons):
     if isReady:
         print("microk8s is running")
     else:
@@ -27,11 +26,47 @@ def print_console(isReady, enabled_addons, disabled_addons):
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
             for enabled in enabled_addons:
-                print(console_formatter.format("", "{}: enabled".format(enabled["name"]), enabled["description"]))
-            print("")
+                print("{}: enabled".format(enabled["name"]))
         if disabled_addons and len(disabled_addons) > 0:
             for disabled in disabled_addons:
-                print(console_formatter.format("", "{}: disabled".format(disabled["name"]), disabled["description"]))
+                print("{}: disabled".format(disabled["name"]))
+
+
+def print_pretty(isReady, enabled_addons, disabled_addons):
+    console_formatter = "{:>1} {:<20} # {}"
+    if isReady:
+        print("microk8s is running")
+    else:
+        print("microk8s is not running. Use microk8s.inspect for a deeper inspection.")
+
+    if isReady:
+        print("addons:")
+        if enabled_addons and len(enabled_addons) > 0:
+            print('{:>2}'.format("enabled:"))
+            for enabled in enabled_addons:
+                print(console_formatter.format("", enabled["name"], enabled["description"]))
+            print("")
+        if disabled_addons and len(disabled_addons) > 0:
+            print('{:>2}'.format("disabled:"))
+            for disabled in disabled_addons:
+                print(console_formatter.format("", disabled["name"], disabled["description"]))
+
+
+def print_old_yaml(isReady, enabled_addons, disabled_addons):
+    print("microk8s:")
+    print("{:>2} {} {}".format("", "running:", isReady))
+
+    if not isReady:
+        print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s.inspect for a deeper inspection."))
+        return
+
+    if isReady:
+        print("addons:")
+        for enabled in enabled_addons:
+            print("  {}: enabled".format(enabled["name"]))
+
+        for disabled in disabled_addons:
+            print("  {}: disabled".format(disabled["name"]))
 
 
 def print_yaml(isReady, enabled_addons, disabled_addons):
@@ -42,7 +77,7 @@ def print_yaml(isReady, enabled_addons, disabled_addons):
         print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s.inspect for a deeper inspection."))
         return
 
-    if isReady:    
+    if isReady:
         print("{:>2}".format("addons:"))
         for enabled in enabled_addons:
             print("{:>4} name: {:<1}".format("-", enabled["name"]))
@@ -64,7 +99,7 @@ def print_addon_status(enabled):
         print ("disabled")
 
 
-def get_status(available_addons, isReady):  
+def get_status(available_addons, isReady):
     enabled = []
     disabled = []
     if isReady:
@@ -90,19 +125,21 @@ if __name__ == '__main__':
 
     # initiate the parser with a description
     parser = argparse.ArgumentParser(description='Microk8s cluster status check.', prog='microk8s.status')
-    parser.add_argument("-o", "--output", help="print cluster and addon status, output can be in yaml or console",
-                        default="console", choices={"console", "yaml"})
+    parser.add_argument("--format", help="print cluster and addon status, output can be in yaml or console",
+                        default="short", choices={"pretty", "yaml", "short"})
     parser.add_argument("-w", "--wait-ready", help="wait until the cluster is in ready state", nargs='?', const=True,
                         type=bool)
     parser.add_argument("-t", "--timeout",
                         help="specify a timeout in seconds when waiting for the cluster to be ready.", type=int,
                         default=0)
     parser.add_argument("-a", "--addon", help="check the status of an addon.", default="all")
+    parser.add_argument("--yaml", help="DEPRECATED, use '--format yaml' instead", const=True, type=bool)
     # read arguments from the command line
     args = parser.parse_args()
 
     wait_ready = args.wait_ready
     timeout = args.timeout
+    yaml_old = args.yaml
 
     if wait_ready:
         isReady = wait_for_ready(wait_ready, timeout)
@@ -119,7 +156,12 @@ if __name__ == '__main__':
     if args.addon != "all":
         print_addon_status(enabled)
     else:
-        if args.output == "yaml":
+        if args.format == "yaml":
             print_yaml(isReady, enabled, disabled)
+        elif args.format == "pretty":
+            print_pretty(isReady, enabled, disabled)
         else:
-            print_console(isReady, enabled, disabled)
+            if yaml_old:
+                print_old_yaml(isReady, enabled, disabled)
+            else:
+                print_short(isReady, enabled, disabled)
