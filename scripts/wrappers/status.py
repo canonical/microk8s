@@ -28,6 +28,7 @@ def print_console(isReady, enabled_addons, disabled_addons):
         if enabled_addons and len(enabled_addons) > 0:
             for enabled in enabled_addons:
                 print(console_formatter.format("", "{}: enabled".format(enabled["name"]), enabled["description"]))
+            print("")
         if disabled_addons and len(disabled_addons) > 0:
             for disabled in disabled_addons:
                 print(console_formatter.format("", "{}: disabled".format(disabled["name"]), disabled["description"]))
