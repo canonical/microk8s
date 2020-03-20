@@ -583,6 +583,45 @@ def join_node_dqlite():
                    hostname_override=node_addr)
 
 
+@app.route('/{}/upgrade'.format(CLUSTER_API), methods=['POST'])
+def upgrade():
+    """
+    Web call to upgrade the node
+    """
+    callback_token = request.json['callback']
+    callback_token = callback_token.strip()
+    if not is_valid(callback_token, callback_token_file):
+        error_msg={"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+
+    upgrade_request = request.json["upgrade"]
+    phase = request.json["phase"]
+
+    # We expect something like this:
+    '''
+    {
+      "callback": "xyztoken"
+      "phase": "prepare" or "commit"
+      "upgrade": "XYZ-upgrade-name"
+    }
+    '''
+    upgrade_script = '{}/upgrade-scripts/{}/node.sh'.format(snap_path, upgrade_request)
+    if not os.path.isfile(upgrade_script):
+        print("Not ready to execute {}".format(upgrade_script))
+        resp_data = {"result": "not ok"}
+        resp = Response(json.dumps(resp_data), status=404, mimetype='application/json')
+        return resp
+    else:
+        print("Ready to execute {}".format(upgrade_script))
+        if phase == "commit":
+            print("Executing {}".format(upgrade_script))
+            subprocess.check_call(upgrade_script)
+
+        resp_data = {"result": "ok"}
+        resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
+        return resp
+
+
 def usage():
     print("Agent responsible for setting up a cluster. Arguments:")
     print("-l, --listen:   interfaces to listen to (defaults to {})".format(default_listen_interface))
