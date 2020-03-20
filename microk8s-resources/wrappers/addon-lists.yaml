@@ -101,7 +101,7 @@ microk8s-addons:
 
     - name: "linkerd"
       description: "Linkerd is a service mesh for Kubernetes and other frameworks"
-      version: "2.6.0"
+      version: "2.7.0"
       check_status: "pod/linkerd-controller"
       supported_architectures:
       - amd64
@@ -114,7 +114,7 @@ microk8s-addons:
       - amd64
 
     - name: "helm"
-      description: "Helm 2: The package manager for Kubernetes"
+      description: "Helm 2 - the package manager for Kubernetes"
       version: "2.16.0"
       check_status: "${SNAP_DATA}/bin/helm"
       supported_architectures:
@@ -122,17 +122,9 @@ microk8s-addons:
       - arm64
 
     - name: "helm3"
-      description: "Helm 3: Kubernetes package manager"
+      description: "Helm 3 - Kubernetes package manager"
       version: "3.0.2"
       check_status: "${SNAP_DATA}/bin/helm3"
-      supported_architectures:
-      - amd64
-      - arm64
-
-    - name: "juju"
-      description: "Model-driven operator engine"
-      version: "2.7.0"
-      check_status: "${SNAP_DATA}/bin/juju"
       supported_architectures:
       - amd64
       - arm64
