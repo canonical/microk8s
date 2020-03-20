@@ -52,7 +52,7 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
                 print(console_formatter.format("", disabled["name"], disabled["description"]))
 
 
-def print_old_yaml(isReady, enabled_addons, disabled_addons):
+def print_short_yaml(isReady, enabled_addons, disabled_addons):
     print("microk8s:")
     print("{:>2} {} {}".format("", "running:", isReady))
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
 
     wait_ready = args.wait_ready
     timeout = args.timeout
-    yaml_old = args.yaml
+    yaml_short = args.yaml
 
     if wait_ready:
         isReady = wait_for_ready(wait_ready, timeout)
@@ -161,7 +161,7 @@ if __name__ == '__main__':
         elif args.format == "pretty":
             print_pretty(isReady, enabled, disabled)
         else:
-            if yaml_old:
-                print_old_yaml(isReady, enabled, disabled)
+            if yaml_short:
+                print_short_yaml(isReady, enabled, disabled)
             else:
                 print_short(isReady, enabled, disabled)
