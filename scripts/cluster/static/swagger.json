@@ -1,0 +1,518 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "description": "Various endpoints to get information and manage your MicroK8s",
+    "version": "1.0.0",
+    "title": "MicroK8s REST API"
+  },
+  "servers": [
+    {
+      "url": "/cluster/api/v1.0"
+    }
+  ],
+  "tags": [
+    {
+      "name": "MicroK8s",
+      "description": "Supported endpoints"
+    }
+  ],
+  "paths": {
+    "/version": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Returns the installed version of MicroK8s",
+
+        "requestBody": {
+          "description": "Provide the token saved in callback-token file",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/callback"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/start": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Start MicroK8s",
+        "requestBody": {
+          "description": "Provide the token saved in callback-token file",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/callback"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/stop": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Stop MicroK8s",
+        "requestBody": {
+          "description": "Provide the token saved in callback-token file",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/callback"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/status": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Returns MicroK8s status",
+        "requestBody": {
+          "description": "Provide the token saved in callback-token file. Optionally you can provide a specific addon name and get its status",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/addon_optional"
+              }
+            }
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/overview": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Returns MicroK8s overview of all namespaces",
+        "requestBody": {
+          "description": "Provide the token saved in callback-token file",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/callback"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/addon/enable": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Enable MicroK8s addOn",
+        "requestBody": {
+          "description": " Provide the token saved in callback-token file",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/addon"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+
+
+    "/addon/disable": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Disable MicroK8s addOn",
+        "requestBody": {
+          "description": " Provide the token saved in callback-token file",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/addon"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/services": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Returns MicroK8s services information",
+        "requestBody": {
+          "description": "Get MicroK8s services information ",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/callback"
+              }
+            }
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/service/restart": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Restart MicroK8s service",
+
+        "requestBody": {
+          "description": "The name of the MicroK8s service to restart. Run the /services endpoint to get the names ",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/service"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/service/start": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Start a MicroK8s service",
+
+        "requestBody": {
+          "description": "The name of the MicroK8s service to start. Run the /services endpoint to get the names ",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/service"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/service/stop": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Stop a MicroK8s service",
+        "requestBody": {
+          "description": "The name of the MicroK8s service to stop. Run the /services endpoint to get the names ",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/service"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/service/enable": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Enable a MicroK8s service",
+        "requestBody": {
+          "description": "The name of the MicroK8s service to enable. Run the /services endpoint to get the names ",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/service"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/service/disable": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Disable a MicroK8s service",
+        "requestBody": {
+          "description": "The name of the MicroK8s service to disable. Run the /services endpoint to get the names ",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/service"
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain; charset=utf-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    },
+    "/service/logs": {
+      "post": {
+        "tags": [
+          "MicroK8s"
+        ],
+        "summary": "Get the logs of  a MicroK8s service",
+        "requestBody": {
+          "description": "The name of the MicroK8s service to disable. Run the /services endpoint to get the names. Provide the number of lines of logs to return ",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/logs"
+              }
+            }
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad request."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "callback": {
+        "type": "object",
+        "properties": {
+          "callback": {
+            "type": "string",
+            "format": "string"
+          }
+        }
+      },
+      "service": {
+        "type": "object",
+        "properties": {
+          "callback": {
+           "type": "string",
+            "format": "string"
+          },
+          "service": {
+            "type": "string",
+            "format": "string"
+          }
+        }
+      },
+      "addon": {
+        "type": "object",
+        "properties": {
+          "callback": {
+           "type": "string",
+            "format": "string"
+          },
+          "addon": {
+            "type": "string",
+            "format": "string"
+          }
+        }
+      },
+      "addon_optional": {
+        "type": "object",
+        "required": [
+          "callback"
+        ],
+        "properties": {
+          "callback": {
+           "type": "string",
+            "format": "string"
+          },
+          "addon": {
+            "type": "string",
+            "format": "string"
+          }
+        }
+      },
+      "logs": {
+        "type": "object",
+        "properties": {
+          "callback": {
+           "type": "string",
+            "format": "string"
+          },
+          "service": {
+            "type": "string",
+            "format": "string"
+          },
+          "lines": {
+            "type": "number",
+            "format": "integer"
+          }
+        }
+      }
+    }
+  }
+}

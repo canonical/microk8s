@@ -1,6 +1,7 @@
 #!flask/bin/python
 import getopt
 import json
+import yaml
 import os
 import random
 import shutil
@@ -12,6 +13,7 @@ import sys
 from .common.utils import try_set_file_permissions
 
 from flask import Flask, jsonify, request, abort, Response
+from flask_swagger_ui import get_swaggerui_blueprint
 
 app = Flask(__name__)
 CLUSTER_API="cluster/api/v1.0"
@@ -24,6 +26,18 @@ certs_request_tokens_file = "{}/credentials/certs-request-tokens.txt".format(sna
 default_port = 25000
 default_listen_interface = "0.0.0.0"
 
+# -- swagger specific --
+SWAGGER_URL = '/swagger'
+API_URL = '/static/swagger.json'
+SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={
+        'app_name': "MicroK8s REST API"
+    }
+)
+app.register_blueprint(SWAGGERUI_BLUEPRINT, url_prefix=SWAGGER_URL)
+# -- end swagger specific --
 
 def get_service_name(service):
     """
@@ -421,6 +435,245 @@ def configure():
     resp_date = {"result": "ok"}
     resp = Response(json.dumps(resp_date), status=200, mimetype='application/json')
     return resp
+
+
+@app.route('/{}/version'.format(CLUSTER_API), methods=['POST'])
+def version():
+    """
+    Web call to get microk8s version installed
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    output = subprocess.check_output("snap info microk8s".split())
+
+    json_output = yaml.load(output)
+    return json_output["installed"].split(' ')[0]
+
+
+@app.route('/{}/services'.format(CLUSTER_API), methods=['POST'])
+def services():
+    """
+    Web call to get all microk8s services
+    Output sample:
+      microk8s.daemon-apiserver
+      microk8s.daemon-apiserver-kicker
+      microk8s.daemon-cluster-agent
+      microk8s.daemon-containerd
+      microk8s.daemon-controller-manager
+      microk8s.daemon-etcd
+      microk8s.daemon-flanneld
+      microk8s.daemon-kubelet
+      microk8s.daemon-proxy
+      microk8s.daemon-scheduler
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    output = subprocess.check_output("snap info microk8s".split())
+    json_output = yaml.load(output)
+    return json_output["services"]
+
+
+@app.route('/{}/service/restart'.format(CLUSTER_API), methods=['POST'])
+def service_restart():
+    """
+    Web call to restart a service
+    :request_param service: the name of the service
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    if "service" not in request.json or len(request.json["service"].strip()) == 0:
+        error_msg = {"error": "Empty service provided"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+    output = subprocess.check_output("systemctl restart snap.{}.service".format(request.json["service"]).split())
+    return output
+
+
+@app.route('/{}/service/start'.format(CLUSTER_API), methods=['POST'])
+def service_start():
+    """
+    Web call to start a service
+    :request_param service: the name of the service
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    if "service" not in request.json or len(request.json["service"].strip()) == 0:
+        error_msg = {"error": "Empty service provided"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+    output = subprocess.check_output("systemctl start snap.{}.service".format(request.json["service"]).split())
+    return output
+
+
+@app.route('/{}/service/stop'.format(CLUSTER_API), methods=['POST'])
+def service_stop():
+    """
+    Web call to start a service
+    :request_param service: the name of the service
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    if "service" not in request.json or len(request.json["service"].strip()) == 0:
+        error_msg = {"error": "Empty service provided"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+    output = subprocess.check_output("systemctl stop snap.{}.service".format(request.json["service"]).split())
+    return output
+
+
+@app.route('/{}/service/enable'.format(CLUSTER_API), methods=['POST'])
+def service_enable():
+    """
+    Web call to enable a service
+    :request_param service: the name of the service
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    if "service" not in request.json or len(request.json["service"].strip()) == 0:
+        error_msg = {"error": "Empty service provided"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+    output = subprocess.check_output("systemctl enable snap.{}.service".format(request.json["service"]).split())
+    return output
+
+
+@app.route('/{}/service/disable'.format(CLUSTER_API), methods=['POST'])
+def service_disable():
+    """
+    Web call to enable a service
+    :request_param service: the name of the service
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    if "service" not in request.json or len(request.json["service"].strip()) == 0:
+        error_msg = {"error": "Empty service provided"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+    output = subprocess.check_output("systemctl disable snap.{}.service".format(request.json["service"]).split())
+    return output
+
+
+@app.route('/{}/service/logs'.format(CLUSTER_API), methods=['POST'])
+def service_logs():
+    """
+    Web call to the logs of a service
+    :request_param service: the name of the service
+    :request_param lines: total lines | if omitted default value 10 will be used
+    """
+    lines = 10
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    if "service" not in request.json or len(request.json["service"].strip()) == 0:
+        error_msg = {"error": "Empty service provided"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+    if "lines" in request.json:
+        lines = request.json["lines"]
+
+    output = subprocess.check_output("journalctl --lines={} --unit=snap.{}.service --no-pager --output=json-pretty".format(lines, request.json["service"]).split())
+    return output
+
+
+@app.route('/{}/addon/enable'.format(CLUSTER_API), methods=['POST'])
+def enable():
+    """
+    Web call to microk8s.enable <addon>
+    :request_param addon: the name of the addon
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    if "addon" not in request.json or len(request.json["addon"].strip()) == 0:
+        error_msg = {"error": "Empty addon provided"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+    output = subprocess.check_output("{}/microk8s-enable.wrapper {}".format(snap_path, request.json["addon"]).split())
+    return output
+
+
+@app.route('/{}/addon/disable'.format(CLUSTER_API), methods=['POST'])
+def disable():
+    """
+    Web call to microk8s.disable <addon>
+    :request_param addon: the name of the addon
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    if "addon" not in request.json or len(request.json["addon"].strip()) == 0:
+        error_msg = {"error": "Empty addon provided"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+    output = subprocess.check_output("{}/microk8s-disable.wrapper {}".format(snap_path, request.json["addon"]).split())
+    return output
+
+
+@app.route('/{}/start'.format(CLUSTER_API), methods=['POST'])
+def start():
+    """
+    Web call for microk8s.start
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    output = subprocess.check_output("{}/microk8s-start.wrapper".format(snap_path).split())
+    return output
+
+
+@app.route('/{}/stop'.format(CLUSTER_API), methods=['POST'])
+def stop():
+    """
+    Web call for microk8s.stop
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    output = subprocess.check_output("{}/microk8s-stop.wrapper".format(snap_path).split())
+    return output
+
+
+@app.route('/{}/overview'.format(CLUSTER_API), methods=['POST'])
+def overview():
+    """
+    Web call to get the microk8s.kubectl get all --all-namespaces
+    """
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    output = subprocess.check_output("{}/microk8s-kubectl.wrapper get all --all-namespaces".format(snap_path).split())
+    return output
+
+
+@app.route('/{}/status'.format(CLUSTER_API), methods=['POST'])
+def status():
+    """
+    Web call to get the microk8s status
+    """
+    cmd = "{}/microk8s-status.wrapper -o yaml --timeout 60".format(snap_path)
+    if not rest_call_validation(request):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    if "addon" in request.json:
+        cmd = "{}/microk8s-status.wrapper -a {}".format(snap_path, request.json["addon"])
+
+    output = subprocess.check_output(cmd.split())
+
+    if "addon" in request.json:
+        json_output = {"addon": request.json["addon"], "status": output.decode().strip('\n')}
+    else:
+        json_output = yaml.load(output)
+
+    resp = app.response_class(response=json.dumps(json_output), status=200, mimetype='application/json')
+    return resp
+
+
+def rest_call_validation(request):
+    if request.headers['Content-Type'] == 'application/json':
+        print("Here {}".format(request.json))
+        callback_token = request.json['callback']
+    else:
+        callback_token = request.form['callback']
+    return is_valid(callback_token, callback_token_file)
 
 
 def usage():
