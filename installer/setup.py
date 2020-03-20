@@ -29,5 +29,25 @@ setup(
     platforms='any',
     entry_points={'console_scripts': [
         'microk8s=cli.microk8s:cli',
+        'microk8s.add-node=cli.parity:main',
+        'microk8s.cilium=cli.parity:main',
+        'microk8s.config=cli.parity:main',
+        'microk8s.ctr=cli.parity:main',
+        'microk8s.disable=cli.parity:main',
+        'microk8s.enable=cli.parity:main',
+        'microk8s.helm=cli.parity:main',
+        'microk8s.helm3=cli.parity:main',
+        'microk8s.inspect=cli.parity:main',
+        'microk8s.istioctl=cli.parity:main',
+        'microk8s.join=cli.parity:main',
+        'microk8s.juju=cli.parity:main',
+        'microk8s.kubectl=cli.parity:main',
+        'microk8s.leave=cli.parity:main',
+        'microk8s.linkerd=cli.parity:main',
+        'microk8s.remove-node=cli.parity:main',
+        'microk8s.reset=cli.parity:main',
+        'microk8s.start=cli.parity:main',
+        'microk8s.status=cli.parity:main',
+        'microk8s.stop=cli.parity:main'
     ]}
 )
