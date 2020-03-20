@@ -125,15 +125,15 @@ if __name__ == '__main__':
 
     # initiate the parser with a description
     parser = argparse.ArgumentParser(description='Microk8s cluster status check.', prog='microk8s.status')
-    parser.add_argument("--format", help="print cluster and addon status, output can be in yaml or console",
+    parser.add_argument("--format", help="print cluster and addon status, output can be in yaml, pretty or short",
                         default="short", choices={"pretty", "yaml", "short"})
-    parser.add_argument("-w", "--wait-ready", help="wait until the cluster is in ready state", nargs='?', const=True,
-                        type=bool)
+    parser.add_argument("-w", "--wait-ready", action='store_true', help="wait until the cluster is in ready state")
     parser.add_argument("-t", "--timeout",
                         help="specify a timeout in seconds when waiting for the cluster to be ready.", type=int,
                         default=0)
     parser.add_argument("-a", "--addon", help="check the status of an addon.", default="all")
-    parser.add_argument("--yaml", help="DEPRECATED, use '--format yaml' instead", const=True, type=bool)
+    parser.add_argument("--yaml", action='store_true', help="DEPRECATED, use '--format yaml' instead")
+
     # read arguments from the command line
     args = parser.parse_args()
 
