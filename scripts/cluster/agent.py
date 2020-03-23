@@ -328,7 +328,7 @@ def join_node():
 @app.route('/{}/sign-cert'.format(CLUSTER_API), methods=['POST'])
 def sign_cert():
     """
-    Web call to sign a certificate
+        Web call to sign a certificate
     """
     if request.headers['Content-Type'] == 'application/json':
         token = request.json['token']
@@ -367,7 +367,7 @@ def configure():
     # We expect something like this:
     '''
     {
-      "callback": "xyztoken"
+      "callback": "xyztoken",
       "service":
       [
         {
