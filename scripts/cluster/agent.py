@@ -649,7 +649,7 @@ def status():
     """
     Web call to get the microk8s status
     """
-    cmd = "{}/microk8s-status.wrapper -o yaml --timeout 60".format(snap_path)
+    cmd = "{}/microk8s-status.wrapper --format yaml --timeout 60".format(snap_path)
     if not rest_call_validation(request):
         error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
