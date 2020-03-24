@@ -123,7 +123,10 @@ def install(args) -> None:
                     ])
 
     elif platform in ['win32']:
-        pass  # TODO: Set Windows registry to source this file: https://superuser.com/questions/144347/is-there-windows-equivalent-to-the-bashrc-file-in-linux
+        import winreg  # Will raise ImportError if called outside of Windows.
+        cmd = winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\Command Processor', access=winreg.KEY_WRITE)
+        winreg.SetValueEx(cmd, 'AutoRun', 0, winreg.REG_SZ, ALIAS_PATH)
 
 
     parser = argparse.ArgumentParser("microk8s install")

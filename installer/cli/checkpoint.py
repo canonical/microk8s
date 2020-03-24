@@ -35,6 +35,7 @@ def _sync_commands() -> None:
         with open(ALIAS_PATH, 'w') as f:
             for i in _get_microk8s_commands():
                 f.write('doskey microk8s.{0}=microk8s {0}'.format(i))
+        os.system('attrib +h {}'.format(ALIAS_PATH))
 
 
 def _make_checkpoint() -> None:
