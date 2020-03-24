@@ -49,7 +49,7 @@ def kubectl(cmd, timeout_insec=300, err_out=None):
     Returns: the kubectl response in a string
 
     """
-    cmd = '/snap/bin/microk8s.kubectl ' + cmd
+    cmd = '/snap/bin/microk8s kubectl ' + cmd
     return run_until_success(cmd, timeout_insec, err_out)
 
 
@@ -152,7 +152,7 @@ def wait_for_namespace_termination(namespace, timeout_insec=360):
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         try:
-            cmd='/snap/bin/microk8s.kubectl get ns {}'.format(namespace)
+            cmd='/snap/bin/microk8s kubectl get ns {}'.format(namespace)
             output = check_output(cmd.split()).strip().decode('utf8')
             print('Waiting...')
         except CalledProcessError as err:
@@ -179,7 +179,7 @@ def microk8s_enable(addon, timeout_insec=300):
             print("Not a cuda capable system. Will not test gpu addon")
             raise CalledProcessError(1, "Nothing to do for gpu")
 
-    cmd = '/snap/bin/microk8s.enable {}'.format(addon)
+    cmd = '/snap/bin/microk8s enable {}'.format(addon)
     return run_until_success(cmd, timeout_insec)
 
 
@@ -191,7 +191,7 @@ def microk8s_disable(addon):
         addon: name of the addon
 
     """
-    cmd = '/snap/bin/microk8s.disable {}'.format(addon)
+    cmd = '/snap/bin/microk8s disable {}'.format(addon)
     return run_until_success(cmd, timeout_insec=300)
 
 
@@ -207,7 +207,7 @@ def microk8s_reset(cluster_nodes=1):
     """
     Call microk8s reset
     """
-    cmd = '/snap/bin/microk8s.reset'
+    cmd = '/snap/bin/microk8s reset'
     run_until_success(cmd, timeout_insec=300)
     wait_for_installation(cluster_nodes)
 

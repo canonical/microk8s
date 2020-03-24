@@ -240,7 +240,7 @@ def validate_forward():
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "default", "running", label="app=nginx")
     os.system('killall kubectl')
-    os.system('/snap/bin/microk8s.kubectl port-forward pod/nginx 5123:80 &')
+    os.system('/snap/bin/microk8s kubectl port-forward pod/nginx 5123:80 &')
     attempt = 10
     while attempt >= 0:
         try:
@@ -363,7 +363,7 @@ def cilium(cmd, timeout_insec=300, err_out=None):
 
     Returns: the cilium response in a string
     """
-    cmd = '/snap/bin/microk8s.cilium ' + cmd
+    cmd = '/snap/bin/microk8s cilium ' + cmd
     return run_until_success(cmd, timeout_insec, err_out)
 
 
