@@ -64,32 +64,71 @@ def juju(*args, **kwargs):
         return run('microk8s-juju.wrapper', *args, **kwargs)
 
 
+def get_hostname():
+    """Gets the hostname that Ambassador will respond to."""
+
+    # Check if we've manually set a hostname on the ingress
+    try:
+        output = run(
+            "microk8s-kubectl.wrapper",
+            "get",
+            "--namespace=kubeflow",
+            "ingress/ambassador",
+            "-ojson",
+            stdout=False,
+            die=False,
+        )
+        return json.loads(output)["spec"]["rules"][0]["host"]
+    except (KeyError, subprocess.CalledProcessError) as err:
+        pass
+
+    # Otherwise, see if we've set up metallb with a custom service
+    try:
+        output = run(
+            "microk8s-kubectl.wrapper",
+            "get",
+            "--namespace=kubeflow",
+            "svc/ambassador",
+            "-ojson",
+            stdout=False,
+            die=False,
+        )
+        pub_ip = json.loads(output)["status"]["loadBalancer"]["ingress"][0]["ip"]
+        return "%s.xip.io" % pub_ip
+    except (KeyError, subprocess.CalledProcessError) as err:
+        pass
+
+    # If all else fails, just use localhost
+    return "localhost"
+
+
 def main():
     password = os.environ.get("KUBEFLOW_AUTH_PASSWORD") or get_random_pass()
     channel = os.environ.get("KUBEFLOW_CHANNEL") or "stable"
     no_proxy = os.environ.get("KUBEFLOW_NO_PROXY") or None
-    hostname = os.environ.get("KUBEFLOW_HOSTNAME") or "localhost"
+    hostname = os.environ.get("KUBEFLOW_HOSTNAME") or None
 
     password_overlay = {
         "applications": {
             "dex-auth": {
-                "options": {
-                    "public-url": hostname,
-                    "static-username": "admin",
-                    "static-password": password,
-                }
+                "options": {"static-username": "admin", "static-password": password}
             },
             "katib-db": {"options": {"root_password": get_random_pass()}},
             "modeldb-db": {"options": {"root_password": get_random_pass()}},
-            "oidc-gatekeeper": {
-                "options": {"public-url": hostname, "client-secret": get_random_pass()}
-            },
+            "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
             "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
             "pipelines-db": {"options": {"root_password": get_random_pass()}},
         }
     }
 
-    for service in ["dns", "storage", "rbac", "dashboard", "ingress", "metallb:10.64.140.43-10.64.140.49"]:
+    for service in [
+        "dns",
+        "storage",
+        "rbac",
+        "dashboard",
+        "ingress",
+        "metallb:10.64.140.43-10.64.140.49",
+    ]:
         print("Enabling %s..." % service)
         run("microk8s-enable.wrapper", service)
 
@@ -120,11 +159,12 @@ def main():
 
     for _ in range(240):
         try:
-            juju(
-                'kubectl',
-                'wait',
-                '--for=condition=ready',
-                'pod/cert-manager-webhook-operator-0',
+            run(
+                "microk8s-kubectl.wrapper",
+                "wait",
+                "--namespace=kubeflow",
+                "--for=condition=ready",
+                "pod/cert-manager-webhook-operator-0",
                 die=False,
             )
             break
@@ -136,21 +176,32 @@ def main():
 
     run(
         "microk8s-kubectl.wrapper",
-        'patch',
-        'role',
-        '-n',
-        'kubeflow',
-        'cert-manager-webhook-operator',
-        '-p',
+        "patch",
+        "role",
+        "--namespace=kubeflow",
+        "cert-manager-webhook-operator",
+        "-p",
         json.dumps(
             {
-                'apiVersion': 'rbac.authorization.k8s.io/v1',
-                'kind': 'Role',
-                'metadata': {'name': 'cert-manager-webhook-operator'},
-                'rules': [
-                    {'apiGroups': [''], 'resources': ['pods'], 'verbs': ['get', 'list']},
-                    {'apiGroups': [''], 'resources': ['pods/exec'], 'verbs': ['create']},
-                    {'apiGroups': [''], 'resources': ['secrets'], 'verbs': ['get', 'list']},
+                "apiVersion": "rbac.authorization.k8s.io/v1",
+                "kind": "Role",
+                "metadata": {"name": "cert-manager-webhook-operator"},
+                "rules": [
+                    {
+                        "apiGroups": [""],
+                        "resources": ["pods"],
+                        "verbs": ["get", "list"],
+                    },
+                    {
+                        "apiGroups": [""],
+                        "resources": ["pods/exec"],
+                        "verbs": ["create"],
+                    },
+                    {
+                        "apiGroups": [""],
+                        "resources": ["secrets"],
+                        "verbs": ["get", "list"],
+                    },
                 ],
             }
         ),
@@ -189,44 +240,11 @@ def main():
         "--all",
     )
 
-    # Workaround for https://bugs.launchpad.net/juju/+bug/1849725.
-    ingress = json.dumps(
-        {
-            "apiVersion": "extensions/v1beta1",
-            "kind": "Ingress",
-            "metadata": {"name": "ambassador-ingress", "namespace": "kubeflow"},
-            "spec": {
-                "rules": [
-                    {
-                        "host": hostname,
-                        "http": {
-                            "paths": [
-                                {
-                                    "backend": {
-                                        "serviceName": "ambassador",
-                                        "servicePort": 80,
-                                    },
-                                    "path": "/",
-                                }
-                            ]
-                        },
-                    }
-                ],
-                "tls": [{"hosts": [hostname], "secretName": "dummy-tls"}],
-            },
-        }
-    ).encode("utf-8")
-
-    env = os.environ.copy()
-    env["PATH"] += ":%s" % os.environ["SNAP"]
-
-    subprocess.run(
-        ["microk8s-kubectl.wrapper", "apply", "-f", "-"],
-        input=ingress,
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        env=env,
-    ).check_returncode()
+    hostname = hostname or get_hostname()
+    juju("config", "dex-auth", "public-url=http://%s:80" % hostname)
+    juju("config", "oidc-gatekeeper", "public-url=http://%s:80" % hostname)
+    juju("config", "ambassador", "juju-external-hostname=%s" % hostname)
+    juju("expose", "ambassador")
 
     print(
         textwrap.dedent(
