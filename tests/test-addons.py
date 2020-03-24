@@ -106,7 +106,7 @@ class TestAddons(object):
         """
 
         print("Enabling Knative and Istio")
-        p = Popen("/snap/bin/microk8s enable knative".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        p = Popen("/snap/bin/microk8s.enable knative".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         p.communicate(input=b'N\n')[0]
         print("Validating Istio")
         validate_istio()
@@ -125,7 +125,7 @@ class TestAddons(object):
         Sets up and validates Cilium.
         """
         print("Enabling Cilium")
-        p = Popen("/snap/bin/microk8s enable cilium".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        p = Popen("/snap/bin/microk8s.enable cilium".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         p.communicate(input=b'N\n')[0]
         print("Validating Cilium")
         validate_cilium()
