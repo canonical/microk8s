@@ -10,9 +10,9 @@ def print_console(addons):
 
 
 def show_help():
-    print("Usage: microk8s.enable ADDON...")
+    print("Usage: microk8s enable ADDON...")
     print("Enable one or more ADDON included with microk8s")
-    print("Example: microk8s.enable dns storage")
+    print("Example: microk8s enable dns storage")
 
 
 available_addons = get_available_addons(get_current_arch())

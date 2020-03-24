@@ -18,7 +18,7 @@ exit_if_stopped() {
   # test if the snap is marked as stopped
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
   then
-    echo "microk8s is not running, try microk8s.start" >&2
+    echo "microk8s is not running, try microk8s start" >&2
     exit 1
   fi
 }

@@ -239,12 +239,12 @@ def main():
 
     To see these values again, run:
 
-        microk8s.juju config dex-auth static-username
-        microk8s.juju config dex-auth static-password
+        microk8s juju config dex-auth static-username
+        microk8s juju config dex-auth static-password
 
     To tear down Kubeflow and associated infrastructure, run:
 
-       microk8s.disable kubeflow
+       microk8s disable kubeflow
     """
             % (hostname, password)
         )
