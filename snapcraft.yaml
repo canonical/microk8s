@@ -16,6 +16,8 @@ confinement: classic
 base: core
 
 apps:
+  microk8s:
+    command: microk8s.wrapper
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
