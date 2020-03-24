@@ -605,18 +605,25 @@ def upgrade():
       "upgrade": "XYZ-upgrade-name"
     }
     '''
-    upgrade_script = '{}/upgrade-scripts/{}/node.sh'.format(snap_path, upgrade_request)
-    if not os.path.isfile(upgrade_script):
-        print("Not ready to execute {}".format(upgrade_script))
-        resp_data = {"result": "not ok"}
-        resp = Response(json.dumps(resp_data), status=404, mimetype='application/json')
-        return resp
-    else:
-        print("Ready to execute {}".format(upgrade_script))
-        if phase == "commit":
+    if phase == "prepare":
+        upgrade_script = '{}/upgrade-scripts/{}/prepare-node.sh'.format(snap_path, upgrade_request)
+        if not os.path.isfile(upgrade_script):
+            print("Not ready to execute {}".format(upgrade_script))
+            resp_data = {"result": "not ok"}
+            resp = Response(json.dumps(resp_data), status=404, mimetype='application/json')
+            return resp
+        else:
             print("Executing {}".format(upgrade_script))
             subprocess.check_call(upgrade_script)
+            resp_data = {"result": "ok"}
+            resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
+            return resp
 
+    elif phase == "commit":
+        upgrade_script = '{}/upgrade-scripts/{}/commit-node.sh'.format(snap_path, upgrade_request)
+        print("Ready to execute {}".format(upgrade_script))
+        print("Executing {}".format(upgrade_script))
+        subprocess.check_call(upgrade_script)
         resp_data = {"result": "ok"}
         resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
         return resp

@@ -16,7 +16,7 @@ snap_path = os.environ.get('SNAP')
 
 def pre_upgrade_master(upgrade):
     try:
-        pre_upgrade_script='{}/upgrade-scripts/{}/pre-master.sh'.format(snap_path, upgrade)
+        pre_upgrade_script='{}/upgrade-scripts/{}/prepare-master.sh'.format(snap_path, upgrade)
         if os.path.isfile(pre_upgrade_script):
             print("Running pre-upgrade script")
             subprocess.check_output(pre_upgrade_script)
@@ -27,7 +27,7 @@ def pre_upgrade_master(upgrade):
 
 def post_upgrade_master(upgrade):
     try:
-        upgrade_script='{}/upgrade-scripts/{}/master.sh'.format(snap_path, upgrade)
+        upgrade_script='{}/upgrade-scripts/{}/commit-master.sh'.format(snap_path, upgrade)
         if os.path.isfile(upgrade_script):
             print("Running post-upgrade script")
             subprocess.check_output(upgrade_script)
@@ -38,7 +38,7 @@ def post_upgrade_master(upgrade):
 
 def node_upgrade(upgrade, phase, node_ep, token):
     try:
-        upgrade_script='{}/upgrade-scripts/{}/node.sh'.format(snap_path, upgrade)
+        upgrade_script='{}/upgrade-scripts/{}/commit-node.sh'.format(snap_path, upgrade)
         if os.path.isfile(upgrade_script):
             remote_op = {"callback": token, "phase": phase, "upgrade": upgrade}
             # TODO: handle ssl verification
@@ -46,7 +46,7 @@ def node_upgrade(upgrade, phase, node_ep, token):
                                 json=remote_op,
                                 verify=False)
             if res.status_code != 200:
-                print("Failed to perform a {} on node {}".format(remote_op["action_str"], node_ep))
+                print("Failed to perform a {} on node {}".format(remote_op["upgrade"], node_ep))
                 raise Exception("Failed to {} node {}".format(phase, node_ep))
     except subprocess.CalledProcessError as e:
         print("Post-upgrade step failed")
@@ -63,16 +63,17 @@ def run_upgrade(upgrade):
 
     try:
         nodes = subprocess.check_output("{}/microk8s-kubectl.wrapper get no".format(snap_path).split())
-        with open(callback_tokens_file, "r+") as fp:
-            for _, line in enumerate(fp):
-                parts = line.split()
-                node_ep = parts[0]
-                host = node_ep.split(":")[0]
-                print("Preparing node {}.".format(host))
-                if host not in nodes:
-                    print("Node {} not present".format(host))
-                    continue
-                node_info = [(parts[0], parts[1])]
+        if os.path.isfile(callback_tokens_file):
+            with open(callback_tokens_file, "r+") as fp:
+                for _, line in enumerate(fp):
+                    parts = line.split()
+                    node_ep = parts[0]
+                    host = node_ep.split(":")[0]
+                    print("Preparing node {}.".format(host))
+                    if host not in nodes.decode():
+                        print("Node {} not present".format(host))
+                        continue
+                    node_info = [(parts[0], parts[1])]
     except subprocess.CalledProcessError:
         print("Error in gathering cluster node information. Upgrade aborting.".format(host))
         exit(1)
@@ -99,7 +100,7 @@ if __name__ == '__main__':
 
     # initiate the parser with a description
     parser = argparse.ArgumentParser(description='Microk8s supervised upgrades.', prog='microk8s.upgrade')
-    parser.add_argument("-l", "--list", help="list available upgrades",  const=True, type=bool)
+    parser.add_argument("-l", "--list", help="list available upgrades")
     parser.add_argument("-r", "--run", help="run a specific upgrade script", nargs='?', type=str, default=None)
     # read arguments from the command line
     args = parser.parse_args()

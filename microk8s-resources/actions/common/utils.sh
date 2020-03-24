@@ -57,7 +57,7 @@ set_service_expected_to_start() {
 
 remove_vxlan_interfaces() {
   links="$(${SNAP}/sbin/ip link show type vxlan | $SNAP/bin/grep -E 'flannel|cilium_vxlan' | $SNAP/usr/bin/gawk '{print $2}' | $SNAP/usr/bin/tr -d :)"
-  for link in "$links"
+  for link in $links
   do
     if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
     then
