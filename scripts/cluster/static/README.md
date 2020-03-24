@@ -31,20 +31,54 @@ sudo echo "xyztoken" > /var/snap/microk8s/current/credentials/callback-token.txt
 
 ### /configure
 
+- Enable dns
 ```
 curl -k -v -d '{"callback":"xyztoken", "addon": [{"name":"dns","enable":true}]}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/configure
 ```
 Response:
 ```
+{"result": "ok"}
 ```
 
 ### /version
+- Get MicroK8s version
+```
+curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/version
+```
+Response:
+```
+v1.17.4
+```
 
 ### /start
-### /stop
-### /status
+- Start MicroK8s
+- Notes: If MicroK8s has been stopped, the cluster-agent will be down to serve any request. !! This endpoint might be useless !!
+```
+curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/start
+```
+Response (for already started):
+```
+Started.
+Enabling pod scheduling
+node/sx-tpad already uncordoned
+```
+To start a stopped MicroK8s do it the command way:
+```
+microk8s.start
+```
 
-Genera status:
+### /stop
+- Stop MicroK8s
+```
+curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/stop
+```
+Response:
+```
+Microk8s will stop but you will probably get a 500 error since the cluster agent will be stopped also
+```
+
+### /status
+- General status:
 ```
 curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/status
 ```
@@ -155,7 +189,7 @@ Response:
     }
 }
 ```
-Status for an addon:
+- Status for an addon:
 ```
 curl -k -v -d '{"callback":"xyztoken","addon":"dns"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/status
 ```
@@ -163,19 +197,127 @@ Response:
 ```json
 {"status": "disabled", "addon": "dns"}
 ```
+
 ### /overview
+- Get all namespaces
+```
+curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/overview
+```
+
+Response:
+```
+NAMESPACE     NAME                          READY   STATUS    RESTARTS   AGE
+kube-system   pod/coredns-7b67f9f8c-rjq5b   1/1     Running   1          40m
+
+NAMESPACE     NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                  AGE
+default       service/kubernetes   ClusterIP   10.152.183.1    <none>        443/TCP                  58m
+kube-system   service/kube-dns     ClusterIP   10.152.183.10   <none>        53/UDP,53/TCP,9153/TCP   40m
+
+NAMESPACE     NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+kube-system   deployment.apps/coredns   1/1     1            1           40m
+
+NAMESPACE     NAME                                DESIRED   CURRENT   READY   AGE
+kube-system   replicaset.apps/coredns-7b67f9f8c   1         1         1       40m
+```
 
 ### /addon/enable
-
+- Enable an addon
 ```
 curl -k -v -d '{"callback":"xyztoken","addon":"dns"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/addon/enable
 ```
+Response:
+```
+Enabling DNS
+Applying manifest
+serviceaccount/coredns created
+configmap/coredns created
+deployment.apps/coredns created
+service/kube-dns created
+clusterrole.rbac.authorization.k8s.io/coredns created
+clusterrolebinding.rbac.authorization.k8s.io/coredns created
+Restarting kubelet
+DNS is enabled
+```
 
 ### /addon/disable
+- Disable an addon
+```
+curl -k -v -d '{"callback":"xyztoken","addon":"dns"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/addon/disable
+```
+
 ### /services
+- Get all available services
+```
+curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/services
+```
+Response:
+```
+{
+    "microk8s.daemon-apiserver": "simple, enabled, active",
+    "microk8s.daemon-apiserver-kicker": "simple, enabled, active",
+    "microk8s.daemon-cluster-agent": "simple, enabled, active",
+    "microk8s.daemon-containerd": "simple, enabled, active",
+    "microk8s.daemon-controller-manager": "simple, enabled, active",
+    "microk8s.daemon-etcd": "simple, enabled, active",
+    "microk8s.daemon-flanneld": "simple, enabled, active",
+    "microk8s.daemon-kubelet": "simple, enabled, active",
+    "microk8s.daemon-proxy": "simple, enabled, active",
+    "microk8s.daemon-scheduler": "simple, enabled, active"
+}
+```
+
 ### /service/restart
+- Restart a service
+```
+curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/restart
+```
+Response: 200 OK
+
 ### /service/start
+- Start a service
+```
+curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/start
+```
+Response: 200 OK
+
 ### /service/stop
+- Stop a service
+```
+curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/stop
+```
+Response: 200 OK
+
 ### /service/enable
+- Enable a service
+```
+curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/enable
+```
+Response: 200 OK
+
 ### /service/disable
+- Disable a service
+```
+curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/disable
+```
+Response: 200 OK
+
 ### /service/logs
+- Get the service logs
+```
+curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/logs | grep MESSAGE
+```
+Response: 
+```
+-- Logs begin at Thu 2018-06-28 23:18:58 EEST, end at Tue 2020-03-24 14:30:07 EET. --
+Mar 24 13:35:40 sx-tpad flanneld[27444]: warning: ignoring ServerName for user-provided CA for backwards compatibility is deprecated
+Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.401822   27444 main.go:244] Created subnet manager: Etcd Local Manager with Previous Subnet: 10.1.32.0/24
+Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.401829   27444 main.go:247] Installing signal handlers
+Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.409706   27444 main.go:386] Found network config - Backend type: vxlan
+Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.409745   27444 vxlan.go:120] VXLAN config: VNI=1 Port=0 GBP=false DirectRouting=false
+Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.415272   27444 local_manager.go:147] Found lease (10.1.32.0/24) for current IP (10.22.22.95), reusing
+Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.416885   27444 main.go:317] Wrote subnet file to /var/snap/microk8s/common/run/flannel/subnet.env
+Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.416910   27444 main.go:321] Running backend.
+Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.417111   27444 vxlan_network.go:60] watching for new subnet leases
+Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.418877   27444 main.go:429] Waiting for 22h59m59.99709928s to renew lease
+
+```

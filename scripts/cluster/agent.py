@@ -571,8 +571,8 @@ def service_logs():
         return Response(json.dumps(error_msg), mimetype='application/json', status=400)
     if "lines" in request.json:
         lines = request.json["lines"]
-
-    output = subprocess.check_output("journalctl --lines={} --unit=snap.{}.service --no-pager --output=json-pretty".format(lines, request.json["service"]).split())
+    # more info on logs could be obtained by using: --output=json-pretty
+    output = subprocess.check_output("journalctl --lines={} --unit=snap.{}.service --no-pager".format(lines, request.json["service"]).split())
     return output
 
 
