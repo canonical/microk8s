@@ -67,6 +67,7 @@ apps:
     command: run-containerd-with-args
     daemon: simple
     plugs:
+    - k8s-journald
     - network-bind
     - docker-support
     - docker-privileged
