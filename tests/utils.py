@@ -179,7 +179,7 @@ def microk8s_enable(addon, timeout_insec=300):
             print("Not a cuda capable system. Will not test gpu addon")
             raise CalledProcessError(1, "Nothing to do for gpu")
 
-    cmd = '/snap/bin/microk8senable {}'.format(addon)
+    cmd = '/snap/bin/microk8s.enable {}'.format(addon)
     return run_until_success(cmd, timeout_insec)
 
 
