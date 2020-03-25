@@ -169,12 +169,12 @@ def main():
 
     To see these values again, run:
 
-        microk8s.juju config kubeflow-gatekeeper username
-        microk8s.juju config kubeflow-gatekeeper password
+        microk8s juju config kubeflow-gatekeeper username
+        microk8s juju config kubeflow-gatekeeper password
 
     To tear down Kubeflow and associated infrastructure, run:
 
-       microk8s.disable kubeflow
+       microk8s disable kubeflow
     """
             % (password_overlay["applications"]["kubeflow-gatekeeper"]["options"]["password"])
         )
