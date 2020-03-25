@@ -60,7 +60,7 @@ def is_cluster_ready():
 def is_cluster_locked():
     clusterLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
     if os.path.isfile(clusterLockFile):
-        print("This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.status on the master.")
+        print("This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s status on the master.")
         exit(0)
 
 

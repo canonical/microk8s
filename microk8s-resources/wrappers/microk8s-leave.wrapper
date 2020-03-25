@@ -10,9 +10,9 @@ export SNAP_NAME
 source $SNAP/actions/common/utils.sh
 
 if echo "$*" | grep -q -- 'help'; then
-  echo "Usage: microk8s.leave"
+  echo "Usage: microk8s leave"
   echo ""
-  echo "With microk8s.leave the node will depart from the cluster it is in."
+  echo "With microk8s leave the node will depart from the cluster it is in."
   exit 0
 fi
 

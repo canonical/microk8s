@@ -224,4 +224,3 @@ def update_yaml_with_arch(manifest_file):
     with open(manifest_file, 'w') as f:
         s = s.replace('$ARCH', arch)
         f.write(s)
-
