@@ -7,7 +7,7 @@ ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 
 if [ ! -f "${SNAP_DATA}/bin/helm" ]; then
-  echo "Helm not available, try enabling it with 'microk8s.enable helm'" >&2
+  echo "Helm not available, try enabling it with 'microk8s enable helm'" >&2
   exit 0
 fi
 
