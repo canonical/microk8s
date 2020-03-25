@@ -15,6 +15,6 @@ script:
   - export UNDER_TIME_PRESURE="True"
   - (cd tests; pytest -s verify-branches.py)
   - (cd tests; sudo pytest -s test-addons.py)
-  - sudo microk8s.reset
+  - sudo microk8s reset
   - sudo snap remove microk8s
   - sudo UPGRADE_MICROK8S_FROM=1.15/edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade.py
