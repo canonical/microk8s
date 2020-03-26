@@ -18,7 +18,7 @@ while true; do
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
             echo
-            echo "Retrieve the client config, similar to microk8s.kubectl config view --raw"
+            echo "Retrieve the client config, similar to microk8s kubectl config view --raw"
             echo
             echo "Options:"
             echo " -h, --help          Show this help"

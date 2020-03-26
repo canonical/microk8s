@@ -76,7 +76,7 @@ class TestAddons(object):
         p.communicate(input=b'Y\n')[0]
         '''
         We would disable DNS here but this freezes any terminating pods.
-        We let microk8s.reset to do the cleanup.
+        We let microk8s reset to do the cleanup.
         print("Disabling DNS")
         microk8s_disable("dns")
         '''

@@ -6,7 +6,7 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu"
 
 if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
-  echo "Linkerd not available, try enabling Linkerd. 'microk8s.enable linkerd' or 'microk8s.enable linkerd:--proxy-auto-inject' "
+  echo "Linkerd not available, try enabling Linkerd. 'microk8s enable linkerd' or 'microk8s enable linkerd:--proxy-auto-inject' "
   exit 0
 fi
 
