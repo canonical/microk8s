@@ -65,7 +65,7 @@ fi
 lxc exec $NAME -- /var/tmp/tests/patch-kube-proxy.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
 lxc exec $NAME -- script -e -c "pytest -s /var/tmp/tests/test-addons.py"
-lxc exec $NAME -- microk8s.reset
+lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
 
 # Test addons upgrade

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -e
+
+function help() {
+    echo "Available subcommands are:"
+    for i in $(ls ${SNAP}/microk8s-*.wrapper | sed 's/microk8s-//g' | sed 's/.wrapper//g'); do
+        echo -e "\t$(basename ${i})"
+    done
+    echo -e "\tinspect"
+}
+
+if [ -z "$1" ]; then
+    help
+    exit 1
+fi
+
+readonly APP="$1"
+shift
+
+if [ -f "${SNAP}/microk8s-${APP}.wrapper" ]; then
+    "${SNAP}/microk8s-${APP}.wrapper" "$@"
+    readonly EXIT="$?"
+elif [ "${APP}" == "inspect" ]; then
+    sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    readonly EXIT="$?"
+elif [ "${APP}" == "help" ] || [ "${APP}" == "--help" ] || [ "$APP" == "-h" ]; then
+    help
+    readonly EXIT="0"
+else
+    echo "'${APP}' is not a valid MicroK8s subcommand."
+    help
+    readonly EXIT="1"
+fi
+
+exit ${EXIT}
