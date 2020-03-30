@@ -27,7 +27,12 @@ go get -d $KUBERNETES_REPOSITORY || true
   make clean
   for app in ${path_apps}
   do
-    make WHAT="${app}" GOFLAGS=-tags=libsqlite3,dqlite CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/ -DHAS_USLEEP=1" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" KUBE_CGO_OVERRIDES=kube-apiserver
+    if [ "$app" = "cmd/kube-apiserver" ]
+    then
+      make WHAT="${app}" GOFLAGS=-tags=libsqlite3,dqlite CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" KUBE_CGO_OVERRIDES=kube-apiserver
+    else
+      make WHAT="${app}"
+    fi
   done
 )
 for app in $apps; do

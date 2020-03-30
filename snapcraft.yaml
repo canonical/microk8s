@@ -88,6 +88,7 @@ apps:
 parts:
   libco:
     source: https://github.com/canonical/libco
+    build-attributes: [no-patchelf]
     source-type: git
     plugin: make
     organize:
@@ -96,6 +97,7 @@ parts:
       - lib/libco*so*
   raft:
     source: https://github.com/canonical/raft
+    build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
     stage-packages:
@@ -109,6 +111,7 @@ parts:
   sqlite:
     source: https://github.com/canonical/sqlite
     source-type: git
+    build-attributes: [no-patchelf]
     plugin: autotools
     configflags:
       - --enable-replication
@@ -137,6 +140,7 @@ parts:
       - raft
       - sqlite
     source: https://github.com/canonical/dqlite
+    build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
     stage-packages:
