@@ -8,7 +8,7 @@ source $SNAP/actions/common/utils.sh
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.config on the master."
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s config on the master."
   exit 0
 fi
 
@@ -24,7 +24,7 @@ while true; do
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
             echo
-            echo "Retrieve the client config, similar to microk8s.kubectl config view --raw"
+            echo "Retrieve the client config, similar to microk8s kubectl config view --raw"
             echo
             echo "Options:"
             echo " -h, --help          Show this help"

@@ -20,14 +20,14 @@ mkdir -p $KUBE_SNAP_BINS
   if [ "$KUBE_ARCH" = "amd64" ]
   then
     # Knative, not quite binares but still fetcing.
-    mkdir knative-yaml
-    curl -L https://github.com/knative/serving/releases/download/$KNATIVE_SERVING_VERSION/serving.yaml -o ./knative-yaml/serving.yaml
-    curl -L https://github.com/knative/eventing/releases/download/$KNATIVE_EVENTING_VERSION/release.yaml  -o ./knative-yaml/release.yaml
-    curl -L https://github.com/knative/serving/releases/download/$KNATIVE_SERVING_VERSION/monitoring.yaml  -o ./knative-yaml/monitoring.yaml
+    mkdir -p knative-yaml/setup
+    curl -L https://github.com/knative/serving/releases/download/$KNATIVE_SERVING_VERSION/serving-crds.yaml -o ./knative-yaml/setup/serving-crds.yaml
+    curl -L https://github.com/knative/serving/releases/download/$KNATIVE_SERVING_VERSION/serving-core.yaml -o ./knative-yaml/serving-core.yaml
 
-    # This patch should be removed as soon as https://github.com/knative/serving/issues/5599 is fixed
-    sed -i 's@extensions/v1beta1@apps/v1@g'  ./knative-yaml/monitoring.yaml
-    sed -i '570 i \ \ selector:\n    matchLabels:\n      app: kube-state-metrics' ./knative-yaml/monitoring.yaml
-    sed -i '6985 i \ \ selector:\n    matchLabels:\n      app: node-exporter' ./knative-yaml/monitoring.yaml
+    curl -L https://github.com/knative/eventing/releases/download/$KNATIVE_EVENTING_VERSION/eventing-crds.yaml -o ./knative-yaml/setup/eventing-crds.yaml
+    curl -L https://github.com/knative/eventing/releases/download/$KNATIVE_EVENTING_VERSION/eventing-core.yaml -o ./knative-yaml/eventing-core.yaml
+    curl -L https://github.com/knative/eventing/releases/download/$KNATIVE_EVENTING_VERSION/in-memory-channel.yaml -o ./knative-yaml/in-memory-channel.yaml
+    curl -L https://github.com/knative/eventing/releases/download/$KNATIVE_EVENTING_VERSION/channel-broker.yaml -o ./knative-yaml/channel-broker.yaml
+    curl -L https://github.com/knative/serving/releases/download/$KNATIVE_EVENTING_VERSION/monitoring-core.yaml -o ./knative-yaml/monitoring-core.yaml
   fi
 )

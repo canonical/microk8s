@@ -20,7 +20,7 @@ def print_short(isReady, enabled_addons, disabled_addons):
     if isReady:
         print("microk8s is running")
     else:
-        print("microk8s is not running. Use microk8s.inspect for a deeper inspection.")
+        print("microk8s is not running. Use microk8s inspect for a deeper inspection.")
 
     if isReady:
         print("addons:")
@@ -37,7 +37,7 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
     if isReady:
         print("microk8s is running")
     else:
-        print("microk8s is not running. Use microk8s.inspect for a deeper inspection.")
+        print("microk8s is not running. Use microk8s inspect for a deeper inspection.")
 
     if isReady:
         print("addons:")
@@ -57,7 +57,7 @@ def print_short_yaml(isReady, enabled_addons, disabled_addons):
     print("{:>2} {} {}".format("", "running:", isReady))
 
     if not isReady:
-        print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s.inspect for a deeper inspection."))
+        print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s inspect for a deeper inspection."))
         return
 
     if isReady:
@@ -74,7 +74,7 @@ def print_yaml(isReady, enabled_addons, disabled_addons):
     print("{:>2} {} {}".format("", "running:", isReady))
 
     if not isReady:
-        print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s.inspect for a deeper inspection."))
+        print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s inspect for a deeper inspection."))
         return
 
     if isReady:
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     is_cluster_locked()
 
     # initiate the parser with a description
-    parser = argparse.ArgumentParser(description='Microk8s cluster status check.', prog='microk8s.status')
+    parser = argparse.ArgumentParser(description='Microk8s cluster status check.', prog='microk8s status')
     parser.add_argument("--format", help="print cluster and addon status, output can be in yaml, pretty or short",
                         default="short", choices={"pretty", "yaml", "short"})
     parser.add_argument("-w", "--wait-ready", action='store_true', help="wait until the cluster is in ready state")

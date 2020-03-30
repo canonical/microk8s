@@ -27,7 +27,7 @@ then
   if [ -z "${ip_range}" ]
   then
     echo "You have to input an IP Range value when asked, or provide it as an argument to the enable command, eg:"
-    echo "  microk8s.enable metallb:10.64.140.43-10.64.140.49"
+    echo "  microk8s enable metallb:10.64.140.43-10.64.140.49"
     exit 1
   fi
 else

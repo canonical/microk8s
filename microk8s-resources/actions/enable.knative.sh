@@ -26,10 +26,7 @@ n=0
 until [ $n -ge 10 ]
 do
   sleep 3
-  ($KUBECTL apply --selector knative.dev/crd-install=true \
-    -f ${SNAP}/actions/knative/serving.yaml \
-    -f ${SNAP}/actions/knative/release.yaml \
-    -f ${SNAP}/actions/knative/monitoring.yaml) && break
+  ($KUBECTL apply -f ${SNAP}/actions/knative/setup/) && break
   n=$[$n+1]
   if [ $n -ge 10 ]; then
     echo "Knative failed to install"
@@ -42,10 +39,11 @@ n=0
 until [ $n -ge 10 ]
 do
   sleep 3
-  ($KUBECTL apply  \
-    -f ${SNAP}/actions/knative/serving.yaml \
-    -f ${SNAP}/actions/knative/release.yaml \
-    -f ${SNAP}/actions/knative/monitoring.yaml) && break
+  ($KUBECTL apply -f ${SNAP}/actions/knative/eventing-core.yaml) && \
+  ($KUBECTL apply -f ${SNAP}/actions/knative/serving-core.yaml) &&  \
+  ($KUBECTL apply -f ${SNAP}/actions/knative/channel-broker.yaml) && \
+  ($KUBECTL apply -f ${SNAP}/actions/knative/in-memory-channel.yaml) && \
+  ($KUBECTL apply -f ${SNAP}/actions/knative/monitoring-core.yaml) && break
   n=$[$n+1]
   if [ $n -ge 10 ]; then
     echo "Knative failed to install"
