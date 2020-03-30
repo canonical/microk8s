@@ -204,6 +204,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/callback'
+            example:
+              callback: xyztoken
       responses:
         '200':
           description: OK

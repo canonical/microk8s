@@ -325,6 +325,9 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/callback"
+              },
+              "example": {
+                "callback": "xyztoken"
               }
             }
           }
@@ -694,7 +697,7 @@
           "configuration": {
             "type": "string",
             "format": "string",
-            "example": "{ \"callback\": \"xyztoken\", \"service\": [ { \"name\": \"kubelet\", \"arguments_remove\": [ \"myoldarg\" ], \"arguments_update\": [ {\"myarg\": \"myvalue\"}, {\"myarg2\": \"myvalue2\"}, {\"myarg3\": \"myvalue3\"} ], \"restart\": false }, { \"name\": \"kube-proxy\", \"restart\": true } ], \"addon\": [ { \"name\": \"gpu\", \"enable\": true }, { \"name\": \"gpu\", \"disable\": true } ] }"
+            "example": "{ \"service\": [ { \"name\": \"kubelet\", \"arguments_remove\": [ \"myoldarg\" ], \"arguments_update\": [ {\"myarg\": \"myvalue\"}, {\"myarg2\": \"myvalue2\"}, {\"myarg3\": \"myvalue3\"} ], \"restart\": false }, { \"name\": \"kube-proxy\", \"restart\": true } ], \"addon\": [ { \"name\": \"gpu\", \"enable\": true }, { \"name\": \"gpu\", \"disable\": true } ] }"
           }
         }
       },

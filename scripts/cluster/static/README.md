@@ -35,7 +35,7 @@ sudo echo "xyztoken" > /var/snap/microk8s/current/credentials/callback-token.txt
 ```
 curl -k -v -d '{"callback":"xyztoken", "addon": [{"name":"dns","enable":true}]}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/configure
 ```
-Response:
+- Response:
 ```
 {"result": "ok"}
 ```
@@ -45,18 +45,18 @@ Response:
 ```
 curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/version
 ```
-Response:
+- Response:
 ```
 v1.17.4
 ```
 
 ### /start
 - Start MicroK8s
-- Notes: If MicroK8s has been stopped, the cluster-agent will be down to serve any request. !! This endpoint might be useless !!
+- Notes: If MicroK8s has been stopped, the cluster-agent will be down to serve any request. 
 ```
 curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/start
 ```
-Response (for already started):
+- Response (for already started):
 ```
 Started.
 Enabling pod scheduling
@@ -72,7 +72,7 @@ microk8s.start
 ```
 curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/stop
 ```
-Response:
+- Response:
 ```
 Microk8s will stop but you will probably get a 500 error since the cluster agent will be stopped also
 ```
@@ -82,7 +82,7 @@ Microk8s will stop but you will probably get a 500 error since the cluster agent
 ```
 curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/status
 ```
-Response:
+- Response:
 ```json
 {
     "addons": [{
@@ -171,10 +171,7 @@ Response:
         "name": "rbac",
         "description": "Role-Based Access Control for authorisation"
     }, {
-        * Closing connection 0 *
-        TLSv1 .0(OUT),
-        TLS alert,
-        Client hello(1): "version": 2.6,
+        "version": 2.6,
         "status": "disabled",
         "name": "registry",
         "description": "Private image registry exposed on localhost:32000"
@@ -193,7 +190,7 @@ Response:
 ```
 curl -k -v -d '{"callback":"xyztoken","addon":"dns"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/status
 ```
-Response:
+- Response:
 ```json
 {"status": "disabled", "addon": "dns"}
 ```
@@ -204,7 +201,7 @@ Response:
 curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/overview
 ```
 
-Response:
+- Response:
 ```
 NAMESPACE     NAME                          READY   STATUS    RESTARTS   AGE
 kube-system   pod/coredns-7b67f9f8c-rjq5b   1/1     Running   1          40m
@@ -225,7 +222,7 @@ kube-system   replicaset.apps/coredns-7b67f9f8c   1         1         1       40
 ```
 curl -k -v -d '{"callback":"xyztoken","addon":"dns"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/addon/enable
 ```
-Response:
+- Response:
 ```
 Enabling DNS
 Applying manifest
@@ -250,7 +247,7 @@ curl -k -v -d '{"callback":"xyztoken","addon":"dns"}' -H "Content-Type: applicat
 ```
 curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/services
 ```
-Response:
+- Response:
 ```
 {
     "microk8s.daemon-apiserver": "simple, enabled, active",
@@ -271,42 +268,42 @@ Response:
 ```
 curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/restart
 ```
-Response: 200 OK
+- Response: 200 OK
 
 ### /service/start
 - Start a service
 ```
 curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/start
 ```
-Response: 200 OK
+- Response: 200 OK
 
 ### /service/stop
 - Stop a service
 ```
 curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/stop
 ```
-Response: 200 OK
+- Response: 200 OK
 
 ### /service/enable
 - Enable a service
 ```
 curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/enable
 ```
-Response: 200 OK
+- Response: 200 OK
 
 ### /service/disable
 - Disable a service
 ```
 curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/disable
 ```
-Response: 200 OK
+- Response: 200 OK
 
 ### /service/logs
 - Get the service logs
 ```
-curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/logs | grep MESSAGE
+curl -k -v -d '{"callback":"xyztoken", "service":"microk8s.daemon-flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/logs
 ```
-Response: 
+- Response: 
 ```
 -- Logs begin at Thu 2018-06-28 23:18:58 EEST, end at Tue 2020-03-24 14:30:07 EET. --
 Mar 24 13:35:40 sx-tpad flanneld[27444]: warning: ignoring ServerName for user-provided CA for backwards compatibility is deprecated
