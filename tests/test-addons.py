@@ -20,6 +20,7 @@ from validators import (
     validate_rbac,
     validate_cilium,
     validate_kubeflow,
+    validate_cluster_agent_api
 )
 from utils import (
     microk8s_enable,
@@ -213,3 +214,10 @@ class TestAddons(object):
         validate_kubeflow()
         print("Disabling kubeflow")
         microk8s_disable("kubeflow")
+
+    def test_cluster_agent_api(self):
+        """
+        Test cluster-agent API
+        """
+        print("Validating cluster-agent REST APIs")
+        validate_cluster_agent_api()
