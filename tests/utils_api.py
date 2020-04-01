@@ -6,8 +6,7 @@ import json
 import shutil
 
 BASE_URL = "https://127.0.0.1:25000/cluster/api/v1.0"
-SNAP_DATA_PATH = os.environ.get('SNAP_DATA')
-CALLBACK_TOKEN_FILE = "{}/credentials/callback-token.txt".format(SNAP_DATA_PATH)
+CALLBACK_TOKEN_FILE = "/var/snap/microk8s/current/credentials/callback-token.txt"
 
 
 class TestClusterAgentApi(object):
