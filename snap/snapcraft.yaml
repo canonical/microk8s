@@ -245,7 +245,7 @@ apps:
     plugs:
     - network
   juju:
-    command: microk8s-juju.wrapper
+    command: bin/snapcraft-preload $SNAP/microk8s-juju.wrapper
     plugs:
     - network
 
@@ -265,6 +265,14 @@ passthrough:
       bind: $SNAP_DATA/kubelet
     /var/lib/kube-proxy:
       bind: $SNAP_DATA/kube-proxy
+    /etc/nvidia-container-runtime/config.toml:
+      bind-file: $SNAP_COMMON/etc/nvidia-container-runtime/config.toml
+    /var/log/nvidia-container-runtime.log:
+      bind-file: $SNAP_COMMON/var/log/nvidia-container-runtime.log
+    /usr/lib/x86_64-linux-gnu/libnvoptix.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvoptix.so.1
+    /usr/lib/x86_64-linux-gnu/libnvoptix.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvoptix.so.435.21
     /usr/lib/x86_64-linux-gnu/libnvidia-tls.so.435.21:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-tls.so.435.21
     /usr/lib/x86_64-linux-gnu/libnvcuvid.so:
@@ -353,6 +361,13 @@ parts:
     plugin: dump
     source: patches/
     prime: ["-*"]
+  snapcraft-preload:
+      source: https://github.com/sergiusens/snapcraft-preload.git
+      plugin: cmake
+      build-packages:
+        - on amd64:
+          - gcc-multilib
+          - g++-multilib
   libnftnl:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
