@@ -135,7 +135,6 @@ microk8s-addons:
       check_status: "pod/ambassador-operator-0"
       supported_architectures:
       - amd64
-      - arm64
 
     - name: "metallb"
       description: "Loadbalancer for your Kubernetes cluster"
