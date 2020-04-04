@@ -28,7 +28,7 @@ default_listen_interface = "0.0.0.0"
 
 # -- swagger specific --
 SWAGGER_URL = '/swagger'
-API_URL = '/static/swagger.json'
+API_URL = '/swagger.json'
 SWAGGERUI_BLUEPRINT = get_swaggerui_blueprint(
     SWAGGER_URL,
     API_URL,
@@ -447,7 +447,7 @@ def version():
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
     output = subprocess.check_output("snap info microk8s".split())
 
-    json_output = yaml.load(output)
+    json_output = yaml.full_load(output)
     return json_output["installed"].split(' ')[0]
 
 
@@ -471,7 +471,7 @@ def services():
         error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
     output = subprocess.check_output("snap info microk8s".split())
-    json_output = yaml.load(output)
+    json_output = yaml.full_load(output)
     return json_output["services"]
 
 
@@ -661,10 +661,17 @@ def status():
     if "addon" in request.json:
         json_output = {"addon": request.json["addon"], "status": output.decode().strip('\n')}
     else:
-        json_output = yaml.load(output)
+        json_output = yaml.full_load(output)
 
     resp = app.response_class(response=json.dumps(json_output), status=200, mimetype='application/json')
     return resp
+
+
+@app.route('/swagger.json', methods=['GET'])
+def swagger_json():
+    with open(os.path.join(os.path.dirname(__file__), "static/swagger.yaml")) as f:
+        content = f.read()
+    return yaml.full_load(content)
 
 
 def rest_call_validation(request):
