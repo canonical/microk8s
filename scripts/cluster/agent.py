@@ -676,7 +676,6 @@ def swagger_json():
 
 def rest_call_validation(request):
     if request.headers['Content-Type'] == 'application/json':
-        print("Here {}".format(request.json))
         callback_token = request.json['callback']
     else:
         callback_token = request.form['callback']
