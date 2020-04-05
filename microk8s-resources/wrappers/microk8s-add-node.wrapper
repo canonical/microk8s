@@ -37,11 +37,8 @@ exit_if_stopped
 # We throw away some randomness by only selecting bytes in the A-Za-z range and taking the first 32 such bytes,
 # so instead of 32*8 = 256 bits of randomness you get approx 182 bits. This is good enough for this short lived tokens.
 token=$(< /dev/urandom tr -dc A-Za-z | head -c32;echo;)
-echo ${token} >> $SNAP_DATA/credentials/cluster-tokens.txt
-if getent group microk8s >/dev/null 2>&1
-then
-  chgrp microk8s $SNAP_DATA/credentials/cluster-tokens.txt || true
-fi
+# Call add-token wrapper to add it to the cluster-tokens.txt file.
+$SNAP/microk8s-add-token.wrapper --token $token --ttl 3600
 
 port="25000"
 if grep -e port "${SNAP_DATA}"/args/cluster-agent &> /dev/null

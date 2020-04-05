@@ -53,6 +53,8 @@ apps:
     completer: kubectl.bash
   add-node:
     command: microk8s-add-node.wrapper
+  add-token:
+    command: microk8s-add-token.wrapper    
   join:
     command: microk8s-join.wrapper
   remove-node:

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+ARCH="$($SNAP/bin/uname -m)"
+export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+
+source $SNAP/actions/common/utils.sh
+
+exit_if_no_permissions
+
+if [ ! -f "$SNAP_DATA/credentials/cluster-tokens.txt" ]; then
+  touch $SNAP_DATA/credentials/cluster-tokens.txt 
+fi
+
+if getent group microk8s >/dev/null 2>&1
+then
+  chgrp microk8s $SNAP_DATA/credentials/cluster-tokens.txt || true
+fi
+
+LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/add_token.py $@

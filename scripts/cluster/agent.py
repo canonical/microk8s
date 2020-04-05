@@ -8,8 +8,9 @@ import socket
 import string
 import subprocess
 import sys
+import time
 
-from .common.utils import try_set_file_permissions
+from .common.utils import try_set_file_permissions, remove_expired_token_from_file
 
 from flask import Flask, jsonify, request, abort, Response
 
@@ -144,7 +145,6 @@ def remove_token_from_file(token, file):
 
     shutil.copyfile(backup_file, file)
 
-
 def get_token(name):
     """
     Get token from known_tokens file
@@ -228,7 +228,10 @@ def is_valid(token_line, token_type=cluster_tokens_file):
 
     with open(token_type) as fp:
         for _, line in enumerate(fp):
-            if token == line.strip():
+            token_in_file = line.strip()
+            if "|" in line :
+                token_in_file = line.strip().split('|')[0]            
+            if token == token_in_file:
                 return True
     return False
 
@@ -280,12 +283,14 @@ def join_node():
         port = request.form['port']
         callback_token = request.form['callback']
 
+    # Remove expired tokens
+    remove_expired_token_from_file(cluster_tokens_file)
+
     if not is_valid(token):
         error_msg={"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
     add_token_to_certs_request(token)
-    remove_token_from_file(token, cluster_tokens_file)
 
     node_addr = get_node_ep(hostname, request.remote_addr)
     node_ep = "{}:{}".format(node_addr, port)
