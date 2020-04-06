@@ -14,8 +14,10 @@ from .common.utils import try_set_file_permissions
 
 from flask import Flask, jsonify, request, abort, Response
 from flask_swagger_ui import get_swaggerui_blueprint
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 CLUSTER_API="cluster/api/v1.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
