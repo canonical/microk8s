@@ -184,6 +184,7 @@ parts:
     python-packages:
     - flask
     - flask_swagger_ui
+    - flask_cors
     - PyYAML
     stage-packages:
     - python3-openssl
