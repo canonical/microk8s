@@ -28,7 +28,7 @@ for addon in "$@"; do
   action="$(addon_name $addon)"
   arguments="$(addon_arguments $addon)"
   # Check if the addon is already enabled, then skip.
-  if ${SNAP}/microk8s-status.wrapper --addon $action | grep "enabled" >/dev/null; then
+  if ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 --addon $action | grep "enabled" >/dev/null; then
     echo "Addon $action is already enabled."
     result=0
     continue
