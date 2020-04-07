@@ -124,7 +124,6 @@ def main():
     for service in [
         "dns",
         "storage",
-        "rbac",
         "dashboard",
         "ingress",
         "metallb:10.64.140.43-10.64.140.49",

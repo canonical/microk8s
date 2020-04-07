@@ -4,6 +4,7 @@ import re
 import requests
 import platform
 import utils_api
+import yaml
 
 from utils import (
     kubectl,
@@ -218,7 +219,12 @@ def validate_registry():
     """
     Validate the private registry.
     """
+
     wait_for_pod_state("", "container-registry", "running", label="app=registry")
+    pvc_stdout = kubectl("get pvc registry-claim -n container-registry -o yaml")
+    pvc_yaml = yaml.safe_load(pvc_stdout)
+    storage = pvc_yaml['spec']['resources']['requests']['storage']
+    assert re.match("(^[2-9][0-9]{1,}|^[1-9][0-9]{2,})(Gi$)",storage)
     docker("pull busybox")
     docker("tag busybox localhost:32000/my-busybox")
     docker("push localhost:32000/my-busybox")
