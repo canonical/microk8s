@@ -50,6 +50,13 @@ curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X P
 v1.17.4
 ```
 
+You can enable a GET request to get the version without having to provide the token in a json body. To do so, you must create a file with the name 'enable_extended_api' under '/var/snap/microk8s/current/args/enable_extended_api', having the same token value with '/var/snap/microk8s/current/credentials/callback-token.txt'
+
+```
+sudo echo "xyztoken" > /var/snap/microk8s/current/args/enable-extended-api
+curl -k -v -X GET https://127.0.0.1:25000/cluster/api/v1.0/version
+```
+
 ### /start
 - Start MicroK8s
 - Notes: If MicroK8s has been stopped, the cluster-agent will be down to serve any request. 
@@ -195,6 +202,13 @@ curl -k -v -d '{"callback":"xyztoken","addon":"dns"}' -H "Content-Type: applicat
 {"status": "disabled", "addon": "dns"}
 ```
 
+You can enable a GET request to get the status without having to provide the token in a json body. To do so, you must create a file with the name 'enable_extended_api' under '/var/snap/microk8s/current/args/enable_extended_api', having the same token value with '/var/snap/microk8s/current/credentials/callback-token.txt'
+
+```
+sudo echo "xyztoken" > /var/snap/microk8s/current/args/enable-extended-api
+curl -k -v -X GET https://127.0.0.1:25000/cluster/api/v1.0/status
+```
+
 ### /overview
 - Get all namespaces
 ```
@@ -215,6 +229,51 @@ kube-system   deployment.apps/coredns   1/1     1            1           40m
 
 NAMESPACE     NAME                                DESIRED   CURRENT   READY   AGE
 kube-system   replicaset.apps/coredns-7b67f9f8c   1         1         1       40m
+```
+
+### /config
+- Get microk8s config
+
+> YOU MUST enable extended api to make this endpoint ACTIVE. You can enable by creating a file with the name 'enable_extended_api' under '/var/snap/microk8s/current/args/enable_extended_api', having the same token value with '/var/snap/microk8s/current/credentials/callback-token.txt'
+```
+sudo echo "xyztoken" > /var/snap/microk8s/current/args/enable-extended-api
+curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/config
+```
+- Response:
+```json
+{
+    "apiVersion": "v1",
+    "clusters": [
+        {
+            "cluster": {
+                "certificate-authority-data": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FUR.......",
+                "server": "https://10.22.22.95:16443"
+            },
+            "name": "microk8s-cluster"
+        }
+    ],
+    "contexts": [
+        {
+            "context": {
+                "cluster": "microk8s-cluster",
+                "user": "admin"
+            },
+            "name": "microk8s"
+        }
+    ],
+    "current-context": "microk8s",
+    "kind": "Config",
+    "preferences": {},
+    "users": [
+        {
+            "name": "admin",
+            "user": {
+                "username": "admin",
+                "password": "Rkh2TDFrb3htT2NBb1gyVkh6M2pIYXVpblNpRmpwY3loVml6S2l2UjRHTT0K"
+            }
+        }
+    ]
+}
 ```
 
 ### /addon/enable

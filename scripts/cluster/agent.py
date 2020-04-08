@@ -10,7 +10,7 @@ import string
 import subprocess
 import sys
 
-from .common.utils import try_set_file_permissions
+from common.utils import try_set_file_permissions
 
 from flask import Flask, jsonify, request, abort, Response
 from flask_swagger_ui import get_swaggerui_blueprint
@@ -25,8 +25,12 @@ cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 certs_request_tokens_file = "{}/credentials/certs-request-tokens.txt".format(snapdata_path)
+enable_extended_api_file = "{}/args/enable-extended-api".format(snapdata_path)
 default_port = 25000
 default_listen_interface = "0.0.0.0"
+ext_api_error_message = "{} request is not allowed if Extended API is not enabled. You can enable it by creating " \
+                        "a file with the name 'enable-extended-api' under '" + enable_extended_api_file + "', " \
+                        "HAVING THE SAME TOKEN VALUE with '" + callback_token_file + "'"
 
 # -- swagger specific --
 SWAGGER_URL = '/swagger'
@@ -439,14 +443,17 @@ def configure():
     return resp
 
 
-@app.route('/{}/version'.format(CLUSTER_API), methods=['POST'])
+@app.route('/{}/version'.format(CLUSTER_API), methods=['POST', 'GET'])
 def version():
     """
     Web call to get microk8s version installed
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    if request.method.upper() == 'GET' and not is_extended_api_enabled():
+        error_msg = {"error": ext_api_error_message.format('GET')}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+    if request.method.upper() == 'POST':
+        v = callback_token_validation(request)
+        if not v["valid"]: return v["response"]
     output = subprocess.check_output("snap info microk8s".split())
 
     json_output = yaml.full_load(output)
@@ -469,12 +476,11 @@ def services():
       microk8s.daemon-proxy
       microk8s.daemon-scheduler
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     output = subprocess.check_output("snap info microk8s".split())
     json_output = yaml.full_load(output)
-    return json_output["services"]
+    return app.response_class(response=json.dumps(json_output["services"], sort_keys=False, indent=4), status=200, mimetype='application/json')
 
 
 @app.route('/{}/service/restart'.format(CLUSTER_API), methods=['POST'])
@@ -483,9 +489,8 @@ def service_restart():
     Web call to restart a service
     :request_param service: the name of the service
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     if "service" not in request.json or len(request.json["service"].strip()) == 0:
         error_msg = {"error": "Empty service provided"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=400)
@@ -499,9 +504,8 @@ def service_start():
     Web call to start a service
     :request_param service: the name of the service
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     if "service" not in request.json or len(request.json["service"].strip()) == 0:
         error_msg = {"error": "Empty service provided"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=400)
@@ -515,9 +519,8 @@ def service_stop():
     Web call to start a service
     :request_param service: the name of the service
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     if "service" not in request.json or len(request.json["service"].strip()) == 0:
         error_msg = {"error": "Empty service provided"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=400)
@@ -531,9 +534,8 @@ def service_enable():
     Web call to enable a service
     :request_param service: the name of the service
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     if "service" not in request.json or len(request.json["service"].strip()) == 0:
         error_msg = {"error": "Empty service provided"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=400)
@@ -547,9 +549,8 @@ def service_disable():
     Web call to enable a service
     :request_param service: the name of the service
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     if "service" not in request.json or len(request.json["service"].strip()) == 0:
         error_msg = {"error": "Empty service provided"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=400)
@@ -565,9 +566,8 @@ def service_logs():
     :request_param lines: total lines | if omitted default value 10 will be used
     """
     lines = 10
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     if "service" not in request.json or len(request.json["service"].strip()) == 0:
         error_msg = {"error": "Empty service provided"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=400)
@@ -584,9 +584,8 @@ def enable():
     Web call to microk8s.enable <addon>
     :request_param addon: the name of the addon
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     if "addon" not in request.json or len(request.json["addon"].strip()) == 0:
         error_msg = {"error": "Empty addon provided"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=400)
@@ -600,9 +599,8 @@ def disable():
     Web call to microk8s.disable <addon>
     :request_param addon: the name of the addon
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     if "addon" not in request.json or len(request.json["addon"].strip()) == 0:
         error_msg = {"error": "Empty addon provided"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=400)
@@ -615,9 +613,8 @@ def start():
     """
     Web call for microk8s.start
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     output = subprocess.check_output("{}/microk8s-start.wrapper".format(snap_path).split())
     return output
 
@@ -627,9 +624,8 @@ def stop():
     """
     Web call for microk8s.stop
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     output = subprocess.check_output("{}/microk8s-stop.wrapper".format(snap_path).split())
     return output
 
@@ -639,49 +635,89 @@ def overview():
     """
     Web call to get the microk8s.kubectl get all --all-namespaces
     """
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
     output = subprocess.check_output("{}/microk8s-kubectl.wrapper get all --all-namespaces".format(snap_path).split())
     return output
 
 
-@app.route('/{}/status'.format(CLUSTER_API), methods=['POST'])
+@app.route('/{}/status'.format(CLUSTER_API), methods=['POST', 'GET'])
 def status():
     """
     Web call to get the microk8s status
     """
     cmd = "{}/microk8s-status.wrapper --format yaml --timeout 60".format(snap_path)
-    if not rest_call_validation(request):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
-    if "addon" in request.json:
-        cmd = "{}/microk8s-status.wrapper -a {}".format(snap_path, request.json["addon"])
+    if request.method.upper() == 'GET' and not is_extended_api_enabled():
+        error_msg = {"error": ext_api_error_message.format('GET')}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+    if request.method.upper() == 'POST':
+        v = callback_token_validation(request)
+        if not v["valid"]: return v["response"]
+        if "addon" in request.json:
+            cmd = "{}/microk8s-status.wrapper -a {}".format(snap_path, request.json["addon"])
 
     output = subprocess.check_output(cmd.split())
 
-    if "addon" in request.json:
+    if request.json and "addon" in request.json:
         json_output = {"addon": request.json["addon"], "status": output.decode().strip('\n')}
     else:
         json_output = yaml.full_load(output)
 
-    resp = app.response_class(response=json.dumps(json_output), status=200, mimetype='application/json')
-    return resp
+    return app.response_class(response=json.dumps(json_output, sort_keys=False, indent=4), status=200, mimetype='application/json')
+
+
+@app.route('/{}/config'.format(CLUSTER_API), methods=['POST'])
+def config():
+    """
+    Web call to get the microk8s config
+    """
+    cmd = "{}/microk8s-config.wrapper".format(snap_path)
+    if not is_extended_api_enabled():
+        error_msg = {"error": ext_api_error_message.format('This')}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
+
+    v = callback_token_validation(request)
+    if not v["valid"]: return v["response"]
+
+    output = subprocess.check_output(cmd.split())
+    json_output = yaml.full_load(output)
+
+    return app.response_class(response=json.dumps(json_output, sort_keys=False, indent=4), status=200, mimetype='application/json')
 
 
 @app.route('/swagger.json', methods=['GET'])
 def swagger_json():
     with open(os.path.join(os.path.dirname(__file__), "static/swagger.yaml")) as f:
         content = f.read()
-    return yaml.full_load(content)
+    return app.response_class(response=json.dumps(yaml.full_load(content), sort_keys=False, indent=4), status=200, mimetype='application/json')
 
 
-def rest_call_validation(request):
+def callback_token_validation(request):
     if request.headers['Content-Type'] == 'application/json':
         callback_token = request.json['callback']
     else:
         callback_token = request.form['callback']
-    return is_valid(callback_token, callback_token_file)
+    valid = is_valid(callback_token, callback_token_file)
+    resp = None
+    if not valid:
+        error_msg = {"error": "Invalid token"}
+        resp = Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    return {"valid": valid, "response": resp}
+
+
+def is_extended_api_enabled():
+    """
+    Check if user has created enable_extended_api, having the same token value with credentials/callback-token.txt
+    """
+    if not os.path.exists(enable_extended_api_file):
+        return False
+
+    with open(callback_token_file, 'r') as file:
+        cb_token_file_value = file.read().replace('\n', '')
+    with open(enable_extended_api_file, 'r') as file:
+        enable_extended_api_file_value = file.read().replace('\n', '')
+
+    return cb_token_file_value == enable_extended_api_file_value
 
 
 def usage():

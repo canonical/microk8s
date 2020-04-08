@@ -123,6 +123,24 @@ paths:
 
         '400':
           description: Bad request.
+    get:
+      tags:
+        - MicroK8s
+      summary: Returns the installed version of MicroK8s
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                version:
+                  summary: Version output example
+                  value: v1.17.4
+
+        '400':
+          description: Bad request.
   /start:
     post:
       tags:
@@ -192,6 +210,19 @@ paths:
                 type: object
         '400':
           description: Bad request.
+    get:
+      tags:
+        - MicroK8s
+      summary: Returns MicroK8s status
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request.
   /overview:
     post:
       tags:
@@ -217,6 +248,49 @@ paths:
                 overview:
                   summary: Overview example
                   value: "NAMESPACE   NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE default     service/kubernetes   ClusterIP   10.152.183.1   <none>        443/TCP   10h"
+        '400':
+          description: Bad request.
+  /config:
+    post:
+      tags:
+        - MicroK8s
+      summary: Returns MicroK8s config information
+      requestBody:
+        description: 'Get MicroK8s config information '
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/callback'
+            example:
+              callback: xyztoken
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                apiVersion: v1
+                clusters:
+                  - cluster:
+                      certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FUR.......
+                      server: https://10.22.22.95:16443
+                    name: microk8s-cluster
+                contexts:
+                  - context:
+                      cluster: microk8s-cluster
+                      user: admin
+                    name: microk8s
+                current-context: microk8s
+                kind: Config
+                preferences: {}
+                users:
+                  - name: admin
+                    user:
+                      username: admin
+                      password: Rkh2TDFrb3htT2NBb1gyVkh6.....
         '400':
           description: Bad request.
   /addon/enable:
