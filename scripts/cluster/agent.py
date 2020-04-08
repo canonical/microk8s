@@ -10,7 +10,7 @@ import string
 import subprocess
 import sys
 
-from common.utils import try_set_file_permissions
+from .common.utils import try_set_file_permissions
 
 from flask import Flask, jsonify, request, abort, Response
 from flask_swagger_ui import get_swaggerui_blueprint
