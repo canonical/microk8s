@@ -24,18 +24,15 @@ KUBECTL="$SNAP/microk8s-kubectl.wrapper"
 CHECK_NAMESPACE=$($KUBECTL get namespaces)
 if ! echo $CHECK_NAMESPACE | grep "microdash" >/dev/null
 then
-    echo "Creating microdash namespace since it does not exist"
     $KUBECTL create namespace microdash
 fi
 
 CHECK_SECRET=$($KUBECTL -n microdash get secrets)
 if echo $CHECK_SECRET | grep "cb-token" >/dev/null
 then
-    echo "Delete existing cb-token secret under microdash namespace"
     $KUBECTL delete secret cb-token -n microdash
 fi
 
-echo "Creating new cb-token secret under microdash namespace"
 $KUBECTL create secret generic cb-token --from-literal=token.txt="${TOKEN}" --namespace microdash
 
 use_manifest microdash apply
