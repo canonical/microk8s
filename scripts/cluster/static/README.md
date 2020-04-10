@@ -29,6 +29,18 @@ https://127.0.0.1:25000/swagger
 sudo echo "xyztoken" > /var/snap/microk8s/current/credentials/callback-token.txt
 ```
 
+### Sending the token
+
+You can send the token-to-validate having two options:
+1. Passing a json body {"callback":"\<value\>"} to the POST request and declaring a 'Content-Type' = 'application/json' header 
+2. Passing the token value in a header with the name 'Callback-Token'
+
+A curl example for getting the /version endpoint with json body or header:
+```
+curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/version
+# or
+curl -k -v -H "Callback-Token: xyztoken" -X POST https://127.0.0.1:25000/cluster/api/v1.0/version
+```
 ### /configure
 
 - Enable dns
