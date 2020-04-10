@@ -61,6 +61,46 @@ lxc file pull test-build/root/microk8s/microk8s_v1.9.6_amd64.snap .
 snap install microk8s_latest_amd64.snap --classic --dangerous
 ```
 
+## Compiling the Cilium CNI manifest
+
+The cilium CNI manifest can be found under `microk8s-resource/cni/cilium/`. Building the manifest is subject to
+the upstream cilium project k8s installation process. At the time of the v1.7 release the following script was used to place the
+cilium manifest under `$SNAP_DATA/args/cni-network/cilium.yaml`:
+
+```
+#!/bin/bash
+
+set -x
+
+SNAP_DATA="/var/snap/microk8s/current"
+SNAP_COMMON="/var/snap/microk8s/common"
+
+CILIUM_VERSION="v1.7"
+CILIUM_ERSION=$(echo $CILIUM_VERSION | sed 's/v//g')
+SOURCE_URI="https://github.com/cilium/cilium/archive"
+CILIUM_DIR="cilium-$CILIUM_ERSION"
+CILIUM_CNI_CONF="plugins/cilium-cni/05-cilium-cni.conf"
+CILIUM_LABELS="k8s-app=cilium"
+NAMESPACE=kube-system
+
+mkdir -p /tmp/cilium
+cd /tmp/cilium
+curl -L $SOURCE_URI/$CILIUM_VERSION.tar.gz -o "/tmp/cilium/cilium.tar.gz"
+gzip -f -d /tmp/cilium/cilium.tar.gz
+tar -xf /tmp/cilium/cilium.tar "$CILIUM_DIR/install" "$CILIUM_DIR/$CILIUM_CNI_CONF"
+cp /tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
+
+cd "/tmp/cilium/$CILIUM_DIR/install/kubernetes"
+helm template cilium \
+   --namespace $NAMESPACE \
+   --set global.cni.confPath="$SNAP_DATA/args/cni-network" \
+   --set global.cni.binPath="$SNAP_DATA/opt/cni/bin" \
+   --set global.cni.customConf=true \
+   --set global.containerRuntime.integration="containerd" \
+   --set global.daemon.runPath="$SNAP_DATA/var/run/cilium"
+   --set global.containerRuntime.socketPath="$SNAP_COMMON/run/containerd.sock" > $SNAP_DATA/args/cni-network/cilium.yaml
+```
+
 ## References
 
 - https://snapcraft.io/docs/snapcraft-overview
