@@ -10,7 +10,7 @@ import subprocess
 import sys
 import time
 
-from .common.utils import try_set_file_permissions, remove_expired_token_from_file
+from .common.utils import try_set_file_permissions, remove_expired_token_from_file, remove_token_from_file, is_token_expired
 
 from flask import Flask, jsonify, request, abort, Response
 
@@ -126,24 +126,7 @@ def add_token_to_certs_request(token):
         fp.write("{}\n".format(token))
 
 
-def remove_token_from_file(token, file):
-    """
-    Remove a token from the valid tokens set
-    
-    :param token: the token to be removed
-    :param file: the file to be removed from
-    """
-    backup_file = "{}.backup".format(file)
-    # That is a critical section. We need to protect it.
-    # We are safe for now because flask serves one request at a time.
-    with open(backup_file, 'w') as back_fp:
-        with open(file, 'r') as fp:
-            for _, line in enumerate(fp):
-                if line.strip() == token:
-                    continue
-                back_fp.write("{}".format(line))
 
-    shutil.copyfile(backup_file, file)
 
 def get_token(name):
     """
@@ -213,6 +196,7 @@ def get_arg(key, file):
     return None
 
 
+
 def is_valid(token_line, token_type=cluster_tokens_file):
     """
     Check whether a token is valid
@@ -230,7 +214,8 @@ def is_valid(token_line, token_type=cluster_tokens_file):
         for _, line in enumerate(fp):
             token_in_file = line.strip()
             if "|" in line :
-                token_in_file = line.strip().split('|')[0]            
+                if not is_token_expired(line):
+                    token_in_file = line.strip().split('|')[0]            
             if token == token_in_file:
                 return True
     return False
@@ -291,6 +276,8 @@ def join_node():
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
     add_token_to_certs_request(token)
+    # remove token for backwards compatibility way of adding a node
+    remove_token_from_file(token, cluster_tokens_file)
 
     node_addr = get_node_ep(hostname, request.remote_addr)
     node_ep = "{}:{}".format(node_addr, port)
