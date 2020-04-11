@@ -17,6 +17,7 @@ then
 fi
 
 if echo "$*" | grep -q -- 'help'; then
+  # Call add_token.py help
   LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/add_token.py --help
   exit 0
 fi
@@ -42,9 +43,7 @@ then
   chgrp microk8s $SNAP_DATA/credentials/cluster-tokens.txt || true
 fi
 
-# We throw away some randomness by only selecting bytes in the A-Za-z range and taking the first 32 such bytes,
-# so instead of 32*8 = 256 bits of randomness you get approx 182 bits. This is good enough for this short lived tokens.
-# token=$(< /dev/urandom tr -dc A-Za-z | head -c32;echo;)
+# Use python's built-in (3.6+) secrets generator to produce the token.
 LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/add_token.py $@
 
 # Get the generated token and display it.

@@ -34,7 +34,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Produce a connection string for a node to join the cluster.', prog='microk8s add-node')
     parser.add_argument("--ttl_token", "-l", help="Specify how long the token is valid, before it expires.  Value of \"-1\" indicates that the token is usable only once (i.e. after joining a node, the token becomes invalid)", type=int,
                         default="-1")
-    parser.add_argument( "--token", "-t", help="Specify the bootstrap token to add, must be 16 characters long.  Auto generates when empty.")
+    parser.add_argument( "--token", "-t", help="Specify the bootstrap token to add, must be 32 characters long.  Auto generates when empty.")
 
     # read arguments from the command line
     args = parser.parse_args()
