@@ -24,6 +24,17 @@ ChangesEnvironment=yes
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
+[Tasks]
+Name: modifypath; Description: "Add MicroK8s to the current user's PATH (Recommended)"
+
+[Files]
+Source: "..\dist\microk8s.exe"; DestDir: "{app}"; Flags: ignoreversion
+
+[Code]
+const
+  ModPathName = 'modifypath';
+  ModPathType = 'user';
+
 function InitializeSetup(): Boolean;
 var
   Version: TWindowsVersion;
@@ -41,17 +52,6 @@ begin
   end;
   Result := True;
 end;
-
-[Tasks]
-Name: modifypath; Description: "Add MicroK8s to the current user's PATH (Recommended)"
-
-[Files]
-Source: "..\dist\microk8s.exe"; DestDir: "{app}"; Flags: ignoreversion
-
-[Code]
-const
-  ModPathName = 'modifypath';
-  ModPathType = 'user';
 
 function ModPathDir(): TArrayOfString;
 begin
