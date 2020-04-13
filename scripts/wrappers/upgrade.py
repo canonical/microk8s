@@ -14,31 +14,20 @@ snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 
 
-def pre_upgrade_master(upgrade):
+def upgrade_master(upgrade, phase):
     try:
-        pre_upgrade_script='{}/upgrade-scripts/{}/prepare-master.sh'.format(snap_path, upgrade)
-        if os.path.isfile(pre_upgrade_script):
-            print("Running pre-upgrade script")
-            subprocess.check_output(pre_upgrade_script)
-    except subprocess.CalledProcessError as e:
-        print("Pre-upgrade step failed")
-        raise e
-
-
-def post_upgrade_master(upgrade):
-    try:
-        upgrade_script='{}/upgrade-scripts/{}/commit-master.sh'.format(snap_path, upgrade)
+        upgrade_script='{}/upgrade-scripts/{}/{}-master.sh'.format(snap_path, upgrade, phase)
         if os.path.isfile(upgrade_script):
-            print("Running post-upgrade script")
+            print("Running {}-upgrade script".format(phase))
             subprocess.check_output(upgrade_script)
     except subprocess.CalledProcessError as e:
-        print("Post-upgrade step failed")
+        print("{}-upgrade step failed".format(phase))
         raise e
 
 
 def node_upgrade(upgrade, phase, node_ep, token):
     try:
-        upgrade_script='{}/upgrade-scripts/{}/commit-node.sh'.format(snap_path, upgrade)
+        upgrade_script='{}/upgrade-scripts/{}/{}-node.sh'.format(snap_path, upgrade, phase)
         if os.path.isfile(upgrade_script):
             remote_op = {"callback": token, "phase": phase, "upgrade": upgrade}
             # TODO: handle ssl verification
@@ -47,20 +36,69 @@ def node_upgrade(upgrade, phase, node_ep, token):
                                 verify=False)
             if res.status_code != 200:
                 print("Failed to perform a {} on node {}".format(remote_op["upgrade"], node_ep))
-                raise Exception("Failed to {} node {}".format(phase, node_ep))
+                raise Exception("Failed to {} on {}".format(phase, node_ep))
     except subprocess.CalledProcessError as e:
-        print("Post-upgrade step failed")
+        print("{} upgrade step failed on {}".format(phase, node_ep))
         raise e
 
 
-def rollback():
-    raise Exception("Rollback not implemented")
+def rollback(upgrade):
+    node_info = get_nodes_info()
+
+    upgrade_log_file = "{}/var/log/upgrades/{}.log".format(upgrade)
+    with open(upgrade_log_file, "r") as log:
+        line = log.readline()
+        parts = line.split(" ")
+        node_type = parts[0]
+        phase = parts[1]
+        if node_type == "node":
+            node_ep = parts[2]
+        else:
+            node_ep = "localhost"
+        if phase == "commit":
+            print("Rolling back {} on {}".format(phase, node_ep))
+            if node_type == "node":
+                tokens = [t for ep, t in node_info if node_ep == ep]
+                if len(tokens != 0):
+                    token = tokens[0]
+                    node_upgrade(upgrade, "rollback", node_ep, token)
+            else:
+                upgrade_master(upgrade, "rollback")
 
 
 def run_upgrade(upgrade):
+    node_info = get_nodes_info()
+
+    upgrade_log_file = "{}/var/log/upgrades/{}.log".format(upgrade)
+    try:
+        with open(upgrade_log_file, "w") as log:
+            upgrade_master(upgrade, "prepare")
+            log.writelines(["master prepare"])
+            log.flush()
+            for node_ep, token in node_info:
+                node_upgrade(upgrade, "prepare", node_ep, token)
+                log.writelines(["node prepare {}".format(node_ep)])
+                log.flush()
+
+            for node_ep, token in node_info:
+                node_upgrade(upgrade, "commit", node_ep, token)
+                log.writelines(["node commit {}".format(node_ep)])
+                log.flush()
+
+            upgrade_master(upgrade, "commit")
+            log.writelines(["master commit"])
+            log.flush()
+
+    except Exception as e:
+        print("Error in upgrading. Error: {}".format(e))
+        log.close()
+        rollback(upgrade_log_file)
+        exit(2)
+
+
+def get_nodes_info():
     callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
     node_info = []
-
     try:
         nodes = subprocess.check_output("{}/microk8s-kubectl.wrapper get no".format(snap_path).split())
         if os.path.isfile(callback_tokens_file):
@@ -69,29 +107,14 @@ def run_upgrade(upgrade):
                     parts = line.split()
                     node_ep = parts[0]
                     host = node_ep.split(":")[0]
-                    print("Preparing node {}.".format(host))
                     if host not in nodes.decode():
                         print("Node {} not present".format(host))
                         continue
                     node_info = [(parts[0], parts[1])]
     except subprocess.CalledProcessError:
-        print("Error in gathering cluster node information. Upgrade aborting.".format(host))
+        print("Error in gathering cluster node information. Upgrade aborted.".format(host))
         exit(1)
-
-    try:
-        pre_upgrade_master(upgrade)
-        for node_ep, token in node_info:
-            node_upgrade(upgrade, "prepare", node_ep, token)
-
-        for node_ep, token in node_info:
-            node_upgrade(upgrade, "commit", node_ep, token)
-
-        post_upgrade_master(upgrade)
-
-    except Exception as e:
-        print("Error in upgrading. Error: {}".format(e))
-        rollback()
-        exit(2)
+    return node_info
 
 
 if __name__ == '__main__':
