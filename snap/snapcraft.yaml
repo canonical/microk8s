@@ -283,6 +283,10 @@ passthrough:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so.435.21
     /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so
+    /usr/lib/x86_64-linux-gnu/libnvidia-rtcore.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-rtcore.so.1
+    /usr/lib/x86_64-linux-gnu/libnvidia-rtcore.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-rtcore.so.435.21
     /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so.1
     /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.435.21:
