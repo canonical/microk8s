@@ -10,6 +10,7 @@ AppUpdatesURL=https://microk8s.io/
 DefaultDirName={autopf}\MicroK8s for Windows
 DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE
+MinVersion=10
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 SetupIconFile=microk8s.ico
@@ -22,6 +23,24 @@ ChangesEnvironment=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
+
+function InitializeSetup(): Boolean;
+var
+  Version: TWindowsVersion;
+  S: String;
+begin
+  GetWindowsVersionEx(Version);
+
+  // Disallow installation on Home edition of Windows
+  if Version.SuiteMask and VER_SUITE_PERSONAL <> 0 then
+  begin
+    SuppressibleMsgBox('MicroK8s cannot be installed on Home edition of Windows 10.',
+      mbCriticalError, MB_OK, IDOK);
+    Result := False;
+    Exit;
+  end;
+  Result := True;
+end;
 
 [Tasks]
 Name: modifypath; Description: "Add MicroK8s to the current user's PATH (Recommended)"

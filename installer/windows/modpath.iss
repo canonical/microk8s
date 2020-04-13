@@ -39,28 +39,6 @@
 //		#include "modpath.iss"
 // ----------------------------------------------------------------------------
 
-[setup]
-AppName=MicroK8s
-MinVersion=10
-
-function InitializeSetup: Boolean;
-var
-  Version: TWindowsVersion;
-  S: String;
-begin
-  GetWindowsVersionEx(Version);
-
-  // Disallow installation on Home edition of Windows
-  if Version.SuiteMask and VER_SUITE_PERSONAL <> 0 then
-  begin
-    SuppressibleMsgBox('This program cannot be installed on a Home edition of Windows.',
-      mbCriticalError, MB_OK, IDOK);
-    Result := False;
-    Exit;
-  end;
-  Result := True;
-end;
-
 procedure ModPath();
 var
 	oldpath:	String;
