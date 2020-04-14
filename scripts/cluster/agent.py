@@ -693,7 +693,7 @@ def swagger_json():
 
 
 def callback_token_validation(request):
-    if 'Content-Type' in request.headers and request.headers['Content-Type'] == 'application/json':
+    if 'Content-Type' in request.headers and request.headers['Content-Type'] == 'application/json' and 'callback' in request.json:
         callback_token = request.json['callback']
     elif 'Callback-Token' in request.headers:
         callback_token = request.headers['Callback-Token']
