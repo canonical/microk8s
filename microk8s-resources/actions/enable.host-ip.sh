@@ -20,6 +20,6 @@ fi
 echo "$IP_ADDRESS" > "${SNAP_DATA}/var/lock/host-ip-enabled"
 echo "Setting ${IP_ADDRESS} as host-ip"
 
-sudo ifconfig lo:17 $IP_ADDRESS up
+run_with_sudo "$SNAP/sbin/ifconfig" lo:17 "$IP_ADDRESS" up
 
 
