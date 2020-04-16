@@ -12,9 +12,9 @@ import requests
 import socket
 import shutil
 import urllib3
+import yaml
 
-from common.utils import try_set_file_permissions
-
+from common.utils import try_set_file_permissions, is_node_running_dqlite
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
@@ -27,37 +27,59 @@ callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path
 server_cert_file_via_env = "${SNAP_DATA}/certs/server.remote.crt"
 server_cert_file = "{}/certs/server.remote.crt".format(snapdata_path)
 
+cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
+cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
+cluster_key_file = "{}/cluster.key".format(cluster_dir)
 
-def get_connection_info(master_ip, master_port, token, callback_token):
+
+def get_connection_info(master_ip, master_port, token, callback_token=None, cluster_type="etcd"):
     """
     Contact the master and get all connection information
 
     :param master_ip: the master IP
     :param master_port: the master port
     :param token: the token to contact the master with
-    :param callback_token: the token to provide to the master for callbacks
+    :param cluster_type: the type of cluster we want to join, etcd or dqlite
+
     :return: the json response of the master
     """
-    cluster_agent_port = 25000
+    cluster_agent_port = "25000"
     filename = "{}/args/cluster-agent".format(snapdata_path)
     with open(filename) as fp:
         for _, line in enumerate(fp):
             if line.startswith("--port"):
-                cluster_agent_port = line.split(' ')
-                cluster_agent_port = cluster_agent_port[-1].split('=')
-                cluster_agent_port = cluster_agent_port[0].rstrip()
+                port_parse = line.split(' ')
+                port_parse = port_parse[-1].split('=')
+                cluster_agent_port = port_parse[0].rstrip()
 
-    req_data = {"token": token,
-                "hostname": socket.gethostname(),
-                "port": cluster_agent_port,
-                "callback": callback_token}
+    if cluster_type == "dqlite":
+        req_data = {"token": token,
+                    "hostname": socket.gethostname(),
+                    "port": cluster_agent_port}
 
-    # TODO: enable ssl verification
-    connection_info = requests.post("https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API),
-                                    json=req_data,
-                                    verify=False)
+        # TODO: enable ssl verification
+        connection_info = requests.post("https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API_V2),
+                                        json=req_data,
+                                        verify=False)  # type: requests.models.Response
+    else:
+        req_data = {"token": token,
+                    "hostname": socket.gethostname(),
+                    "port": cluster_agent_port,
+                    "callback": callback_token}
+
+        # TODO: enable ssl verification
+        connection_info = requests.post("https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API),
+                                        json=req_data,
+                                        verify=False)
+
     if connection_info.status_code != 200:
-        print("Failed to join cluster. {}".format(connection_info.json()["error"]))
+        message = "Error code {}.".format(connection_info.status_code)  # type: str
+        if connection_info.headers.get('content-type') == 'application/json':
+            res_data = connection_info.json()  # type: Dict[str, str]
+            if 'error' in res_data:
+                message = "{} {}".format(message, res_data["error"])
+        print("Failed to join cluster. {}".format(message))
         exit(1)
     return connection_info.json()
 
@@ -356,6 +378,218 @@ def remove_node(node):
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+def get_token(name, tokens_file = "known_tokens.csv"):
+    """
+    Get token from known_tokens file
+
+    :param name: the name of the node
+    :param tokens_file: the file where the tokens should go
+    :returns: the token or None(if name doesn't exist)
+    """
+    file = "{}/credentials/{}".format(snapdata_path, tokens_file)
+    with open(file) as fp:
+        for line in fp:
+            if name in line:
+                parts = line.split(',')
+                return parts[0].rstrip()
+    return None
+
+
+def store_cert(filename, payload):
+    """
+    Store a certificate
+
+    :param filename: where to store the certificate
+    :param payload: certificate payload
+    """
+    file_with_path = "{}/certs/{}".format(snapdata_path, filename)
+    backup_file_with_path = "{}.backup".format(file_with_path)
+    shutil.copyfile(file_with_path, backup_file_with_path)
+    try_set_file_permissions(backup_file_with_path)
+    with open(file_with_path, 'w+') as fp:
+        fp.write(payload)
+    try_set_file_permissions(file_with_path)
+
+
+def store_cluster_certs(cluster_cert, cluster_key):
+    """
+    Store the dqlite cluster certs
+
+    :param cluster_cert: the cluster certificate
+    :param cluster_key: the cluster certificate key
+    """
+    with open(cluster_cert_file, 'w+') as fp:
+        fp.write(cluster_cert)
+    try_set_file_permissions(cluster_cert_file)
+    with open(cluster_key_file, 'w+') as fp:
+        fp.write(cluster_key)
+    try_set_file_permissions(cluster_key_file)
+
+
+def create_admin_kubeconfig(ca):
+    """
+    Create a kubeconfig file. The file in stored under credentials named after the admin
+
+    :param ca: the ca
+    """
+    token = get_token("admin", "basic_auth.csv")
+    if not token:
+        print("Error, could not locate admin token. Joining cluster failed.")
+        exit(2)
+    assert token is not None
+    config_template = "{}/microk8s-resources/{}".format(snap_path, "client.config.template")
+    config = "{}/credentials/client.config".format(snapdata_path)
+    shutil.copyfile(config, "{}.backup".format(config))
+    try_set_file_permissions("{}.backup".format(config))
+    ca_line = ca_one_line(ca)
+    with open(config_template, 'r') as tfp:
+        with open(config, 'w+') as fp:
+            config_txt = tfp.read()
+            config_txt = config_txt.replace("CADATA", ca_line)
+            config_txt = config_txt.replace("NAME", "admin")
+            config_txt = config_txt.replace("AUTHTYPE", "password")
+            config_txt = config_txt.replace("PASSWORD", token)
+            fp.write(config_txt)
+        try_set_file_permissions(config)
+
+
+def store_callback_token(token):
+    """
+    Store the callback token
+
+    :param stoken: the callback token
+    """
+    callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
+    with open(callback_token_file, "w") as fp:
+        fp.write(token)
+    try_set_file_permissions(callback_token_file)
+
+
+def restart_all_services():
+    """
+    Restart all services
+    """
+    subprocess.check_call("{}/microk8s-stop.wrapper".format(snap_path).split())
+    waits = 10
+    while waits > 0:
+        try:
+            subprocess.check_call("{}/microk8s-start.wrapper".format(snap_path).split())
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+            waits -= 1
+
+
+def update_dqlite(cluster_cert, cluster_key, voters, host):
+    """
+    Configure the dqlite cluster
+
+    :param cluster_cert: the dqlite cluster cert
+    :param cluster_key: the dqlite cluster key
+    :param voters: the dqlite voters
+    :param host: the hostname others see of this node
+    """
+    subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
+    time.sleep(10)
+    shutil.rmtree(cluster_backup_dir, ignore_errors=True)
+    shutil.move(cluster_dir, cluster_backup_dir)
+    os.mkdir(cluster_dir)
+    store_cluster_certs(cluster_cert, cluster_key)
+    with open("{}/info.yaml".format(cluster_backup_dir)) as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+
+    # TODO make port configurable
+    init_data = {'Cluster': voters, 'Address': "{}:19001".format(host)}
+    with open("{}/init.yaml".format(cluster_dir), 'w') as f:
+        yaml.dump(init_data, f)
+
+    subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
+
+    waits = 10
+    print("Waiting for node to join the cluster.", end=" ", flush=True)
+    while waits > 0:
+        try:
+            out = subprocess.check_output("curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s"
+                                    .format(data['Address'], cluster_cert_file, cluster_key_file,
+                                            cluster_cert_file).split());
+            if data['Address'] in out.decode():
+                break
+            else:
+                print(".", end=" ", flush=True)
+                time.sleep(5)
+                waits -= 1
+
+        except subprocess.CalledProcessError:
+            print("..", end=" ", flush=True)
+            time.sleep(5)
+            waits -= 1
+    print(" ")
+    restart_all_services()
+
+
+def join_dqlite(connection_parts):
+    """
+    Configure node to join a dqlite cluster.
+
+    :param connection_parts: connection string parts
+    """
+    token = connection_parts[1]
+    master_ep = connection_parts[0].split(":")
+    master_ip = master_ep[0]
+    master_port = master_ep[1]
+    info = get_connection_info(master_ip, master_port, token, cluster_type="dqlite")
+
+    hostname_override = info['hostname_override']
+
+    store_cert("ca.crt", info["ca"])
+    store_cert("ca.key", info["ca_key"])
+    store_cert("server.crt", info["server_cert"])
+    store_cert("server.key", info["server_cert_key"])
+    store_cert("serviceaccount.key", info["service_account_key"])
+    store_cert("front-proxy-client.crt", info["proxy_cert"])
+    store_cert("front-proxy-client.key", info["proxy_cert_key"])
+    # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
+    for component in [("kube-proxy", "kubeproxy", "proxy.config"),
+                      ("kubelet", "kubelet", "kubelet.config"),
+                      ("kube-controller-manager", "controller", "controller.config"),
+                      ("kube-scheduler", "scheduler", "scheduler.config")]:
+        component_token = get_token(component[0])
+        if not component_token:
+            print("Error, could not locate {} token. Joining cluster failed.".format(component[0]))
+            exit(3)
+        assert token is not None
+        # TODO make this configurable
+        create_kubeconfig(component_token, info["ca"], "127.0.0.1", "16443", component[2], component[1])
+    create_admin_kubeconfig(info["ca"])
+    store_base_kubelet_args(info["kubelet_args"])
+    store_callback_token(info["callback_token"])
+
+    update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
+
+
+def join_etcd(connection_parts):
+    """
+    Configure node to join an etcd cluster.
+
+    :param connection_parts: connection string parts
+    """
+    token = connection_parts[1]
+    master_ep = connection_parts[0].split(":")
+    master_ip = master_ep[0]
+    master_port = master_ep[1]
+    callback_token = generate_callback_token()
+    info = get_connection_info(master_ip, master_port, token, callback_token=callback_token)
+    store_base_kubelet_args(info["kubelet_args"])
+    hostname_override = None
+    if 'hostname_override' in info:
+        hostname_override = info['hostname_override']
+    store_remote_ca(info["ca"])
+    update_flannel(info["etcd"], master_ip, master_port, token)
+    update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override)
+    update_kubelet(info["kubelet"], info["ca"], master_ip, info["apiport"])
+    mark_cluster_node()
+
+
 if __name__ == "__main__":
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "h", ["help"])
@@ -383,20 +617,9 @@ if __name__ == "__main__":
             sys.exit(4)
 
         connection_parts = args[0].split("/")
-        token = connection_parts[1]
-        master_ep = connection_parts[0].split(":")
-        master_ip = master_ep[0]
-        master_port = master_ep[1]
-        callback_token = generate_callback_token()
-        info = get_connection_info(master_ip, master_port, token, callback_token)
-        store_base_kubelet_args(info["kubelet_args"])
-        hostname_override = None
-        if 'hostname_override' in info:
-            hostname_override = info['hostname_override']
+        if is_node_running_dqlite():
+            join_dqlite(connection_parts)
+        else:
+            join_etcd(connection_parts)
 
-        store_remote_ca(info["ca"])
-        update_flannel(info["etcd"], master_ip, master_port, token)
-        update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override)
-        update_kubelet(info["kubelet"], info["ca"], master_ip, info["apiport"])
-        mark_cluster_node()
     sys.exit(0)
