@@ -114,6 +114,8 @@ def install(args) -> None:
         Windows().enable_hyperv()
         print('Hyper-V has been enabled.')
         print('This host must be restarted.  After restart, run `microk8s install` again to complete setup.')
+        input('Press any key to exit...')
+        exit(0)
 
     vm_provider_name: str = 'multipass'
     vm_provider_class = get_provider_for(vm_provider_name)
