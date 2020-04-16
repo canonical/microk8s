@@ -27,7 +27,7 @@ class Windows(Auxillary):
         Check if Hyper V is already enabled.
         """
         try:
-            subprocess.check_call([
+            out = subprocess.check_output([
                 'DISM',
                 '/Online',
                 '/Get-FeatureInfo',
@@ -35,14 +35,17 @@ class Windows(Auxillary):
             ])
         except subprocess.CalledProcessError:
             return False
-        else:
-            return True
+
+        if 'State : Disabled' in out.decode():
+            return False
+
+        return True
 
     def enable_hyperv(self) -> None:
         """
         Enable Hyper V feature.
         """
-        subprocess.call([
+        subprocess.check_call([
             'DISM',
             '/Online',
             '/Enable-Feature',
