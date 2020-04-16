@@ -48,6 +48,7 @@ class Windows(Auxillary):
         try:
             subprocess.check_call([
                 'DISM',
+                '/All',
                 '/Online',
                 '/Enable-Feature',
                 '/NoRestart',
