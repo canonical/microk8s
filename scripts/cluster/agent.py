@@ -601,7 +601,7 @@ def upgrade():
     '''
     {
       "callback": "xyztoken"
-      "phase": "prepare" or "commit"
+      "phase": "prepare", "commit" or "rollback"
       "upgrade": "XYZ-upgrade-name"
     }
     '''
@@ -621,6 +621,15 @@ def upgrade():
 
     elif phase == "commit":
         upgrade_script = '{}/upgrade-scripts/{}/commit-node.sh'.format(snap_path, upgrade_request)
+        print("Ready to execute {}".format(upgrade_script))
+        print("Executing {}".format(upgrade_script))
+        subprocess.check_call(upgrade_script)
+        resp_data = {"result": "ok"}
+        resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
+        return resp
+
+    elif phase == "rollback":
+        upgrade_script = '{}/upgrade-scripts/{}/rollback-node.sh'.format(snap_path, upgrade_request)
         print("Ready to execute {}".format(upgrade_script))
         print("Executing {}".format(upgrade_script))
         subprocess.check_call(upgrade_script)
