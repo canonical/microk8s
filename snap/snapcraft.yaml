@@ -31,7 +31,11 @@ plugs:
   dot-kube:
     interface: personal-files
     write:
-      - $HOME/.kube
+    - $HOME/.kube
+  ld-cache:
+    interface: system-files
+    read:
+    - /etc/ld.so.cache
 
 hooks:
   configure:
@@ -67,6 +71,7 @@ apps:
     command: run-containerd-with-args
     daemon: simple
     plugs:
+    - ld-cache
     - k8s-journald
     - network-bind
     - docker-support
@@ -255,6 +260,8 @@ passthrough:
   layout:
     /usr/libexec:
       symlink: $SNAP_COMMON/usr/libexec
+    /usr/local/lib:
+      bind: $SNAP_COMMON/usr/local/lib
     /var/lib/cni:
       bind: $SNAP_COMMON/var/lib/cni
     /var/log/pods:
@@ -273,6 +280,12 @@ passthrough:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvoptix.so.1
     /usr/lib/x86_64-linux-gnu/libnvoptix.so.435.21:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvoptix.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opticalflow.so
+    /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so.1:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opticalflow.so.1
+    /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so.435.21:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opticalflow.so.435.21
     /usr/lib/x86_64-linux-gnu/libnvidia-tls.so.435.21:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-tls.so.435.21
     /usr/lib/x86_64-linux-gnu/libnvcuvid.so:
@@ -670,9 +683,9 @@ parts:
       mkdir go
       export GOPATH="$(pwd)/go"
       export PATH="${GOPATH}/bin:${PATH}"
-      cd nvidia-container-toolkit/
       go get -u github.com/BurntSushi/toml
-      go build
+      cd pkg
+      go build -ldflags "-s -w" -o nvidia-container-toolkit
       mkdir -p $SNAPCRAFT_PART_INSTALL/usr/bin/
       cp nvidia-container-toolkit $SNAPCRAFT_PART_INSTALL/usr/bin/nvidia-container-toolkit
       cp nvidia-container-toolkit $SNAPCRAFT_PART_INSTALL/usr/bin/nvidia-container-runtime-hook
