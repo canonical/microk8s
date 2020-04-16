@@ -73,7 +73,6 @@ begin
 end;
 
 [Run]
-Filename: "DISM";  Parameters: "/Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V"; StatusMsg: "Enabling Hyper-V"; Description: "Enable Hyper-V (a restart will be required)?"; Flags: postinstall
 Filename: "{app}\microk8s.exe"; Parameters: "install --assume-yes"; StatusMsg: "Setting up MicroK8s for the first time"; Description: "Setup and start MicroK8s?"; Flags: postinstall
 
 [UninstallRun]
