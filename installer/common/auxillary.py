@@ -45,12 +45,16 @@ class Windows(Auxillary):
         """
         Enable Hyper V feature.
         """
-        subprocess.check_call([
-            'DISM',
-            '/Online',
-            '/Enable-Feature',
-            '/All',
-            '/NoRestart',
-            '/FeatureName:Microsoft-Hyper-V'
-        ])
-
+        try:
+            subprocess.check_call([
+                'DISM',
+                '/Online',
+                '/Enable-Feature',
+                '/NoRestart',
+                '/FeatureName:Microsoft-Hyper-V'
+            ])
+        except subprocess.CalledProcessError as e:
+            if e.returncode == 3010:
+                pass  # This is fine, because Windows.
+            else:
+                raise
