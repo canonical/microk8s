@@ -51,13 +51,13 @@ def rollback(upgrade):
             node_type = parts[0]
             phase = parts[1]
             if node_type == "node":
-                node_ep = parts[2]
+                node_ep = parts[2].rstrip()
             else:
                 node_ep = "localhost"
             if phase == "commit":
                 print("Rolling back {} on {}".format(phase, node_ep))
                 if node_type == "node":
-                    tokens = [t for ep, t in node_info if node_ep == ep]
+                    tokens = [t for ep, t in node_info if node_ep.startswith(ep)]
                     if len(tokens) != 0:
                         token = tokens[0]
                         node_upgrade(upgrade, "rollback", node_ep, token)

@@ -6,12 +6,6 @@ echo "Rolling back calico upgrade on a node"
 source $SNAP/actions/common/utils.sh
 CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 
-
-if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]; then
-  KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-  $KUBECTL delete -f "$SNAP_DATA/args/cni-network/cni.yaml"
-fi
-
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
 
 if [ -e "$BACKUP_DIR/args/cni-network/flannel.conflist" ]; then
