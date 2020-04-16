@@ -58,7 +58,7 @@ def rollback(upgrade):
                 print("Rolling back {} on {}".format(phase, node_ep))
                 if node_type == "node":
                     tokens = [t for ep, t in node_info if node_ep == ep]
-                    if len(tokens != 0):
+                    if len(tokens) != 0:
                         token = tokens[0]
                         node_upgrade(upgrade, "rollback", node_ep, token)
                 else:

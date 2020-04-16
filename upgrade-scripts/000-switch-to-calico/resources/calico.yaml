@@ -26,6 +26,7 @@ data:
           "type": "calico",
           "log_level": "info",
           "datastore_type": "kubernetes",
+          "nodename_file_optional": true,
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": __CNI_MTU__,
           "ipam": {
