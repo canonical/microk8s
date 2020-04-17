@@ -110,11 +110,15 @@ def install(args) -> None:
     args = parser.parse_args(args)
 
     if platform == 'win32' and not Windows().check_hyperv():
+        if not Windows().is_enough_space():
+            print('There is not enough disk space to continue.  You need at least 50GB.')
+            input('Press return key to exit...')
+            exit(1)
         print('Hyper-V will now be enabled.')
         Windows().enable_hyperv()
         print('Hyper-V has been enabled.')
         print('This host must be restarted.  After restart, run `microk8s install` again to complete setup.')
-        input('Press any key to exit...')
+        input('Press return key to exit...')
         exit(0)
 
     vm_provider_name: str = 'multipass'
