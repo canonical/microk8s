@@ -26,7 +26,7 @@ class Auxillary(object):
 
         :return: Integer free space
         """
-        return disk_usage(realpath(__file__)).free
+        return disk_usage(realpath('/')).free
 
     def is_enough_space(self) -> bool:
         """
