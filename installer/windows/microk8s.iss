@@ -11,7 +11,7 @@ DefaultDirName={autopf}\MicroK8s for Windows
 DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE
 MinVersion=10
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 SetupIconFile=microk8s.ico
 Compression=lzma
@@ -73,7 +73,7 @@ begin
 end;
 
 [Run]
-Filename: "{app}\microk8s.exe"; Parameters: "install --assume-yes"; StatusMsg: "Setting up MicroK8s for the first time"; Description: "Setup and start MicroK8s?"; Flags: postinstall
+Filename: "{app}\microk8s.exe"; Parameters: "install --assume-yes"; StatusMsg: "Setting up MicroK8s for the first time"; Description: "Setup and start MicroK8s?"; Flags: postinstall runascurrentuser
 
 [UninstallRun]
 Filename: "{app}\microk8s.exe"; Parameters: "uninstall"
