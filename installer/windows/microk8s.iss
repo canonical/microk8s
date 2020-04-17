@@ -2,7 +2,6 @@
 AppId={{05E40DED-CE0A-437E-B90C-25A32B47880F}
 AppName=MicroK8s for Windows
 AppVersion=1.0.0
-;AppVerName=MicroK8s for Windows 1.0.0
 AppPublisher=Canonical Ltd.
 AppPublisherURL=https://microk8s.io/
 AppSupportURL=https://microk8s.io/
@@ -12,7 +11,6 @@ DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE
 MinVersion=10
 PrivilegesRequired=admin
-PrivilegesRequiredOverridesAllowed=dialog
 SetupIconFile=microk8s.ico
 Compression=lzma
 SolidCompression=yes
