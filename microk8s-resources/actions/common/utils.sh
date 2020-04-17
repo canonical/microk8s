@@ -466,3 +466,18 @@ function valid_ip() {
     fi
     return $stat
 }
+
+
+init_cluster() {
+  mkdir -p ${SNAP_DATA}/var/kubernetes/backend
+  IP="127.0.0.1"
+  # TODO: make the port configurable
+  echo "Address: $IP:19001" > ${SNAP_DATA}/var/kubernetes/backend/init.yaml
+  DNS=$($SNAP/bin/hostname)
+  mkdir -p $SNAP_DATA/var/tmp/
+  cp $SNAP/microk8s-resources/certs/csr-dqlite.conf.template $SNAP_DATA/var/tmp/csr-dqlite.conf
+  $SNAP/bin/sed -i 's/HOSTNAME/'"${DNS}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
+  $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
+  ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
+}
+

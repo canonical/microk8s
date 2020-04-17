@@ -12,6 +12,8 @@ import time
 from itertools import count
 from distutils.util import strtobool
 
+MIN_MEM_GB = 14
+
 
 def run(*args, die=True, debug=False, stdout=True):
     # Add wrappers to $PATH
@@ -108,6 +110,24 @@ def main():
     no_proxy = os.environ.get("KUBEFLOW_NO_PROXY") or None
     hostname = os.environ.get("KUBEFLOW_HOSTNAME") or None
     debug = strtobool(os.environ.get("KUBEFLOW_DEBUG") or "false")
+    ignore_min_mem = strtobool(os.environ.get("KUBEFLOW_IGNORE_MIN_MEM") or "false")
+
+    with open("/proc/meminfo") as f:
+        memtotal_lines = [l for l in f.readlines() if "MemTotal" in l]
+
+    try:
+        total_mem = int(memtotal_lines[0].split(" ")[-2])
+    except IndexError:
+        print("Couldn't determine total memory.")
+        print("Kubeflow recommends at least %s GB of memory." % MIN_MEM_GB)
+
+    if total_mem < MIN_MEM_GB * 1024 * 1024 and not ignore_min_mem:
+        print("Kubeflow recommends at least %s GB of memory." % MIN_MEM_GB)
+        print(
+            "Run `KUBEFLOW_IGNORE_MIN_MEM=true microk8s.enable kubeflow`"
+            " if you'd like to proceed anyways."
+        )
+        sys.exit(1)
 
     password_overlay = {
         "applications": {

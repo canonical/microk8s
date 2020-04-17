@@ -91,6 +91,74 @@ apps:
     command: microk8s-juju.wrapper
 
 parts:
+  libco:
+    source: https://github.com/canonical/libco
+    build-attributes: [no-patchelf]
+    source-type: git
+    plugin: make
+    organize:
+      usr/lib/: lib/
+    prime:
+      - lib/libco*so*
+  raft:
+    source: https://github.com/canonical/raft
+    build-attributes: [no-patchelf]
+    source-type: git
+    plugin: autotools
+    stage-packages:
+      - libuv1
+    organize:
+      usr/lib/: lib/
+      include/: usr/include/
+    prime:
+      - lib/libraft*so*
+      - usr/include/
+  sqlite:
+    source: https://github.com/canonical/sqlite
+    source-type: git
+    build-attributes: [no-patchelf]
+    plugin: autotools
+    configflags:
+      - --enable-replication
+    build-packages:
+      - tclsh
+    override-build: |-
+      set -ex
+
+      git log -1 --format=format:%ci%n | sed -e 's/ [-+].*$//;s/ /T/;s/^/D /' > manifest
+      git log -1 --format=format:%H > manifest.uuid
+      cp /usr/share/misc/config.guess .
+      cp /usr/share/misc/config.sub .
+      autoreconf -f -i
+
+      set +ex
+      snapcraftctl build
+    organize:
+      include/: usr/include/
+    prime:
+      - bin/sqlite3
+      - lib/libsqlite3*so*
+      - usr/include/
+  dqlite:
+    after:
+      - libco
+      - raft
+      - sqlite
+    source: https://github.com/canonical/dqlite
+    build-attributes: [no-patchelf]
+    source-type: git
+    plugin: autotools
+    stage-packages:
+      - libuv1
+    build-packages:
+      - libuv1-dev
+    organize:
+      usr/lib/: lib/
+      include/: usr/include/
+    prime:
+      - lib/libdqlite*so*
+      - lib/*/libuv*
+      - usr/include/
   libnftnl:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
@@ -190,7 +258,7 @@ parts:
     - python3-requests
     - gunicorn3
   microk8s:
-    after: [containerd]
+    after: [containerd, dqlite]
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
@@ -214,26 +282,26 @@ parts:
       - -tests*
       - -docs*
       - -build*
+      - -go*
     override-build: |
       set -eux
       . build-scripts/set-env-variables.sh
 
       REMOVE_KUBE_SNAP_BINS=false
       echo "Reached here"
+      # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
+      # if "${KUBE_SNAP_BINS}" does not exist but it is set we will put the k8s binaries there
+      # if "${KUBE_SNAP_BINS}" does not exist and it is not set we do not need to keep the created binaries
       if [ ! -e "${KUBE_SNAP_BINS}" ]; then
         if [ -z "${KUBE_SNAP_BINS}" ]; then
+          # "${KUBE_SNAP_BINS}" not set, we will remove the binaries after we build them.
           REMOVE_KUBE_SNAP_BINS=true
           . build-scripts/set-env-binaries-location.sh
         fi
         echo "Downloading binaries"
         . build-scripts/fetch-other-binaries.sh
-        if [ -z "${KUBERNETES_COMMIT}" ]; then
-          echo "Downloading k8s binaries from upstream"
-          . build-scripts/fetch-k8s-binaries.sh
-        else
-          echo "Building k8s binaries"
-          . build-scripts/build-k8s-binaries.sh
-        fi
+        echo "Building k8s binaries"
+        . build-scripts/build-k8s-binaries.sh
       else
         echo "Binaries provided in $KUBE_SNAP_BINS"
       fi
