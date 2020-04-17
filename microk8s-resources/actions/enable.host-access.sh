@@ -13,7 +13,7 @@ read -ra IP_ADDRESS <<< "$value"
 KEY_NAME="ip"
 if [ ! -z "$key" ] && [ "$key" != $KEY_NAME ]
 then
-  echo "You should use the the '$KEY_NAME' as key in the argument passed and not '$key'. Eg. microk8s.enable host-ip:$KEY_NAME=$IP_ADDRESS";
+  echo "You should use the the '$KEY_NAME' as key in the argument passed and not '$key'. Eg. microk8s.enable host-access:$KEY_NAME=$IP_ADDRESS";
   exit
 fi
 
@@ -27,11 +27,11 @@ else
     exit
   fi
 fi
-echo "$IP_ADDRESS" > "${SNAP_DATA}/var/lock/host-ip-enabled"
-echo "Setting ${IP_ADDRESS} as host-ip"
+echo "$IP_ADDRESS" > "${SNAP_DATA}/var/lock/host-access-enabled"
+echo "Setting ${IP_ADDRESS} as host-access"
 
 run_with_sudo "$SNAP/sbin/ifconfig" lo:microk8s "$IP_ADDRESS" up
 
-echo "Host-ip is enabled"
+echo "Host-access is enabled"
 
 
