@@ -30,7 +30,7 @@ fi
 echo "$IP_ADDRESS" > "${SNAP_DATA}/var/lock/host-ip-enabled"
 echo "Setting ${IP_ADDRESS} as host-ip"
 
-run_with_sudo "$SNAP/sbin/ifconfig" lo:1 "$IP_ADDRESS" up
+run_with_sudo "$SNAP/sbin/ifconfig" lo:microk8s "$IP_ADDRESS" up
 
 echo "Host-ip is enabled"
 
