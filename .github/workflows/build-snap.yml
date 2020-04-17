@@ -17,19 +17,17 @@ jobs:
     - name: Checking out repo
       uses: actions/checkout@v2
     - name: Install lxd
-      run: sudo snap install lxd
-    - name: Migrate lxd
-      run: sudo /snap/bin/lxd.migrate -yes
-    - name: Wait for lxd to be ready
-      run: sudo /snap/bin/lxd waitready
-    - name: Initialise lxd
-      run: sudo /snap/bin/lxd init --auto
+      run: |
+        sudo snap install lxd
+        sudo /snap/bin/lxd.migrate -yes
+        sudo /snap/bin/lxd waitready
+        sudo /snap/bin/lxd init --auto
     - name: Install snapcraft
       run: sudo snap install snapcraft --classic
     - name: Build snap
-      run: sudo snapcraft --use-lxd
-    - name: Make built snap name generic
-      run: sudo mv microk8s*.snap microk8s.snap
+      run: |
+        sudo snapcraft --use-lxd
+        sudo mv microk8s*.snap microk8s.snap
     - name: Uploading snap
       uses: actions/upload-artifact@v1
       with:
