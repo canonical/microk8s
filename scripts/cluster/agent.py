@@ -1,7 +1,6 @@
 #!flask/bin/python
 import getopt
 import json
-import yaml
 import os
 import random
 import shutil
@@ -9,13 +8,17 @@ import socket
 import string
 import subprocess
 import sys
+import time
 
-from .common.utils import try_set_file_permissions
+import yaml
+
+from .common.utils import try_set_file_permissions, is_node_running_dqlite, get_callback_token
 
 from flask import Flask, jsonify, request, abort, Response
 
 app = Flask(__name__)
 CLUSTER_API="cluster/api/v1.0"
+CLUSTER_API_V2 = "cluster/api/v2.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
@@ -266,7 +269,7 @@ def get_node_ep(hostname, remote_addr):
 
 
 @app.route('/{}/join'.format(CLUSTER_API), methods=['POST'])
-def join_node():
+def join_node_etcd():
     """
     Web call to join a node to the cluster
     """
@@ -284,6 +287,10 @@ def join_node():
     if not is_valid(token):
         error_msg={"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+
+    if is_node_running_dqlite():
+        error_msg = {"error": "Not possible to join. This is an HA dqlite cluster."}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=501)
 
     add_token_to_certs_request(token)
     remove_token_from_file(token, cluster_tokens_file)
@@ -328,6 +335,10 @@ def sign_cert():
     if not is_valid(token, certs_request_tokens_file):
         error_msg={"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+
+    if is_node_running_dqlite():
+        error_msg = {"error": "Not possible to join. This is an HA dqlite cluster."}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=501)
 
     remove_token_from_file(token, certs_request_tokens_file)
     signed_cert = sign_client_cert(cert_request, token)
@@ -533,6 +544,154 @@ def callback_token_validation(request):
         error_msg = {"error": "Invalid token"}
         resp = Response(json.dumps(error_msg), mimetype='application/json', status=500)
     return {"valid": valid, "response": resp}
+
+
+def get_dqlite_voters():
+    """
+    Get the voting members of the dqlite cluster
+
+    :param : the list with the voting members
+    """
+    snapdata_path = "/var/snap/microk8s/current"
+    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+    cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
+    cluster_key_file = "{}/cluster.key".format(cluster_dir)
+
+    waits = 10
+    print("Waiting for access to cluster.", end=" ", flush=True)
+    while waits > 0:
+        try:
+            with open("{}/info.yaml".format(cluster_dir)) as f:
+                data = yaml.load(f, Loader=yaml.FullLoader)
+                out = subprocess.check_output("curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s"
+                                              .format(data['Address'], cluster_cert_file,
+                                                      cluster_key_file, cluster_cert_file).split())
+                if data['Address'] in out.decode():
+                    break
+                else:
+                    print(".", end=" ", flush=True)
+                    time.sleep(5)
+                    waits -= 1
+        except subprocess.CalledProcessError:
+            print("..", end=" ", flush=True)
+            time.sleep(5)
+            waits -= 1
+    print(" ")
+    if waits == 0:
+        raise Exception("Could not get cluster info")
+
+    nodes = yaml.safe_load(out)
+    voters = []
+    for n in nodes:
+        if n["Role"] == 0:
+            voters.append(n["Address"])
+    return voters
+
+
+def update_dqlite_ip(host):
+    """
+    Update dqlite so it listens on the default interface and not on localhost
+
+    :param : the host others see for this node
+    """
+    subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
+    time.sleep(10)
+
+    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+    # TODO make the port configurable
+    update_data = {'Address': "{}:19001".format(host)}
+    with open("{}/update.yaml".format(cluster_dir), 'w') as f:
+        yaml.dump(update_data, f)
+    subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
+    time.sleep(10)
+    attempts = 12
+    while True:
+        voters = get_dqlite_voters()
+        if len(voters) > 0 and not voters[0].startswith("127.0.0.1"):
+            break
+        else:
+            time.sleep(5)
+            attempts -= 1
+        if attempts <= 0:
+            break
+
+
+def get_cert(certificate):
+    """
+    Return the data of the certificate
+
+    :returns: the certificate file contents
+    """
+    cert_file = "{}/certs/{}".format(snapdata_path, certificate)
+    with open(cert_file) as fp:
+        cert = fp.read()
+    return cert
+
+
+def get_cluster_certs():
+    """
+    Return the cluster certificates
+
+    :returns: the cluster certificate files
+    """
+    file = "{}/var/kubernetes/backend/cluster.crt".format(snapdata_path)
+    with open(file) as fp:
+        cluster_cert = fp.read()
+    file = "{}/var/kubernetes/backend/cluster.key".format(snapdata_path)
+    with open(file) as fp:
+        cluster_key = fp.read()
+
+    return cluster_cert, cluster_key
+
+
+@app.route('/{}/join'.format(CLUSTER_API_V2), methods=['POST'])
+def join_node_dqlite():
+    """
+    Web call to join a node to the cluster
+    """
+    if request.headers['Content-Type'] == 'application/json':
+        token = request.json['token']
+        hostname = request.json['hostname']
+        port = request.json['port']
+    else:
+        token = request.form['token']
+        hostname = request.form['hostname']
+        port = request.form['port']
+
+    if not is_valid(token):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+
+    if not is_node_running_dqlite():
+        error_msg = {"error": "Not possible to join. This is not an HA dqlite cluster."}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=501)
+
+    voters = get_dqlite_voters()  # type: List[str]
+    # Check if we need to set dqlite with external IP
+    if len(voters) == 1 and voters[0].startswith("127.0.0.1"):
+        update_dqlite_ip(request.host.split(":")[0])
+        voters = get_dqlite_voters()
+    callback_token = get_callback_token()
+    remove_token_from_file(token, cluster_tokens_file)
+    node_addr = request.remote_addr
+    api_port = get_arg('--secure-port', 'kube-apiserver')
+    kubelet_args = read_kubelet_args_file()
+    cluster_cert, cluster_key = get_cluster_certs()
+
+    return jsonify(ca=get_cert("ca.crt"),
+                   ca_key=get_cert("ca.key"),
+                   server_cert=get_cert("server.crt"),
+                   server_cert_key=get_cert("server.key"),
+                   service_account_key=get_cert("serviceaccount.key"),
+                   proxy_cert=get_cert("front-proxy-client.crt"),
+                   proxy_cert_key=get_cert("front-proxy-client.key"),
+                   cluster_cert=cluster_cert,
+                   cluster_key=cluster_key,
+                   voters=voters,
+                   callback_token=callback_token,
+                   apiport=api_port,
+                   kubelet_args=kubelet_args,
+                   hostname_override=node_addr)
 
 
 def usage():
