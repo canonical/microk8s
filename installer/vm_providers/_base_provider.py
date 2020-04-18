@@ -135,10 +135,10 @@ class Provider(abc.ABC):
         except errors.ProviderInstanceNotFoundError:
             self._launch(specs)
             # We need to setup MicroK8s and scan for cli commands
-            self._setup_microk8s()
+            self._setup_microk8s(specs)
 
-    def _setup_microk8s(self) -> None:
-        self.run("snap install microk8s --classic".split())
+    def _setup_microk8s(self, specs: Dict) -> None:
+        self.run("snap install microk8s --classic --channel {}".format(specs['channel']).split())
 
     def _get_env_command(self) -> Sequence[str]:
         """Get command sequence for `env` with configured flags."""
