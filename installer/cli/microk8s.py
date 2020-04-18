@@ -192,7 +192,7 @@ def _get_microk8s_commands() -> List:
         instance_info = instance.get_instance_info()
         if instance_info.is_running():
             commands = instance.run('ls -1 /snap/bin/'.split(), hide_output=True)
-            mk8s = [c.decode().replace('microk8s.', '') for c in commands.split() if c.decode().startswith('microk8s')]
+            mk8s = [c.decode().replace('microk8s.', '') for c in commands.split() if c.decode().startswith('microk8s.')]
             return mk8s
         else:
             return ["start", "stop"]
