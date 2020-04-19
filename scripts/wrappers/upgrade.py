@@ -14,6 +14,12 @@ snap_path = os.environ.get('SNAP')
 
 
 def upgrade_master(upgrade, phase):
+    """
+    Upgrade the master node
+    :param upgrade: which upgrade to call
+    :param phase: prepare, commit or rollback
+    :return:
+    """
     try:
         upgrade_script='{}/upgrade-scripts/{}/{}-master.sh'.format(snap_path, upgrade, phase)
         if os.path.isfile(upgrade_script):
@@ -25,6 +31,14 @@ def upgrade_master(upgrade, phase):
 
 
 def node_upgrade(upgrade, phase, node_ep, token):
+    """
+    Upgrade a node
+    :param upgrade: which upgrade to call
+    :param phase: prepare, commit or rollback
+    :param node_ep: the node endpoint the nodes cluster agent listens at
+    :param token: the callback token to access the node
+    :return:
+    """
     try:
         upgrade_script='{}/upgrade-scripts/{}/{}-node.sh'.format(snap_path, upgrade, phase)
         if os.path.isfile(upgrade_script):
@@ -42,6 +56,10 @@ def node_upgrade(upgrade, phase, node_ep, token):
 
 
 def rollback(upgrade):
+    """
+    The rollback method that oversees the rollback of the cluster
+    :param upgrade: which upgrade to call
+    """
     node_info = get_nodes_info()
 
     upgrade_log_file = "{}/var/log/upgrades/{}.log".format(snapdata_path, upgrade)
@@ -66,6 +84,10 @@ def rollback(upgrade):
 
 
 def run_upgrade(upgrade):
+    """
+    The upgrade method that oversees the upgrade of the cluster
+    :param upgrade: which upgrade to call
+    """
     node_info = get_nodes_info()
 
     log_dir = "{}/var/log/upgrades".format(snapdata_path)
@@ -98,6 +120,10 @@ def run_upgrade(upgrade):
 
 
 def get_nodes_info():
+    """
+    Get the list of node endpoints and tokens in the cluster
+    :return:
+    """
     callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
     node_info = []
     try:
@@ -119,6 +145,9 @@ def get_nodes_info():
 
 
 def list_upgrades():
+    """
+    List all available upgrades
+    """
     upgrades_dir = '{}/upgrade-scripts/'.format(snap_path)
     upgrades = [dI for dI in os.listdir(upgrades_dir) if os.path.isdir(os.path.join(upgrades_dir, dI))]
     for u in upgrades:
