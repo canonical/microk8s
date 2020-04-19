@@ -143,3 +143,11 @@ microk8s-addons:
       supported_architectures:
       - amd64
       - arm64
+
+    - name: "host-access"
+      description: "Allow Pods connecting to Host services smoothly"
+      version: "1.0.0"
+      check_status: "${SNAP_DATA}/var/lock/host-access-enabled"
+      supported_architectures:
+      - amd64
+      - arm64

@@ -1,6 +1,8 @@
 import os
 import shutil
 import time
+import string
+import random
 
 
 def try_set_file_permissions(file):
@@ -68,4 +70,40 @@ def is_token_expired(token_line):
         if int(round(time.time())) > int(expiry):
             return True
 
-    return False    
+    return False  
+      
+def get_callback_token():
+    """
+    Generate a token and store it in the callback token file
+
+    :return: the token
+    """
+    snapdata_path = os.environ.get('SNAP_DATA')
+    callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
+    if os.path.exists(callback_token_file):
+        with open(callback_token_file) as fp:
+            token = fp.read()
+    else:
+        token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(64))
+        with open(callback_token_file, "w") as fp:
+            fp.write("{}\n".format(token))
+        try_set_file_permissions(callback_token_file)
+
+    return token
+
+
+def is_node_running_dqlite():
+    """
+    Check if we should use the dqlite joining process (join api version 2.0)
+
+    :return: True if dqlite is to be used
+    """
+    # We want to use the join with
+    snapdata_path = os.environ.get('SNAP_DATA')
+    apiserver_conf_file = "{}/args/kube-apiserver".format(snapdata_path)
+    with open(apiserver_conf_file) as f:
+        line = f.readline()
+        if line.startswith("--storage-backend") and line.endswith("dqlite"):
+            return True
+
+    return False

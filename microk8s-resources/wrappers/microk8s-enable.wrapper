@@ -24,19 +24,11 @@ exit_if_no_permissions
 
 result=1
 for addon in "$@"; do
-  # Making sure the cluster is up and running befor each addon
-  STATUS=$(${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30)
-  if echo $STATUS | grep "$addon: enabled" >/dev/null
-  then
-    echo "$addon is already enabled"
-    result=0
-    continue
-  fi
-
+  # Making sure the cluster is up and running before each addon
   action="$(addon_name $addon)"
   arguments="$(addon_arguments $addon)"
   # Check if the addon is already enabled, then skip.
-  if ${SNAP}/microk8s-status.wrapper --addon $action | grep "enabled" >/dev/null; then
+  if ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 --addon $action | grep "enabled" >/dev/null; then
     echo "Addon $action is already enabled."
     result=0
     continue

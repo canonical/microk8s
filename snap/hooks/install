@@ -89,3 +89,5 @@ do
   fi
 done
 
+init_cluster
+

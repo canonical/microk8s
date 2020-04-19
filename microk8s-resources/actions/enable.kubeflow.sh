@@ -12,6 +12,8 @@ import time
 from itertools import count
 from distutils.util import strtobool
 
+MIN_MEM_GB = 14
+
 
 def run(*args, die=True, debug=False, stdout=True):
     # Add wrappers to $PATH
@@ -41,12 +43,12 @@ def run(*args, die=True, debug=False, stdout=True):
         else:
             raise
 
-    result_stdout = result.stdout.decode('utf-8')
+    result_stdout = result.stdout.decode("utf-8")
 
     if debug and stdout:
         print(result_stdout)
         if result.stderr:
-            print(result.stderr.decode('utf-8'))
+            print(result.stderr.decode("utf-8"))
 
     return result_stdout
 
@@ -59,9 +61,9 @@ def get_random_pass():
 
 def juju(*args, **kwargs):
     if strtobool(os.environ.get("KUBEFLOW_DEBUG") or "false"):
-        return run('microk8s-juju.wrapper', "--debug", *args, debug=True, **kwargs)
+        return run("microk8s-juju.wrapper", "--debug", *args, debug=True, **kwargs)
     else:
-        return run('microk8s-juju.wrapper', *args, **kwargs)
+        return run("microk8s-juju.wrapper", *args, **kwargs)
 
 
 def get_hostname():
@@ -79,7 +81,7 @@ def get_hostname():
             die=False,
         )
         return json.loads(output)["spec"]["rules"][0]["host"]
-    except (KeyError, subprocess.CalledProcessError) as err:
+    except (KeyError, subprocess.CalledProcessError):
         pass
 
     # Otherwise, see if we've set up metallb with a custom service
@@ -95,7 +97,7 @@ def get_hostname():
         )
         pub_ip = json.loads(output)["status"]["loadBalancer"]["ingress"][0]["ip"]
         return "%s.xip.io" % pub_ip
-    except (KeyError, subprocess.CalledProcessError) as err:
+    except (KeyError, subprocess.CalledProcessError):
         pass
 
     # If all else fails, just use localhost
@@ -107,6 +109,25 @@ def main():
     channel = os.environ.get("KUBEFLOW_CHANNEL") or "stable"
     no_proxy = os.environ.get("KUBEFLOW_NO_PROXY") or None
     hostname = os.environ.get("KUBEFLOW_HOSTNAME") or None
+    debug = strtobool(os.environ.get("KUBEFLOW_DEBUG") or "false")
+    ignore_min_mem = strtobool(os.environ.get("KUBEFLOW_IGNORE_MIN_MEM") or "false")
+
+    with open("/proc/meminfo") as f:
+        memtotal_lines = [l for l in f.readlines() if "MemTotal" in l]
+
+    try:
+        total_mem = int(memtotal_lines[0].split(" ")[-2])
+    except IndexError:
+        print("Couldn't determine total memory.")
+        print("Kubeflow recommends at least %s GB of memory." % MIN_MEM_GB)
+
+    if total_mem < MIN_MEM_GB * 1024 * 1024 and not ignore_min_mem:
+        print("Kubeflow recommends at least %s GB of memory." % MIN_MEM_GB)
+        print(
+            "Run `KUBEFLOW_IGNORE_MIN_MEM=true microk8s.enable kubeflow`"
+            " if you'd like to proceed anyways."
+        )
+        sys.exit(1)
 
     password_overlay = {
         "applications": {
@@ -129,9 +150,21 @@ def main():
         "metallb:10.64.140.43-10.64.140.49",
     ]:
         print("Enabling %s..." % service)
-        run("microk8s-enable.wrapper", service)
+        run("microk8s-enable.wrapper", service, debug=debug)
 
-    run("microk8s-status.wrapper", '--wait-ready')
+    run("microk8s-status.wrapper", "--wait-ready", debug=debug)
+
+    print("Waiting for DNS and storage plugins to finish setting up")
+    run(
+        "microk8s-kubectl.wrapper",
+        "wait",
+        "--for=condition=available",
+        "-nkube-system",
+        "deployment/coredns",
+        "deployment/hostpath-provisioner",
+        "--timeout=10m",
+        debug=debug,
+    )
 
     try:
         juju("show-controller", "uk8s", die=False, stdout=False)
@@ -237,6 +270,7 @@ def main():
         "pod",
         "--timeout=-1s",
         "--all",
+        debug=debug,
     )
 
     hostname = hostname or get_hostname()
