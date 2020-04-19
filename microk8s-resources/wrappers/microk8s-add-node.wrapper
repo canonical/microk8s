@@ -46,7 +46,7 @@ fi
 # Use python's built-in (3.6+) secrets generator to produce the token.
 LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/add_token.py $@
 
-# Get the generated token and display it.
+# Get the generated token and display it, so users can use it to join the cluster.
 OIFS=$IFS
 TOKEN_IN_LINE=$(tail -1 $SNAP_DATA/credentials/cluster-tokens.txt)
 
