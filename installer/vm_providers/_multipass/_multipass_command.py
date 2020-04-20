@@ -73,7 +73,7 @@ class MultipassCommand:
     @classmethod
     def _wait_for_multipass_ready(cls, *, echoer):
         echoer.wrapped("Waiting for multipass...")
-        retry_count = 20
+        retry_count = 60
         while retry_count:
             try:
                 output = subprocess.check_output([cls.provider_cmd, "version"]).decode()
