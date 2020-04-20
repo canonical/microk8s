@@ -109,38 +109,44 @@ def install(args) -> None:
     parser.add_argument('-y', '--assume-yes', action='store_true', default=definitions.DEFAULT_ASSUME)
     args = parser.parse_args(args)
 
+    echo = Echo()
+
     if platform == 'win32':
         if not Windows().check_admin():
-            print('`microk8s install` must be ran as adminstrator in order to check Hyper-V status.')
+            echo.error('`microk8s install` must be ran as adminstrator in order to check Hyper-V status.')
             input('Press return key to exit...')
             exit(1)
 
         if not Windows().is_enough_space():
-            print('There is not enough disk space to continue.  You need at least 50GB.')
+            echo.error('There is not enough disk space to continue.  You need at least 50GB.')
             input('Press return key to exit...')
             exit(1)
 
         if not Windows().check_hyperv():
-            print('Hyper-V will now be enabled.')
-            Windows().enable_hyperv()
-            print('Hyper-V has been enabled.')
-            print('This host must be restarted.  After restart, run `microk8s install` again to complete setup.')
-            input('Press return key to exit...')
-            exit(0)
+            if args.assume_yes or (echo.is_tty_connected() and echo.confirm(
+                "Hyper-V needs to be enabled. "
+                "Would you like to do that now?"
+            )):
+                echo.info('Hyper-V will now be enabled.')
+                Windows().enable_hyperv()
+                echo.info('Hyper-V has been enabled.')
+                echo.info('This host must be restarted.  After restart, run `microk8s install` again to complete setup.')
+                input('Press return key to exit...')
+                exit(0)
+            else:
+                echo.error('Cannot continue without enabling Hyper-V')
+                exit(1)
 
     vm_provider_name: str = 'multipass'
     vm_provider_class = get_provider_for(vm_provider_name)
-    echo = Echo()
     try:
         vm_provider_class.ensure_provider()
     except ProviderNotFound as provider_error:
         if provider_error.prompt_installable:
-            if echo.is_tty_connected() and args.assume_yes:
-                vm_provider_class.setup_provider(echoer=echo)
-            elif echo.is_tty_connected() and echo.confirm(
+            if args.assume_yes or (echo.is_tty_connected() and echo.confirm(
                 "Support for {!r} needs to be set up. "
                 "Would you like to do that it now?".format(provider_error.provider)
-            ) and not args.assume_yes:
+            )):
                 vm_provider_class.setup_provider(echoer=echo)
             else:
                 raise provider_error
