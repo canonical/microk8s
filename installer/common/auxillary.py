@@ -1,3 +1,4 @@
+import ctypes
 import logging
 import subprocess
 
@@ -47,9 +48,21 @@ class Windows(Auxillary):
         """
         super(Windows, self).__init__()
 
-    def check_hyperv(self) -> bool:
+    @staticmethod
+    def check_admin() -> bool:
+        """
+        Check if running as admin.
+
+        :return: Boolean
+        """
+        return ctypes.windll.shell32.IsUserAnAdmin() == 1
+
+    @staticmethod
+    def check_hyperv() -> bool:
         """
         Check if Hyper V is already enabled.
+
+        :return: Boolean
         """
         try:
             out = subprocess.check_output([
@@ -66,9 +79,12 @@ class Windows(Auxillary):
 
         return True
 
-    def enable_hyperv(self) -> None:
+    @staticmethod
+    def enable_hyperv() -> None:
         """
         Enable Hyper V feature.
+
+        :return: None
         """
         try:
             subprocess.check_call([
