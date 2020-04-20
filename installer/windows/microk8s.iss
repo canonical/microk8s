@@ -6,6 +6,7 @@ AppPublisher=Canonical Ltd.
 AppPublisherURL=https://microk8s.io/
 AppSupportURL=https://microk8s.io/
 AppUpdatesURL=https://microk8s.io/
+ArchitecturesAllowed=x64
 DefaultDirName={autopf}\MicroK8s for Windows
 DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE
