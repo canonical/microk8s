@@ -404,13 +404,12 @@ def validate_kubeflow():
 
     wait_for_pod_state("ambassador-operator-0", "kubeflow", "running")
 
+
 def validate_cluster_agent_api():
     """
     Validate basic API endpoints
     """
     api = utils_api.TestClusterAgentApi()
-    api.test_version()
     api.test_status()
     api.test_services()
-    api.test_service_logs()
 
