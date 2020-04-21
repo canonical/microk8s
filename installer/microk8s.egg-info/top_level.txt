@@ -1,3 +1,0 @@
-cli
-common
-vm_providers
