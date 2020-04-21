@@ -183,6 +183,16 @@ parts:
     - "--disable-shared"
     - "--enable-static"
     prime: [ -bin/iptables-xml ]
+  migrator:
+    build-snaps: [go]
+    source: https://github.com/ktsakalozos/go-migrator
+    source-type: git
+    plugin: go
+    go-importpath: github.com/ktsakalozos/go-migrator
+    build-packages:
+      - gcc
+    prime:
+      - bin/migrator
   containerd:
     build-snaps: [go]
     after: [iptables]

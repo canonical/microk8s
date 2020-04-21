@@ -1,18 +1,19 @@
 #!/bin/bash
-set -ex
+set -e
 
-echo "Rolling back calico upgrade on master"
+echo "Nothing to do to rollback dqlite upgrade on a node"
 
 source $SNAP/actions/common/utils.sh
 CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 
+BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
 
-if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]; then
-  KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-  $KUBECTL delete -f "$SNAP_DATA/args/cni-network/cni.yaml"
+echo "Restarting kube-apiserver"
+if [ -e "$BACKUP_DIR/args/kube-apiserver" ]; then
+  cp "$BACKUP_DIR"/args/kube-apiserver "$SNAP_DATA/args/"
+  systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 fi
 
-BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
 
 if [ -e "$BACKUP_DIR/args/cni-network/flannel.conflist" ]; then
   rm -rf "$SNAP_DATA"/args/cni-network/*
