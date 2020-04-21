@@ -1,17 +1,17 @@
 [Setup]
 AppId={{05E40DED-CE0A-437E-B90C-25A32B47880F}
 AppName=MicroK8s for Windows
-AppVersion=1.0.0
-;AppVerName=MicroK8s for Windows 1.0.0
+AppVersion=1.0.1
 AppPublisher=Canonical Ltd.
 AppPublisherURL=https://microk8s.io/
 AppSupportURL=https://microk8s.io/
 AppUpdatesURL=https://microk8s.io/
+ArchitecturesAllowed=x64
 DefaultDirName={autopf}\MicroK8s for Windows
 DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE
-PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
+MinVersion=10
+PrivilegesRequired=admin
 SetupIconFile=microk8s.ico
 Compression=lzma
 SolidCompression=yes
@@ -34,6 +34,24 @@ const
   ModPathName = 'modifypath';
   ModPathType = 'user';
 
+function InitializeSetup(): Boolean;
+var
+  Version: TWindowsVersion;
+  S: String;
+begin
+  GetWindowsVersionEx(Version);
+
+  // Disallow installation on Home edition of Windows
+  if Version.SuiteMask and VER_SUITE_PERSONAL <> 0 then
+  begin
+    SuppressibleMsgBox('MicroK8s cannot be installed on Home edition of Windows 10.',
+      mbCriticalError, MB_OK, IDOK);
+    Result := False;
+    Exit;
+  end;
+  Result := True;
+end;
+
 function ModPathDir(): TArrayOfString;
 begin
   SetArrayLength(Result, 1);
@@ -54,7 +72,7 @@ begin
 end;
 
 [Run]
-Filename: "{app}\microk8s.exe"; Parameters: "install --assume-yes"; StatusMsg: "Setting up MicroK8s for the first time"; Description: "Setup and start MicroK8s?"; Flags: postinstall
+Filename: "{app}\microk8s.exe"; Parameters: "install --assume-yes"; StatusMsg: "Setting up MicroK8s for the first time"; Description: "Setup and start MicroK8s with the default settings?"; Flags: postinstall runascurrentuser
 
 [UninstallRun]
 Filename: "{app}\microk8s.exe"; Parameters: "uninstall"
