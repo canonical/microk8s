@@ -7,6 +7,7 @@ command_descriptions = {
   'disable':         "Disables running add-ons",
   'enable':          "Enables  useful add-ons",
   'helm':            "The helm client",
+  'helm3':            "The helm3 client",
   'inspect':         "Checks the cluster and gathers logs",
   'istioctl':        "The istio client",
   'join':            "Joins this instance as a node to a cluster",
