@@ -1,7 +1,7 @@
 [Setup]
 AppId={{05E40DED-CE0A-437E-B90C-25A32B47880F}
 AppName=MicroK8s for Windows
-AppVersion=1.0.1
+AppVersion=1.0.2
 AppPublisher=Canonical Ltd.
 AppPublisherURL=https://microk8s.io/
 AppSupportURL=https://microk8s.io/
