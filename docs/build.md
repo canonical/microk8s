@@ -61,7 +61,25 @@ lxc file pull test-build/root/microk8s/microk8s_v1.9.6_amd64.snap .
 snap install microk8s_latest_amd64.snap --classic --dangerous
 ```
 
+## Assembling the Calico CNI manifest
+
+The calico CNI manifest can be found under `upgrade-scripts/000-switch-to-calico/resources/calico.yaml`.
+Building the manifest is subject to the upstream calico project k8s installation process.
+At the time of the v3.13.2 release. The `calico.yaml` manifest is a slightly modifies version of:
+`https://docs.projectcalico.org/manifests/calico.yaml`:
+- CALICO_IPV4POOL_CIDR was set to "10.1.0.0/16"
+- CNI_NET_DIR was set to "/var/snap/microk8s/current/args/cni-network"
+- We set the following mount paths:
+  1. var-run-calico to /var/snap/microk8s/current/var/run/calico
+  1. var-lib-calico to /var/snap/microk8s/current/var/lib/calico
+  1. cni-bin-dir to /var/snap/microk8s/current/opt/cni/bin
+  1. cni-net-dir to /var/snap/microk8s/current/args/cni-network
+  1. host-local-net-dir to /var/snap/microk8s/current/var/lib/cni/networks
+  1. policysync to /var/snap/microk8s/current/var/run/nodeagent
+- We enabled vxlan following the instructions in [the official docs.](https://docs.projectcalico.org/getting-started/kubernetes/installation/config-options#switching-from-ip-in-ip-to-vxlan)
+
 ## References
 
 - https://snapcraft.io/docs/snapcraft-overview
 - https://forum.snapcraft.io/t/how-to-create-a-lxd-container-for-snap-development/4658
+- https://docs.projectcalico.org/getting-started/kubernetes/installation/config-options#switching-from-ip-in-ip-to-vxlan
