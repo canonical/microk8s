@@ -134,8 +134,26 @@ class Provider(abc.ABC):
             self._start()
         except errors.ProviderInstanceNotFoundError:
             self._launch(specs)
+            self._check_connectivity()
             # We need to setup MicroK8s and scan for cli commands
             self._setup_microk8s(specs)
+
+    def _check_connectivity(self) -> None:
+        """Check that the VM can access the internet."""
+        try
+            self.run("ping -c 1 snapcraft.io".split(), hide_output=True)
+        except errors.ProviderLaunchError:
+            url = None
+            if sys.platform == "win32":
+                url = "https://multipass.run/docs/troubleshooting-networking-on-windows"
+            elif sys.platform == "darwin":
+                url = "https://multipass.run/docs/troubleshooting-networking-on-macos"
+
+            if url:
+                raise errors.ConnectivityError(
+                    "The VM cannot connect to snapcraft.io, please see {}".format(url))
+            else:
+                raise
 
     def _setup_microk8s(self, specs: Dict) -> None:
         self.run("snap install microk8s --classic --channel {}".format(specs['channel']).split())
