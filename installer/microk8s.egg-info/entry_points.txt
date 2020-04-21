@@ -1,0 +1,3 @@
+[console_scripts]
+microk8s = cli.microk8s:cli
+

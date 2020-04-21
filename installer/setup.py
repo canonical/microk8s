@@ -24,6 +24,7 @@ setup(
         'requests_unixsocket==0.1.5',
         'simplejson==3.8.2',
         'toml==0.10.0',
+        'urllib3==1.24',
         'wheel'
     ],
     platforms='any',

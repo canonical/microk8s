@@ -140,7 +140,7 @@ class Provider(abc.ABC):
 
     def _check_connectivity(self) -> None:
         """Check that the VM can access the internet."""
-        try
+        try:
             self.run("ping -c 1 snapcraft.io".split(), hide_output=True)
         except errors.ProviderLaunchError:
             url = None
