@@ -72,7 +72,7 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  install         Installs MicroK8s. Use --cpu, --mem, --disk to appoint resources.
+  install         Installs MicroK8s. Use --cpu, --mem, --disk and --channel to configure your setup. 
   uninstall       Removes MicroK8s"""
     click.echo(msg)
     commands = _get_microk8s_commands()
@@ -90,12 +90,16 @@ def _show_install_help():
     msg = """Usage: microk8s install OPTIONS
 
     Options:
-      --help  Show this message and exit.
-      --cpu   Cores used by MicroK8s (default={})
-      --mem   RAM in GB used by MicroK8s (default={})
-      --disk  Maximum volume in GB of the dynamicaly expandable hard disk to be used (default={})
+      --help     Show this message and exit.
+      --cpu      Cores used by MicroK8s (default={})
+      --mem      RAM in GB used by MicroK8s (default={})
+      --disk     Maximum volume in GB of the dynamically expandable hard disk to be used (default={})
+      --channel  Kubernetes version to install (default={})
        -y, --assume-yes  Automatic yes to prompts"""
-    Echo.info(msg.format(definitions.DEFAULT_CORES, definitions.DEFAULT_MEMORY, definitions.DEFAULT_DISK))
+    Echo.info(msg.format(definitions.DEFAULT_CORES,
+                         definitions.DEFAULT_MEMORY,
+                         definitions.DEFAULT_DISK,
+                         definitions.DEFAULT_CHANNEL))
 
 
 def install(args) -> None:
@@ -106,6 +110,7 @@ def install(args) -> None:
     parser.add_argument('--cpu', default=definitions.DEFAULT_CORES, type=int)
     parser.add_argument('--mem', default=definitions.DEFAULT_MEMORY, type=int)
     parser.add_argument('--disk', default=definitions.DEFAULT_DISK, type=int)
+    parser.add_argument('--channel', default=definitions.DEFAULT_CHANNEL, type=str)
     parser.add_argument('-y', '--assume-yes', action='store_true', default=definitions.DEFAULT_ASSUME)
     args = parser.parse_args(args)
 
