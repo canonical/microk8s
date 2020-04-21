@@ -40,7 +40,7 @@ class Provider(abc.ABC):
         self.echoer = echoer
         self._is_ephemeral = is_ephemeral
 
-        self.instance_name = "MicroK8sVM"
+        self.instance_name = "microk8s-vm"
 
         if build_provider_flags is None:
             build_provider_flags = dict()
