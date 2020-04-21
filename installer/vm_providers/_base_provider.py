@@ -143,6 +143,7 @@ class Provider(abc.ABC):
         try:
             self.run("ping -c 1 snapcraft.io".split(), hide_output=True)
         except errors.ProviderLaunchError:
+            self.destroy()
             url = None
             if sys.platform == "win32":
                 url = "https://multipass.run/docs/troubleshooting-networking-on-windows"
