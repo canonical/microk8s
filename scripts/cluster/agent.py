@@ -435,40 +435,16 @@ def configure():
     return resp
 
 
-@app.route('/{}/version'.format(CLUSTER_API), methods=['POST'])
-def version():
-    """
-    Web call to get microk8s version installed
-    """
-    v = callback_token_validation(request)
-    if not v["valid"]: return v["response"]
-    output = subprocess.check_output("snap info microk8s".split())
-
-    json_output = yaml.full_load(output)
-    return json_output["installed"].split(' ')[0]
-
-
 @app.route('/{}/services'.format(CLUSTER_API), methods=['POST'])
 def services():
     """
     Web call to get all microk8s services
-    Output sample:
-      microk8s.daemon-apiserver
-      microk8s.daemon-apiserver-kicker
-      microk8s.daemon-cluster-agent
-      microk8s.daemon-containerd
-      microk8s.daemon-controller-manager
-      microk8s.daemon-etcd
-      microk8s.daemon-flanneld
-      microk8s.daemon-kubelet
-      microk8s.daemon-proxy
-      microk8s.daemon-scheduler
     """
     v = callback_token_validation(request)
     if not v["valid"]: return v["response"]
-    output = subprocess.check_output("snap info microk8s".split()).decode().replace('microk8s.daemon-', '')
-    json_output = yaml.full_load(output)
-    return app.response_class(response=json.dumps(json_output["services"], sort_keys=False, indent=4), status=200,
+    output = {"services": ["apiserver", "apiserver-kicker", "cluster-agent", "containerd", "controller-manager", "etcd",
+                           "flanneld", "kubelet", "proxy", "scheduler"]}
+    return app.response_class(response=json.dumps(output, sort_keys=False, indent=4), status=200,
                               mimetype='application/json')
 
 
@@ -492,35 +468,6 @@ def status():
         json_output = yaml.full_load(output)
 
     return app.response_class(response=json.dumps(json_output, sort_keys=False, indent=4), status=200, mimetype='application/json')
-
-
-@app.route('/{}/service/logs'.format(CLUSTER_API), methods=['POST'])
-def service_logs():
-    """
-    Web call to the logs of a service.
-    Example:
-    {
-        "callback": "xyztoken",
-        "service": "cluster-agent",
-        "lines": 25
-    }
-    :request_param service: the name of the service
-    :request_param lines: total lines | if omitted default value 10 will be used
-    """
-    lines = 10
-    v = callback_token_validation(request)
-    if not v["valid"]: return v["response"]
-    if "service" not in request.json or len(request.json["service"].strip()) == 0:
-        error_msg = {"error": "Empty service provided"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=400)
-    if "lines" in request.json:
-        lines = request.json["lines"]
-
-    service_name = get_service_name(request.json['service'])
-    # more info on logs could be obtained by using: --output=json-pretty
-    output = subprocess.check_output("journalctl --lines={} --unit=snap.microk8s.daemon-{}.service --no-pager"
-                                     .format(lines, service_name).split())
-    return output
 
 
 def callback_token_validation(request):

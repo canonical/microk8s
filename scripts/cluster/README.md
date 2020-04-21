@@ -30,15 +30,13 @@ curl -k -v -d '{"callback":"xyztoken", "addon": [{"name":"dns","enable":true}]}'
 ```
 {"result": "ok"}
 ```
-
-### /version
-- Get MicroK8s version
+- Restart flanneld
 ```
-curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/version
+curl -k -v -d '{"callback":"xyztoken", "service": [{"name":"flanneld","restart":true}]}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/configure
 ```
 - Response:
 ```
-v1.18.1
+{"result": "ok"}
 ```
 
 ### /status
@@ -165,38 +163,44 @@ curl -k -v -d '{"callback":"xyztoken","addon":"dns"}' -H "Content-Type: applicat
 curl -k -v -d '{"callback":"xyztoken"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/services
 ```
 - Response:
-```
+```json
 {
-    "apiserver": "simple, enabled, active",
-    "apiserver-kicker": "simple, enabled, active",
-    "cluster-agent": "simple, enabled, active",
-    "containerd": "simple, enabled, active",
-    "controller-manager": "simple, enabled, active",
-    "etcd": "simple, enabled, active",
-    "flanneld": "simple, enabled, active",
-    "kubelet": "simple, enabled, active",
-    "proxy": "simple, enabled, active",
-    "scheduler": "simple, enabled, active"
+    "services": [
+        "apiserver",
+        "apiserver-kicker",
+        "cluster-agent",
+        "containerd",
+        "controller-manager",
+        "etcd",
+        "flanneld",
+        "kubelet",
+        "proxy",
+        "scheduler"
+    ]
 }
 ```
 
-### /service/logs
-- Get the service logs
+### How to get Kubernetes version from k8s API
+- Get version data
 ```
-curl -k -v -d '{"callback":"xyztoken", "service":"flanneld"}' -H "Content-Type: application/json" -X POST https://127.0.0.1:25000/cluster/api/v1.0/service/logs
-```
-- Response: 
-```
--- Logs begin at Thu 2018-06-28 23:18:58 EEST, end at Tue 2020-03-24 14:30:07 EET. --
-Mar 24 13:35:40 sx-tpad flanneld[27444]: warning: ignoring ServerName for user-provided CA for backwards compatibility is deprecated
-Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.401822   27444 main.go:244] Created subnet manager: Etcd Local Manager with Previous Subnet: 10.1.32.0/24
-Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.401829   27444 main.go:247] Installing signal handlers
-Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.409706   27444 main.go:386] Found network config - Backend type: vxlan
-Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.409745   27444 vxlan.go:120] VXLAN config: VNI=1 Port=0 GBP=false DirectRouting=false
-Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.415272   27444 local_manager.go:147] Found lease (10.1.32.0/24) for current IP (10.22.22.95), reusing
-Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.416885   27444 main.go:317] Wrote subnet file to /var/snap/microk8s/common/run/flannel/subnet.env
-Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.416910   27444 main.go:321] Running backend.
-Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.417111   27444 vxlan_network.go:60] watching for new subnet leases
-Mar 24 13:35:40 sx-tpad microk8s.daemon-flanneld[27444]: I0324 13:35:40.418877   27444 main.go:429] Waiting for 22h59m59.99709928s to renew lease
+APISERVER=$(microk8s.kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " ")
+SECRET_NAME=$(microk8s.kubectl get secrets | grep ^default | cut -f1 -d ' ')
+TOKEN=$(microk8s.kubectl describe secret $SECRET_NAME | grep -E '^token' | cut -f2 -d':' | tr -d " ")
 
+curl -k $APISERVER/version --header "Authorization: Bearer $TOKEN" 
+
+```
+- Response:
+```json
+{
+  "major": "1",
+  "minor": "18",
+  "gitVersion": "v1.18.2",
+  "gitCommit": "52c56ce7a8272c798dbc29846288d7cd9fbae032",
+  "gitTreeState": "clean",
+  "buildDate": "2020-04-16T11:48:36Z",
+  "goVersion": "go1.13.9",
+  "compiler": "gc",
+  "platform": "linux/amd64"
+}
 ```
