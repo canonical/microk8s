@@ -21,6 +21,10 @@ from typing import Sequence  # noqa: F401
 from common.errors import BaseError
 
 
+class ConnectivityError(BaseError):
+    pass
+
+
 class ProviderBaseError(BaseError):
     pass
 
