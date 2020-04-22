@@ -100,3 +100,14 @@ class Windows(Auxillary):
                 pass  # This is fine, because Windows.
             else:
                 raise
+
+
+class MacOS(Auxillary):
+    """
+    MacOS auxillary methods.
+    """
+    def __init__(self) -> None:
+        """
+        :return: None
+        """
+        super(MacOS, self).__init__()

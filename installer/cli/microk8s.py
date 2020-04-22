@@ -7,7 +7,7 @@ from sys import exit, platform
 import click
 
 from cli.echo import Echo
-from common.auxillary import Windows
+from common.auxillary import Windows, MacOS
 from common.errors import BaseError
 from vm_providers.factory import get_provider_for
 from vm_providers.errors import ProviderNotFound
@@ -103,10 +103,10 @@ def _show_install_help():
 
 
 def install(args) -> None:
-    if "--help" in args:
+    if '--help' in args or '-h' in args:
         _show_install_help()
         return
-    parser = argparse.ArgumentParser("microk8s install")
+    parser = argparse.ArgumentParser('microk8s install')
     parser.add_argument('--cpu', default=definitions.DEFAULT_CORES, type=int)
     parser.add_argument('--mem', default=definitions.DEFAULT_MEMORY, type=int)
     parser.add_argument('--disk', default=definitions.DEFAULT_DISK, type=int)
@@ -141,6 +141,12 @@ def install(args) -> None:
             else:
                 echo.error('Cannot continue without enabling Hyper-V')
                 exit(1)
+
+    if platform == 'darwin':
+        if not MacOS().is_enough_space():
+            echo.error('There is not enough disk space to continue.  You need at least 50GB.')
+            input('Press return key to exit...')
+            exit(1)
 
     vm_provider_name: str = 'multipass'
     vm_provider_class = get_provider_for(vm_provider_name)
