@@ -45,6 +45,8 @@ if grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
   run_with_sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
 fi
 
+# Allow for services to restart
+sleep 15
 ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30
 
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"

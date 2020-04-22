@@ -96,21 +96,21 @@ def run_upgrade(upgrade):
     try:
         os.makedirs(log_dir, exist_ok=True)
         with open(upgrade_log_file, "w") as log:
-            upgrade_master(upgrade, "prepare")
             log.writelines(["master prepare"])
+            upgrade_master(upgrade, "prepare")
             log.flush()
             for node_ep, token in node_info:
-                node_upgrade(upgrade, "prepare", node_ep, token)
                 log.writelines(["\nnode prepare {}".format(node_ep)])
+                node_upgrade(upgrade, "prepare", node_ep, token)
                 log.flush()
 
             for node_ep, token in node_info:
-                node_upgrade(upgrade, "commit", node_ep, token)
                 log.writelines(["\nnode commit {}".format(node_ep)])
+                node_upgrade(upgrade, "commit", node_ep, token)
                 log.flush()
 
-            upgrade_master(upgrade, "commit")
             log.writelines(["\nmaster commit"])
+            upgrade_master(upgrade, "commit")
             log.flush()
 
     except Exception as e:
