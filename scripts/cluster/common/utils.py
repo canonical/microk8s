@@ -45,12 +45,12 @@ def is_node_running_dqlite():
 
     :return: True if dqlite is to be used
     """
-    # We want to use the join with
+    # We want to use the join with 'SNAP_DATA' but this env variable is not set
     snapdata_path = os.environ.get('SNAP_DATA')
     apiserver_conf_file = "{}/args/kube-apiserver".format(snapdata_path)
     with open(apiserver_conf_file) as f:
-        line = f.readline()
-        if line.startswith("--storage-backend") and line.endswith("dqlite"):
-            return True
+        for line in f:
+            if line.startswith("--storage-backend") and line.rstrip().endswith("dqlite"):
+                return True
 
     return False

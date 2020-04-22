@@ -9,7 +9,6 @@ CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/001-switch-to-dqlite"
 DB_DIR="$BACKUP_DIR/db"
 
-mkdir -p "$BACKUP_DIR"
 mkdir -p "$BACKUP_DIR/args/"
 
 echo "Configuring services"
