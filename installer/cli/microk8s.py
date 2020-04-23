@@ -117,23 +117,22 @@ def install(args) -> None:
     echo = Echo()
 
     if platform == 'win32':
-        if not Windows().check_admin():
+        aux = Windows(args)
+        if not aux.check_admin():
             echo.error('`microk8s install` must be ran as adminstrator in order to check Hyper-V status.')
             input('Press return key to exit...')
             exit(1)
 
-        if not Windows().is_enough_space():
-            echo.error('There is not enough disk space to continue.  You need at least 50GB.')
-            input('Press return key to exit...')
-            exit(1)
+        if not aux.is_enough_space():
+            echo.warning('VM disk size requested exceeds free space on host.')
 
-        if not Windows().check_hyperv():
+        if not aux.check_hyperv():
             if args.assume_yes or (echo.is_tty_connected() and echo.confirm(
                 "Hyper-V needs to be enabled. "
                 "Would you like to do that now?"
             )):
                 echo.info('Hyper-V will now be enabled.')
-                Windows().enable_hyperv()
+                aux.enable_hyperv()
                 echo.info('Hyper-V has been enabled.')
                 echo.info('This host must be restarted.  After restart, run `microk8s install` again to complete setup.')
                 input('Press return key to exit...')
@@ -143,10 +142,9 @@ def install(args) -> None:
                 exit(1)
 
     if platform == 'darwin':
-        if not MacOS().is_enough_space():
-            echo.error('There is not enough disk space to continue.  You need at least 50GB.')
-            input('Press return key to exit...')
-            exit(1)
+        aux = MacOS(args)
+        if not aux.is_enough_space():
+            echo.warning('VM disk size requested exceeds free space on host.')
 
     vm_provider_name: str = 'multipass'
     vm_provider_class = get_provider_for(vm_provider_name)

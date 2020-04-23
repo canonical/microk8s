@@ -2,7 +2,6 @@ import ctypes
 import logging
 import subprocess
 
-from . import definitions
 from os.path import realpath
 from shutil import disk_usage
 
@@ -13,12 +12,14 @@ class Auxillary(object):
     """
     Base OS auxillary class.
     """
-    def __init__(self) -> None:
+    def __init__(self, args) -> None:
         """
+        :param args: ArgumentParser
         :return: None
         """
+        self._args = args
         self.minimum_disk = \
-            definitions.DEFAULT_DISK * 1024 * 1024 * 1024
+            self._args.disk * 1024 * 1024 * 1024
 
     @staticmethod
     def _free_space() -> int:
@@ -42,11 +43,12 @@ class Windows(Auxillary):
     """
     Windows auxillary methods.
     """
-    def __init__(self) -> None:
+    def __init__(self, args) -> None:
         """
+        :param args: ArgumentParser
         :return: None
         """
-        super(Windows, self).__init__()
+        super(Windows, self).__init__(args)
 
     @staticmethod
     def check_admin() -> bool:
@@ -106,8 +108,9 @@ class MacOS(Auxillary):
     """
     MacOS auxillary methods.
     """
-    def __init__(self) -> None:
+    def __init__(self, args) -> None:
         """
+        :param args: ArgumentParser
         :return: None
         """
-        super(MacOS, self).__init__()
+        super(MacOS, self).__init__(args)
