@@ -6,9 +6,9 @@ version: "latest"
 summary: Kubernetes for workstations and appliances
 description: |-
  MicroK8s is a small, fast, secure, single node Kubernetes that installs on
- just about any Linux box. Use it for offline development, prototyping, 
- testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's 
- also a great k8s for appliances - develop your IoT apps for k8s and deploy 
+ just about any Linux box. Use it for offline development, prototyping,
+ testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's
+ also a great k8s for appliances - develop your IoT apps for k8s and deploy
  them to MicroK8s on your boxes.
 
 grade: stable
@@ -633,7 +633,7 @@ parts:
       echo "Creating inspect hook"
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
-      # Add bash completion for microk8s.kubectl. 
+      # Add bash completion for microk8s.kubectl.
       ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
 
       if $REMOVE_KUBE_SNAP_BINS; then

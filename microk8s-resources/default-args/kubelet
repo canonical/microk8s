@@ -4,6 +4,7 @@
 --anonymous-auth=false
 --network-plugin=cni
 --root-dir=${SNAP_COMMON}/var/lib/kubelet
+--log-dir=${SNAP_COMMON}/var/log
 --fail-swap-on=false
 --cni-conf-dir=${SNAP_DATA}/args/cni-network/
 --cni-bin-dir=${SNAP}/opt/cni/bin/
