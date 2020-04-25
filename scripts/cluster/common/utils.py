@@ -36,6 +36,8 @@ def remove_expired_token_from_file(file):
                 if is_token_expired(line):
                     continue
                 back_fp.write("{}".format(line))
+
+    try_set_file_permissions(backup_file)
     shutil.copyfile(backup_file, file)
 
 
@@ -58,6 +60,7 @@ def remove_token_from_file(token, file):
                         continue
                 back_fp.write("{}".format(line))
 
+    try_set_file_permissions(backup_file)
     shutil.copyfile(backup_file, file)
 
 
@@ -71,7 +74,8 @@ def is_token_expired(token_line):
             return True
 
     return False  
-      
+
+
 def get_callback_token():
     """
     Generate a token and store it in the callback token file

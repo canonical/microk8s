@@ -50,9 +50,7 @@ LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts
 OIFS=$IFS
 TOKEN_IN_LINE=$(tail -1 $SNAP_DATA/credentials/cluster-tokens.txt)
 
-echo $TOKEN_IN_LINE
-
-IFS='|' # space is set as delimiter
+IFS='|'
 read -ra ADDR <<< "$TOKEN_IN_LINE" # str is read into an array as tokens separated by IFS
 token=${ADDR[0]}
 IFS=$OIFS
