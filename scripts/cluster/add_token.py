@@ -1,7 +1,13 @@
 import os
 import time
 import argparse
-import secrets
+try:
+    from secrets import token_hex
+except ImportError:
+    from os import urandom
+
+    def token_hex(nbytes=None):
+        return urandom(nbytes).hex()
 
 
 cluster_tokens_file = os.path.expandvars("${SNAP_DATA}/credentials/cluster-tokens.txt")
@@ -50,7 +56,7 @@ if __name__ == '__main__':
     if args.token is not None:
         token = args.token
     else:
-        token = secrets.token_hex(16)
+        token = token_hex(16)
 
     if len(token) < 32:
         print("Invalid token size.  It must be 32 characters long.")

@@ -7,6 +7,7 @@ ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
 export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+export PYTHONNOUSERSITE=false
 
 source $SNAP/actions/common/utils.sh
 
