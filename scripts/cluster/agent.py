@@ -9,14 +9,16 @@ import string
 import subprocess
 import sys
 import time
-
-<<<<<<< HEAD
-from .common.utils import try_set_file_permissions, remove_expired_token_from_file, remove_token_from_file, is_token_expired
-=======
 import yaml
 
-from .common.utils import try_set_file_permissions, is_node_running_dqlite, get_callback_token
->>>>>>> upstream/master
+from .common.utils import (
+    try_set_file_permissions,
+    remove_expired_token_from_file,
+    is_node_running_dqlite,
+    get_callback_token,
+    remove_token_from_file,
+    is_token_expired
+)
 
 from flask import Flask, jsonify, request, abort, Response
 
@@ -201,7 +203,6 @@ def get_arg(key, file):
                 args = args[-1].split('=')
                 return args[-1].rstrip()
     return None
-
 
 
 def is_valid(token_line, token_type=cluster_tokens_file):
