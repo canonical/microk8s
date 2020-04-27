@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 echo "Rolling back calico upgrade on a node"
 
@@ -28,10 +28,8 @@ fi
 echo "Restarting kube-apiserver"
 if [ -e "$BACKUP_DIR/args/kube-apiserver" ]; then
   cp "$BACKUP_DIR"/args/kube-apiserver "$SNAP_DATA/args/"
-  systemctl restart snap.${SNAP_NAME}.daemon-apiserver
 fi
 
-${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30
 
 echo "Restarting flannel"
 set_service_expected_to_start flanneld

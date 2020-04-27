@@ -24,7 +24,8 @@ def upgrade_master(upgrade, phase):
         upgrade_script='{}/upgrade-scripts/{}/{}-master.sh'.format(snap_path, upgrade, phase)
         if os.path.isfile(upgrade_script):
             print("Running {}-upgrade script".format(phase))
-            subprocess.check_output(upgrade_script)
+            out = subprocess.check_output(upgrade_script)
+            print(out)
     except subprocess.CalledProcessError as e:
         print("{}-upgrade step failed".format(phase))
         raise e
