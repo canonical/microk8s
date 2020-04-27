@@ -121,6 +121,18 @@ metadata:
   name: nginx-load-balancer-microk8s-conf
   namespace: ingress
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-ingress-tcp-microk8s-conf
+  namespace: ingress
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-ingress-udp-microk8s-conf
+  namespace: ingress
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -169,4 +181,6 @@ spec:
         args:
         - /nginx-ingress-controller
         - --configmap=$(POD_NAMESPACE)/nginx-load-balancer-microk8s-conf
+        - --tcp-services-configmap=$(POD_NAMESPACE)/nginx-ingress-tcp-microk8s-conf
+        - --udp-services-configmap=$(POD_NAMESPACE)/nginx-ingress-udp-microk8s-conf
         $EXTRA_ARGS
