@@ -100,8 +100,10 @@ apps:
     command: run-cluster-agent-with-args
     daemon: simple
     plugs:
+    - mount-observe
     - network-bind
     - network-observe
+    - network-control
   daemon-controller-manager:
     command: run-with-config-args kube-controller-manager
     daemon: simple
@@ -202,6 +204,7 @@ apps:
   enable:
     command: microk8s-enable.wrapper
     plugs:
+    - home
     - network
     - network-control
     - kernel-module-observe
