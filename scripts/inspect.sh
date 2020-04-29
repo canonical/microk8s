@@ -203,6 +203,19 @@ function build_report_tarball {
   printf -- '  Report tarball is at %s/inspection-report-%s.tar.gz\n' "${SNAP_DATA}" "${now_is}"
 }
 
+function check_certificates {
+  exp_date_str="$(openssl x509 -enddate -noout -in /var/snap/microk8s/current/certs/ca.crt | cut -d= -f 2)"
+  exp_date_secs="$(date -d "$exp_date_str" +%s)"
+  now_secs=$(date +%s)
+  difference=$(($exp_date_secs-$now_secs))
+  days=$(($difference/(3600*24)))
+  if [ "3" -ge $days ];
+  then
+    printf -- '\033[0;33mWARNING: \033[0m This deployments certificates will expire in $days days. \n'
+    printf -- 'Either redeploy MicroK8s or attempt a refresh with "microk8s refresh-certs"\n'
+  fi
+}
+
 
 if [ ${#@} -ne 0 ] && [ "${@#"--help"}" = "" ]; then
   print_help
@@ -211,6 +224,9 @@ fi;
 
 rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
+
+printf -- 'Inspecting Certificates\n'
+check_certificates
 
 printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"
