@@ -53,6 +53,8 @@ apps:
     completer: kubectl.bash
   add-node:
     command: microk8s-add-node.wrapper
+  refresh-certs:
+    command: microk8s-refresh-certs.wrapper
   join:
     command: microk8s-join.wrapper
   remove-node:
