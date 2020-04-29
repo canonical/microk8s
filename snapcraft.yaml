@@ -398,7 +398,7 @@ parts:
       fi
 
 slots:
-  microk8s-info:
+  microk8s:
     interface: content
     content: microk8s
     source:
