@@ -14,6 +14,7 @@ command_descriptions = {
   'kubectl':         "The kubernetes client",
   'leave':           "Disconnects this node from any cluster it has joined",
   'linkerd':         "The linkerd client",
+  'refresh-certs':   "Refresh the CA certificates in this deployment",
   'remove-node':     "Removes a node from the cluster",
   'reset':           "Cleans the cluster from all workloads",
   'start':           "Starts the kubernetes cluster",
