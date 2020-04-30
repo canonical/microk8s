@@ -207,8 +207,14 @@ def dashboard_proxy() -> None:
 
     instance = vm_provider_class(echoer=echo)
 
+    echo.info("Checking if Dashboard is running.")
     command = ["microk8s.enable", "dashboard"]
-    instance.run(command, hide_output=True)
+    output = instance.run(command, hide_output=True)
+    if b"Addon dashboard is already enabled." not in output:
+        echo.info("Waiting for Dashboard to come up.")
+        command = ["microk8s.kubectl", "-n", "kube-system", "wait",
+                   "deployment", "kubernetes-dashboard", "--for", "condition=available"]
+        instance.run(command, hide_output=True)
 
     command = ["microk8s.kubectl", "-n", "kube-system", "get", "secret"]
     output = instance.run(command, hide_output=True)
