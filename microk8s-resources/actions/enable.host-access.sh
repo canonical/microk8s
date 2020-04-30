@@ -32,6 +32,23 @@ echo "Setting ${IP_ADDRESS} as host-access"
 
 run_with_sudo "$SNAP/sbin/ifconfig" lo:microk8s "$IP_ADDRESS" up
 
+# Make loopback ip permanent
+NETFILE=/etc/network/interfaces
+if [ ! -f $NETFILE ]
+then
+  echo "WARNING!! File $NETFILE does not exist. Loopback IP[$IP_ADDRESS] will be not added permanently and configuration will be lost on restart"
+else
+  # Check if the configuration already exists
+  CONFIG="\nauto lo:microk8s\niface lo:microk8s inet static\naddress $IP_ADDRESS\nnetmask 255.0.0.0\n"
+  CONFIG_1="auto lo:microk8siface lo:microk8s inet staticaddress ${IP_ADDRESS}netmask 255.0.0.0"
+  CONTENT=$(cat $NETFILE | tr -d "\n\r")
+  if [[ ! $CONTENT == *"${CONFIG_1}"* ]]; then
+    echo -e "$CONFIG" >> $NETFILE
+  else
+    echo "Loopback IP[$IP_ADDRESS] config already exists"
+  fi
+fi
+
 echo "Host-access is enabled"
 
 
