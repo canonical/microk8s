@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
     ignore_unknown_options=True,
     allow_extra_args=True,
 ))
-@click.option('-h', '--help', is_flag=True)
+@click.option("-h", "--help", is_flag=True)
 @click.pass_context
 def cli(ctx, help):
     try:
@@ -33,15 +33,18 @@ def cli(ctx, help):
         if len(ctx.args) == 0:
             show_error()
             exit(1)
-        if ctx.args[0] == 'install':
+        if ctx.args[0] == "install":
             install(ctx.args[1:])
             exit(0)
-        elif ctx.args[0] == 'uninstall':
+        elif ctx.args[0] == "uninstall":
             uninstall()
             exit(0)
-        elif ctx.args[0] == 'stop':
+        elif ctx.args[0] == "stop":
             run(ctx.args)
             stop()
+            exit(0)
+        elif ctx.args[0] == "dashboard-proxy":
+            dashboard_proxy()
             exit(0)
         else:
             run(ctx.args)
@@ -103,50 +106,50 @@ def _show_install_help():
 
 
 def install(args) -> None:
-    if '--help' in args or '-h' in args:
+    if "--help" in args or "-h" in args:
         _show_install_help()
         return
-    parser = argparse.ArgumentParser('microk8s install')
-    parser.add_argument('--cpu', default=definitions.DEFAULT_CORES, type=int)
-    parser.add_argument('--mem', default=definitions.DEFAULT_MEMORY, type=int)
-    parser.add_argument('--disk', default=definitions.DEFAULT_DISK, type=int)
-    parser.add_argument('--channel', default=definitions.DEFAULT_CHANNEL, type=str)
-    parser.add_argument('-y', '--assume-yes', action='store_true', default=definitions.DEFAULT_ASSUME)
+    parser = argparse.ArgumentParser("microk8s install")
+    parser.add_argument("--cpu", default=definitions.DEFAULT_CORES, type=int)
+    parser.add_argument("--mem", default=definitions.DEFAULT_MEMORY, type=int)
+    parser.add_argument("--disk", default=definitions.DEFAULT_DISK, type=int)
+    parser.add_argument("--channel", default=definitions.DEFAULT_CHANNEL, type=str)
+    parser.add_argument("-y", "--assume-yes", action="store_true", default=definitions.DEFAULT_ASSUME)
     args = parser.parse_args(args)
 
     echo = Echo()
 
-    if platform == 'win32':
+    if platform == "win32":
         aux = Windows(args)
         if not aux.check_admin():
-            echo.error('`microk8s install` must be ran as adminstrator in order to check Hyper-V status.')
-            input('Press return key to exit...')
+            echo.error("`microk8s install` must be ran as adminstrator in order to check Hyper-V status.")
+            input("Press return key to exit...")
             exit(1)
 
         if not aux.is_enough_space():
-            echo.warning('VM disk size requested exceeds free space on host.')
+            echo.warning("VM disk size requested exceeds free space on host.")
 
         if not aux.check_hyperv():
             if args.assume_yes or (echo.is_tty_connected() and echo.confirm(
                 "Hyper-V needs to be enabled. "
                 "Would you like to do that now?"
             )):
-                echo.info('Hyper-V will now be enabled.')
+                echo.info("Hyper-V will now be enabled.")
                 aux.enable_hyperv()
-                echo.info('Hyper-V has been enabled.')
-                echo.info('This host must be restarted.  After restart, run `microk8s install` again to complete setup.')
-                input('Press return key to exit...')
+                echo.info("Hyper-V has been enabled.")
+                echo.info("This host must be restarted.  After restart, run `microk8s install` again to complete setup.")
+                input("Press return key to exit...")
                 exit(0)
             else:
-                echo.error('Cannot continue without enabling Hyper-V')
+                echo.error("Cannot continue without enabling Hyper-V")
                 exit(1)
 
-    if platform == 'darwin':
+    if platform == "darwin":
         aux = MacOS(args)
         if not aux.is_enough_space():
-            echo.warning('VM disk size requested exceeds free space on host.')
+            echo.warning("VM disk size requested exceeds free space on host.")
 
-    vm_provider_name: str = 'multipass'
+    vm_provider_name: str = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
     try:
         vm_provider_class.ensure_provider()
@@ -164,7 +167,7 @@ def install(args) -> None:
 
     instance = vm_provider_class(echoer=echo)
     instance.launch_instance(vars(args))
-    echo.info("MicroK8s is up and running. See the available commands with 'microk8s --help'.")
+    echo.info("MicroK8s is up and running. See the available commands with `microk8s --help`.")
 
 
 def uninstall() -> None:
@@ -188,6 +191,58 @@ def uninstall() -> None:
     echo.info("Thank you for using MicroK8s!")
 
 
+def dashboard_proxy() -> None:
+    vm_provider_name = "multipass"
+    vm_provider_class = get_provider_for(vm_provider_name)
+    echo = Echo()
+    try:
+        vm_provider_class.ensure_provider()
+    except ProviderNotFound as provider_error:
+        if provider_error.prompt_installable:
+            if echo.is_tty_connected():
+                echo.warning("MicroK8s is not installed. Please run `microk8s install`.")
+            return 1
+        else:
+            raise provider_error
+
+    instance = vm_provider_class(echoer=echo)
+
+    command = ["microk8s.enable", "dashboard"]
+    instance.run(command, hide_output=True)
+
+    command = ["microk8s.kubectl", "-n", "kube-system", "get", "secret"]
+    output = instance.run(command, hide_output=True)
+    secret_name = None
+    for line in output.split(b"\n"):
+        if line.startswith(b"default-token"):
+            secret_name = line.split()[0].decode()
+            break
+
+    if not secret_name:
+        echo.error("Cannot find the dashboard secret.")
+
+    command = ["microk8s.kubectl", "-n", "kube-system", "describe", "secret", secret_name]
+    output = instance.run(command, hide_output=True)
+    token = None
+    for line in output.split(b"\n"):
+        if line.startswith(b"token:"):
+            token = line.split()[1].decode()
+
+    if not token:
+        echo.error("Cannot find token from secret.")
+
+    ip = instance.get_instance_info().ipv4[0]
+
+    echo.info("Dashboard will be available at https://{}:10443".format(ip))
+    echo.info("Use the following token to login:")
+    echo.info(token)
+
+    command = ["microk8s.kubectl", "port-forward", "-n", "kube-system",
+               "service/kubernetes-dashboard", "10443:443", "--address", "0.0.0.0"]
+
+    instance.run(command)
+
+
 def stop() -> None:
     vm_provider_name = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
@@ -207,7 +262,7 @@ def run(cmd) -> None:
     except ProviderNotFound as provider_error:
         if provider_error.prompt_installable:
             if echo.is_tty_connected():
-                echo.warning("MicroK8s is not installed. Please run 'microk8s install'.")
+                echo.warning("MicroK8s is not installed. Please run `microk8s install`.")
             return 1
         else:
             raise provider_error
@@ -219,6 +274,10 @@ def run(cmd) -> None:
 
 
 def _get_microk8s_commands() -> List:
+    additional_commands = [
+        'dashboard-proxy'
+    ]
+
     vm_provider_name = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
     echo = Echo()
@@ -227,14 +286,16 @@ def _get_microk8s_commands() -> List:
         instance = vm_provider_class(echoer=echo)
         instance_info = instance.get_instance_info()
         if instance_info.is_running():
-            commands = instance.run('ls -1 /snap/bin/'.split(), hide_output=True)
-            mk8s = [c.decode().replace('microk8s.', '') for c in commands.split() if c.decode().startswith('microk8s.')]
-            return mk8s
+            commands = instance.run("ls -1 /snap/bin/".split(), hide_output=True)
+            mk8s = [c.decode().replace("microk8s.", "") for c in commands.split() if c.decode().startswith("microk8s.")]
+            complete = mk8s + additional_commands
+            complete.sort()
+            return complete
         else:
             return ["start", "stop"]
     except ProviderNotFound as provider_error:
         return ["start", "stop"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()
