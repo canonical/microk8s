@@ -40,10 +40,10 @@ then
 else
   # Check if the configuration already exists
   CONFIG="\nauto lo:microk8s\niface lo:microk8s inet static\naddress $IP_ADDRESS\nnetmask 255.0.0.0\n"
-  CONFIG_1="auto lo:microk8siface lo:microk8s inet staticaddress ${IP_ADDRESS}netmask 255.0.0.0"
+  CONFIG_STRIP=$( echo $CONFIG | sed 's#\\n##g' )
   CONTENT=$(cat $NETFILE | tr -d "\n\r")
-  if [[ ! $CONTENT == *"${CONFIG_1}"* ]]; then
-    echo -e "$CONFIG" >> $NETFILE
+  if [[ ! $CONTENT == *"${CONFIG_STRIP}"* ]]; then
+    echo -e "$CONFIG" | run_with_sudo tee -a $NETFILE > /dev/null
   else
     echo "Loopback IP[$IP_ADDRESS] config already exists"
   fi
