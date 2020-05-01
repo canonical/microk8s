@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 echo "Rolling back calico upgrade on master"
 

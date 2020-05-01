@@ -27,6 +27,7 @@ callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path
 server_cert_file_via_env = "${SNAP_DATA}/certs/server.remote.crt"
 server_cert_file = "{}/certs/server.remote.crt".format(snapdata_path)
 
+CLUSTER_API_V2 = "cluster/api/v2.0"
 cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
 cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
 cluster_cert_file = "{}/cluster.crt".format(cluster_dir)

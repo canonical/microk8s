@@ -375,6 +375,12 @@ then
     snapctl restart ${SNAP_NAME}.daemon-containerd
 fi
 
+if ! grep -e "\-\-timeout" ${SNAP_DATA}/args/cluster-agent
+then
+  refresh_opt_in_config timeout 240 cluster-agent
+  snapctl restart ${SNAP_NAME}.daemon-containerd
+fi
+
 mkdir -p "$SNAP_DATA/juju/share/juju" "$SNAP_DATA/juju-home"
 chmod -R ug+rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"
 chmod -R o-rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"

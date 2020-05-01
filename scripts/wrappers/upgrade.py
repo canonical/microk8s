@@ -24,7 +24,8 @@ def upgrade_master(upgrade, phase):
         upgrade_script='{}/upgrade-scripts/{}/{}-master.sh'.format(snap_path, upgrade, phase)
         if os.path.isfile(upgrade_script):
             print("Running {}-upgrade script".format(phase))
-            subprocess.check_output(upgrade_script)
+            out = subprocess.check_output(upgrade_script)
+            print(out)
     except subprocess.CalledProcessError as e:
         print("{}-upgrade step failed".format(phase))
         raise e
@@ -60,7 +61,8 @@ def rollback(upgrade):
     The rollback method that oversees the rollback of the cluster
     :param upgrade: which upgrade to call
     """
-    node_info = get_nodes_info()
+    # We should get the nodes without checking their existence from the API server
+    node_info = get_nodes_info(safe=False)
 
     upgrade_log_file = "{}/var/log/upgrades/{}.log".format(snapdata_path, upgrade)
     with open(upgrade_log_file, "r") as log:
@@ -95,52 +97,60 @@ def run_upgrade(upgrade):
     try:
         os.makedirs(log_dir, exist_ok=True)
         with open(upgrade_log_file, "w") as log:
-            upgrade_master(upgrade, "prepare")
             log.writelines(["master prepare"])
+            upgrade_master(upgrade, "prepare")
             log.flush()
             for node_ep, token in node_info:
-                node_upgrade(upgrade, "prepare", node_ep, token)
                 log.writelines(["\nnode prepare {}".format(node_ep)])
+                node_upgrade(upgrade, "prepare", node_ep, token)
                 log.flush()
 
             for node_ep, token in node_info:
-                node_upgrade(upgrade, "commit", node_ep, token)
                 log.writelines(["\nnode commit {}".format(node_ep)])
+                node_upgrade(upgrade, "commit", node_ep, token)
                 log.flush()
 
-            upgrade_master(upgrade, "commit")
             log.writelines(["\nmaster commit"])
+            upgrade_master(upgrade, "commit")
             log.flush()
 
     except Exception as e:
         print("Error in upgrading. Error: {}".format(e))
         log.close()
-        rollback(upgrade_log_file)
+        rollback(upgrade)
         exit(2)
 
 
-def get_nodes_info():
+def get_nodes_info(safe=True):
     """
     Get the list of node endpoints and tokens in the cluster
     :return:
     """
     callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
     node_info = []
-    try:
-        nodes = subprocess.check_output("{}/microk8s-kubectl.wrapper get no".format(snap_path).split())
+    if safe:
+        try:
+            nodes = subprocess.check_output("{}/microk8s-kubectl.wrapper get no".format(snap_path).split())
+            if os.path.isfile(callback_tokens_file):
+                with open(callback_tokens_file, "r+") as fp:
+                    for _, line in enumerate(fp):
+                        parts = line.split()
+                        node_ep = parts[0]
+                        host = node_ep.split(":")[0]
+                        if host not in nodes.decode():
+                            print("Node {} not present".format(host))
+                            continue
+                        node_info = [(parts[0], parts[1])]
+        except subprocess.CalledProcessError:
+            print("Error in gathering cluster node information. Upgrade aborted.".format(host))
+            exit(1)
+    else:
         if os.path.isfile(callback_tokens_file):
             with open(callback_tokens_file, "r+") as fp:
                 for _, line in enumerate(fp):
                     parts = line.split()
-                    node_ep = parts[0]
-                    host = node_ep.split(":")[0]
-                    if host not in nodes.decode():
-                        print("Node {} not present".format(host))
-                        continue
                     node_info = [(parts[0], parts[1])]
-    except subprocess.CalledProcessError:
-        print("Error in gathering cluster node information. Upgrade aborted.".format(host))
-        exit(1)
+
     return node_info
 
 
