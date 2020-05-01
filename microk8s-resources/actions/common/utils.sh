@@ -154,7 +154,7 @@ skip_opt_in_config() {
 restart_service() {
     # restart a systemd service
     # argument $1 is the service name
-    run_with_sudo systemctl restart "snap.microk8s.daemon-$1.service"
+    snapctl restart "microk8s.daemon-$1"
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
