@@ -11,13 +11,13 @@ echo "Restarting etcd"
 set_service_expected_to_start etcd
 if [ -e "$BACKUP_DIR/args/etcd" ]; then
   cp "$BACKUP_DIR"/args/etcd "$SNAP_DATA/args/"
-  systemctl restart snap.${SNAP_NAME}.daemon-etcd
+  snapctl restart ${SNAP_NAME}.daemon-etcd
 fi
 
 echo "Restarting kube-apiserver"
 if [ -e "$BACKUP_DIR/args/kube-apiserver" ]; then
   cp "$BACKUP_DIR"/args/kube-apiserver "$SNAP_DATA/args/"
-  systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+  snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
 ${SNAP}/microk8s-start.wrapper

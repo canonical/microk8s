@@ -22,19 +22,19 @@ fi
 echo "Restarting kubelet"
 if [ -e "$BACKUP_DIR/args/kubelet" ]; then
   cp "$BACKUP_DIR"/args/kubelet "$SNAP_DATA/args/"
-  systemctl restart snap.${SNAP_NAME}.daemon-kubelet
+  snapctl restart ${SNAP_NAME}.daemon-kubelet
 fi
 
 echo "Restarting kube-proxy"
 if [ -e "$BACKUP_DIR/args/kube-proxy" ]; then
   cp "$BACKUP_DIR"/args/kube-proxy "$SNAP_DATA/args/"
-  systemctl restart snap.${SNAP_NAME}.daemon-proxy
+  snapctl restart ${SNAP_NAME}.daemon-proxy
 fi
 
 echo "Restarting kube-apiserver"
 if [ -e "$BACKUP_DIR/args/kube-apiserver" ]; then
   cp "$BACKUP_DIR"/args/kube-apiserver "$SNAP_DATA/args/"
-  systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+  snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
 ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30
@@ -42,13 +42,13 @@ ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30
 echo "Restarting flannel"
 set_service_expected_to_start flanneld
 remove_vxlan_interfaces
-run_with_sudo systemctl start snap.${SNAP_NAME}.daemon-flanneld
+run_with_sudo snapctl start ${SNAP_NAME}.daemon-flanneld
 
 echo "Restarting kubelet"
 if grep -qE "bin_dir.*SNAP_DATA}\/" $SNAP_DATA/args/containerd-template.toml; then
   echo "Restarting containerd"
   run_with_sudo "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP_DATA}/opt;bin_dir = "${SNAP}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
-  run_with_sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
+  run_with_sudo snapctl restart ${SNAP_NAME}.daemon-containerd
 fi
 
 echo "Calico rolledback"

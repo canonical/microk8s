@@ -490,7 +490,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     :param voters: the dqlite voters
     :param host: the hostname others see of this node
     """
-    subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
+    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
     shutil.move(cluster_dir, cluster_backup_dir)
@@ -504,7 +504,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
-    subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
+    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
 
     waits = 10
     print("Waiting for node to join the cluster.", end=" ", flush=True)

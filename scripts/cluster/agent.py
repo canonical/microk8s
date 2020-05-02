@@ -480,7 +480,7 @@ def update_dqlite_ip(host):
 
     :param : the host others see for this node
     """
-    subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
+    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
     time.sleep(10)
 
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
@@ -488,7 +488,7 @@ def update_dqlite_ip(host):
     update_data = {'Address': "{}:19001".format(host)}
     with open("{}/update.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(update_data, f)
-    subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
+    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
     time.sleep(10)
     attempts = 12
     while True:

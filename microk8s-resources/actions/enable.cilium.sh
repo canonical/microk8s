@@ -15,21 +15,21 @@ fi
 
 echo "Restarting kube-apiserver"
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-snapctl restart "${SNAP_NAME}.daemon-apiserver"
+run_with_sudo snapctl restart "${SNAP_NAME}.daemon-apiserver"
 
 # Reconfigure kubelet/containerd to pick up the new CNI config and binary.
 echo "Restarting kubelet"
 refresh_opt_in_config "cni-bin-dir" "\${SNAP_DATA}/opt/cni/bin/" kubelet
-snapctl restart "${SNAP_NAME}.daemon-kubelet"
+run_with_sudo snapctl restart "${SNAP_NAME}.daemon-kubelet"
 
 set_service_not_expected_to_start flanneld
-snapctl stop "${SNAP_NAME}.daemon-flanneld"
+run_with_sudo snapctl stop "${SNAP_NAME}.daemon-flanneld"
 remove_vxlan_interfaces
 
 if grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
   echo "Restarting containerd"
   run_with_sudo "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP}/opt;bin_dir = "${SNAP_DATA}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
-  snapctl restart "${SNAP_NAME}.daemon-containerd"
+  run_with_sudo snapctl restart "${SNAP_NAME}.daemon-containerd"
 fi
 
 echo "Enabling Cilium"
