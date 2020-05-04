@@ -212,7 +212,7 @@ def dashboard_proxy() -> None:
     output = instance.run(command, hide_output=True)
     if b"Addon dashboard is already enabled." not in output:
         echo.info("Waiting for Dashboard to come up.")
-        command = ["microk8s.kubectl", "-n", "kube-system", "wait",
+        command = ["microk8s.kubectl", "-n", "kube-system", "wait", "--timeout=240s",
                    "deployment", "kubernetes-dashboard", "--for", "condition=available"]
         instance.run(command, hide_output=True)
 
