@@ -57,6 +57,7 @@ class InstanceInfo:
                 state=instance_info["state"],
                 image_release=instance_info["image_release"],
                 mounts=instance_info["mounts"],
+                ipv4=instance_info["ipv4"]
             )
         except KeyError as missing_key:
             raise errors.ProviderInfoDataKeyError(
@@ -71,7 +72,8 @@ class InstanceInfo:
         name: str,
         state: str,
         image_release: str,
-        mounts: Dict[str, Any]
+        mounts: Dict[str, Any],
+        ipv4: str
     ) -> None:
         """Initialize an InstanceInfo.
 
@@ -87,6 +89,7 @@ class InstanceInfo:
         self.state = state
         self.image_release = image_release
         self.mounts = mounts
+        self.ipv4 = ipv4
 
     def is_mounted(self, mountpoint: str) -> bool:
         return mountpoint in self.mounts
