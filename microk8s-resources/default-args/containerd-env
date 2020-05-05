@@ -8,7 +8,7 @@
 #
 # Remember to restart the containerd daemon after editing this file:
 #
-# sudo systemctl restart snap.microk8s.daemon-containerd.service
+# sudo systemctl restart microk8s.daemon-containerd
 #
 #
 

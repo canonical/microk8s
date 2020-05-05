@@ -35,8 +35,8 @@ then
   init_cluster
 fi
 
-systemctl start snap.microk8s.daemon-etcd
-systemctl start snap.microk8s.daemon-apiserver
+snapctl start microk8s.daemon-etcd
+snapctl start microk8s.daemon-apiserver
 
 # TODO do some proper wait here
 sleep 15
@@ -49,7 +49,7 @@ $SNAP/bin/migrator --mode restore --endpoint "unix:///var/snap/microk8s/current/
 sleep 10
 
 set_service_not_expected_to_start etcd
-systemctl stop snap.microk8s.daemon-etcd
+snapctl stop microk8s.daemon-etcd
 
 ${SNAP}/microk8s-start.wrapper
 ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30
