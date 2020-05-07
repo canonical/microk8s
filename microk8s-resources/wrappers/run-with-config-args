@@ -83,13 +83,27 @@ then
       n=$[$n+1]
       sleep 6
     done
-
   fi
+
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
   then
     # Mark the api server as starting. This is needed incase you
     # microk8s stop and then snap start microk8s
     rm -f ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+  fi
+
+  if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]
+  then
+    ipvs="ipv4 ipv6"
+    for ipv in $ipvs
+    do
+      if [ -e "/proc/sys/net/$ipv/conf/all/forwarding" ] &&
+         ! grep -e "1" "/proc/sys/net/$ipv/conf/all/forwarding"
+      then
+        echo "Enable ip forwarding for $ipv"
+        echo "1" > "/proc/sys/net/$ipv/conf/all/forwarding"
+      fi
+    done
   fi
 fi
 
