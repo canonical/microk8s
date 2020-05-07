@@ -172,6 +172,17 @@ arch() {
 }
 
 
+snapshotter() {
+  # Determine the underlying filesystem that containerd will be running on
+  FSTYPE=$(stat -f -c %T "${SNAP_COMMON}")
+  # ZFS is supported through the native snapshotter
+  if [ "$FSTYPE" = "zfs" ]; then
+    echo "native"
+  else
+    echo "overlayfs"
+  fi
+}
+
 use_manifest() {
     # Perform an action (apply or delete) on a manifest.
     # Optionally replace strings in the manifest
