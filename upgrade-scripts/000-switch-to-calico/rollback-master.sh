@@ -42,13 +42,13 @@ ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30
 echo "Restarting flannel"
 set_service_expected_to_start flanneld
 remove_vxlan_interfaces
-run_with_sudo snapctl start ${SNAP_NAME}.daemon-flanneld
+snapctl start ${SNAP_NAME}.daemon-flanneld
 
 echo "Restarting kubelet"
 if grep -qE "bin_dir.*SNAP_DATA}\/" $SNAP_DATA/args/containerd-template.toml; then
   echo "Restarting containerd"
-  run_with_sudo "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP_DATA}/opt;bin_dir = "${SNAP}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
-  run_with_sudo snapctl restart ${SNAP_NAME}.daemon-containerd
+  "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP_DATA}/opt;bin_dir = "${SNAP}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
+  snapctl restart ${SNAP_NAME}.daemon-containerd
 fi
 
 echo "Calico rolledback"
