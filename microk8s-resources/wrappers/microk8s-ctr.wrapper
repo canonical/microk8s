@@ -6,5 +6,14 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
 export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 
+# Determine the underlying filesystem that ctr will be running on
+FSTYPE=$(stat -f -c %T "${SNAP_COMMON}")
+# ZFS is supported through the native snapshotter
+if [ "$FSTYPE" = "zfs" ]; then
+  SNAPSHOTTER="native"
+else
+  SNAPSHOTTER="overlayfs"
+fi
+
 declare -a args="($(cat $SNAP_DATA/args/ctr))"
-sudo -E LD_LIBRARY_PATH="$IN_SNAP_LD_LIBRARY_PATH" "${SNAP}/bin/ctr" "${args[@]}" "$@"
+sudo -E LD_LIBRARY_PATH="$IN_SNAP_LD_LIBRARY_PATH" CONTAINERD_SNAPSHOTTER="$SNAPSHOTTER" "${SNAP}/bin/ctr" "${args[@]}" "$@"
