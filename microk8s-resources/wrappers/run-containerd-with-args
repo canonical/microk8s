@@ -29,14 +29,7 @@ else
   RUNTIME="runc"
 fi
 
-# Determine the underlying filesystem that containerd will be running on
-FSTYPE=$(stat -f -c %T "${SNAP_COMMON}")
-# ZFS is supported throught the native snapshotter
-if [ "$FSTYPE" = "zfs" ]; then
-  SNAPSHOTTER="native"
-else
-  SNAPSHOTTER="overlayfs"
-fi
+SNAPSHOTTER=$(snapshotter)
 
 sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${SNAPSHOTTER}@'"${SNAPSHOTTER}"'@g;s@${RUNTIME}@'"${RUNTIME}"'@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml
 
