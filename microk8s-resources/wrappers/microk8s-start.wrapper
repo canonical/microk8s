@@ -47,5 +47,4 @@ else
   fi
 fi
 
-echo "Enabling pod scheduling"
-uncordon_node
+wait_for_node

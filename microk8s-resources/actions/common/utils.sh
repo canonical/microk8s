@@ -413,6 +413,9 @@ get_node() {
     fi
 }
 
+wait_for_node() {
+  get_node
+}
 
 drain_node() {
     # Drain node
@@ -479,5 +482,6 @@ init_cluster() {
   $SNAP/bin/sed -i 's/HOSTNAME/'"${DNS}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
   $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
   ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
+  chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
 }
 
