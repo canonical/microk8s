@@ -24,7 +24,6 @@ def remove_expired_token_from_file(file):
     """
     Remove expired token from the valid tokens set
     
-    :param token: the token to be removed
     :param file: the file to be removed from
     """
     backup_file = "{}.backup".format(file)
@@ -67,6 +66,8 @@ def remove_token_from_file(token, file):
 def is_token_expired(token_line):
     """
     Checks if the token in the file is expired, when using the TTL based.
+    
+    :returns: True if the token is expired, otherwise False
     """
     if "|" in token_line:
         expiry = token_line.strip().split('|')[1]
@@ -80,7 +81,7 @@ def get_callback_token():
     """
     Generate a token and store it in the callback token file
 
-    :return: the token
+    :returns: the token
     """
     snapdata_path = os.environ.get('SNAP_DATA')
     callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
@@ -100,7 +101,7 @@ def is_node_running_dqlite():
     """
     Check if we should use the dqlite joining process (join api version 2.0)
 
-    :return: True if dqlite is to be used
+    :returns: True if dqlite is to be used, otherwise False
     """
     snapdata_path = os.environ.get('SNAP_DATA')
     apiserver_conf_file = "{}/args/kube-apiserver".format(snapdata_path)
