@@ -19,10 +19,6 @@ def is_enabled(addon, item):
 def print_short(isReady, enabled_addons, disabled_addons):
     if isReady:
         print("microk8s is running")
-    else:
-        print("microk8s is not running. Use microk8s inspect for a deeper inspection.")
-
-    if isReady:
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
             for enabled in enabled_addons:
@@ -30,16 +26,14 @@ def print_short(isReady, enabled_addons, disabled_addons):
         if disabled_addons and len(disabled_addons) > 0:
             for disabled in disabled_addons:
                 print("{}: disabled".format(disabled["name"]))
+    else:
+        print("microk8s is not running. Use microk8s inspect for a deeper inspection.")
 
 
 def print_pretty(isReady, enabled_addons, disabled_addons):
     console_formatter = "{:>1} {:<20} # {}"
     if isReady:
         print("microk8s is running")
-    else:
-        print("microk8s is not running. Use microk8s inspect for a deeper inspection.")
-
-    if isReady:
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
             print('{:>2}'.format("enabled:"))
@@ -50,16 +44,14 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
             print('{:>2}'.format("disabled:"))
             for disabled in disabled_addons:
                 print(console_formatter.format("", disabled["name"], disabled["description"]))
-
+    else:
+        print("microk8s is not running. Use microk8s inspect for a deeper inspection.")
+        
 
 def print_short_yaml(isReady, enabled_addons, disabled_addons):
     print("microk8s:")
     print("{:>2} {} {}".format("", "running:", isReady))
-
-    if not isReady:
-        print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s inspect for a deeper inspection."))
-        return
-
+    
     if isReady:
         print("addons:")
         for enabled in enabled_addons:
@@ -67,15 +59,13 @@ def print_short_yaml(isReady, enabled_addons, disabled_addons):
 
         for disabled in disabled_addons:
             print("  {}: disabled".format(disabled["name"]))
-
+    else:
+        print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s inspect for a deeper inspection."))
+        
 
 def print_yaml(isReady, enabled_addons, disabled_addons):
     print("microk8s:")
     print("{:>2} {} {}".format("", "running:", isReady))
-
-    if not isReady:
-        print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s inspect for a deeper inspection."))
-        return
 
     if isReady:
         print("{:>2}".format("addons:"))
@@ -90,6 +80,8 @@ def print_yaml(isReady, enabled_addons, disabled_addons):
             print("{:>4} description: {:<1}".format("", disabled["description"]))
             print("{:>4} version: {:<1}".format("", disabled["version"]))
             print("{:>4} status: disabled".format(""))
+    else:
+        print("{:>2} {} {}".format("","message:","microk8s is not running. Use microk8s inspect for a deeper inspection."))
 
 
 def print_addon_status(enabled):
