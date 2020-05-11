@@ -105,6 +105,19 @@ then
       fi
     done
   fi
+
+  if [ "${app}" = "kube-proxy" ] &&
+     [ -f "${SNAP_DATA}/var/lock/host-access-enabled" ] &&
+     ! ip link show lo:microk8s &> /dev/null
+  then
+    IP_ADDRESS=$(<"${SNAP_DATA}/var/lock/host-access-enabled")
+    if ! "$SNAP/sbin/ifconfig" lo:microk8s "$IP_ADDRESS" up
+    then
+      echo "Failed to enable host-access"
+    else
+      echo "Host-access enabled [${IP_ADDRESS}]"
+    fi
+  fi
 fi
 
 # This is really the only way I could find to get the args passed in correctly. WTF
