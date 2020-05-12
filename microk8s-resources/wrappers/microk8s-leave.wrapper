@@ -33,4 +33,4 @@ then
   exit 1
 fi
 
-${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset
+run_with_sudo preserve_env ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset

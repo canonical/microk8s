@@ -285,7 +285,9 @@ def join_node_etcd():
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
     if is_node_running_dqlite():
-        error_msg = {"error": "Not possible to join. This is an HA dqlite cluster."}
+        msg = ("Failed to join the cluster. This is an HA dqlite cluster. \n"
+               "Please, retry after enabling HA on this joining node with 'microk8s enable ha-cluster'.")
+        error_msg = {"error": msg}
         return Response(json.dumps(error_msg), mimetype='application/json', status=501)
 
     add_token_to_certs_request(token)

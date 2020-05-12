@@ -10,4 +10,6 @@ source $SNAP/actions/common/utils.sh
 
 exit_if_no_permissions
 
-LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/upgrade.py $@
+"${SNAP}/microk8s-leave.wrapper"
+
+# TODO: Switch to etcd and flannel
