@@ -5,6 +5,8 @@ import argparse
 from common.utils import (
     exit_if_no_permission,
     is_cluster_locked,
+    is_ha_enabled,
+    get_dqlite_info,
     wait_for_ready,
     is_cluster_ready,
     get_available_addons,
@@ -132,6 +134,47 @@ def get_status(available_addons, isReady):
     return enabled, disabled
 
 
+def print_ha_yaml(ha_ready, info):
+    ha_formed = ha_cluster_formed(info)
+
+    print("ha:")
+    print("{:>2} {} {}".format("", "enabled:", ha_ready))
+    print("{:>2} {} {}".format("", "completed:", ha_formed))
+
+    if ha_ready:
+        print("{:>2}".format("nodes:"))
+        for node in info:
+            print("{:>4} address: {:<1}".format("-", node[0]))
+            print("{:>4} role: {:<1}".format("", node[1]))
+
+
+def ha_cluster_formed(info):
+    voters = 0
+    for node in info:
+        if node[1] == "voter":
+            voters += 1
+    ha_formed = False
+    if voters > 2:
+        ha_formed = True
+    return ha_formed
+
+
+def print_ha_pretty(ha_ready, info):
+    ha_formed = ha_cluster_formed(info)
+
+    if ha_ready and ha_formed:
+        print("The cluster is highly available.")
+    elif ha_ready and not ha_formed:
+        print("HA is enabled on this node but an HA cluster has not formed yet.")
+    elif not ha_ready:
+        print("HA is not enabled on this node, enable it with 'microk8s enable ha-cluster'.")
+
+    if ha_ready:
+        print("Cluster nodes:")
+        for node in info:
+            print("  - {} is a {} node".format(node[0], node[1]))
+
+
 if __name__ == '__main__':
     exit_if_no_permission()
     is_cluster_locked()
@@ -161,6 +204,9 @@ if __name__ == '__main__':
         "--yaml", action='store_true', help="DEPRECATED, use '--format yaml' instead"
     )
 
+    subparsers = parser.add_subparsers(help="show HA status", dest="command")
+    parser_ha = subparsers.add_parser('ha-cluster')
+
     # read arguments from the command line
     args = parser.parse_args()
 
@@ -172,6 +218,15 @@ if __name__ == '__main__':
         isReady = wait_for_ready(wait_ready, timeout)
     else:
         isReady = is_cluster_ready()
+
+    if isReady and args.command == "ha-cluster":
+        ha_ready = is_ha_enabled()
+        info = get_dqlite_info()
+        if args.format == "yaml":
+            print_ha_yaml(ha_ready, info)
+        else:
+            print_ha_pretty(ha_ready, info)
+        exit(0)
 
     available_addons = get_available_addons(get_current_arch())
 
