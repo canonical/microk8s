@@ -103,11 +103,5 @@ def is_node_running_dqlite():
 
     :returns: True if dqlite is to be used, otherwise False
     """
-    snapdata_path = os.environ.get('SNAP_DATA')
-    apiserver_conf_file = "{}/args/kube-apiserver".format(snapdata_path)
-    with open(apiserver_conf_file) as f:
-        for line in f:
-            if line.startswith("--storage-backend") and line.rstrip().endswith("dqlite"):
-                return True
-
-    return False
+    ha_lock = os.path.expandvars("${SNAP_DATA}/var/lock/ha-cluster")
+    return os.path.isfile(ha_lock)
