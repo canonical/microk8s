@@ -266,6 +266,7 @@ parts:
     python-packages:
     - flask
     - PyYAML
+    - netifaces
     stage-packages:
     - python3-openssl
     - openssl

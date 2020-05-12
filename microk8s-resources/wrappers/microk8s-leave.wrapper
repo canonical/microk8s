@@ -20,7 +20,8 @@ fi
 exit_if_stopped
 exit_if_no_permissions
 
-if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ] &&
+   ! grep "^\-\-storage\-backend.dqlite" "$SNAP_DATA/args/kube-apiserver" &> /dev/null
 then
   echo "This MicroK8s deployment is not acting as a node in a cluster."
   exit 1
