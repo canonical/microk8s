@@ -207,6 +207,9 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(help="show HA status", dest="command")
     parser_ha = subparsers.add_parser('ha-cluster')
 
+    subparsers = parser.add_subparsers(help="show HA status", dest="command")
+    parser_ha = subparsers.add_parser('ha-cluster')
+
     # read arguments from the command line
     args = parser.parse_args()
 
