@@ -1,7 +1,6 @@
 --cert-dir=${SNAP_DATA}/certs
 --service-cluster-ip-range=10.152.183.0/24
 --authorization-mode=AlwaysAllow
---basic-auth-file=${SNAP_DATA}/credentials/basic_auth.csv
 --service-account-key-file=${SNAP_DATA}/certs/serviceaccount.key
 --client-ca-file=${SNAP_DATA}/certs/ca.crt
 --tls-cert-file=${SNAP_DATA}/certs/server.crt
@@ -9,7 +8,6 @@
 --kubelet-client-certificate=${SNAP_DATA}/certs/server.crt
 --kubelet-client-key=${SNAP_DATA}/certs/server.key
 --secure-port=16443
---token-auth-file=${SNAP_DATA}/credentials/known_tokens.csv
 --token-auth-file=${SNAP_DATA}/credentials/known_tokens.csv
 --etcd-servers='https://127.0.0.1:12379'
 --etcd-cafile=${SNAP_DATA}/certs/ca.crt
