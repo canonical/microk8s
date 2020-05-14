@@ -118,6 +118,21 @@ then
       echo "Host-access enabled [${IP_ADDRESS}]"
     fi
   fi
+
+  if [ "${app}" = "kube-proxy" ] &&
+     ! [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ]
+  then
+    if ! modprobe br_netfilter
+    then
+      refresh_opt_in_config "proxy-mode" "userspace" kube-proxy
+    fi
+  fi
+  if [ "${app}" = "kube-proxy" ] &&
+     [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ] &&
+     grep 0 /proc/sys/net/bridge/bridge-nf-call-iptables
+  then
+    echo "1" > /proc/sys/net/bridge/bridge-nf-call-iptables
+  fi
 fi
 
 # This is really the only way I could find to get the args passed in correctly. WTF
