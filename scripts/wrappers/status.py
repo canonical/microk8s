@@ -183,7 +183,7 @@ if __name__ == '__main__':
     else:
         isReady = is_cluster_ready()
 
-    if args.command == "ha-cluster":
+    if isReady and args.command == "ha-cluster":
         ha_ready = is_ha_enabled()
         info = get_dqlite_info()
         if args.format == "yaml":

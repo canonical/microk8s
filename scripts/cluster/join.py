@@ -338,7 +338,7 @@ def reset_current_dqlite_installation():
     if len(my_ep) > 0 and "127.0.0.1" not in my_ep[0]:
         for ep in other_ep:
             try:
-                subprocess.check_output("curl -X 'DELETE' https://{}/cluster/{} --cacert {} --key {} --cert {}  -k -s"
+                subprocess.check_output("curl -X DELETE https://{}/cluster/{} --cacert {} --key {} --cert {}  -k -s"
                                         .format(ep, my_ep[0], cluster_cert_file, cluster_key_file, cluster_cert_file)
                                         .split())
                 break
