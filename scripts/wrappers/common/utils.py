@@ -57,6 +57,51 @@ def is_cluster_ready():
         return False
 
 
+def is_ha_enabled():
+    ha_lock = os.path.expandvars("${SNAP_DATA}/var/lock/ha-cluster")
+    return os.path.isfile(ha_lock)
+
+
+def get_dqlite_info():
+    cluster_dir = os.path.expandvars("${SNAP_DATA}/var/kubernetes/backend")
+    cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
+    cluster_key_file = "{}/cluster.key".format(cluster_dir)
+    info = []
+
+    if not is_ha_enabled():
+        return info
+
+    waits = 10
+    while waits > 0:
+        try:
+            with open("{}/info.yaml".format(cluster_dir), mode='r') as f:
+                data = yaml.load(f, Loader=yaml.FullLoader)
+                out = subprocess.check_output("curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s"
+                                              .format(data['Address'], cluster_cert_file,
+                                                      cluster_key_file, cluster_cert_file).split())
+                if data['Address'] in out.decode():
+                    break
+                else:
+                    time.sleep(5)
+                    waits -= 1
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+            waits -= 1
+
+    if waits == 0:
+        return info
+
+    nodes = yaml.safe_load(out)
+    for n in nodes:
+        if n["Role"] == 0:
+            info.append((n["Address"], "voter"))
+        if n["Role"] == 1:
+            info.append((n["Address"], "standby"))
+        if n["Role"] == 2:
+            info.append((n["Address"], "spare"))
+    return info
+
+
 def is_cluster_locked():
     clusterLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
     if os.path.isfile(clusterLockFile):

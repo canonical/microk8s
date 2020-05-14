@@ -13,3 +13,5 @@ exit_if_no_permissions
 "${SNAP}/microk8s-leave.wrapper"
 
 # TODO: Switch to etcd and flannel
+# end then remove the lock
+# rm -rf "${SNAP_DATA}/var/lock/ha-cluster"
