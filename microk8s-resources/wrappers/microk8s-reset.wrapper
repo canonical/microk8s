@@ -21,6 +21,10 @@ disable_addons() {
   echo "Disabling all addons."
   actions="$(get_all_addons)"
   for action in $actions; do
+    if [ "$action" = "ha-cluster" ]
+    then
+      continue
+    fi
     echo "Disabling addon : $action"
     addon_arguments=""
     if [ "$action" = "storage" ] && [ ${destroy_storage_enabled} ]

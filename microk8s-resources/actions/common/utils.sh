@@ -425,7 +425,7 @@ get_node() {
 }
 
 wait_for_node() {
-  get_node
+  get_node &> /dev/null
 }
 
 drain_node() {

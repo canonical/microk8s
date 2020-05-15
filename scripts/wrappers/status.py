@@ -143,7 +143,7 @@ def print_ha_pretty(ha_ready, info):
     if ha_ready and ha_formed:
         print("The cluster is highly available.")
     elif ha_ready and not ha_formed:
-        print("HA is enabled on this node but an HA cluster is has not formed yet.")
+        print("HA is enabled on this node but an HA cluster has not formed yet.")
     elif not ha_ready:
         print("HA is not enabled on this node, enable it with 'microk8s enable ha-cluster'.")
 
