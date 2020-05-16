@@ -155,7 +155,7 @@ subjects:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: kubelet-api-admin
+  name: microk8s-admin
 subjects:
 - kind: User
   name: 127.0.0.1
