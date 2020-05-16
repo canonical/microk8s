@@ -8,7 +8,11 @@ echo "Enabling Metrics-Server"
 
 "$SNAP/microk8s-enable.wrapper" rbac
 
-sleep 10
+apiserver=$(wait_for_service apiserver)
+if [[ $apiserver == fail ]]
+then
+  echo "kube-apiserver did not start on time.  Proceeding."
+fi
 
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 use_manifest metrics-server apply
