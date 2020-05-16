@@ -14,7 +14,7 @@ $KUBECTL delete deployment -n kube-system metrics-server-v0.2.1 || true
 use_manifest metrics-server delete 
 # wait for pod to terminate before restarting kubelet
 echo "Waiting for pods to be terminated."
-sleep 15
+sleep 10
 
 skip_opt_in_config "authentication-token-webhook" kubelet
 skip_opt_in_config "authorization-mode" kubelet
@@ -27,4 +27,4 @@ then
 fi
 sleep 15
 
-echo " Metrics-Server is disabled"
+echo "Metrics-Server is disabled"

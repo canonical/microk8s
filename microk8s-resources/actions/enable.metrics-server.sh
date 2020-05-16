@@ -8,6 +8,8 @@ echo "Enabling Metrics-Server"
 
 "$SNAP/microk8s-enable.wrapper" rbac
 
+sleep 10
+
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 use_manifest metrics-server apply
 
