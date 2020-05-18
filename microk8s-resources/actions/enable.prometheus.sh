@@ -5,6 +5,9 @@ set -e
 source $SNAP/actions/common/utils.sh
 
 echo "Enabling Prometheus"
+refresh_opt_in_config "authentication-token-webhook" "true" kubelet
+restart_service kubelet
+
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 $KUBECTL apply -f "${SNAP}/actions/prometheus/setup"
 
