@@ -16,7 +16,8 @@ then
   (cd "${SNAP_DATA}/tmp/istio"
   run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux.tar.gz -o "$SNAP_DATA/tmp/istio/istio.tar.gz"
   run_with_sudo gzip -d "$SNAP_DATA/tmp/istio/istio.tar.gz"
-  run_with_sudo tar -xvf "$SNAP_DATA/tmp/istio/istio.tar")
+  run_with_sudo tar -xvf "$SNAP_DATA/tmp/istio/istio.tar"
+  run_with_sudo chmod 777 "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}")
   run_with_sudo mkdir -p "$SNAP_DATA/bin/"
   run_with_sudo mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/bin/istioctl" "$SNAP_DATA/bin/"
   run_with_sudo chmod +x "$SNAP_DATA/bin/"
@@ -43,7 +44,7 @@ $KUBECTL apply -f "${SNAP_DATA}/actions/istio/istio-demo.yaml"
 run_with_sudo touch "$SNAP_USER_COMMON/istio.lock"
 
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-apiserver"
+restart_service apiserver
 
 echo "Istio is starting"
 echo ""
