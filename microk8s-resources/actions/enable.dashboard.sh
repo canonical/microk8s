@@ -4,6 +4,8 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
+echo "Enabling Kubernetes Dashboard"
+"$SNAP/microk8s-enable.wrapper" metrics-server
 echo "Applying manifest"
 use_manifest dashboard apply
 
