@@ -71,7 +71,7 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  install         Installs MicroK8s. Use --cpu, --mem, --disk to appoint resources.
+  install         Installs MicroK8s. Use --cpu, --mem, --disk and --channel to configure your setup.
   uninstall       Removes MicroK8s"""
     click.echo(msg)
     commands = _get_microk8s_commands()
