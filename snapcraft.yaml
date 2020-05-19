@@ -128,14 +128,24 @@ parts:
     - btrfs-tools
     - libseccomp-dev
     override-build: |
-      set -eu
+      set -eux
       . $SNAPCRAFT_PROJECT_DIR/build-scripts/set-env-variables.sh
 
       go version
       export GOPATH=$(realpath ../go)
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+
+      # Build runc
+      go get -d github.com/opencontainers/runc
+      (
+        cd $GOPATH/src/github.com/opencontainers/runc
+        git checkout ${RUNC_COMMIT}
+        make BUILDTAGS='seccomp apparmor'
+      )
+      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
+
       # Build containerd
-      go get github.com/containerd/containerd
+      go get -d github.com/containerd/containerd
       (
         cd $GOPATH/src/github.com/containerd/containerd
         git checkout ${CONTAINERD_COMMIT}
@@ -145,15 +155,6 @@ parts:
       )
       cp $GOPATH/src/github.com/containerd/containerd/bin/* $SNAPCRAFT_PART_INSTALL/bin/
       rm $SNAPCRAFT_PART_INSTALL/bin/containerd-stress
-
-      # Build runc
-      go get github.com/opencontainers/runc
-      (
-        cd $GOPATH/src/github.com/opencontainers/runc
-        git checkout ${RUNC_COMMIT}
-        make BUILDTAGS='seccomp apparmor'
-      )
-      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
 
       # Assemble the snap
       # snapcraftctl build
