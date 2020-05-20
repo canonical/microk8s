@@ -39,13 +39,10 @@ jobs:
         file-url: https://people.canonical.com/~msawicz/multipass/v1.2.1/multipass-1.2.1+win-win64.exe
         file-name: multipass.exe
         location: ${{ github.workspace }}/installer/windows
-    - name: Debug
-      run: |
-        cd ${{ github.workspace }}/NSIS_Plugins
-        dir
     - name: Create installer
       uses: joncloud/makensis-action@v1.1
       with:
+        include-more-plugins: true
         include-custom-plugins-path: ${{ github.workspace }}/NSIS_Plugins/Plugins
         script-file: ${{ github.workspace }}/installer/windows/microk8s.nsi
     - name: Upload installer
