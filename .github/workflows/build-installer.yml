@@ -25,6 +25,15 @@ jobs:
       run: python -m pip install -r ./requirements.txt
     - name: Build exe
       run: pyinstaller.exe --onefile microk8s.spec
+    - name: Get NSIS plugin
+      uses: wei/wget@v1
+      working-directory: /
+      with:
+        args: https://nsis.sourceforge.io/mediawiki/images/7/7f/EnVar_plugin.zip
+    - name: Get Multipass
+      uses: wei/wget@v1
+      with:
+        args: https://people.canonical.com/~msawicz/multipass/v1.2.1/multipass-1.2.1+win-win64.exe
     - name: Create installer
       uses: joncloud/makensis-action@v1.1
       with:
