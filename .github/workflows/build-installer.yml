@@ -32,7 +32,7 @@ jobs:
         file-name: envar_plugin.zip
         location: ${{ github.workspace }}
     - name: Extract EnVar plugin
-      run: powershell 'Expand-Archive -Force "${{ github.workspace }}/envar_plugin.zip" "C:\Program Files\NSIS"'
+      run: 7z x -o"C:\Program Files\NSIS" "${{ github.workspace }}/envar_plugin.zip"
     - name: Download Multipass installer
       uses: carlosperate/download-file-action@v1.0.3
       with:
