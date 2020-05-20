@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 echo "Switching node to dqlite"
 
