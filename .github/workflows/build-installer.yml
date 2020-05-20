@@ -28,7 +28,7 @@ jobs:
     - name: Create installer
       uses: joncloud/makensis-action@v1.1
       with:
-        script-file: ./windows/microk8s.nsi
+        script-file: ${{ github.workspace }}//installer/windows/microk8s.nsi
     - name: Upload installer
       uses: actions/upload-artifact@v2
       with:
