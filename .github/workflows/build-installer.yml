@@ -13,7 +13,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: ./installer/
+        working-directory: ${{ github.workspace }}/installer/
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -24,8 +24,8 @@ jobs:
     - name: Install Python requirements
       run: python -m pip install -r ./requirements.txt
     - name: Build exe
+      working-directory: ${{ github.workspace }}/installer/windows
       run: pyinstaller.exe --onefile microk8s.spec
-
     - name: Download EnVar plugin for NSIS
       uses: carlosperate/download-file-action@v1.0.3
       with:
@@ -41,7 +41,7 @@ jobs:
     - name: Create installer
       uses: joncloud/makensis-action@v1.1
       with:
-        script-file: ${{ github.workspace }}//installer/windows/microk8s.nsi
+        script-file: ${{ github.workspace }}/installer/windows/microk8s.nsi
     - name: Upload installer
       uses: actions/upload-artifact@v2
       with:
