@@ -10,4 +10,4 @@ toml==0.10.0
 wheel
 pyinstaller
 setuptools<45.0.0  # https://github.com/pypa/setuptools/issues/1963
-https://pyyaml.org/download/pyyaml/PyYAML-3.13-cp37-cp37m-win32.whl
+https://pyyaml.org/download/pyyaml/PyYAML-5.3.1-cp38-cp38-win_amd64.whl
