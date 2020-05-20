@@ -22,7 +22,7 @@ jobs:
       with:
         python-version: 3.8
     - name: Install Python requirements
-      run: python -m pip install -r ./requirements.txt
+      run: python -m pip install -r ../requirements.txt
     - name: Build exe
       run: pyinstaller.exe --onefile ../microk8s.spec
     - name: Download EnVar plugin for NSIS
