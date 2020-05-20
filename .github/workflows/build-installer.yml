@@ -27,7 +27,6 @@ jobs:
       run: pyinstaller.exe --onefile microk8s.spec
     - name: Get NSIS plugin
       uses: wei/wget@v1
-      working-directory: /
       with:
         args: https://nsis.sourceforge.io/mediawiki/images/7/7f/EnVar_plugin.zip
     - name: Get Multipass
