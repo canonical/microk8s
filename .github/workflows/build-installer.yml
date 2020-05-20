@@ -3,10 +3,10 @@ name: Build MicroK8s snap on PR and push to master
 on:
   push:
     branches:
-      - '*install*'
+      - '**install**'
   pull_request:
     branches:
-      - master
+      - '**install**'
 
 jobs:
   windows:
