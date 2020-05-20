@@ -1,0 +1,36 @@
+name: Build MicroK8s snap on PR and push to master
+
+on:
+  push:
+    branches:
+      - '*install*'
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: ./installer/
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install Python requirements
+      run: python3 -m pip install -r ./requirements.txt
+    - name: Build exe
+      run: pyinstaller.exe --onefile microk8s.spec
+    - name: Create installer
+      uses: joncloud/makensis-action@v1.1
+      with:
+        script-file: ./windows/microk8s.nsi
+    - name: Upload installer
+      uses: actions/upload-artifact@v2
+      with:
+        name: Windows installer
+        path: ${{ github.workspace }}/installer/microk8s-installer.exe
