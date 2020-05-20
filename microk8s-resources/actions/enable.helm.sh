@@ -10,7 +10,7 @@ echo "Enabling Helm"
 if [ ! -f "${SNAP_DATA}/bin/helm" ]
 then
   SOURCE_URI="https://get.helm.sh"
-  HELM_VERSION="v2.16.0"
+  HELM_VERSION="v2.16.7"
 
   echo "Fetching helm version $HELM_VERSION."
   run_with_sudo mkdir -p "${SNAP_DATA}/tmp/helm"
