@@ -77,8 +77,6 @@ apps:
     command: microk8s-stop.wrapper
   status:
     command: microk8s-status.wrapper
-#  upgrade:
-#    command: microk8s-upgrade.wrapper
   config:
     command: microk8s-config.wrapper
   reset:
