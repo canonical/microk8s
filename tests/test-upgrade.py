@@ -12,6 +12,7 @@ from validators import (
     validate_prometheus,
     validate_fluentd,
     validate_jaeger,
+    validate_kubeflow,
     validate_cilium,
 )
 from subprocess import check_call, CalledProcessError, check_output
@@ -25,7 +26,7 @@ from utils import (
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
 # Have UPGRADE_MICROK8S_TO point to a file to upgrade to that file
 upgrade_to = os.environ.get('UPGRADE_MICROK8S_TO', 'edge')
-under_time_pressure = os.environ.get('UNDER_TIME_PRESURE', 'False')
+under_time_pressure = os.environ.get('UNDER_TIME_PRESSURE', 'False')
 
 
 class TestUpgrade(object):
@@ -114,7 +115,7 @@ class TestUpgrade(object):
         # AMD64 only tests
         if platform.machine() == 'x86_64' and under_time_pressure == 'False':
             '''
-            Prometheus operator on our lxc is chashlooping disabling the test for now.
+            # Prometheus operator on our lxc is chashlooping disabling the test for now.
             try:
                 enable = microk8s_enable("prometheus", timeout_insec=30)
                 assert "Nothing to do for" not in enable
@@ -122,6 +123,17 @@ class TestUpgrade(object):
                 test_matrix['prometheus'] = validate_prometheus
             except:
                 print('Will not test the prometheus')
+
+            # The kubeflow deployment is huge. It will not fit comfortably
+            # with the rest of the addons on the same machine during an upgrade
+            # we will need to find another way to test it. 
+            try:
+                enable = microk8s_enable("kubeflow", timeout_insec=30)
+                assert "Nothing to do for" not in enable
+                validate_kubeflow()
+                test_matrix['kubeflow'] = validate_kubeflow
+            except:
+                print('Will not test kubeflow')
             '''
 
             try:

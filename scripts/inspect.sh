@@ -13,7 +13,7 @@ function print_help {
 
 
 function check_service {
-  # Chec the service passed as the firsr argument is up and running and collect its logs.
+  # Check the service passed as the first argument is up and running and collect its logs.
   local service=$1
   mkdir -p $INSPECT_DUMP/$service
   journalctl -n $JOURNALCTL_LIMIT -u $service &> $INSPECT_DUMP/$service/journal.log
@@ -55,6 +55,8 @@ function store_network {
   netstat -pln &> $INSPECT_DUMP/network/netstat
   ifconfig &> $INSPECT_DUMP/network/ifconfig
   iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
+  iptables -S &> $INSPECT_DUMP/network/iptables-S
+  iptables -L &> $INSPECT_DUMP/network/iptables-L
 }
 
 
@@ -92,12 +94,12 @@ function store_kubernetes_info {
   # Collect some in-k8s details
   printf -- '  Inspect kubernetes cluster\n'
   mkdir -p $INSPECT_DUMP/k8s
-  sudo -E /snap/bin/microk8s.kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
-  sudo -E /snap/bin/microk8s.kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
-  sudo -E /snap/bin/microk8s.kubectl cluster-info dump 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
-  sudo -E /snap/bin/microk8s.kubectl get all --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
-  sudo -E /snap/bin/microk8s.kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
-  sudo -E /snap/bin/microk8s.kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+  sudo -E /snap/bin/microk8s kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
+  sudo -E /snap/bin/microk8s kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
+  sudo -E /snap/bin/microk8s kubectl cluster-info dump 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+  sudo -E /snap/bin/microk8s kubectl get all --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
+  sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+  sudo -E /snap/bin/microk8s kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
 
 
@@ -106,9 +108,9 @@ function suggest_fixes {
   printf '\n'
   if ! systemctl status snap.microk8s.daemon-apiserver &> /dev/null
   then
-    if lsof -Pi :8080 -sTCP:LISTEN -t &> /dev/null
+    if lsof -Pi :16443 -sTCP:LISTEN -t &> /dev/null
     then
-      printf -- '\033[0;33m WARNING: \033[0m Port 8080 seems to be in use by another application.\n'
+      printf -- '\033[0;33m WARNING: \033[0m Port 16443 seems to be in use by another application.\n'
     fi
   fi
 
@@ -122,10 +124,10 @@ function suggest_fixes {
   if /snap/core/current/usr/bin/which ufw &> /dev/null
   then
     ufw=$(ufw status)
-    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cbr0 &> /dev/null
+    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cni0 &> /dev/null
     then
       printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-      printf -- 'with: sudo ufw allow in on cbr0 && sudo ufw allow out on cbr0\n'
+      printf -- 'with: sudo ufw allow in on cni0 && sudo ufw allow out on cni0\n'
     fi
   fi
 
@@ -147,7 +149,7 @@ function suggest_fixes {
       printf -- '    "insecure-registries" : ["localhost:32000"] \n'
       printf -- '}\n'
       printf -- 'and then restart docker with: sudo systemctl restart docker\n'
-    # else if the file docker/daemon.json exists 
+    # else if the file docker/daemon.json exists
     else
       # if it doesn't include the registry as insecure, prompt to add the following lines
       if ! grep -qs localhost:32000 /etc/docker/daemon.json
@@ -159,10 +161,39 @@ function suggest_fixes {
         printf -- '}\n'
         printf -- 'and then restart docker with: sudo systemctl restart docker\n'
       fi
-    fi     
+    fi
+  fi
+
+  # Fedora Specific Checks
+  if fedora_release
+  then
+
+    # Check if appropriate cgroup libraries for Fedora are installed
+    if ! rpm -q libcgroup &> /dev/null
+    then
+      printf -- '\033[31m FAIL: \033[0m libcgroup v1 is not installed. Please install it\n'
+      printf -- '\twith: dnf install libcgroup libcgroup-tools \n'
+    fi
+
+    # check if cgroups v1 is supported
+    if [ ! -d "/sys/fs/cgroup/memory" ] &> /dev/null
+    then
+      printf -- '\033[31m FAIL: \033[0m Cgroup v1 seems not to be enabled. Please enable it \n'
+      printf -- '\tby executing the following command and reboot: \n'
+      printf -- '\tgrubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0" \n'
+    fi
   fi
 }
 
+function fedora_release {
+  local RELEASE=`cat /etc/os-release | grep "^NAME=" | cut -f2 -d=`
+  if [ "${RELEASE}" == "Fedora" ]
+  then
+    return 0
+  else
+    return 1
+  fi
+}
 
 function build_report_tarball {
   # Tar and gz the report
@@ -170,6 +201,19 @@ function build_report_tarball {
   tar -C ${SNAP_DATA} -cf ${SNAP_DATA}/inspection-report-${now_is}.tar inspection-report &> /dev/null
   gzip ${SNAP_DATA}/inspection-report-${now_is}.tar
   printf -- '  Report tarball is at %s/inspection-report-%s.tar.gz\n' "${SNAP_DATA}" "${now_is}"
+}
+
+function check_certificates {
+  exp_date_str="$(openssl x509 -enddate -noout -in /var/snap/microk8s/current/certs/ca.crt | cut -d= -f 2)"
+  exp_date_secs="$(date -d "$exp_date_str" +%s)"
+  now_secs=$(date +%s)
+  difference=$(($exp_date_secs-$now_secs))
+  days=$(($difference/(3600*24)))
+  if [ "3" -ge $days ];
+  then
+    printf -- '\033[0;33mWARNING: \033[0m This deployments certificates will expire in $days days. \n'
+    printf -- 'Either redeploy MicroK8s or attempt a refresh with "microk8s refresh-certs"\n'
+  fi
 }
 
 
@@ -180,6 +224,9 @@ fi;
 
 rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
+
+printf -- 'Inspecting Certificates\n'
+check_certificates
 
 printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"

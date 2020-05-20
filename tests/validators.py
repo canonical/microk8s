@@ -3,6 +3,7 @@ import os
 import re
 import requests
 import platform
+import yaml
 
 from utils import (
     kubectl,
@@ -17,34 +18,23 @@ from utils import (
 
 def validate_dns_dashboard():
     """
-    Validate the dashboard addon by looking at the grafana URL.
-    Validate DNS by starting a busy box and nslookuping the kubernetes default service.
+    Validate the dashboard addon by trying to access the kubernetes dashboard.
+    The dashboard will return an HTML indicating that it is up and running.
     """
-    wait_for_pod_state("", "kube-system", "running", label="k8s-app=influxGrafana")
-    cluster_info = kubectl("cluster-info")
-    # Cluster info output is colored so we better search for the port in the url pattern
-    # instead of trying to extract the url substring
-    regex = "http(.?)://127.0.0.1:([0-9]+)/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy"
-    grafana_pattern = re.compile(regex)
-    for url in cluster_info.split():
-        port_search = grafana_pattern.search(url)
-        if port_search:
-            break
-
-    grafana_url = "http{}://127.0.0.1:{}" \
-                  "/api/v1/namespaces/kube-system/services/" \
-                  "monitoring-grafana/proxy".format(port_search.group(1), port_search.group(2))
-    assert grafana_url
-
-    attempt = 50
-    while attempt >= 0:
-        resp = requests.get(grafana_url, verify=False)
-        if (resp.status_code == 200 and grafana_url.startswith('http://')) or \
-            (resp.status_code == 401 and grafana_url.startswith('https://')):
-            break
-        time.sleep(2)
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=kubernetes-dashboard")
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=dashboard-metrics-scraper")
+    attempt = 30
+    while attempt > 0:
+        try:
+            output = kubectl("get --raw /api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/")
+            if "Kubernetes Dashboard" in output:
+                break
+        except:
+            pass
+        time.sleep(10)
         attempt -= 1
-    assert resp.status_code in [200, 401]
+
+    assert attempt > 0
 
 
 def validate_storage():
@@ -217,7 +207,12 @@ def validate_registry():
     """
     Validate the private registry.
     """
+    
     wait_for_pod_state("", "container-registry", "running", label="app=registry")
+    pvc_stdout = kubectl("get pvc registry-claim -n container-registry -o yaml")
+    pvc_yaml = yaml.safe_load(pvc_stdout)
+    storage = pvc_yaml['spec']['resources']['requests']['storage']
+    assert re.match("(^[2-9][0-9]{1,}|^[1-9][0-9]{2,})(Gi$)",storage)
     docker("pull busybox")
     docker("tag busybox localhost:32000/my-busybox")
     docker("push localhost:32000/my-busybox")
@@ -385,3 +380,14 @@ def validate_cilium():
     output = cilium('endpoint list -o json')
     assert "nginx" in output
     kubectl("delete -f {}".format(manifest))
+
+
+def validate_kubeflow():
+    """
+    Validate kubeflow
+    """
+    if platform.machine() != 'x86_64':
+        print("Kubeflow tests are only relevant in x86 architectures")
+        return
+
+    wait_for_pod_state("ambassador-operator-0", "kubeflow", "running")

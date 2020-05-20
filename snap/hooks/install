@@ -13,28 +13,19 @@ cp -r ${SNAP}/default-args ${SNAP_DATA}/args
 
 # Create the certificates
 mkdir ${SNAP_DATA}/certs
-# Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA 
+# Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
 cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
 produce_certs
 rm -rf .srl
 
-# Create the basic tokens
 mkdir ${SNAP_DATA}/credentials
-admin_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
-echo "${admin_token},admin,admin,\"system:masters\"" > ${SNAP_DATA}/credentials/basic_auth.csv
 ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
 
-# Create the client kubeconfig
-cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/AUTHTYPE/password/g' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
-
 # Create the known tokens
+admin_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+echo "${admin_token},admin,admin,\"system:masters\"" > ${SNAP_DATA}/credentials/known_tokens.csv
 proxy_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
-echo "${proxy_token},system:kube-proxy,kube-proxy" > ${SNAP_DATA}/credentials/known_tokens.csv
+echo "${proxy_token},system:kube-proxy,kube-proxy" >> ${SNAP_DATA}/credentials/known_tokens.csv
 kubelet_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
 hostname=$(hostname)
 echo "${kubelet_token},system:node:${hostname},kubelet-0,\"system:nodes\"" >> ${SNAP_DATA}/credentials/known_tokens.csv
@@ -43,6 +34,13 @@ echo "${controller_token},system:kube-controller-manager,controller" >> ${SNAP_D
 scheduler_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
 echo "${scheduler_token},system:kube-scheduler,scheduler" >> ${SNAP_DATA}/credentials/known_tokens.csv
 
+# Create the client kubeconfig
+cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
+$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
+$SNAP/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
+$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/client.config
+$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/client.config
+$SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
 
 # Create the client kubeconfig for the controller
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/controller.config
@@ -88,4 +86,6 @@ do
     $SNAP/sbin/ip link delete ${link}
   fi
 done
+
+init_cluster
 

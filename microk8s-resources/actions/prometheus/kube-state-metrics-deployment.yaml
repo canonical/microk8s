@@ -17,9 +17,11 @@ spec:
     spec:
       containers:
       - args:
+        - --logtostderr
         - --secure-listen-address=:8443
+        - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
         - --upstream=http://127.0.0.1:8081/
-        image: quay.io/coreos/kube-rbac-proxy:v0.4.0
+        image: quay.io/coreos/kube-rbac-proxy:v0.4.1
         name: kube-rbac-proxy-main
         ports:
         - containerPort: 8443
@@ -32,9 +34,11 @@ spec:
             cpu: 10m
             memory: 20Mi
       - args:
+        - --logtostderr
         - --secure-listen-address=:9443
+        - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
         - --upstream=http://127.0.0.1:8082/
-        image: quay.io/coreos/kube-rbac-proxy:v0.4.0
+        image: quay.io/coreos/kube-rbac-proxy:v0.4.1
         name: kube-rbac-proxy-self
         ports:
         - containerPort: 9443
@@ -51,7 +55,7 @@ spec:
         - --port=8081
         - --telemetry-host=127.0.0.1
         - --telemetry-port=8082
-        image: quay.io/coreos/kube-state-metrics:v1.4.0
+        image: quay.io/coreos/kube-state-metrics:v1.8.0
         name: kube-state-metrics
         resources:
           limits:
@@ -60,37 +64,8 @@ spec:
           requests:
             cpu: 100m
             memory: 150Mi
-      - command:
-        - /pod_nanny
-        - --container=kube-state-metrics
-        - --cpu=100m
-        - --extra-cpu=2m
-        - --memory=150Mi
-        - --extra-memory=30Mi
-        - --threshold=5
-        - --deployment=kube-state-metrics
-        env:
-        - name: MY_POD_NAME
-          valueFrom:
-            fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.name
-        - name: MY_POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.namespace
-        image: quay.io/coreos/addon-resizer:1.0
-        name: addon-resizer
-        resources:
-          limits:
-            cpu: 10m
-            memory: 30Mi
-          requests:
-            cpu: 10m
-            memory: 30Mi
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534

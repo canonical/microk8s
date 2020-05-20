@@ -17,7 +17,8 @@ callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path
 def do_op(remote_op):
     """
     Perform an operation on a remote node
-    :param op_str: the operation json string
+    
+    :param remote_op: the operation json string
     """
     with open(callback_tokens_file, "r+") as fp:
         for _, line in enumerate(fp):
@@ -44,6 +45,7 @@ def do_op(remote_op):
 def restart(service):
     """
     Restart service on all nodes
+    
     :param service: the service name
     """
     print("Restarting nodes.")
@@ -109,17 +111,20 @@ def set_addon(addon, state):
     :param addon: the add-on name
     :param state: 'enable' or 'disable'
     """
-    print("Set add-on {} to {} on nodes.".format(addon, state))
-    remote_op = {
-        "action_str": "set of {} to {}".format(addon, state),
-        "addon": [
-            {
-                "name": addon,
-                state: "true"
-            }
-        ]
-    }
-    do_op(remote_op)
+    if state not in ("enable","disable"):
+        raise ValueError("Wrong value '{}' for state. Must be one of 'enable' or 'disable'".format(state))
+    else:
+        print("Setting add-on {} to {} on nodes.".format(addon, state))
+        remote_op = {
+            "action_str": "set of {} to {}".format(addon, state),
+            "addon": [
+                {
+                    "name": addon,
+                    state: "true"
+                }
+            ]
+        }
+        do_op(remote_op)
 
 
 def usage():

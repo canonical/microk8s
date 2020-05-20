@@ -17,22 +17,26 @@ Options:
 EOF
 }
 
-
-destroy_storage() {
-  echo "Destroying storage"
-  microk8s.enable storage && microk8s.disable storage \
-      || echo "Ignoring storage destroying issue"
+disable_addons() {
+  echo "Disabling all addons."
+  actions="$(get_all_addons)"
+  for action in $actions; do
+    echo "Disabling addon : $action"
+    addon_arguments=""
+    if [ "$action" = "storage" ] && [ ${destroy_storage_enabled} ]
+    then
+       microk8s disable $action:destroy-storage > /dev/null 2>&1 || true
+    else
+       microk8s disable $action > /dev/null 2>&1 || true
+    fi
+  done
+  echo "All addons disabled."
 }
-
 
 clean_cluster() {
   echo "Calling clean_cluster"
   # Clean the cluster
-  REMOVEABLE_NSES=$($KUBECTL get ns -o=name | awk -F/ '{if ($2 !~ /^(default|kube-public|kube-system|kube-node-lease)$/) print}' | paste -s --delimiters=' ')
-  if [ -n "$REMOVEABLE_NSES" ]
-  then
-    $KUBECTL delete $REMOVEABLE_NSES
-  fi
+
   NSES=$($KUBECTL get ns -o=name | awk -F/ '{print $2}' | paste -s --delimiters=' ')
   for NS in $NSES
   do
@@ -53,6 +57,27 @@ clean_cluster() {
   echo "Removing CRDs"
   $KUBECTL delete --all customresourcedefinitions.apiextensions.k8s.io
 
+  echo "Removing PriorityClasses"
+  REMOVEABLE_PCS=$($KUBECTL get priorityclasses -o=name | awk -F/ '{if ($2 !~ /^(system-cluster-critical|system-node-critical)$/) print}' | paste -s --delimiters=' ')
+  if [ -n "$REMOVEABLE_PCS" ]
+  then
+    $KUBECTL delete $REMOVEABLE_PCS
+  fi
+
+  echo "Removing StorageClasses"
+  REMOVEABLE_SCS=$($KUBECTL get storageclasses -o=name | awk -F/ '{if ($2 !~ /^(microk8s-hostpath)$/) print}' | paste -s --delimiters=' ')
+  if [ -n "$REMOVEABLE_SCS" ]
+  then
+    $KUBECTL delete $REMOVEABLE_SCS
+  fi
+
+  # Finally clean up the namespaces
+  REMOVEABLE_NSES=$($KUBECTL get ns -o=name | awk -F/ '{if ($2 !~ /^(default|kube-public|kube-system|kube-node-lease)$/) print}' | paste -s --delimiters=' ')
+  if [ -n "$REMOVEABLE_NSES" ]
+  then
+    $KUBECTL delete $REMOVEABLE_NSES
+  fi
+
   ${SNAP}/microk8s-stop.wrapper
   sleep 5
   ${SNAP}/microk8s-start.wrapper
@@ -70,13 +95,21 @@ clean_cluster() {
   echo "Cleaning up addons client binaries.."
   if [ -d "$SNAP_DATA/bin/" ]
   then
-    sudo rm -rf "$SNAP_DATA/bin/"
+    run_with_sudo rm -rf "$SNAP_DATA/bin/"
+  fi
+}
+
+apply_cni() {
+  if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ]
+  then
+    echo "Setting up the CNI"
+    $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
   fi
 }
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.reset on the master."
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s reset on the master."
   exit 0
 fi
 
@@ -115,8 +148,7 @@ done
 exit_if_stopped
 exit_if_no_permissions
 
-if ${destroy_storage_enabled} ; then
-  destroy_storage
-fi
+disable_addons
 clean_cluster
 
+apply_cni

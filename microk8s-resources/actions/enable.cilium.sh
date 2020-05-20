@@ -11,25 +11,25 @@ if ! [ "${ARCH}" = "amd64" ]; then
   exit 1
 fi
 
-"$SNAP/microk8s-enable.wrapper" helm
+"$SNAP/microk8s-enable.wrapper" helm3
 
 echo "Restarting kube-apiserver"
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-sudo systemctl restart snap.${SNAP_NAME}.daemon-apiserver
+run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-apiserver"
 
 # Reconfigure kubelet/containerd to pick up the new CNI config and binary.
 echo "Restarting kubelet"
 refresh_opt_in_config "cni-bin-dir" "\${SNAP_DATA}/opt/cni/bin/" kubelet
-sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
+run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-kubelet"
 
 set_service_not_expected_to_start flanneld
-sudo systemctl stop snap.${SNAP_NAME}.daemon-flanneld
+run_with_sudo preserve_env snapctl stop "${SNAP_NAME}.daemon-flanneld"
 remove_vxlan_interfaces
 
 if grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
   echo "Restarting containerd"
-  sudo "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP}/opt;bin_dir = "${SNAP_DATA}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
-  sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
+  run_with_sudo "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP}/opt;bin_dir = "${SNAP_DATA}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
+  run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-containerd"
 fi
 
 echo "Enabling Cilium"
@@ -51,33 +51,33 @@ else
   NAMESPACE=kube-system
 
   echo "Fetching cilium version $CILIUM_VERSION."
-  sudo mkdir -p "${SNAP_DATA}/tmp/cilium"
+  run_with_sudo mkdir -p "${SNAP_DATA}/tmp/cilium"
   (cd "${SNAP_DATA}/tmp/cilium"
-  sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $SOURCE_URI/$CILIUM_VERSION.tar.gz -o "$SNAP_DATA/tmp/cilium/cilium.tar.gz"
-  if ! sudo gzip -f -d "$SNAP_DATA/tmp/cilium/cilium.tar.gz"; then
+  run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $SOURCE_URI/$CILIUM_VERSION.tar.gz -o "$SNAP_DATA/tmp/cilium/cilium.tar.gz"
+  if ! run_with_sudo gzip -f -d "$SNAP_DATA/tmp/cilium/cilium.tar.gz"; then
     echo "Invalid version \"$CILIUM_VERSION\". Must be a branch on https://github.com/cilium/cilium."
     exit 1
   fi
-  sudo tar -xf "$SNAP_DATA/tmp/cilium/cilium.tar" "$CILIUM_DIR/install" "$CILIUM_DIR/$CILIUM_CNI_CONF")
+  run_with_sudo tar -xf "$SNAP_DATA/tmp/cilium/cilium.tar" "$CILIUM_DIR/install" "$CILIUM_DIR/$CILIUM_CNI_CONF")
 
-  sudo mv "$SNAP_DATA/args/cni-network/cni.conf" "$SNAP_DATA/args/cni-network/10-kubenet.conf" 2>/dev/null || true
-  sudo mv "$SNAP_DATA/args/cni-network/flannel.conflist" "$SNAP_DATA/args/cni-network/20-flanneld.conflist" 2>/dev/null || true
-  sudo cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF" "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
+  run_with_sudo mv "$SNAP_DATA/args/cni-network/cni.conf" "$SNAP_DATA/args/cni-network/10-kubenet.conf" 2>/dev/null || true
+  run_with_sudo mv "$SNAP_DATA/args/cni-network/flannel.conflist" "$SNAP_DATA/args/cni-network/20-flanneld.conflist" 2>/dev/null || true
+  run_with_sudo cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF" "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
 
   # Generate the YAMLs for Cilium and apply them
   (cd "${SNAP_DATA}/tmp/cilium/$CILIUM_DIR/install/kubernetes"
-  ${SNAP_DATA}/bin/helm template cilium \
+  ${SNAP_DATA}/bin/helm3 template cilium \
       --namespace $NAMESPACE \
       --set global.cni.confPath="$SNAP_DATA/args/cni-network" \
       --set global.cni.binPath="$SNAP_DATA/opt/cni/bin" \
       --set global.cni.customConf=true \
       --set global.containerRuntime.integration="containerd" \
       --set global.containerRuntime.socketPath="$SNAP_COMMON/run/containerd.sock" \
-      | sudo tee cilium.yaml >/dev/null)
+      | run_with_sudo tee cilium.yaml >/dev/null)
 
-  sudo mkdir -p "$SNAP_DATA/actions/cilium/"
-  sudo cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/install/kubernetes/cilium.yaml" "$SNAP_DATA/actions/cilium.yaml"
-  sudo sed -i 's;path: \(/var/run/cilium\);path: '"$SNAP_DATA"'\1;g' "$SNAP_DATA/actions/cilium.yaml"
+  run_with_sudo mkdir -p "$SNAP_DATA/actions/cilium/"
+  run_with_sudo cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/install/kubernetes/cilium.yaml" "$SNAP_DATA/actions/cilium.yaml"
+  run_with_sudo sed -i 's;path: \(/var/run/cilium\);path: '"$SNAP_DATA"'\1;g' "$SNAP_DATA/actions/cilium.yaml"
 
   ${SNAP}/microk8s-status.wrapper --wait-ready >/dev/null
   echo "Deploying $SNAP_DATA/actions/cilium.yaml. This may take several minutes."
@@ -88,13 +88,13 @@ else
   CILIUM_POD=$("$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" -n $NAMESPACE get pod -l $CILIUM_LABELS -o jsonpath="{.items[0].metadata.name}")
   CILIUM_BIN=$(mktemp)
   "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" -n $NAMESPACE cp $CILIUM_POD:/usr/bin/cilium $CILIUM_BIN >/dev/null
-  sudo mkdir -p "$SNAP_DATA/bin/"
-  sudo mv $CILIUM_BIN "$SNAP_DATA/bin/cilium-$CILIUM_ERSION"
-  sudo chmod +x "$SNAP_DATA/bin/"
-  sudo chmod +x "$SNAP_DATA/bin/cilium-$CILIUM_ERSION"
-  sudo ln -s $SNAP_DATA/bin/cilium-$CILIUM_ERSION $SNAP_DATA/bin/cilium
+  run_with_sudo mkdir -p "$SNAP_DATA/bin/"
+  run_with_sudo mv $CILIUM_BIN "$SNAP_DATA/bin/cilium-$CILIUM_ERSION"
+  run_with_sudo chmod +x "$SNAP_DATA/bin/"
+  run_with_sudo chmod +x "$SNAP_DATA/bin/cilium-$CILIUM_ERSION"
+  run_with_sudo ln -s $SNAP_DATA/bin/cilium-$CILIUM_ERSION $SNAP_DATA/bin/cilium
 
-  sudo rm -rf "$SNAP_DATA/tmp/cilium"
+  run_with_sudo rm -rf "$SNAP_DATA/tmp/cilium"
 fi
 
 echo "Cilium is enabled"

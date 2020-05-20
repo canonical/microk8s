@@ -24,7 +24,7 @@ then
   snapctl restart ${SNAP_NAME}.daemon-controller-manager
 fi
 
-#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA 
+#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
 if [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
 then
    cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
@@ -70,7 +70,7 @@ fi
 mkdir -p ${SNAP_DATA}/var/lock/
 
 # This will allow us to refresh the snap to the more secure version.
-# We need to make sure the client certificate used in microk8s.kubectl is available under $SNAP_DATA
+# We need to make sure the client certificate used in microk8s kubectl is available under $SNAP_DATA
 if [ ! -f ${SNAP_DATA}/credentials/client.config ]
 then
   echo "Patching client config location"
@@ -78,7 +78,15 @@ then
   cp ${SNAP}/microk8s-resources/client.config ${SNAP_DATA}/credentials/
 fi
 
-# Upgrading to containerd
+# copy kubectl-env
+if [ ! -e ${SNAP_DATA}/args/kubectl-env ] && grep -e "\-\-kubeconfig=\${SNAP_DATA}/credentials/client.config" ${SNAP_DATA}/args/kubectl
+then
+  echo "Making sure we have kubectl environment file"
+  cp ${SNAP}/default-args/kubectl-env ${SNAP_DATA}/args/kubectl-env
+  skip_opt_in_config kubeconfig kubectl
+fi
+
+# copy kubectl
 if [ ! -e ${SNAP_DATA}/args/kubectl ]
 then
   echo "Making sure we have kubectl arguments file"
@@ -145,7 +153,7 @@ fi
 if grep -e "\-\-allow-privileged" ${SNAP_DATA}/args/kubelet
 then
   echo "Patching 1.15 allow-privileged"
-  sudo "${SNAP}/bin/sed" -i '/allow-privileged/d' ${SNAP_DATA}/args/kubelet
+  "${SNAP}/bin/sed" -i '/allow-privileged/d' ${SNAP_DATA}/args/kubelet
   snapctl restart ${SNAP_NAME}.daemon-kubelet
 fi
 
@@ -166,7 +174,7 @@ then
   cp "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}"/install/kubernetes/helm/istio/templates/crds.yaml "$SNAP_DATA/actions/istio/"
   mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo-auth.yaml" "$SNAP_DATA/actions/istio/"
   mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml" "$SNAP_DATA/actions/istio/"
-  sudo rm -rf "$SNAP_DATA/tmp/istio"
+  rm -rf "$SNAP_DATA/tmp/istio"
 fi
 
 need_api_restart=false
@@ -319,7 +327,13 @@ then
   need_api_restart=true
 fi
 
-if [ "${need_api_restart}" ]
+if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
+then
+  refresh_opt_in_config enable-v2 true etcd
+  snapctl restart ${SNAP_NAME}.daemon-etcd
+fi
+
+if ${need_api_restart}
 then
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
@@ -327,6 +341,63 @@ fi
 if [ -L "${SNAP_DATA}/bin/cilium" ]
 then
   echo "Cilium is enabled we need to reconfigure it."
-  sudo rm -rf $SNAP_DATA/bin/cilium*
-  ${SNAP}/microk8s-enable.wrapper cilium
+  rm -rf $SNAP_DATA/bin/cilium*
+  ${SNAP}/actions/enable.cilium.sh
+fi
+
+# modify the containerd localhost:32000 mirror registry
+if [ -e ${SNAP_DATA}/args/containerd-template.toml ] && grep -e "plugins.cri.registry.mirrors.\"local.insecure-registry.io\"" ${SNAP_DATA}/args/containerd-template.toml
+then
+    "$SNAP/bin/sed" -i 's@plugins.cri.registry.mirrors."local.insecure-registry.io"@plugins.cri.registry.mirrors."localhost:32000"@g' ${SNAP_DATA}/args/containerd-template.toml
+    snapctl restart ${SNAP_NAME}.daemon-containerd
+fi
+
+if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  if grep -e "\-\-etcd-cafile /var/snap/microk8s/.*/ca.remote.crt" ${SNAP_DATA}/args/flanneld
+  then
+    skip_opt_in_config etcd-cafile flanneld
+    refresh_opt_in_config etcd-cafile \${SNAP_DATA}/certs/ca.remote.crt flanneld
+  fi
+
+  if grep -e "\-\-etcd-certfile /var/snap/microk8s/.*/server.remote.crt" ${SNAP_DATA}/args/flanneld
+  then
+    skip_opt_in_config etcd-certfile flanneld
+    refresh_opt_in_config etcd-certfile \${SNAP_DATA}/certs/server.remote.crt flanneld
+  fi
+fi
+
+# This patches flanneld conf template by adding cniversion if it doesnt exist.
+if [ -e ${SNAP_DATA}/args/flannel-template.conflist ] && ! grep -e "cniVersion" ${SNAP_DATA}/args/flannel-template.conflist
+then
+    "$SNAP/bin/sed" -i 's@"name": "microk8s-flannel-network",@"name": "microk8s-flannel-network",\n    "cniVersion": "0.3.1",@g' ${SNAP_DATA}/args/flannel-template.conflist
+    snapctl restart ${SNAP_NAME}.daemon-flanneld
+    snapctl restart ${SNAP_NAME}.daemon-containerd
+fi
+
+if ! grep -e "\-\-timeout" ${SNAP_DATA}/args/cluster-agent
+then
+  refresh_opt_in_config timeout 240 cluster-agent
+  snapctl restart ${SNAP_NAME}.daemon-containerd
+fi
+
+mkdir -p "$SNAP_DATA/juju/share/juju" "$SNAP_DATA/juju-home"
+chmod -R ug+rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"
+chmod -R o-rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"
+
+if getent group microk8s >/dev/null 2>&1
+then
+    chgrp microk8s -R "$SNAP_DATA/juju" "$SNAP_DATA/juju-home" || true
+fi
+
+if ! grep -e "\-\-ip-masq" ${SNAP_DATA}/args/flanneld
+then
+  refresh_opt_in_config ip-masq true flanneld
+  snapctl restart ${SNAP_NAME}.daemon-flanneld
+fi
+
+if grep -e "\-\-cluster-cidr=10.152.183.0/24" ${SNAP_DATA}/args/kube-proxy
+then
+  refresh_opt_in_config cluster-cidr 10.1.0.0/16 kube-proxy
+  snapctl restart ${SNAP_NAME}.daemon-proxy
 fi

@@ -10,7 +10,7 @@ source $SNAP/actions/common/utils.sh
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.disable on the master."
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s disable on the master."
   exit 0
 fi
 
@@ -39,9 +39,15 @@ for addon in "$@"; do
   ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 >/dev/null
   action="$(addon_name $addon)"
   arguments="$(addon_arguments $addon)"
+  # Check if the addon is already disabled, then skip.
+  if ${SNAP}/microk8s-status.wrapper --addon $action | grep "disabled" >/dev/null; then
+    echo "Addon $action is already disabled."
+    result=0
+    continue
+  fi
+
   # If there is a script to execute for the action $1 run the script and ignore any yamls
   if [ -f "${SNAP}/actions/disable.$action.sh" ]; then
-
     "${SNAP}/actions/disable.$action.sh" "${arguments}"
     disable_result="$?"
     if [ "$disable_result" = "0" ]

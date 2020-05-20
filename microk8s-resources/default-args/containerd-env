@@ -8,7 +8,7 @@
 #
 # Remember to restart the containerd daemon after editing this file:
 #
-# sudo systemctl restart snap.microk8s.daemon-containerd.service
+# sudo systemctl restart microk8s.daemon-containerd
 #
 #
 
@@ -16,3 +16,8 @@
 # this get inherited to the running containers
 #
 ulimit -n 65536 || true
+
+# Attempt to change the maximum locked memory limit
+# this get inherited to the running containers
+#
+ulimit -l 16384 || true

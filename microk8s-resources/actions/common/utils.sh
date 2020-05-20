@@ -7,6 +7,7 @@ exit_if_no_permissions() {
     echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:" >&2
     echo "" >&2
     echo "    sudo usermod -a -G microk8s $USER" >&2
+    echo "    sudo chown -f -R $USER ~/.kube" >&2
     echo "" >&2
     echo "The new group will be available on the user's next login." >&2
     exit 1
@@ -17,7 +18,7 @@ exit_if_stopped() {
   # test if the snap is marked as stopped
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
   then
-    echo "microk8s is not running, try microk8s.start" >&2
+    echo "microk8s is not running, try microk8s start" >&2
     exit 1
   fi
 }
@@ -56,14 +57,38 @@ set_service_expected_to_start() {
 
 remove_vxlan_interfaces() {
   links="$(${SNAP}/sbin/ip link show type vxlan | $SNAP/bin/grep -E 'flannel|cilium_vxlan' | $SNAP/usr/bin/gawk '{print $2}' | $SNAP/usr/bin/tr -d :)"
-  for link in "$links"
+  for link in $links
   do
     if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
     then
       echo "Deleting old ${link} link" >&2
-      sudo $SNAP/sbin/ip link delete ${link}
+      run_with_sudo $SNAP/sbin/ip link delete ${link}
     fi
   done
+}
+
+run_with_sudo() {
+  # As we call the sudo binary of the host we have to make sure we do not change the LD_LIBRARY_PATH used
+  if [ -n "${LD_LIBRARY_PATH-}" ]
+  then
+    GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+    local LD_LIBRARY_PATH=""
+    if [ "$1" == "preserve_env" ]
+    then
+      shift
+      sudo -E LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+    else
+      sudo LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+    fi
+  else
+    if [ "$1" == "preserve_env" ]
+    then
+      shift
+      sudo -E "$@"
+    else
+      sudo "$@"
+    fi
+  fi
 }
 
 refresh_opt_in_config() {
@@ -74,17 +99,17 @@ refresh_opt_in_config() {
     local config_file="$SNAP_DATA/args/$3"
     local replace_line="$opt=$value"
     if $(grep -qE "^$opt=" $config_file); then
-        sudo "$SNAP/bin/sed" -i "s;^$opt=.*;$replace_line;" $config_file
+        run_with_sudo "$SNAP/bin/sed" -i "s;^$opt=.*;$replace_line;" $config_file
     else
-        sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
+        run_with_sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
-        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
         fi
     fi
 }
@@ -98,10 +123,10 @@ nodes_addon() {
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
-        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
         fi
     fi
 }
@@ -113,14 +138,14 @@ skip_opt_in_config() {
     # argument $2 is the configuration file under $SNAP_DATA/args
     local opt="--$1"
     local config_file="$SNAP_DATA/args/$2"
-    sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
+    run_with_sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
-        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
         fi
     fi
 }
@@ -129,14 +154,14 @@ skip_opt_in_config() {
 restart_service() {
     # restart a systemd service
     # argument $1 is the service name
-    sudo systemctl restart "snap.microk8s.daemon-$1.service"
+    run_with_sudo preserve_env snapctl restart "microk8s.daemon-$1"
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
-        tokens=$(sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
+        tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            sudo -E LD_LIBRARY_PATH=$LD_LIBRARY_PATH "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
         fi
     fi
 }
@@ -146,6 +171,17 @@ arch() {
     echo $SNAP_ARCH
 }
 
+
+snapshotter() {
+  # Determine the underlying filesystem that containerd will be running on
+  FSTYPE=$(stat -f -c %T "${SNAP_COMMON}")
+  # ZFS is supported through the native snapshotter
+  if [ "$FSTYPE" = "zfs" ]; then
+    echo "native"
+  else
+    echo "overlayfs"
+  fi
+}
 
 use_manifest() {
     # Perform an action (apply or delete) on a manifest.
@@ -213,7 +249,7 @@ wait_for_service() {
     # Return fail if the service did not start in 30 seconds
     local service_name="$1"
     local TRY_ATTEMPT=0
-    while ! (sudo systemctl is-active --quiet snap.${SNAP_NAME}.daemon-${service_name}) &&
+    while ! (run_with_sudo preserve_env snapctl services ${SNAP_NAME}.daemon-${service_name} | grep active) &&
           ! [ ${TRY_ATTEMPT} -eq 30 ]
     do
         TRY_ATTEMPT=$((TRY_ATTEMPT+1))
@@ -264,20 +300,30 @@ get_ips() {
     then
         echo "none"
     else
+        if $SNAP/sbin/ifconfig cni0 &> /dev/null
+        then
+          CNI_IP="$($SNAP/sbin/ip -o -4 addr list cni0 | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
+          local ips="";
+          for ip in $IP_ADDR
+          do
+            [ "$ip" != "$CNI_IP" ] && ips+="${ips:+ }$ip";
+          done
+          IP_ADDR="$ips"
+        fi
         echo "${IP_ADDR}"
     fi
 }
 
 gen_server_cert() (
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
-    ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 gen_proxy_client_cert() (
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
-    ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
-    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
+    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 produce_certs() {
@@ -291,24 +337,24 @@ produce_certs() {
 
     # Generate apiserver CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt
     fi
 
     # Generate front proxy CA
     if ! [ -f ${SNAP_DATA}/certs/front-proxy-ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -days 10000 -out ${SNAP_DATA}/certs/front-proxy-ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.
     # The file csr.conf.rendered is compared with csr.conf to determine if a regeneration of the certs must be done.
     #
-    # Returns 
+    # Returns
     #  0 if no change
-    #  1 otherwise. 
+    #  1 otherwise.
 
     render_csr_conf
     if ! [ -f "${SNAP_DATA}/certs/csr.conf" ]; then
-        echo "changeme" >  "${SNAP_DATA}/certs/csr.conf" 
+        echo "changeme" >  "${SNAP_DATA}/certs/csr.conf"
     fi
 
     local force
@@ -378,6 +424,9 @@ get_node() {
     fi
 }
 
+wait_for_node() {
+  get_node
+}
 
 drain_node() {
     # Drain node
@@ -401,3 +450,49 @@ uncordon_node() {
         $KUBECTL uncordon $node || true
     fi
 }
+
+get_all_addons() {
+    actions="$(find "$SNAP/actions" -maxdepth 1 ! -name 'coredns.yaml' -name '*.yaml' -or -name 'enable.*.sh')"
+    actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
+    echo $actions
+}
+
+
+function valid_ip() {
+# Test an IP address for validity:
+# Usage:
+#      valid_ip IP_ADDRESS
+#      if [[ $? -eq 0 ]]; then echo good; else echo bad; fi
+#   OR
+#      if valid_ip IP_ADDRESS; then echo good; else echo bad; fi
+#
+    local  ip=$1
+    local  stat=1
+
+    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+    return $stat
+}
+
+
+init_cluster() {
+  mkdir -p ${SNAP_DATA}/var/kubernetes/backend
+  IP="127.0.0.1"
+  # TODO: make the port configurable
+  echo "Address: $IP:19001" > ${SNAP_DATA}/var/kubernetes/backend/init.yaml
+  DNS=$($SNAP/bin/hostname)
+  mkdir -p $SNAP_DATA/var/tmp/
+  cp $SNAP/microk8s-resources/certs/csr-dqlite.conf.template $SNAP_DATA/var/tmp/csr-dqlite.conf
+  $SNAP/bin/sed -i 's/HOSTNAME/'"${DNS}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
+  $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
+  ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
+  chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
+}
+
