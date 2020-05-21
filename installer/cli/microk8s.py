@@ -121,28 +121,8 @@ def install(args) -> None:
 
     if platform == "win32":
         aux = Windows(args)
-        if not aux.check_admin():
-            echo.error("`microk8s install` must be ran as adminstrator in order to check Hyper-V status.")
-            input("Press return key to exit...")
-            exit(1)
-
         if not aux.is_enough_space():
             echo.warning("VM disk size requested exceeds free space on host.")
-
-        if not aux.check_hyperv():
-            if args.assume_yes or (echo.is_tty_connected() and echo.confirm(
-                "Hyper-V needs to be enabled. "
-                "Would you like to do that now?"
-            )):
-                echo.info("Hyper-V will now be enabled.")
-                aux.enable_hyperv()
-                echo.info("Hyper-V has been enabled.")
-                echo.info("This host must be restarted.  After restart, run `microk8s install` again to complete setup.")
-                input("Press return key to exit...")
-                exit(0)
-            else:
-                echo.error("Cannot continue without enabling Hyper-V")
-                exit(1)
 
     if platform == "darwin":
         aux = MacOS(args)
