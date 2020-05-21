@@ -51,7 +51,7 @@ jobs:
         cd "C:\Program Files (x86)\NSIS\Plugins\x86-ansi"
         dir
     - name: Create installer
-      run: "C:/Program Files (x86)/NSIS/makensis.exe" ${{ github.workspace }}/installer/windows/microk8s.nsi
+      run: makensis.exe ${{ github.workspace }}/installer/windows/microk8s.nsi
     - name: Upload installer
       uses: actions/upload-artifact@v2
       with:
