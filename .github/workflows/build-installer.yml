@@ -50,13 +50,6 @@ jobs:
         dir
         cd "C:\Program Files (x86)\NSIS\Plugins\x86-ansi"
         dir
-
-    # - name: Create installer
-    #   uses: joncloud/makensis-action@v1.2
-    #   with:
-    #     include-more-plugins: true
-    #     include-custom-plugins-path: ${{ github.workspace }}/NSIS_Plugins/Plugins/x86-ansi/
-    #     script-file: ${{ github.workspace }}/installer/windows/microk8s.nsi
     - name: Create installer
       run: "C:/Program Files (x86)/NSIS/makensis.exe" ${{ github.workspace }}/installer/windows/microk8s.nsi
     - name: Upload installer
