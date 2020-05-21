@@ -25,10 +25,6 @@ jobs:
       run: python -m pip install -r ../requirements.txt
     - name: Build exe
       run: pyinstaller.exe --onefile ../microk8s.spec
-    - name: Install NSIS
-      uses: crazy-max/ghaction-chocolatey@v1.2.0
-      with:
-        args: install --yes nsis
     - name: Download EnVar plugin for NSIS
       uses: carlosperate/download-file-action@v1.0.3
       with:
@@ -36,19 +32,33 @@ jobs:
         file-name: envar_plugin.zip
         location: ${{ github.workspace }}
     - name: Extract EnVar plugin
-      run: 7z x -o"${{ github.workspace }}/NSIS_Plugins" "${{ github.workspace }}/envar_plugin.zip"
+      #run: 7z x -o"${{ github.workspace }}/NSIS_Plugins" "${{ github.workspace }}/envar_plugin.zip"
+      run: 7z x -o"C:/Program Files (x86)/NSIS" "${{ github.workspace }}/envar_plugin.zip"
     - name: Download Multipass installer
       uses: carlosperate/download-file-action@v1.0.3
       with:
         file-url: https://people.canonical.com/~msawicz/multipass/v1.2.1/multipass-1.2.1+win-win64.exe
         file-name: multipass.exe
         location: ${{ github.workspace }}/installer/windows
+    - name: Debug
+      run: |
+        cd "C:\Program Files (x86)\NSIS"
+        dir
+        cd "C:\Program Files (x86)\NSIS\Plugins"
+        dir
+        cd "C:\Program Files (x86)\NSIS\Contrib"
+        dir
+        cd "C:\Program Files (x86)\NSIS\Plugins\x86-ansi"
+        dir
+
     # - name: Create installer
     #   uses: joncloud/makensis-action@v1.2
     #   with:
     #     include-more-plugins: true
     #     include-custom-plugins-path: ${{ github.workspace }}/NSIS_Plugins/Plugins/x86-ansi/
     #     script-file: ${{ github.workspace }}/installer/windows/microk8s.nsi
+    - name: Create installer
+      run: "C:/Program Files (x86)/NSIS/makensis.exe" ${{ github.workspace }}/installer/windows/microk8s.nsi
     - name: Upload installer
       uses: actions/upload-artifact@v2
       with:
