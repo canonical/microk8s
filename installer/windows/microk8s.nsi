@@ -12,7 +12,7 @@
 !define MUI_HEADERIMAGE_RIGHT
 
 Unicode True
-Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
+Name "${PRODUCT_NAME} for Windows ${PRODUCT_VERSION}"
 BrandingText "Canonical Ltd."
 Icon ".\microk8s.ico"
 OutFile "microk8s-installer.exe"
