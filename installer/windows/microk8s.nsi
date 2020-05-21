@@ -22,7 +22,7 @@ RequestExecutionLevel admin
 SetCompress auto
 
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "../../LICENSE"
+!insertmacro MUI_PAGE_LICENSE "..\..\LICENSE"
 !define MUI_COMPONENTSPAGE_TEXT_COMPLIST " "
 !define MUI_COMPONENTSPAGE_TEXT_INSTTYPE " "
 !insertmacro MUI_PAGE_COMPONENTS
