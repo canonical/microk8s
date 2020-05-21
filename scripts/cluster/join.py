@@ -335,15 +335,7 @@ def reset_current_dqlite_installation():
     subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
     time.sleep(10)
 
-    if len(my_ep) > 0 and "127.0.0.1" not in my_ep[0]:
-        for ep in other_ep:
-            try:
-                subprocess.check_output("curl -X DELETE https://{}/cluster/{} --cacert {} --key {} --cert {}  -k -s"
-                                        .format(ep, my_ep[0], cluster_cert_file, cluster_key_file, cluster_cert_file)
-                                        .split())
-                break
-            except subprocess.CalledProcessError:
-                print("Contacting node {} failed.".format(ep))
+    delete_dqlite_node(my_ep, other_ep)
 
     print("Generating new cluster certificates.", flush=True)
     shutil.rmtree(cluster_dir, ignore_errors=True)
@@ -395,6 +387,18 @@ def reset_current_dqlite_installation():
             waits -= 1
     print(" ")
     restart_all_services()
+
+
+def delete_dqlite_node(delete_node, dqlite_ep):
+    if len(delete_node) > 0 and "127.0.0.1" not in delete_node[0]:
+        for ep in dqlite_ep:
+            try:
+                subprocess.check_output("curl -X DELETE https://{}/cluster/{} --cacert {} --key {} --cert {}  -k -s"
+                                        .format(ep, delete_node[0], cluster_cert_file, cluster_key_file, cluster_cert_file)
+                                        .split())
+                break
+            except subprocess.CalledProcessError:
+                print("Contacting node {} failed.".format(ep))
 
 
 def get_dqlite_endpoints():
@@ -490,6 +494,37 @@ def remove_node(node):
     remove_callback_token(node)
     subprocess.check_call("{}/microk8s-kubectl.wrapper delete no {}".format(snap_path, node).split(),
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def remove_dqlite_node(node, force=False):
+    try:
+        # Make sure this node exists
+        node_info = subprocess.check_output("{}/microk8s-kubectl.wrapper get no {} -o json".format(snap_path, node).split())
+        info = json.loads(node_info)
+        node_address = None
+        for a in info['status']['addresses']:
+            if a['type'] == 'InternalIP':
+                node_address = a['address']
+                break
+
+        if not node_address:
+            print("Could nod detect the IP of {}.".format(node))
+            exit(1)
+
+        if force:
+            node_ep = None
+            my_ep, other_ep = get_dqlite_endpoints()
+            for ep in other_ep:
+                if ep.startswith("{}:".format(node)):
+                    node_ep = ep
+
+            delete_dqlite_node(node_ep, my_ep[0])
+
+    except subprocess.CalledProcessError:
+        print("Node {} does not exist in Kubernetes.".format(node))
+        exit(1)
+
+    remove_node()
 
 
 def get_token(name, tokens_file = "known_tokens.csv"):
@@ -723,7 +758,14 @@ if __name__ == "__main__":
 
     if args[0] == "reset":
         if len(args) > 1:
-            remove_node(args[1])
+            if is_node_running_dqlite():
+                force = False
+                if len(args) > 2 and args[2] == "--force":
+                    force = True
+                remove_dqlite_node(args[1], force)
+            else:
+                remove_node(args[1])
+
         else:
             if is_node_running_dqlite():
                 reset_current_dqlite_installation()
