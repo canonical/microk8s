@@ -10,7 +10,7 @@ from cli.echo import Echo
 from common.auxillary import Windows, MacOS
 from common.errors import BaseError
 from vm_providers.factory import get_provider_for
-from vm_providers.errors import ProviderNotFound
+from vm_providers.errors import ProviderNotFound, ProviderInstanceNotFoundError
 from common import definitions
 
 logger = logging.getLogger(__name__)
@@ -177,59 +177,55 @@ def dashboard_proxy() -> None:
     echo = Echo()
     try:
         vm_provider_class.ensure_provider()
-    except ProviderNotFound as provider_error:
-        if provider_error.prompt_installable:
-            if echo.is_tty_connected():
-                echo.warning("MicroK8s is not installed. Please run `microk8s install`.")
-            return 1
-        else:
-            raise provider_error
+        instance = vm_provider_class(echoer=echo)
+        instance.get_instance_info()
 
-    instance = vm_provider_class(echoer=echo)
+        echo.info("Checking if Dashboard is running.")
+        command = ["microk8s.enable", "dashboard"]
+        output = instance.run(command, hide_output=True)
+        if b"Addon dashboard is already enabled." not in output:
+            echo.info("Waiting for Dashboard to come up.")
+            command = ["microk8s.kubectl", "-n", "kube-system", "wait", "--timeout=240s",
+                       "deployment", "kubernetes-dashboard", "--for", "condition=available"]
+            instance.run(command, hide_output=True)
 
-    echo.info("Checking if Dashboard is running.")
-    command = ["microk8s.enable", "dashboard"]
-    output = instance.run(command, hide_output=True)
-    if b"Addon dashboard is already enabled." not in output:
-        echo.info("Waiting for Dashboard to come up.")
-        command = ["microk8s.kubectl", "-n", "kube-system", "wait", "--timeout=240s",
-                   "deployment", "kubernetes-dashboard", "--for", "condition=available"]
-        instance.run(command, hide_output=True)
+        command = ["microk8s.kubectl", "-n", "kube-system", "get", "secret"]
+        output = instance.run(command, hide_output=True)
+        secret_name = None
+        for line in output.split(b"\n"):
+            if line.startswith(b"default-token"):
+                secret_name = line.split()[0].decode()
+                break
 
-    command = ["microk8s.kubectl", "-n", "kube-system", "get", "secret"]
-    output = instance.run(command, hide_output=True)
-    secret_name = None
-    for line in output.split(b"\n"):
-        if line.startswith(b"default-token"):
-            secret_name = line.split()[0].decode()
-            break
+        if not secret_name:
+            echo.error("Cannot find the dashboard secret.")
 
-    if not secret_name:
-        echo.error("Cannot find the dashboard secret.")
+        command = ["microk8s.kubectl", "-n", "kube-system", "describe", "secret", secret_name]
+        output = instance.run(command, hide_output=True)
+        token = None
+        for line in output.split(b"\n"):
+            if line.startswith(b"token:"):
+                token = line.split()[1].decode()
 
-    command = ["microk8s.kubectl", "-n", "kube-system", "describe", "secret", secret_name]
-    output = instance.run(command, hide_output=True)
-    token = None
-    for line in output.split(b"\n"):
-        if line.startswith(b"token:"):
-            token = line.split()[1].decode()
+        if not token:
+            echo.error("Cannot find token from secret.")
 
-    if not token:
-        echo.error("Cannot find token from secret.")
+        ip = instance.get_instance_info().ipv4[0]
 
-    ip = instance.get_instance_info().ipv4[0]
+        echo.info("Dashboard will be available at https://{}:10443".format(ip))
+        echo.info("Use the following token to login:")
+        echo.info(token)
 
-    echo.info("Dashboard will be available at https://{}:10443".format(ip))
-    echo.info("Use the following token to login:")
-    echo.info(token)
+        command = ["microk8s.kubectl", "port-forward", "-n", "kube-system",
+                   "service/kubernetes-dashboard", "10443:443", "--address", "0.0.0.0"]
 
-    command = ["microk8s.kubectl", "port-forward", "-n", "kube-system",
-               "service/kubernetes-dashboard", "10443:443", "--address", "0.0.0.0"]
-
-    try:
-        instance.run(command)
-    except KeyboardInterrupt:
-        return
+        try:
+            instance.run(command)
+        except KeyboardInterrupt:
+            return
+    except ProviderInstanceNotFoundError as provider_error:
+        _not_installed(echo)
+        return 1
 
 
 def stop() -> None:
@@ -248,18 +244,19 @@ def run(cmd) -> None:
     echo = Echo()
     try:
         vm_provider_class.ensure_provider()
-    except ProviderNotFound as provider_error:
-        if provider_error.prompt_installable:
-            if echo.is_tty_connected():
-                echo.warning("MicroK8s is not installed. Please run `microk8s install`.")
-            return 1
-        else:
-            raise provider_error
+        instance = vm_provider_class(echoer=echo)
+        instance.get_instance_info()
+        command = cmd[0]
+        cmd[0] = "microk8s.{}".format(command)
+        instance.run(cmd)
+    except ProviderInstanceNotFoundError as provider_error:
+        _not_installed(echo)
+        return 1
 
-    instance = vm_provider_class(echoer=echo)
-    command = cmd[0]
-    cmd[0] = "microk8s.{}".format(command)
-    instance.run(cmd)
+
+def _not_installed(echo) -> None:
+    if echo.is_tty_connected():
+        echo.warning("MicroK8s is not installed. Please run `microk8s install`.")
 
 
 def _get_microk8s_commands() -> List:
