@@ -24,7 +24,11 @@ jobs:
     - name: Install Python requirements
       run: python -m pip install -r ../requirements.txt
     - name: Build exe
-      run: pyinstaller.exe --onefile ../microk8s.spec
+      working-directory: ${{ github.workspace }}/installer
+      run: pyinstaller.exe --onefile ./microk8s.spec
+    - name: Move exe to installer build directory
+      working-directory: ${{ github.workspace }}/installer
+      run: move microk8s.exe ./windows/microk8s.exe
     - name: Download EnVar plugin for NSIS
       uses: carlosperate/download-file-action@v1.0.3
       with:
