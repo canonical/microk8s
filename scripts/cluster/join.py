@@ -399,6 +399,7 @@ def delete_dqlite_node(delete_node, dqlite_ep):
                 break
             except subprocess.CalledProcessError:
                 print("Contacting node {} failed.".format(ep))
+                exit(2)
 
 
 def get_dqlite_endpoints():
@@ -500,7 +501,7 @@ def remove_dqlite_node(node, force=False):
     try:
         # Make sure this node exists
         node_info = subprocess.check_output("{}/microk8s-kubectl.wrapper get no {} -o json".format(snap_path, node).split())
-        info = json.loads(node_info)
+        info = json.loads(node_info.decode())
         node_address = None
         for a in info['status']['addresses']:
             if a['type'] == 'InternalIP':
@@ -511,20 +512,25 @@ def remove_dqlite_node(node, force=False):
             print("Could nod detect the IP of {}.".format(node))
             exit(1)
 
-        if force:
-            node_ep = None
-            my_ep, other_ep = get_dqlite_endpoints()
-            for ep in other_ep:
-                if ep.startswith("{}:".format(node)):
-                    node_ep = ep
+        node_ep = None
+        my_ep, other_ep = get_dqlite_endpoints()
+        for ep in other_ep:
+            if ep.startswith("{}:".format(node_address)):
+                node_ep = ep
 
-            delete_dqlite_node(node_ep, my_ep[0])
+        if node_ep and force:
+            delete_dqlite_node([node_ep], my_ep)
+        elif node_ep and not force:
+            print("Removal failed. Node {} is registered with dqlite. Please, run first 'microk8s leave' on the departing node. \n"
+                  "If the node is not available anymore and will never attempt to join the cluster in the future use the '--force' flag \n"
+                  "to unregister the node while removing it.".format(node))
+            exit(1)
 
     except subprocess.CalledProcessError:
         print("Node {} does not exist in Kubernetes.".format(node))
         exit(1)
 
-    remove_node()
+    remove_node(node)
 
 
 def get_token(name, tokens_file = "known_tokens.csv"):
@@ -743,15 +749,19 @@ def join_etcd(connection_parts):
 
 if __name__ == "__main__":
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "h", ["help"])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "hf", ["help", "force"])
     except getopt.GetoptError as err:
         print(err)  # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
+
+    force = False
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
             sys.exit(1)
+        elif o in ("-f", "--force"):
+            force = True
         else:
             print("Unhandled option")
             sys.exit(1)
@@ -759,9 +769,6 @@ if __name__ == "__main__":
     if args[0] == "reset":
         if len(args) > 1:
             if is_node_running_dqlite():
-                force = False
-                if len(args) > 2 and args[2] == "--force":
-                    force = True
                 remove_dqlite_node(args[1], force)
             else:
                 remove_node(args[1])

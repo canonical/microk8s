@@ -33,8 +33,13 @@ then
   exit 1
 fi
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -eq 0 ]; then
     echo "Please provide the node you want to remove."
+  exit 1
+fi
+
+if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] && [ "$#" -eq 2 ] && ! [ "$2" == "--force" ] ; then
+    echo "Please provide the node and the optional --force flag."
   exit 1
 fi
 
