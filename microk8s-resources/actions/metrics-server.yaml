@@ -152,15 +152,15 @@ subjects:
   name: metrics-server
   namespace: kube-system
 ---
-kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
 metadata:
   name: microk8s-admin
-subjects:
-- kind: User
-  name: 127.0.0.1
-  apiGroup: rbac.authorization.k8s.io
 roleRef:
-  kind: ClusterRole
-  name: system:kubelet-api-admin
   apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+- apiGroup: rbac.authorization.k8s.io
+  kind: User
+  name: front-proxy-client  
