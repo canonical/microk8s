@@ -107,7 +107,6 @@ class TestAddons(object):
 
         print("Enabling Knative and Istio")
         p = Popen("/snap/bin/microk8s.enable knative".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        p.communicate(input=b'N\n')[0]
         print("Validating Istio")
         validate_istio()
         print("Validating Knative")

@@ -10,7 +10,7 @@ from cli.echo import Echo
 from common.auxillary import Windows, MacOS
 from common.errors import BaseError
 from vm_providers.factory import get_provider_for
-from vm_providers.errors import ProviderNotFound
+from vm_providers.errors import ProviderNotFound, ProviderInstanceNotFoundError
 from common import definitions
 
 logger = logging.getLogger(__name__)
@@ -75,7 +75,7 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  install         Installs MicroK8s. Use --cpu, --mem, --disk and --channel to configure your setup. 
+  install         Installs MicroK8s. Use --cpu, --mem, --disk and --channel to configure your setup.
   uninstall       Removes MicroK8s"""
     click.echo(msg)
     commands = _get_microk8s_commands()
@@ -121,28 +121,8 @@ def install(args) -> None:
 
     if platform == "win32":
         aux = Windows(args)
-        if not aux.check_admin():
-            echo.error("`microk8s install` must be ran as adminstrator in order to check Hyper-V status.")
-            input("Press return key to exit...")
-            exit(1)
-
         if not aux.is_enough_space():
             echo.warning("VM disk size requested exceeds free space on host.")
-
-        if not aux.check_hyperv():
-            if args.assume_yes or (echo.is_tty_connected() and echo.confirm(
-                "Hyper-V needs to be enabled. "
-                "Would you like to do that now?"
-            )):
-                echo.info("Hyper-V will now be enabled.")
-                aux.enable_hyperv()
-                echo.info("Hyper-V has been enabled.")
-                echo.info("This host must be restarted.  After restart, run `microk8s install` again to complete setup.")
-                input("Press return key to exit...")
-                exit(0)
-            else:
-                echo.error("Cannot continue without enabling Hyper-V")
-                exit(1)
 
     if platform == "darwin":
         aux = MacOS(args)
@@ -197,56 +177,55 @@ def dashboard_proxy() -> None:
     echo = Echo()
     try:
         vm_provider_class.ensure_provider()
-    except ProviderNotFound as provider_error:
-        if provider_error.prompt_installable:
-            if echo.is_tty_connected():
-                echo.warning("MicroK8s is not installed. Please run `microk8s install`.")
-            return 1
-        else:
-            raise provider_error
+        instance = vm_provider_class(echoer=echo)
+        instance.get_instance_info()
 
-    instance = vm_provider_class(echoer=echo)
+        echo.info("Checking if Dashboard is running.")
+        command = ["microk8s.enable", "dashboard"]
+        output = instance.run(command, hide_output=True)
+        if b"Addon dashboard is already enabled." not in output:
+            echo.info("Waiting for Dashboard to come up.")
+            command = ["microk8s.kubectl", "-n", "kube-system", "wait", "--timeout=240s",
+                       "deployment", "kubernetes-dashboard", "--for", "condition=available"]
+            instance.run(command, hide_output=True)
 
-    echo.info("Checking if Dashboard is running.")
-    command = ["microk8s.enable", "dashboard"]
-    output = instance.run(command, hide_output=True)
-    if b"Addon dashboard is already enabled." not in output:
-        echo.info("Waiting for Dashboard to come up.")
-        command = ["microk8s.kubectl", "-n", "kube-system", "wait", "--timeout=240s",
-                   "deployment", "kubernetes-dashboard", "--for", "condition=available"]
-        instance.run(command, hide_output=True)
+        command = ["microk8s.kubectl", "-n", "kube-system", "get", "secret"]
+        output = instance.run(command, hide_output=True)
+        secret_name = None
+        for line in output.split(b"\n"):
+            if line.startswith(b"default-token"):
+                secret_name = line.split()[0].decode()
+                break
 
-    command = ["microk8s.kubectl", "-n", "kube-system", "get", "secret"]
-    output = instance.run(command, hide_output=True)
-    secret_name = None
-    for line in output.split(b"\n"):
-        if line.startswith(b"default-token"):
-            secret_name = line.split()[0].decode()
-            break
+        if not secret_name:
+            echo.error("Cannot find the dashboard secret.")
 
-    if not secret_name:
-        echo.error("Cannot find the dashboard secret.")
+        command = ["microk8s.kubectl", "-n", "kube-system", "describe", "secret", secret_name]
+        output = instance.run(command, hide_output=True)
+        token = None
+        for line in output.split(b"\n"):
+            if line.startswith(b"token:"):
+                token = line.split()[1].decode()
 
-    command = ["microk8s.kubectl", "-n", "kube-system", "describe", "secret", secret_name]
-    output = instance.run(command, hide_output=True)
-    token = None
-    for line in output.split(b"\n"):
-        if line.startswith(b"token:"):
-            token = line.split()[1].decode()
+        if not token:
+            echo.error("Cannot find token from secret.")
 
-    if not token:
-        echo.error("Cannot find token from secret.")
+        ip = instance.get_instance_info().ipv4[0]
 
-    ip = instance.get_instance_info().ipv4[0]
+        echo.info("Dashboard will be available at https://{}:10443".format(ip))
+        echo.info("Use the following token to login:")
+        echo.info(token)
 
-    echo.info("Dashboard will be available at https://{}:10443".format(ip))
-    echo.info("Use the following token to login:")
-    echo.info(token)
+        command = ["microk8s.kubectl", "port-forward", "-n", "kube-system",
+                   "service/kubernetes-dashboard", "10443:443", "--address", "0.0.0.0"]
 
-    command = ["microk8s.kubectl", "port-forward", "-n", "kube-system",
-               "service/kubernetes-dashboard", "10443:443", "--address", "0.0.0.0"]
-
-    instance.run(command)
+        try:
+            instance.run(command)
+        except KeyboardInterrupt:
+            return
+    except ProviderInstanceNotFoundError as provider_error:
+        _not_installed(echo)
+        return 1
 
 
 def stop() -> None:
@@ -265,18 +244,19 @@ def run(cmd) -> None:
     echo = Echo()
     try:
         vm_provider_class.ensure_provider()
-    except ProviderNotFound as provider_error:
-        if provider_error.prompt_installable:
-            if echo.is_tty_connected():
-                echo.warning("MicroK8s is not installed. Please run `microk8s install`.")
-            return 1
-        else:
-            raise provider_error
+        instance = vm_provider_class(echoer=echo)
+        instance.get_instance_info()
+        command = cmd[0]
+        cmd[0] = "microk8s.{}".format(command)
+        instance.run(cmd)
+    except ProviderInstanceNotFoundError as provider_error:
+        _not_installed(echo)
+        return 1
 
-    instance = vm_provider_class(echoer=echo)
-    command = cmd[0]
-    cmd[0] = "microk8s.{}".format(command)
-    instance.run(cmd)
+
+def _not_installed(echo) -> None:
+    if echo.is_tty_connected():
+        echo.warning("MicroK8s is not installed. Please run `microk8s install`.")
 
 
 def _get_microk8s_commands() -> List:

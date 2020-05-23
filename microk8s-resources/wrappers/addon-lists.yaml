@@ -19,7 +19,7 @@ microk8s-addons:
 
     - name: "dashboard"
       description: "The Kubernetes dashboard"
-      version: "2.0.0-beta5"
+      version: "2.0.0"
       check_status: "pod/kubernetes-dashboard"
       supported_architectures:
       - arm64
@@ -59,7 +59,7 @@ microk8s-addons:
 
     - name: "istio"
       description: "Core Istio service mesh services"
-      version: "1.3.4"
+      version: "1.5.1"
       check_status: "pod/istio"
       supported_architectures:
       - amd64
