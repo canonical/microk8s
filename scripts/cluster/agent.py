@@ -147,10 +147,10 @@ def get_token(name):
     """
     file = "{}/credentials/known_tokens.csv".format(snapdata_path)
     with open(file) as fp:
-        line = fp.readline()
-        if name in line:
-            parts = line.split(',')
-            return parts[0].rstrip()
+        for _, line in enumerate(fp):
+            if name in line:
+                parts = line.split(',')
+                return parts[0].rstrip()
     return None
 
 
