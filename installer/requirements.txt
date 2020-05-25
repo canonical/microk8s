@@ -1,7 +1,7 @@
+urllib3==1.24.2
 click~=7.0
 jsonschema==2.5.1
 progressbar33==2.4
-https://pyyaml.org/download/pyyaml/PyYAML-3.13-cp37-cp37m-win_amd64.whl; sys_platform == 'win32'
 requests==2.20.0
 requests_unixsocket==0.1.5
 pysha3==1.0.2; python_version < '3.6'
@@ -10,3 +10,4 @@ toml==0.10.0
 wheel
 pyinstaller
 setuptools<45.0.0  # https://github.com/pypa/setuptools/issues/1963
+https://pyyaml.org/download/pyyaml/PyYAML-5.3.1-cp38-cp38-win_amd64.whl; sys_platform == 'win32'

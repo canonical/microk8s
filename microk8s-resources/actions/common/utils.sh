@@ -57,7 +57,7 @@ set_service_expected_to_start() {
 
 remove_vxlan_interfaces() {
   links="$(${SNAP}/sbin/ip link show type vxlan | $SNAP/bin/grep -E 'flannel|cilium_vxlan' | $SNAP/usr/bin/gawk '{print $2}' | $SNAP/usr/bin/tr -d :)"
-  for link in "$links"
+  for link in $links
   do
     if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
     then
@@ -154,7 +154,7 @@ skip_opt_in_config() {
 restart_service() {
     # restart a systemd service
     # argument $1 is the service name
-    run_with_sudo systemctl restart "snap.microk8s.daemon-$1.service"
+    run_with_sudo preserve_env snapctl restart "microk8s.daemon-$1"
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
     then
@@ -171,6 +171,17 @@ arch() {
     echo $SNAP_ARCH
 }
 
+
+snapshotter() {
+  # Determine the underlying filesystem that containerd will be running on
+  FSTYPE=$(stat -f -c %T "${SNAP_COMMON}")
+  # ZFS is supported through the native snapshotter
+  if [ "$FSTYPE" = "zfs" ]; then
+    echo "native"
+  else
+    echo "overlayfs"
+  fi
+}
 
 use_manifest() {
     # Perform an action (apply or delete) on a manifest.
@@ -238,7 +249,7 @@ wait_for_service() {
     # Return fail if the service did not start in 30 seconds
     local service_name="$1"
     local TRY_ATTEMPT=0
-    while ! (run_with_sudo systemctl is-active --quiet snap.${SNAP_NAME}.daemon-${service_name}) &&
+    while ! (run_with_sudo preserve_env snapctl services ${SNAP_NAME}.daemon-${service_name} | grep active) &&
           ! [ ${TRY_ATTEMPT} -eq 30 ]
     do
         TRY_ATTEMPT=$((TRY_ATTEMPT+1))
@@ -326,12 +337,12 @@ produce_certs() {
 
     # Generate apiserver CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt
     fi
 
     # Generate front proxy CA
     if ! [ -f ${SNAP_DATA}/certs/front-proxy-ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.
@@ -413,6 +424,9 @@ get_node() {
     fi
 }
 
+wait_for_node() {
+  get_node
+}
 
 drain_node() {
     # Drain node
@@ -443,6 +457,31 @@ get_all_addons() {
     echo $actions
 }
 
+
+function valid_ip() {
+# Test an IP address for validity:
+# Usage:
+#      valid_ip IP_ADDRESS
+#      if [[ $? -eq 0 ]]; then echo good; else echo bad; fi
+#   OR
+#      if valid_ip IP_ADDRESS; then echo good; else echo bad; fi
+#
+    local  ip=$1
+    local  stat=1
+
+    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+    return $stat
+}
+
+
 init_cluster() {
   mkdir -p ${SNAP_DATA}/var/kubernetes/backend
   IP="127.0.0.1"
@@ -454,5 +493,6 @@ init_cluster() {
   $SNAP/bin/sed -i 's/HOSTNAME/'"${DNS}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
   $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
   ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
+  chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
 }
 

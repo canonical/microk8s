@@ -6,9 +6,9 @@ version: "latest"
 summary: Kubernetes for workstations and appliances
 description: |-
  MicroK8s is a small, fast, secure, single node Kubernetes that installs on
- just about any Linux box. Use it for offline development, prototyping, 
- testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's 
- also a great k8s for appliances - develop your IoT apps for k8s and deploy 
+ just about any Linux box. Use it for offline development, prototyping,
+ testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's
+ also a great k8s for appliances - develop your IoT apps for k8s and deploy
  them to MicroK8s on your boxes.
 
 grade: stable
@@ -48,11 +48,15 @@ apps:
   daemon-proxy:
     command: run-with-config-args kube-proxy
     daemon: simple
+  dashboard-proxy:
+    command: microk8s-dashboard-proxy.wrapper
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
   add-node:
     command: microk8s-add-node.wrapper
+  refresh-certs:
+    command: microk8s-refresh-certs.wrapper
   join:
     command: microk8s-join.wrapper
   remove-node:
@@ -181,6 +185,16 @@ parts:
     - "--disable-shared"
     - "--enable-static"
     prime: [ -bin/iptables-xml ]
+  migrator:
+    build-snaps: [go]
+    source: https://github.com/ktsakalozos/go-migrator
+    source-type: git
+    plugin: go
+    go-importpath: github.com/ktsakalozos/go-migrator
+    build-packages:
+      - gcc
+    prime:
+      - bin/migrator
   containerd:
     build-snaps: [go]
     after: [iptables]
@@ -192,14 +206,24 @@ parts:
     - btrfs-tools
     - libseccomp-dev
     override-build: |
-      set -eu
+      set -eux
       . $SNAPCRAFT_PROJECT_DIR/build-scripts/set-env-variables.sh
 
       go version
       export GOPATH=$(realpath ../go)
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+
+      # Build runc
+      go get -d github.com/opencontainers/runc
+      (
+        cd $GOPATH/src/github.com/opencontainers/runc
+        git checkout ${RUNC_COMMIT}
+        make BUILDTAGS='seccomp apparmor'
+      )
+      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
+
       # Build containerd
-      go get github.com/containerd/containerd
+      go get -d github.com/containerd/containerd
       (
         cd $GOPATH/src/github.com/containerd/containerd
         git checkout ${CONTAINERD_COMMIT}
@@ -209,15 +233,6 @@ parts:
       )
       cp $GOPATH/src/github.com/containerd/containerd/bin/* $SNAPCRAFT_PART_INSTALL/bin/
       rm $SNAPCRAFT_PART_INSTALL/bin/containerd-stress
-
-      # Build runc
-      go get github.com/opencontainers/runc
-      (
-        cd $GOPATH/src/github.com/opencontainers/runc
-        git checkout ${RUNC_COMMIT}
-        make BUILDTAGS='seccomp apparmor'
-      )
-      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
 
       # Assemble the snap
       # snapcraftctl build
@@ -252,6 +267,7 @@ parts:
     python-packages:
     - flask
     - PyYAML
+    - netifaces
     stage-packages:
     - python3-openssl
     - openssl
@@ -485,7 +501,7 @@ parts:
       - bin/juju
 
 slots:
-  microk8s-info:
+  microk8s:
     interface: content
     content: microk8s
     source:

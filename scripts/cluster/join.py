@@ -8,11 +8,13 @@ import getopt
 import sys
 import time
 
+import netifaces
 import requests
 import socket
 import shutil
 import urllib3
 import yaml
+import json
 
 from common.utils import try_set_file_permissions, is_node_running_dqlite
 
@@ -27,6 +29,7 @@ callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path
 server_cert_file_via_env = "${SNAP_DATA}/certs/server.remote.crt"
 server_cert_file = "{}/certs/server.remote.crt".format(snapdata_path)
 
+CLUSTER_API_V2 = "cluster/api/v2.0"
 cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
 cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
 cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
@@ -162,7 +165,7 @@ def update_flannel(etcd, master_ip, master_port, token):
     set_arg("--etcd-certfile", server_cert_file_via_env, "flanneld")
     set_arg("--etcd-keyfile", "${SNAP_DATA}/certs/server.key", "flanneld")
 
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-flanneld.service".split())
+    subprocess.check_call("snapctl restart microk8s.daemon-flanneld".split())
 
 
 def ca_one_line(ca):
@@ -218,7 +221,7 @@ def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
     if hostname_override:
         set_arg("--hostname-override", hostname_override, "kube-proxy")
 
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-proxy.service".split())
+    subprocess.check_call("snapctl restart microk8s.daemon-proxy".split())
 
 
 def update_kubelet(token, ca, master_ip, api_port):
@@ -232,7 +235,7 @@ def update_kubelet(token, ca, master_ip, api_port):
     """
     create_kubeconfig(token, ca, master_ip, api_port, "kubelet.config", "kubelet")
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-kubelet.service".split())
+    subprocess.check_call("snapctl restart microk8s.daemon-kubelet".split())
 
 
 def store_remote_ca(ca):
@@ -255,7 +258,7 @@ def mark_cluster_node():
     os.chmod(lock_file, 0o700)
     services = ['etcd', 'apiserver', 'apiserver-kicker', 'controller-manager', 'scheduler']
     for service in services:
-        subprocess.check_call("systemctl restart snap.microk8s.daemon-{}.service".format(service).split())
+        subprocess.check_call("snapctl restart microk8s.daemon-{}".format(service).split())
 
 
 def generate_callback_token():
@@ -284,7 +287,7 @@ def store_base_kubelet_args(args_string):
     try_set_file_permissions(args_file)
 
 
-def reset_current_installation():
+def reset_current_etcd_installation():
     """
     Take a node out of a cluster
     """
@@ -316,6 +319,111 @@ def reset_current_installation():
             print("Services not ready to start. Waiting...")
             time.sleep(5)
             waits -= 1
+
+
+def reset_current_dqlite_installation():
+    """
+    Take a node out of a dqlite cluster
+    """
+
+    # We need to:
+    # 1. Stop the apiserver
+    # 2. Send a DELETE request to any member of the dqlite cluster
+    # 3. wipe out the existing installation
+    my_ep, other_ep = get_dqlite_endpoints()
+
+    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
+    time.sleep(10)
+
+    if len(my_ep) > 0 and "127.0.0.1" not in my_ep[0]:
+        for ep in other_ep:
+            try:
+                subprocess.check_output("curl -X 'DELETE' https://{}/cluster/{} --cacert {} --key {} --cert {}  -k -s"
+                                        .format(ep, my_ep[0], cluster_cert_file, cluster_key_file, cluster_cert_file)
+                                        .split())
+                break
+            except subprocess.CalledProcessError:
+                print("Contacting node {} failed.".format(ep))
+
+    shutil.rmtree(cluster_dir, ignore_errors=True)
+    os.mkdir(cluster_dir)
+    if os.path.isfile("{}/cluster.crt".format(cluster_backup_dir)):
+        # reuse the certificates we had before the cluster formation
+        shutil.copy("{}/cluster.crt".format(cluster_backup_dir), "{}/cluster.crt".format(cluster_dir))
+        shutil.copy("{}/cluster.key".format(cluster_backup_dir), "{}/cluster.key".format(cluster_dir))
+    else:
+        # This nod never joined a cluster. A cluster was formed around it.
+        hostname = socket.gethostname()  # type: str
+        ip = '127.0.0.1'  # type: str
+        shutil.copy('{}/microk8s-resources/certs/csr-dqlite.conf.template'.format(snap_path),
+                    '{}/var/tmp/csr-dqlite.conf'.format(snapdata_path))
+        subprocess.check_call("{}/bin/sed -i s/HOSTNAME/{}/g {}/var/tmp/csr-dqlite.conf"
+                              .format(snap_path, hostname, snapdata_path).split())
+        subprocess.check_call("{}/bin/sed -i s/HOSTIP/{}/g  {}/var/tmp/csr-dqlite.conf"
+                              .format(snap_path, ip, snapdata_path).split())
+        subprocess.check_call('{0}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes '
+                              '-keyout {1}/var/kubernetes/backend/cluster.key '
+                              '-out {1}/var/kubernetes/backend/cluster.crt '
+                              '-subj "/CN=k8s" -config {1}/var/tmp/csr-dqlite.conf -extensions v3_ext'
+                              .format(snap_path, snapdata_path).split())
+
+    # TODO make this port configurable
+    init_data = {'Address': '127.0.0.1:19001'}  # type: Dict[str, str]
+    with open("{}/init.yaml".format(cluster_dir), 'w') as f:
+        yaml.dump(init_data, f)
+
+    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
+
+    waits = 10  # type: int
+    print("Waiting for node to start.", end=" ", flush=True)
+    time.sleep(10)
+    while waits > 0:
+        try:
+            subprocess.check_output("{}/microk8s-kubectl.wrapper get service/kubernetes".format(snap_path).split())
+            subprocess.check_output("{}/microk8s-kubectl.wrapper apply -f {}/args/cni-network/cni.yaml"
+                                  .format(snap_path, snapdata_path).split())
+            break
+        except subprocess.CalledProcessError:
+            print(".", end=" ", flush=True)
+            time.sleep(5)
+            waits -= 1
+    print(" ")
+    restart_all_services()
+
+
+def get_dqlite_endpoints():
+    """
+    Return the endpoints the current node has on dqlite and the endpoints of the rest of the nodes.
+
+    :return: two lists with the endpoints
+    """
+    with open("{}/info.yaml".format(cluster_dir)) as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+    out = subprocess.check_output("curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s"
+                                  .format(data['Address'], cluster_cert_file, cluster_key_file,
+                                          cluster_cert_file).split())
+    data = json.loads(out.decode())
+    ep_addresses = []
+    for ep in data:
+        ep_addresses.append(ep["Address"])
+    local_ips = []
+    for interface in netifaces.interfaces():
+        if netifaces.AF_INET not in netifaces.ifaddresses(interface):
+            continue
+        for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
+            local_ips.append(link['addr'])
+    my_ep = []
+    other_ep = []
+    for ep in ep_addresses:
+        found = False
+        for ip in local_ips:
+            if "{}:".format(ip) in ep:
+                my_ep.append(ep)
+                found = True
+        if not found:
+            other_ep.append(ep)
+
+    return my_ep, other_ep
 
 
 def remove_kubelet_token(node):
@@ -489,7 +597,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     :param voters: the dqlite voters
     :param host: the hostname others see of this node
     """
-    subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
+    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
     shutil.move(cluster_dir, cluster_backup_dir)
@@ -503,7 +611,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
-    subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
+    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
 
     waits = 10
     print("Waiting for node to join the cluster.", end=" ", flush=True)
@@ -609,7 +717,10 @@ if __name__ == "__main__":
         if len(args) > 1:
             remove_node(args[1])
         else:
-            reset_current_installation()
+            if is_node_running_dqlite():
+                reset_current_dqlite_installation()
+            else:
+                reset_current_etcd_installation()
     else:
         if len(args) <= 0:
             print("Please provide a connection string.")

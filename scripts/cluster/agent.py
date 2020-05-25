@@ -12,7 +12,14 @@ import time
 
 import yaml
 
-from .common.utils import try_set_file_permissions, is_node_running_dqlite, get_callback_token
+from .common.utils import (
+    try_set_file_permissions,
+    remove_expired_token_from_file,
+    is_node_running_dqlite,
+    get_callback_token,
+    remove_token_from_file,
+    is_token_expired
+)
 
 from flask import Flask, jsonify, request, abort, Response
 
@@ -129,24 +136,6 @@ def add_token_to_certs_request(token):
         fp.write("{}\n".format(token))
 
 
-def remove_token_from_file(token, file):
-    """
-    Remove a token from the valid tokens set
-    
-    :param token: the token to be removed
-    :param file: the file to be removed from
-    """
-    backup_file = "{}.backup".format(file)
-    # That is a critical section. We need to protect it.
-    # We are safe for now because flask serves one request at a time.
-    with open(backup_file, 'w') as back_fp:
-        with open(file, 'r') as fp:
-            for _, line in enumerate(fp):
-                if line.strip() == token:
-                    continue
-                back_fp.write("{}".format(line))
-
-    shutil.copyfile(backup_file, file)
 
 
 def get_token(name):
@@ -158,10 +147,10 @@ def get_token(name):
     """
     file = "{}/credentials/known_tokens.csv".format(snapdata_path)
     with open(file) as fp:
-        line = fp.readline()
-        if name in line:
-            parts = line.split(',')
-            return parts[0].rstrip()
+        for _, line in enumerate(fp):
+            if name in line:
+                parts = line.split(',')
+                return parts[0].rstrip()
     return None
 
 
@@ -232,7 +221,11 @@ def is_valid(token_line, token_type=cluster_tokens_file):
 
     with open(token_type) as fp:
         for _, line in enumerate(fp):
-            if token == line.strip():
+            token_in_file = line.strip()
+            if "|" in line :
+                if not is_token_expired(line):
+                    token_in_file = line.strip().split('|')[0]            
+            if token == token_in_file:
                 return True
     return False
 
@@ -284,6 +277,9 @@ def join_node_etcd():
         port = request.form['port']
         callback_token = request.form['callback']
 
+    # Remove expired tokens
+    remove_expired_token_from_file(cluster_tokens_file)
+
     if not is_valid(token):
         error_msg={"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
@@ -293,6 +289,7 @@ def join_node_etcd():
         return Response(json.dumps(error_msg), mimetype='application/json', status=501)
 
     add_token_to_certs_request(token)
+    # remove token for backwards compatibility way of adding a node
     remove_token_from_file(token, cluster_tokens_file)
 
     node_addr = get_node_ep(hostname, request.remote_addr)
@@ -304,7 +301,7 @@ def join_node_etcd():
     api_port = get_arg('--secure-port', 'kube-apiserver')
     proxy_token = get_token('kube-proxy')
     kubelet_token = add_kubelet_token(node_addr)
-    subprocess.check_call("systemctl restart snap.microk8s.daemon-apiserver.service".split())
+    subprocess.check_call("snapctl restart microk8s.daemon-apiserver".split())
     if node_addr != hostname:
         kubelet_args = read_kubelet_args_file(node_addr)
     else:
@@ -416,7 +413,7 @@ def configure():
             if "restart" in service and service["restart"]:
                 service_name = get_service_name(service["name"])
                 print("restarting {}".format(service["name"]))
-                subprocess.check_call("systemctl restart snap.microk8s.daemon-{}.service".format(service_name).split())
+                subprocess.check_call("snapctl restart microk8s.daemon-{}".format(service_name).split())
 
     if "addon" in configuration:
         for addon in configuration["addon"]:
@@ -541,7 +538,7 @@ def update_dqlite_ip(host):
 
     :param : the host others see for this node
     """
-    subprocess.check_call("systemctl stop snap.microk8s.daemon-apiserver.service".split())
+    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
     time.sleep(10)
 
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
@@ -549,7 +546,7 @@ def update_dqlite_ip(host):
     update_data = {'Address': "{}:19001".format(host)}
     with open("{}/update.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(update_data, f)
-    subprocess.check_call("systemctl start snap.microk8s.daemon-apiserver.service".split())
+    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
     time.sleep(10)
     attempts = 12
     while True:
@@ -639,6 +636,61 @@ def join_node_dqlite():
                    apiport=api_port,
                    kubelet_args=kubelet_args,
                    hostname_override=node_addr)
+
+
+@app.route('/{}/upgrade'.format(CLUSTER_API), methods=['POST'])
+def upgrade():
+    """
+    Web call to upgrade the node
+    """
+    callback_token = request.json['callback']
+    callback_token = callback_token.strip()
+    if not is_valid(callback_token, callback_token_file):
+        error_msg={"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+
+    upgrade_request = request.json["upgrade"]
+    phase = request.json["phase"]
+
+    # We expect something like this:
+    '''
+    {
+      "callback": "xyztoken"
+      "phase": "prepare", "commit" or "rollback"
+      "upgrade": "XYZ-upgrade-name"
+    }
+    '''
+    if phase == "prepare":
+        upgrade_script = '{}/upgrade-scripts/{}/prepare-node.sh'.format(snap_path, upgrade_request)
+        if not os.path.isfile(upgrade_script):
+            print("Not ready to execute {}".format(upgrade_script))
+            resp_data = {"result": "not ok"}
+            resp = Response(json.dumps(resp_data), status=404, mimetype='application/json')
+            return resp
+        else:
+            print("Executing {}".format(upgrade_script))
+            subprocess.check_call(upgrade_script)
+            resp_data = {"result": "ok"}
+            resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
+            return resp
+
+    elif phase == "commit":
+        upgrade_script = '{}/upgrade-scripts/{}/commit-node.sh'.format(snap_path, upgrade_request)
+        print("Ready to execute {}".format(upgrade_script))
+        print("Executing {}".format(upgrade_script))
+        subprocess.check_call(upgrade_script)
+        resp_data = {"result": "ok"}
+        resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
+        return resp
+
+    elif phase == "rollback":
+        upgrade_script = '{}/upgrade-scripts/{}/rollback-node.sh'.format(snap_path, upgrade_request)
+        print("Ready to execute {}".format(upgrade_script))
+        print("Executing {}".format(upgrade_script))
+        subprocess.check_call(upgrade_script)
+        resp_data = {"result": "ok"}
+        resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
+        return resp
 
 
 def usage():

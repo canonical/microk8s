@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='microk8s',
-    version='1.0.0',
+    version='1.0.2',
     url='https://github.com/ubuntu/microk8s',
     license='Apache-2.0',
     author='Joe Borg',
@@ -24,6 +24,7 @@ setup(
         'requests_unixsocket==0.1.5',
         'simplejson==3.8.2',
         'toml==0.10.0',
+        'urllib3==1.24.2',
         'wheel'
     ],
     platforms='any',
