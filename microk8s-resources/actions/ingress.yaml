@@ -183,4 +183,5 @@ spec:
         - --configmap=$(POD_NAMESPACE)/nginx-load-balancer-microk8s-conf
         - --tcp-services-configmap=$(POD_NAMESPACE)/nginx-ingress-tcp-microk8s-conf
         - --udp-services-configmap=$(POD_NAMESPACE)/nginx-ingress-udp-microk8s-conf
+        $DEFAULT_CERT
         $EXTRA_ARGS
