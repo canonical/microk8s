@@ -159,7 +159,7 @@ fi
 
 if ([ -f "$SNAP_USER_COMMON/istio-auth.lock" ] || [ -f "$SNAP_USER_COMMON/istio-auth.lock" ]) && ! [ -f "$SNAP_DATA/bin/istioctl" ]
 then
-  ISTIO_VERSION="v1.0.5"
+  ISTIO_VERSION="v1.6.0"
   echo "Fetching istioctl version $ISTIO_VERSION."
   ISTIO_ERSION=$(echo $ISTIO_VERSION | sed 's/v//g')
   mkdir -p "${SNAP_DATA}/tmp/istio"
