@@ -59,7 +59,7 @@ microk8s-addons:
 
     - name: "istio"
       description: "Core Istio service mesh services"
-      version: "1.5.1"
+      version: "1.6.0"
       check_status: "pod/istio"
       supported_architectures:
       - amd64
