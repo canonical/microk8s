@@ -58,6 +58,7 @@ for addon in "$@"; do
         echo "Failed to disable $action"
         exit 1
       fi
+    fi
   done
 
   if [ -f "${SNAP}/actions/$action.yaml" ]; then
