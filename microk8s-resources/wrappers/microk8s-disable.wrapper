@@ -22,7 +22,7 @@ if echo "$*" | grep -q -- '--help'; then
     echo
     echo "Available addons:"
     echo
-    actions="$(find "${SNAP}/actions" -name '*.yaml' -or -name 'disable.*.sh')"
+    actions="$(find "${SNAP}/actions" -name '*.yaml' -or -name 'disable.*')"
     actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
     for action in $actions; do
         echo "  $action"
@@ -47,17 +47,20 @@ for addon in "$@"; do
   fi
 
   # If there is a script to execute for the action $1 run the script and ignore any yamls
-  if [ -f "${SNAP}/actions/disable.$action.sh" ]; then
-    "${SNAP}/actions/disable.$action.sh" "${arguments}"
-    disable_result="$?"
-    if [ "$disable_result" = "0" ]
-    then
-      result=0
-    else
-      echo "Failed to disable $action"
-      exit 1
-    fi
-  elif [ -f "${SNAP}/actions/$action.yaml" ]; then
+  for filepath in "${SNAP}/actions/disable.$action"*; do
+    if [ -f ${filepath} ]; then
+      "${filepath}" "${arguments}"
+      disable_result="$?"
+      if [ "$disable_result" = "0" ]; then
+        result=0
+        break
+      else
+        echo "Failed to disable $action"
+        exit 1
+      fi
+  done
+
+  if [ -f "${SNAP}/actions/$action.yaml" ]; then
     echo "Disabling $action"
     use_manifest $action delete
     if [ "$use_manifest_result" = "0" ]
@@ -68,7 +71,9 @@ for addon in "$@"; do
       echo "Failed to disable $action"
       exit 1
     fi
-  else
+  fi
+
+  if [[ $result -eq 1 ]]; then
     echo "Nothing to do for $action"
     exit 2
   fi

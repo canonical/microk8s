@@ -35,17 +35,21 @@ for addon in "$@"; do
   fi
   
   # If there is a script to execute for the $action run the script and ignore any yamls
-  if [ -f "${SNAP}/actions/enable.$action.sh" ]; then
-    "${SNAP}/actions/enable.$action.sh" "${arguments}"
-    enable_result="$?"
-    if [ "$enable_result" = "0" ]
-    then
-      result=0
-    else
-      echo "Failed to enable $action"
-      exit 1
-    fi
-  elif [ -f "${SNAP}/actions/$action.yaml" ]; then
+  for filepath in "${SNAP}/actions/enable.$action"*; do
+    if [ -f ${filepath} ]; then
+      "${filepath}" "${arguments}"
+      enable_result="$?"
+      if [ "$enable_result" = "0" ]; then
+        result=0
+        break
+      else
+        echo "Failed to enable $action"
+        exit 1
+      fi
+
+  done
+
+  if [ -f "${SNAP}/actions/$action.yaml" ]; then
     echo "Enabling $action"
     use_manifest $action apply
     if [ "$use_manifest_result" = "0" ]
@@ -56,7 +60,9 @@ for addon in "$@"; do
       echo "Failed to enable $action"
       exit 1
     fi
-  else
+  fi
+
+  if [[ $result -eq 1 ]]; then
     echo "Nothing to do for $action"
     exit 2
   fi
