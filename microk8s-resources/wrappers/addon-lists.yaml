@@ -51,7 +51,7 @@ microk8s-addons:
 
     - name: "metrics-server"
       description: "K8s Metrics Server for API access to service metrics"
-      version: "0.2.1"
+      version: "0.3.6"
       check_status: "pod/metrics-server"
       supported_architectures:
       - arm64
