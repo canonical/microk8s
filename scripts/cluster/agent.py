@@ -575,7 +575,8 @@ def join_node_dqlite():
                    callback_token=callback_token,
                    apiport=api_port,
                    kubelet_args=kubelet_args,
-                   hostname_override=node_addr)
+                   hostname_override=node_addr,
+                   admin_token=get_token('admin'))
 
 
 @app.route('/{}/upgrade'.format(CLUSTER_API), methods=['POST'])
