@@ -462,6 +462,27 @@ def remove_kubelet_token(node):
     shutil.copyfile(backup_file, file)
 
 
+def replace_admin_token(token):
+    """
+    Replaces the admin token in the known tokens
+
+    :param token: the admin token
+    """
+    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
+    backup_file = "{}.backup".format(file)
+    # That is a critical section. We need to protect it.
+    with open(backup_file, 'w') as back_fp:
+        with open(file, 'r') as fp:
+            for _, line in enumerate(fp):
+                if "admin,admin,\"system:masters\"" in line:
+                    continue
+                back_fp.write("{}".format(line))
+            back_fp.write("{},admin,admin,\"system:masters\"\n".format(token))
+
+    try_set_file_permissions(backup_file)
+    shutil.copyfile(backup_file, file)
+
+
 def remove_callback_token(node):
     """
     Remove a callback token
@@ -585,16 +606,20 @@ def store_cluster_certs(cluster_cert, cluster_key):
     try_set_file_permissions(cluster_key_file)
 
 
-def create_admin_kubeconfig(ca):
+def create_admin_kubeconfig(ca, ha_admin_token=None):
     """
     Create a kubeconfig file. The file in stored under credentials named after the admin
 
     :param ca: the ca
+    :param ha_admin_token: the ha_cluster_token
     """
-    token = get_token("admin", "basic_auth.csv")
-    if not token:
-        print("Error, could not locate admin token. Joining cluster failed.")
-        exit(2)
+    if not ha_admin_token:
+        token = get_token("admin", "basic_auth.csv")
+        if not token:
+            print("Error, could not locate admin token. Joining cluster failed.")
+            exit(2)
+    else:
+        token = ha_admin_token
     assert token is not None
     config_template = "{}/microk8s-resources/{}".format(snap_path, "client.config.template")
     config = "{}/credentials/client.config".format(snapdata_path)
@@ -603,12 +628,15 @@ def create_admin_kubeconfig(ca):
     ca_line = ca_one_line(ca)
     with open(config_template, 'r') as tfp:
         with open(config, 'w+') as fp:
-            config_txt = tfp.read()
-            config_txt = config_txt.replace("CADATA", ca_line)
-            config_txt = config_txt.replace("NAME", "admin")
-            config_txt = config_txt.replace("AUTHTYPE", "password")
-            config_txt = config_txt.replace("PASSWORD", token)
-            fp.write(config_txt)
+            for _, config_txt in enumerate(tfp):
+                if config_txt.strip().startswith("username:"):
+                    continue
+                else:
+                    config_txt = config_txt.replace("CADATA", ca_line)
+                    config_txt = config_txt.replace("NAME", "admin")
+                    config_txt = config_txt.replace("AUTHTYPE", "token")
+                    config_txt = config_txt.replace("PASSWORD", token)
+                    fp.write(config_txt)
         try_set_file_permissions(config)
 
 
@@ -721,7 +749,9 @@ def join_dqlite(connection_parts):
         assert token is not None
         # TODO make this configurable
         create_kubeconfig(component_token, info["ca"], "127.0.0.1", "16443", component[2], component[1])
-    create_admin_kubeconfig(info["ca"])
+    if "admin_token" in info:
+        replace_admin_token(info["admin_token"])
+    create_admin_kubeconfig(info["ca"], info["admin_token"])
     store_base_kubelet_args(info["kubelet_args"])
     store_callback_token(info["callback_token"])
 
