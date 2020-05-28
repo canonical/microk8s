@@ -12,7 +12,8 @@ description: |-
  them to MicroK8s on your boxes.
 
 grade: stable
-confinement: strict
+#confinement: strict
+confinement: classic
 base: core18
 
 plugs:
@@ -702,6 +703,7 @@ parts:
       - bmake
       - m4
       - pkg-config
+      - lsb-core
       - libcap-dev
       - libseccomp-dev
     source: https://github.com/NVIDIA/libnvidia-container
