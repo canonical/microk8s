@@ -387,12 +387,16 @@ def delete_dqlite_node(delete_node, dqlite_ep):
     if len(delete_node) > 0 and "127.0.0.1" not in delete_node[0]:
         for ep in dqlite_ep:
             try:
-                subprocess.check_output("curl -X DELETE https://{}/cluster/{} --cacert {} --key {} --cert {}  -k -s"
-                                        .format(ep, delete_node[0], cluster_cert_file, cluster_key_file, cluster_cert_file)
-                                        .split())
-                break
-            except subprocess.CalledProcessError:
-                print("Contacting node {} failed.".format(ep))
+                url = 'https://{}/cluster/{}'.format(ep, delete_node[0])
+                resp = requests.delete(url, cert=(cluster_cert_file, cluster_key_file), verify=False)
+                if resp.status_code != 200:
+                    print("Contacting node {} failed. Exit code {}.".format(ep, resp.status_code))
+                    exit(2)
+                else:
+                    break
+            except Exception as err:
+                print("Contacting node {} failed. Error:".format(ep))
+                print(repr(err))
                 exit(2)
 
 
