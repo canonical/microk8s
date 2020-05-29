@@ -12,14 +12,14 @@ class Auxillary(object):
     """
     Base OS auxillary class.
     """
+
     def __init__(self, args) -> None:
         """
         :param args: ArgumentParser
         :return: None
         """
         self._args = args
-        self.minimum_disk = \
-            self._args.disk * 1024 * 1024 * 1024
+        self.minimum_disk = self._args.disk * 1024 * 1024 * 1024
 
     @staticmethod
     def _free_space() -> int:
@@ -43,6 +43,7 @@ class Windows(Auxillary):
     """
     Windows auxillary methods.
     """
+
     def __init__(self, args) -> None:
         """
         :param args: ArgumentParser
@@ -67,12 +68,9 @@ class Windows(Auxillary):
         :return: Boolean
         """
         try:
-            out = subprocess.check_output([
-                'DISM',
-                '/Online',
-                '/Get-FeatureInfo',
-                '/FeatureName:Microsoft-Hyper-V'
-            ])
+            out = subprocess.check_output(
+                ['DISM', '/Online', '/Get-FeatureInfo', '/FeatureName:Microsoft-Hyper-V']
+            )
         except subprocess.CalledProcessError:
             return False
 
@@ -89,14 +87,16 @@ class Windows(Auxillary):
         :return: None
         """
         try:
-            subprocess.check_call([
-                'DISM',
-                '/Online',
-                '/Enable-Feature',
-                '/All',
-                '/NoRestart',
-                '/FeatureName:Microsoft-Hyper-V'
-            ])
+            subprocess.check_call(
+                [
+                    'DISM',
+                    '/Online',
+                    '/Enable-Feature',
+                    '/All',
+                    '/NoRestart',
+                    '/FeatureName:Microsoft-Hyper-V',
+                ]
+            )
         except subprocess.CalledProcessError as e:
             if e.returncode == 3010:
                 pass  # This is fine, because Windows.
@@ -108,6 +108,7 @@ class MacOS(Auxillary):
     """
     MacOS auxillary methods.
     """
+
     def __init__(self, args) -> None:
         """
         :param args: ArgumentParser

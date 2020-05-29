@@ -28,16 +28,23 @@ def do_op(remote_op):
             print("Applying to node {}.".format(host))
             try:
                 # Make sure this node exists
-                subprocess.check_call("{}/microk8s-kubectl.wrapper get no {}".format(snap_path, host).split(),
-                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.check_call(
+                    "{}/microk8s-kubectl.wrapper get no {}".format(snap_path, host).split(),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
                 token = parts[1]
                 remote_op["callback"] = token
                 # TODO: handle ssl verification
-                res = requests.post("https://{}/{}/configure".format(node_ep, CLUSTER_API),
-                                    json=remote_op,
-                                    verify=False)
+                res = requests.post(
+                    "https://{}/{}/configure".format(node_ep, CLUSTER_API),
+                    json=remote_op,
+                    verify=False,
+                )
                 if res.status_code != 200:
-                    print("Failed to perform a {} on node {}".format(remote_op["action_str"], node_ep))
+                    print(
+                        "Failed to perform a {} on node {}".format(remote_op["action_str"], node_ep)
+                    )
             except subprocess.CalledProcessError:
                 print("Node {} not present".format(host))
 
@@ -51,12 +58,7 @@ def restart(service):
     print("Restarting nodes.")
     remote_op = {
         "action_str": "restart {}".format(service),
-        "service": [
-            {
-                "name": service,
-                "restart": "yes"
-            }
-        ]
+        "service": [{"name": service, "restart": "yes"}],
     }
     do_op(remote_op)
 
@@ -72,14 +74,7 @@ def update_argument(service, key, value):
     print("Adding argument {} to nodes.".format(key))
     remote_op = {
         "action_str": "change of argument {} to {}".format(key, value),
-        "service": [
-            {
-                "name": service,
-                "arguments_update": [
-                    {key: value}
-                ]
-            }
-        ]
+        "service": [{"name": service, "arguments_update": [{key: value}]}],
     }
     do_op(remote_op)
 
@@ -94,12 +89,7 @@ def remove_argument(service, key):
     print("Removing argument {} from nodes.".format(key))
     remote_op = {
         "action_str": "removal of argument {}".format(key),
-        "service": [
-            {
-                "name": service,
-                "arguments_remove": [key]
-            }
-        ]
+        "service": [{"name": service, "arguments_remove": [key]}],
     }
     do_op(remote_op)
 
@@ -111,18 +101,15 @@ def set_addon(addon, state):
     :param addon: the add-on name
     :param state: 'enable' or 'disable'
     """
-    if state not in ("enable","disable"):
-        raise ValueError("Wrong value '{}' for state. Must be one of 'enable' or 'disable'".format(state))
+    if state not in ("enable", "disable"):
+        raise ValueError(
+            "Wrong value '{}' for state. Must be one of 'enable' or 'disable'".format(state)
+        )
     else:
         print("Setting add-on {} to {} on nodes.".format(addon, state))
         remote_op = {
             "action_str": "set of {} to {}".format(addon, state),
-            "addon": [
-                {
-                    "name": addon,
-                    state: "true"
-                }
-            ]
+            "addon": [{"name": addon, state: "true"}],
         }
         do_op(remote_op)
 

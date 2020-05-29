@@ -36,15 +36,22 @@ class VM:
             print('Creating mulitpass VM')
             self.backend = "multipass"
             if not attach_vm:
-                subprocess.check_call('/snap/bin/multipass launch 18.04 -n {} -m 2G'.format(self.vm_name).split())
-                subprocess.check_call('/snap/bin/multipass exec {}  -- sudo '
-                                      'snap install microk8s --classic --channel {}'
-                                      .format(self.vm_name, channel_to_test)
-                                      .split())
+                subprocess.check_call(
+                    '/snap/bin/multipass launch 18.04 -n {} -m 2G'.format(self.vm_name).split()
+                )
+                subprocess.check_call(
+                    '/snap/bin/multipass exec {}  -- sudo '
+                    'snap install microk8s --classic --channel {}'.format(
+                        self.vm_name, channel_to_test
+                    ).split()
+                )
             else:
-                subprocess.check_call('/snap/bin/multipass exec {}  -- sudo '
-                                      'snap refresh microk8s --channel {}'.format(self.vm_name, channel_to_test)
-                                      .split())
+                subprocess.check_call(
+                    '/snap/bin/multipass exec {}  -- sudo '
+                    'snap refresh microk8s --channel {}'.format(
+                        self.vm_name, channel_to_test
+                    ).split()
+                )
 
         elif path.exists('/snap/bin/lxc') or backend == 'lxc':
             self.backend = "lxc"
@@ -54,14 +61,19 @@ class VM:
                     subprocess.check_call('/snap/bin/lxc profile copy default microk8s'.split())
                     with open('lxc/microk8s-zfs.profile', "r+") as fp:
                         profile_string = fp.read()
-                        process = subprocess.Popen('/snap/bin/lxc profile edit microk8s'.split(),
-                                                   stdin=subprocess.PIPE,
-                                                   stdout=subprocess.PIPE)
+                        process = subprocess.Popen(
+                            '/snap/bin/lxc profile edit microk8s'.split(),
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE,
+                        )
                         process.stdin.write(profile_string.encode())
                         process.stdin.close()
 
-                subprocess.check_call('/snap/bin/lxc launch -p default -p microk8s ubuntu:18.04 {}'
-                                      .format(self.vm_name).split())
+                subprocess.check_call(
+                    '/snap/bin/lxc launch -p default -p microk8s ubuntu:18.04 {}'.format(
+                        self.vm_name
+                    ).split()
+                )
                 cmd_prefix = '/snap/bin/lxc exec {}  -- script -e -c'.format(self.vm_name).split()
                 cmd = ['snap install microk8s --classic --channel {}'.format(channel_to_test)]
                 time.sleep(20)
@@ -81,9 +93,9 @@ class VM:
         :return: the output of the command
         """
         if self.backend == "multipass":
-            output = subprocess.check_output('/snap/bin/multipass exec {}  -- sudo '
-                                             '{}'.format(self.vm_name, cmd)
-                                             .split())
+            output = subprocess.check_output(
+                '/snap/bin/multipass exec {}  -- sudo ' '{}'.format(self.vm_name, cmd).split()
+            )
             return output
         elif self.backend == "lxc":
             cmd_prefix = '/snap/bin/lxc exec {}  -- script -e -c '.format(self.vm_name).split()
@@ -106,7 +118,6 @@ class VM:
 
 
 class TestCluster(object):
-
     @pytest.fixture(autouse=True, scope="module")
     def setup_cluster(self):
         """
@@ -161,7 +172,7 @@ class TestCluster(object):
                 for line in pods.decode().splitlines():
                     if 'calico' in line and 'Running' in line:
                         ready_pods += 1
-                if ready_pods == (len(self.VM)+1):
+                if ready_pods == (len(self.VM) + 1):
                     print(pods.decode())
                     break
                 time.sleep(5)
@@ -224,13 +235,13 @@ class TestCluster(object):
             if ready_pods == (len(self.VM)):
                 print(pods.decode())
                 break
-            attempt -=1
+            attempt -= 1
             if attempt <= 0:
                 assert False
             time.sleep(5)
         print('Checking calico is on the nodes running')
 
-        leftVMs = [ self.VM[1], self.VM[2] ]
+        leftVMs = [self.VM[1], self.VM[2]]
         attempt = 100
         while True:
             assert attempt > 0
@@ -261,7 +272,7 @@ class TestCluster(object):
             for line in pods.decode().splitlines():
                 if 'ingress' in line and 'Running' in line:
                     ready_pods += 1
-            if ready_pods == (len(self.VM)-1):
+            if ready_pods == (len(self.VM) - 1):
                 print(pods.decode())
                 break
             attempt -= 1

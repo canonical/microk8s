@@ -26,7 +26,9 @@ def validate_dns_dashboard():
     attempt = 30
     while attempt > 0:
         try:
-            output = kubectl("get --raw /api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/")
+            output = kubectl(
+                "get --raw /api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
+            )
             if "Kubernetes Dashboard" in output:
                 break
         except:
@@ -207,12 +209,12 @@ def validate_registry():
     """
     Validate the private registry.
     """
-    
+
     wait_for_pod_state("", "container-registry", "running", label="app=registry")
     pvc_stdout = kubectl("get pvc registry-claim -n container-registry -o yaml")
     pvc_yaml = yaml.safe_load(pvc_stdout)
     storage = pvc_yaml['spec']['resources']['requests']['storage']
-    assert re.match("(^[2-9][0-9]{1,}|^[1-9][0-9]{2,})(Gi$)",storage)
+    assert re.match("(^[2-9][0-9]{1,}|^[1-9][0-9]{2,})(Gi$)", storage)
     docker("pull busybox")
     docker("tag busybox localhost:32000/my-busybox")
     docker("push localhost:32000/my-busybox")
@@ -326,9 +328,21 @@ def validate_linkerd():
         return
 
     wait_for_installation()
-    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=controller", timeout_insec=300)
+    wait_for_pod_state(
+        "",
+        "linkerd",
+        "running",
+        label="linkerd.io/control-plane-component=controller",
+        timeout_insec=300,
+    )
     print("Linkerd controller up and running.")
-    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=proxy-injector", timeout_insec=300)
+    wait_for_pod_state(
+        "",
+        "linkerd",
+        "running",
+        label="linkerd.io/control-plane-component=proxy-injector",
+        timeout_insec=300,
+    )
     print("Linkerd proxy injector up and running.")
     ### Disabling this test because the deletion of the namespace get stuck.
     here = os.path.dirname(os.path.abspath(__file__))

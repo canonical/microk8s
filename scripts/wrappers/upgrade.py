@@ -21,7 +21,7 @@ def upgrade_master(upgrade, phase):
     :return:
     """
     try:
-        upgrade_script='{}/upgrade-scripts/{}/{}-master.sh'.format(snap_path, upgrade, phase)
+        upgrade_script = '{}/upgrade-scripts/{}/{}-master.sh'.format(snap_path, upgrade, phase)
         if os.path.isfile(upgrade_script):
             print("Running {}-upgrade script".format(phase))
             out = subprocess.check_output(upgrade_script)
@@ -41,13 +41,13 @@ def node_upgrade(upgrade, phase, node_ep, token):
     :return:
     """
     try:
-        upgrade_script='{}/upgrade-scripts/{}/{}-node.sh'.format(snap_path, upgrade, phase)
+        upgrade_script = '{}/upgrade-scripts/{}/{}-node.sh'.format(snap_path, upgrade, phase)
         if os.path.isfile(upgrade_script):
             remote_op = {"callback": token, "phase": phase, "upgrade": upgrade}
             # TODO: handle ssl verification
-            res = requests.post("https://{}/{}/upgrade".format(node_ep, CLUSTER_API),
-                                json=remote_op,
-                                verify=False)
+            res = requests.post(
+                "https://{}/{}/upgrade".format(node_ep, CLUSTER_API), json=remote_op, verify=False
+            )
             if res.status_code != 200:
                 print("Failed to perform a {} on node {}".format(remote_op["upgrade"], node_ep))
                 raise Exception("Failed to {} on {}".format(phase, node_ep))
@@ -130,7 +130,9 @@ def get_nodes_info(safe=True):
     node_info = []
     if safe:
         try:
-            nodes = subprocess.check_output("{}/microk8s-kubectl.wrapper get no".format(snap_path).split())
+            nodes = subprocess.check_output(
+                "{}/microk8s-kubectl.wrapper get no".format(snap_path).split()
+            )
             if os.path.isfile(callback_tokens_file):
                 with open(callback_tokens_file, "r+") as fp:
                     for _, line in enumerate(fp):
@@ -159,7 +161,9 @@ def list_upgrades():
     List all available upgrades
     """
     upgrades_dir = '{}/upgrade-scripts/'.format(snap_path)
-    upgrades = [dI for dI in os.listdir(upgrades_dir) if os.path.isdir(os.path.join(upgrades_dir, dI))]
+    upgrades = [
+        dI for dI in os.listdir(upgrades_dir) if os.path.isdir(os.path.join(upgrades_dir, dI))
+    ]
     for u in upgrades:
         print(u)
 
@@ -170,9 +174,15 @@ if __name__ == '__main__':
 
     # initiate the parser with a description
     parser = argparse.ArgumentParser(description='MicroK8s supervised upgrades.', prog='upgrade')
-    parser.add_argument("-l", "--list", help="list available upgrades", nargs='?', const=True, type=bool)
-    parser.add_argument("-r", "--run", help="run a specific upgrade script", nargs='?', type=str, default=None)
-    parser.add_argument("-u", "--undo", help="rollback a specific upgrade", nargs='?', type=str, default=None)
+    parser.add_argument(
+        "-l", "--list", help="list available upgrades", nargs='?', const=True, type=bool
+    )
+    parser.add_argument(
+        "-r", "--run", help="run a specific upgrade script", nargs='?', type=str, default=None
+    )
+    parser.add_argument(
+        "-u", "--undo", help="rollback a specific upgrade", nargs='?', type=str, default=None
+    )
     args = parser.parse_args()
 
     run = args.run
