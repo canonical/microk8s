@@ -708,11 +708,7 @@ def join_dqlite(connection_parts):
 
     store_cert("ca.crt", info["ca"])
     store_cert("ca.key", info["ca_key"])
-    store_cert("server.crt", info["server_cert"])
-    store_cert("server.key", info["server_cert_key"])
     store_cert("serviceaccount.key", info["service_account_key"])
-    store_cert("front-proxy-client.crt", info["proxy_cert"])
-    store_cert("front-proxy-client.key", info["proxy_cert_key"])
     # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
     for component in [("kube-proxy", "kubeproxy", "proxy.config"),
                       ("kubelet", "kubelet", "kubelet.config"),
