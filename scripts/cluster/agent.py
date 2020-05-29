@@ -568,11 +568,7 @@ def join_node_dqlite():
 
     return jsonify(ca=get_cert("ca.crt"),
                    ca_key=get_cert("ca.key"),
-                   server_cert=get_cert("server.crt"),
-                   server_cert_key=get_cert("server.key"),
                    service_account_key=get_cert("serviceaccount.key"),
-                   proxy_cert=get_cert("front-proxy-client.crt"),
-                   proxy_cert_key=get_cert("front-proxy-client.key"),
                    cluster_cert=cluster_cert,
                    cluster_key=cluster_key,
                    voters=voters,
