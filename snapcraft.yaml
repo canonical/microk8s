@@ -291,6 +291,7 @@ parts:
     - zfsutils-linux
     - iproute2
     - git
+    - libcurl3
     source: .
     prime:
       - -README*
