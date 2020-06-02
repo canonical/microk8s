@@ -38,3 +38,5 @@ go get -d $KUBERNETES_REPOSITORY || true
 for app in $apps; do
   cp $GOPATH/src/$KUBERNETES_REPOSITORY/_output/bin/$app $KUBE_SNAP_BINS/$KUBE_ARCH/
 done
+
+rm -rf $GOPATH/src/$KUBERNETES_REPOSITORY/_output/
