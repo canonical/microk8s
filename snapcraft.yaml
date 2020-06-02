@@ -280,7 +280,6 @@ parts:
     build-packages:
     - make
     - mercurial
-    - git
     - rsync
     - openssl
     - file
@@ -291,6 +290,7 @@ parts:
     - util-linux
     - zfsutils-linux
     - iproute2
+    - git
     source: .
     prime:
       - -README*
