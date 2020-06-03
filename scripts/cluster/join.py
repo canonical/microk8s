@@ -5,8 +5,10 @@ import string
 import subprocess
 import os
 import getopt
+import ssl
 import sys
 import time
+import hashlib
 
 import netifaces
 import requests
@@ -41,6 +43,23 @@ cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
 cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
 cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
 cluster_key_file = "{}/cluster.key".format(cluster_dir)
+
+
+def get_fingerprint(addr, port):
+    """
+    Get the certificate fingerprint of the server at addr:port
+
+    :param addr: the address of the server
+    :param port: the port of the server
+    :return: the digest of the server cert
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)
+    wrapped_socket = ssl.wrap_socket(sock)
+    wrapped_socket.connect((addr, port))
+    der_cert_bin = wrapped_socket.getpeercert(True)
+    wrapped_socket.close()
+    return hashlib.sha3_256(der_cert_bin).hexdigest()
 
 
 def get_connection_info(master_ip, master_port, token, callback_token=None, cluster_type="etcd"):
@@ -160,7 +179,7 @@ def get_etcd_client_cert(master_ip, master_port, token):
     subprocess.check_call(cmd_cert.split())
     with open(cer_req_file) as fp:
         csr = fp.read()
-        req_data = {"token": token, "request": csr}
+        req_data = {'token': token, 'request': csr}
         # TODO: enable ssl verification
         signed = requests.post(
             "https://{}:{}/{}/sign-cert".format(master_ip, master_port, CLUSTER_API),
@@ -939,8 +958,8 @@ def join_etcd(connection_parts, verify=True):
     info = get_connection_info(master_ip, master_port, token, callback_token=callback_token)
     store_base_kubelet_args(info["kubelet_args"])
     hostname_override = None
-    if "hostname_override" in info:
-        hostname_override = info["hostname_override"]
+    if 'hostname_override' in info:
+        hostname_override = info['hostname_override']
     store_remote_ca(info["ca"])
     update_flannel(info["etcd"], master_ip, master_port, token)
     update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override)
