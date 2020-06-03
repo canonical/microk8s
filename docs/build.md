@@ -5,12 +5,14 @@ A VM managed by Multipass is spawned to contain the build process. If you don’
 snapcraft will first prompt for its automatic installation.
 
 Alternatively, you can build the snap in an LXC container.
-LXD is needed in this case:
+Snapcraft and LXD are needed in this case:
 ```
+sudo snap install snapcraft --classic
 sudo snap install lxd
 sudo apt-get remove lxd* -y
 sudo apt-get remove lxc* -y
 sudo lxd init
+sudo usermod -a -G lxd ${USER}
 ```
 
 Build the snap with:
