@@ -22,6 +22,11 @@ cd ./microk8s/
 snapcraft --use-lxd
 ```
 
+Install the newly compiled snap:
+```
+snap install microk8s_*_amd64.snap --classic --dangerous
+```
+
 ## Building a custom MicroK8s package
 
 To produce a custom build with specific component versions we cannot use the snapcraft build process on the host OS. We need to
