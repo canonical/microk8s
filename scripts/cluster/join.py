@@ -58,7 +58,7 @@ def get_fingerprint(addr, port):
     wrapped_socket.connect((addr, port))
     der_cert_bin = wrapped_socket.getpeercert(True)
     wrapped_socket.close()
-    return hashlib.sha3_256(der_cert_bin).hexdigest()
+    return hashlib.sha256(der_cert_bin).hexdigest()
 
 
 def get_connection_info(master_ip, master_port, token, callback_token=None, cluster_type="etcd"):
