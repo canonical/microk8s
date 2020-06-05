@@ -437,7 +437,7 @@ parts:
   # b) the version dependencies of each package is met.
   nvidia-runtime:
     plugin: dump
-    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime_2.0.0+docker18.06.1-1_amd64.deb
+    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime_3.2.0-1_amd64.deb
     source-type: deb
     override-build: |
       set -eu
@@ -449,9 +449,9 @@ parts:
         echo "Skipped"
       fi
 
-  nvidia-runtime-hook:
+  nvidia-toolkit:
     plugin: dump
-    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime-hook_1.4.0-1_amd64.deb
+    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-toolkit_1.1.2-1_amd64.deb
     source-type: deb
     override-build: |
       set -eu
@@ -465,7 +465,7 @@ parts:
 
   libnvidia:
     plugin: dump
-    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container1_1.0.0-1_amd64.deb
+    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container1_1.1.1-1_amd64.deb
     source-type: deb
     override-build: |
       set -eu
@@ -479,7 +479,7 @@ parts:
 
   libnvidia-tools:
     plugin: dump
-    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container-tools_1.0.0-1_amd64.deb
+    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container-tools_1.1.1-1_amd64.deb
     source-type: deb
     override-build: |
       set -eu
