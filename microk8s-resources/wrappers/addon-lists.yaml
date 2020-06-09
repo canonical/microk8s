@@ -32,7 +32,7 @@ microk8s-addons:
       supported_architectures:
       - arm64
       - amd64
-    
+
     - name: "storage"
       description: "Storage class; allocates storage from host directory"
       version: "1.0.0"
@@ -40,7 +40,7 @@ microk8s-addons:
       supported_architectures:
       - arm64
       - amd64
-        
+
     - name: "registry"
       description: "Private image registry exposed on localhost:32000"
       version: "2.6"
@@ -159,3 +159,10 @@ microk8s-addons:
       supported_architectures:
       - amd64
       - arm64
+
+    - name: "ambassador"
+      description: "Ambassador API Gateway and Ingress"
+      version: ""
+      check_status: "deployment.apps/ambassador-operator"
+      supported_architectures:
+      - amd64
