@@ -38,14 +38,10 @@ if sys.platform == "win32":
 logger = logging.getLogger(__name__)
 
 
-_MULTIPASS_RELEASES_API_URL = (
-    "https://api.github.com/repos/CanonicalLtd/multipass/releases"
-)
-_MULTIPASS_DL_VERSION = "1.0.0"
-_MULTIPASS_DL_NAME = "multipass-{version}+win-win64.exe".format(
-    version=_MULTIPASS_DL_VERSION
-)
-_MULTIPASS_DL_SHA3_384 = "e7c22f8aeaa205c9343535b0cd846709c00ce65d523a0c41d2ae8f830bd39291cad5b3645b0daf24a92d0dba6759183e"  # noqa: E501
+_MULTIPASS_RELEASES_API_URL = "https://api.github.com/repos/canonical/multipass/releases"
+_MULTIPASS_DL_VERSION = "1.2.0"
+_MULTIPASS_DL_NAME = "multipass-{version}+win-win64.exe".format(version=_MULTIPASS_DL_VERSION)
+_MULTIPASS_DL_SHA3_384 = "6478cb37294052259f7a0337077264f5494e0788f23d4b5e2acac8f553ca5bc55031737c484397418e68e4ad2d0dc62f"  # noqa: E501
 
 
 def windows_reload_multipass_path_env():
@@ -106,9 +102,7 @@ def _run_installer(installer_path: str, echoer):
 
     if not shutil.which("multipass.exe"):
         # Installation failed.
-        raise ProviderMultipassInstallationFailed(
-            "installation did not complete successfully"
-        )
+        raise ProviderMultipassInstallationFailed("installation did not complete successfully")
 
     echoer.info("Multipass installation completed successfully.")
 
@@ -140,9 +134,7 @@ def _fetch_installer_url() -> str:
         data = resp.json()
     except simplejson.JSONDecodeError:
         raise ProviderMultipassDownloadFailed(
-            "failed to fetch valid release data from {}".format(
-                _MULTIPASS_RELEASES_API_URL
-            )
+            "failed to fetch valid release data from {}".format(_MULTIPASS_RELEASES_API_URL)
         )
 
     for assets in data:
@@ -155,9 +147,7 @@ def _fetch_installer_url() -> str:
 
     # Something changed we don't know about - we will simply categorize
     # all possible events as an updated version we do not yet know about.
-    raise ProviderMultipassDownloadFailed(
-        "ref specified is not a valid ref in GitHub"
-    )
+    raise ProviderMultipassDownloadFailed("ref specified is not a valid ref in GitHub")
 
 
 def _download_multipass(dl_dir: str, echoer) -> str:
@@ -251,4 +241,3 @@ def download_requests_stream(request_stream, destination, message=None, total_re
                 total_read += len(buf)
                 progress_bar.update(total_read)
     progress_bar.finish()
-

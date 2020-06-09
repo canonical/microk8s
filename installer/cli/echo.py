@@ -27,7 +27,6 @@ from common.definitions import MAX_CHARACTERS_WRAP
 
 
 class Echo:
-
     @staticmethod
     def is_tty_connected() -> bool:
         """ Check to see if running under TTY. """
@@ -41,9 +40,7 @@ class Echo:
         MAX_CHARACTERS_WRAP
         """
         click.echo(
-            click.formatting.wrap_text(
-                msg, width=MAX_CHARACTERS_WRAP, preserve_paragraphs=True
-            )
+            click.formatting.wrap_text(msg, width=MAX_CHARACTERS_WRAP, preserve_paragraphs=True)
         )
 
     @staticmethod

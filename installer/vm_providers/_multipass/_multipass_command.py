@@ -80,9 +80,11 @@ class MultipassCommand:
             except subprocess.CalledProcessError:
                 output = ""
             except FileNotFoundError:
-                raise errors.ProviderStartError(provider_name=cls.provider_name,
-                                                error_message="multipass not found - please check that it"
-                                                              " can be found in the configured PATH")
+                raise errors.ProviderStartError(
+                    provider_name=cls.provider_name,
+                    error_message="multipass not found - please check that it"
+                    " can be found in the configured PATH",
+                )
 
             # if multipassd is in the version information, it means the service is up
             # and we can carry on
@@ -103,11 +105,13 @@ class MultipassCommand:
             try:
                 subprocess.check_call(["brew", "cask", "install", "multipass"])
             except subprocess.CalledProcessError:
-                raise errors.ProviderStartError(provider_name=cls.provider_name,
-                                                error_message="Failed to install multipass using homebrew.\n"
-                                                              "Verify your homebrew installation and try again.\n"
-                                                              "Alternatively, manually install multipass by running"
-                                                              " 'brew cask install multipass'.")
+                raise errors.ProviderStartError(
+                    provider_name=cls.provider_name,
+                    error_message="Failed to install multipass using homebrew.\n"
+                    "Verify your homebrew installation and try again.\n"
+                    "Alternatively, manually install multipass by running"
+                    " 'brew cask install multipass'.",
+                )
         elif platform == "win32":
             windows_install_multipass(echoer)
         else:
@@ -328,8 +332,6 @@ class MultipassCommand:
         stdout, stderr = process.communicate()
         if process.returncode != 0:
             raise errors.ProviderInfoError(
-                provider_name=self.provider_name,
-                exit_code=process.returncode,
-                stderr=stderr,
+                provider_name=self.provider_name, exit_code=process.returncode, stderr=stderr,
             )
         return stdout

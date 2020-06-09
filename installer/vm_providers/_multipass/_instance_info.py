@@ -47,9 +47,7 @@ class InstanceInfo:
             instance_info = json_data["info"][instance_name]
         except KeyError as missing_key:
             raise errors.ProviderInfoDataKeyError(
-                provider_name="multipass",
-                missing_key=str(missing_key),
-                data=json_data
+                provider_name="multipass", missing_key=str(missing_key), data=json_data
             ) from missing_key
         try:
             return cls(
@@ -57,21 +55,15 @@ class InstanceInfo:
                 state=instance_info["state"],
                 image_release=instance_info["image_release"],
                 mounts=instance_info["mounts"],
+                ipv4=instance_info["ipv4"],
             )
         except KeyError as missing_key:
             raise errors.ProviderInfoDataKeyError(
-                provider_name="multipass",
-                missing_key=str(missing_key),
-                data=instance_info,
+                provider_name="multipass", missing_key=str(missing_key), data=instance_info,
             ) from missing_key
 
     def __init__(
-        self,
-        *,
-        name: str,
-        state: str,
-        image_release: str,
-        mounts: Dict[str, Any]
+        self, *, name: str, state: str, image_release: str, mounts: Dict[str, Any], ipv4: str
     ) -> None:
         """Initialize an InstanceInfo.
 
@@ -87,6 +79,7 @@ class InstanceInfo:
         self.state = state
         self.image_release = image_release
         self.mounts = mounts
+        self.ipv4 = ipv4
 
     def is_mounted(self, mountpoint: str) -> bool:
         return mountpoint in self.mounts

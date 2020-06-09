@@ -22,11 +22,7 @@ def run(*args, die=True, debug=False, stdout=True):
         print("\033[;1;32m+ %s\033[;0;0m" % " ".join(args))
 
     result = subprocess.run(
-        args,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
+        args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
     )
 
     try:
@@ -52,9 +48,7 @@ def run(*args, die=True, debug=False, stdout=True):
 
 
 def get_random_pass():
-    return "".join(
-        random.choice(string.ascii_uppercase + string.digits) for _ in range(30)
-    )
+    return "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
 
 
 def juju(*args, **kwargs):
@@ -111,9 +105,7 @@ def main():
 
     password_overlay = {
         "applications": {
-            "dex-auth": {
-                "options": {"static-username": "admin", "static-password": password}
-            },
+            "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
             "katib-db": {"options": {"root_password": get_random_pass()}},
             "modeldb-db": {"options": {"root_password": get_random_pass()}},
             "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
@@ -199,21 +191,9 @@ def main():
                 "kind": "Role",
                 "metadata": {"name": "cert-manager-webhook-operator"},
                 "rules": [
-                    {
-                        "apiGroups": [""],
-                        "resources": ["pods"],
-                        "verbs": ["get", "list"],
-                    },
-                    {
-                        "apiGroups": [""],
-                        "resources": ["pods/exec"],
-                        "verbs": ["create"],
-                    },
-                    {
-                        "apiGroups": [""],
-                        "resources": ["secrets"],
-                        "verbs": ["get", "list"],
-                    },
+                    {"apiGroups": [""], "resources": ["pods"], "verbs": ["get", "list"],},
+                    {"apiGroups": [""], "resources": ["pods/exec"], "verbs": ["create"],},
+                    {"apiGroups": [""], "resources": ["secrets"], "verbs": ["get", "list"],},
                 ],
             }
         ),
@@ -223,9 +203,7 @@ def main():
     print("Waiting for operator pods to become ready.")
     wait_seconds = 15
     for i in count():
-        status = json.loads(
-            juju("status", "-m", "uk8s:kubeflow", "--format=json", stdout=False)
-        )
+        status = json.loads(juju("status", "-m", "uk8s:kubeflow", "--format=json", stdout=False))
         unready_apps = [
             name
             for name, app in status["applications"].items()
