@@ -11,12 +11,6 @@ Then update the deployments of prometheus and alertmanager to have one replica o
 
 There is no reason to automate this because this may not work in the future. This is not the recommended way of installing Prometheus Operator.
 
-Add in the grafana deployment in the grafana container the environment variable:
-```dtd
-      - env:
-        - name: GF_INSTALL_PLUGINS
-          value: grafana-piechart-panel
-```
 
 # References
  - https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus

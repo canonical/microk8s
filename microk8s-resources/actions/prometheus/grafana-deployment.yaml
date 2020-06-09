@@ -16,10 +16,7 @@ spec:
         app: grafana
     spec:
       containers:
-      - env:
-        - name: GF_INSTALL_PLUGINS
-          value: grafana-piechart-panel
-        image: grafana/grafana:6.4.3
+      - image: grafana/grafana:6.4.3
         name: grafana
         ports:
         - containerPort: 3000
