@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 source $SNAP/actions/common/utils.sh
 
@@ -9,12 +9,14 @@ read -ra ARGUMENTS <<<"$1"
 read -r key value <<<$(echo "${ARGUMENTS[@]}" | gawk -F "=" '{print $1 ,$2}')
 read -ra CERT_SECRET <<< "$value"
 
-KEY_NAME="defaultcert"
+KEY_NAME="default-ssl-certificate"
 
 if [ ! -z "$key" ] && [ "$key" != $KEY_NAME ]
 then
-  echo "You should use the the '$KEY_NAME' as key in the argument passed and not '$key'. Eg. microk8s.enable ingress:$KEY_NAME=namespace/secret_name";
-  exit
+  echo "Unknown argument '$key'."
+  echo "You can use '$KEY_NAME' to load the default TLS certificate from a secret, eg"
+  echo "   microk8s enable ingress:$KEY_NAME=namespace/secret_name"
+  exit 1
 fi
 
 echo "Enabling Ingress"
