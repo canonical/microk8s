@@ -18,7 +18,8 @@ script:
   - sudo /snap/bin/lxd.migrate -yes
   - sudo /snap/bin/lxd waitready
   - sudo /snap/bin/lxd init --auto
-  - sudo snapcraft --use-lxd
+  - sudo usermod --append --groups lxd $USER
+  - sg lxd -c 'snapcraft --use-lxd'
   - sudo apt update
   - sudo snap install *.snap --classic --dangerous
   - sudo pip3 install --upgrade pip
