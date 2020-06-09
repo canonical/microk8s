@@ -8,11 +8,26 @@ def dashboard_proxy():
     output = check_output(command)
     if b"Addon dashboard is already enabled." not in output:
         print("Waiting for Dashboard to come up.")
-        command = ["microk8s.kubectl", "-n", "kube-system", "wait", "--timeout=240s",
-                   "deployment", "kubernetes-dashboard", "--for", "condition=available"]
+        command = [
+            "microk8s.kubectl",
+            "-n",
+            "kube-system",
+            "wait",
+            "--timeout=240s",
+            "deployment",
+            "kubernetes-dashboard",
+            "--for",
+            "condition=available",
+        ]
         check_output(command)
 
-    command = ["/snap/microk8s/current/microk8s-kubectl.wrapper", "-n", "kube-system", "get", "secret"]
+    command = [
+        "/snap/microk8s/current/microk8s-kubectl.wrapper",
+        "-n",
+        "kube-system",
+        "get",
+        "secret",
+    ]
     output = check_output(command)
     secret_name = None
     for line in output.split(b"\n"):
@@ -23,7 +38,14 @@ def dashboard_proxy():
     if not secret_name:
         print("Cannot find the dashboard secret.")
 
-    command = ["/snap/microk8s/current/microk8s-kubectl.wrapper", "-n", "kube-system", "describe", "secret", secret_name]
+    command = [
+        "/snap/microk8s/current/microk8s-kubectl.wrapper",
+        "-n",
+        "kube-system",
+        "describe",
+        "secret",
+        secret_name,
+    ]
     output = check_output(command)
     token = None
     for line in output.split(b"\n"):
@@ -37,8 +59,16 @@ def dashboard_proxy():
     print("Use the following token to login:")
     print(token)
 
-    command = ["/snap/microk8s/current/microk8s-kubectl.wrapper", "port-forward", "-n", "kube-system",
-               "service/kubernetes-dashboard", "10443:443", "--address", "0.0.0.0"]
+    command = [
+        "/snap/microk8s/current/microk8s-kubectl.wrapper",
+        "port-forward",
+        "-n",
+        "kube-system",
+        "service/kubernetes-dashboard",
+        "10443:443",
+        "--address",
+        "0.0.0.0",
+    ]
 
     try:
         check_output(command)

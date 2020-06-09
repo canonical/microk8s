@@ -18,13 +18,13 @@ from .common.utils import (
     is_node_running_dqlite,
     get_callback_token,
     remove_token_from_file,
-    is_token_expired
+    is_token_expired,
 )
 
 from flask import Flask, jsonify, request, abort, Response
 
 app = Flask(__name__)
-CLUSTER_API="cluster/api/v1.0"
+CLUSTER_API = "cluster/api/v1.0"
 CLUSTER_API_V2 = "cluster/api/v2.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
@@ -114,14 +114,18 @@ def sign_client_cert(cert_request, token):
     :returns: the certificate
     """
     req_file = "{}/certs/request.{}.csr".format(snapdata_path, token)
-    sign_cmd = "openssl x509 -sha256 -req -in {csr} -CA {SNAP_DATA}/certs/ca.crt -CAkey" \
-               " {SNAP_DATA}/certs/ca.key -CAcreateserial -out {SNAP_DATA}/certs/server.{token}.crt" \
-               " -days 365".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
+    sign_cmd = (
+        "openssl x509 -sha256 -req -in {csr} -CA {SNAP_DATA}/certs/ca.crt -CAkey"
+        " {SNAP_DATA}/certs/ca.key -CAcreateserial -out {SNAP_DATA}/certs/server.{token}.crt"
+        " -days 365".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
+    )
 
     with open(req_file, 'w') as fp:
         fp.write(cert_request)
     subprocess.check_call(sign_cmd.split())
-    with open("{SNAP_DATA}/certs/server.{token}.crt".format(SNAP_DATA=snapdata_path, token=token)) as fp:
+    with open(
+        "{SNAP_DATA}/certs/server.{token}.crt".format(SNAP_DATA=snapdata_path, token=token)
+    ) as fp:
         cert = fp.read()
     return cert
 
@@ -134,8 +138,6 @@ def add_token_to_certs_request(token):
     """
     with open(certs_request_tokens_file, "a+") as fp:
         fp.write("{}\n".format(token))
-
-
 
 
 def get_token(name):
@@ -222,9 +224,9 @@ def is_valid(token_line, token_type=cluster_tokens_file):
     with open(token_type) as fp:
         for _, line in enumerate(fp):
             token_in_file = line.strip()
-            if "|" in line :
+            if "|" in line:
                 if not is_token_expired(line):
-                    token_in_file = line.strip().split('|')[0]            
+                    token_in_file = line.strip().split('|')[0]
             if token == token_in_file:
                 return True
     return False
@@ -281,12 +283,14 @@ def join_node_etcd():
     remove_expired_token_from_file(cluster_tokens_file)
 
     if not is_valid(token):
-        error_msg={"error": "Invalid token"}
+        error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
     if is_node_running_dqlite():
-        msg = ("Failed to join the cluster. This is an HA dqlite cluster. \n"
-               "Please, retry after enabling HA on this joining node with 'microk8s enable ha-cluster'.")
+        msg = (
+            "Failed to join the cluster. This is an HA dqlite cluster. \n"
+            "Please, retry after enabling HA on this joining node with 'microk8s enable ha-cluster'."
+        )
         error_msg = {"error": msg}
         return Response(json.dumps(error_msg), mimetype='application/json', status=501)
 
@@ -309,13 +313,15 @@ def join_node_etcd():
     else:
         kubelet_args = read_kubelet_args_file()
 
-    return jsonify(ca=ca,
-                   etcd=etcd_ep,
-                   kubeproxy=proxy_token,
-                   apiport=api_port,
-                   kubelet=kubelet_token,
-                   kubelet_args=kubelet_args,
-                   hostname_override=node_addr)
+    return jsonify(
+        ca=ca,
+        etcd=etcd_ep,
+        kubeproxy=proxy_token,
+        apiport=api_port,
+        kubelet=kubelet_token,
+        kubelet_args=kubelet_args,
+        hostname_override=node_addr,
+    )
 
 
 @app.route('/{}/sign-cert'.format(CLUSTER_API), methods=['POST'])
@@ -332,7 +338,7 @@ def sign_cert():
 
     token = token.strip()
     if not is_valid(token, certs_request_tokens_file):
-        error_msg={"error": "Invalid token"}
+        error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
     if is_node_running_dqlite():
@@ -358,7 +364,7 @@ def configure():
 
     callback_token = callback_token.strip()
     if not is_valid(callback_token, callback_token_file):
-        error_msg={"error": "Invalid token"}
+        error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
     # We expect something like this:
@@ -417,17 +423,23 @@ def configure():
             if "restart" in service and service["restart"]:
                 service_name = get_service_name(service["name"])
                 print("restarting {}".format(service["name"]))
-                subprocess.check_call("snapctl restart microk8s.daemon-{}".format(service_name).split())
+                subprocess.check_call(
+                    "snapctl restart microk8s.daemon-{}".format(service_name).split()
+                )
 
     if "addon" in configuration:
         for addon in configuration["addon"]:
             print("{}".format(addon["name"]))
             if "enable" in addon and addon["enable"]:
                 print("Enabling {}".format(addon["name"]))
-                subprocess.check_call("{}/microk8s-enable.wrapper {}".format(snap_path, addon["name"]).split())
+                subprocess.check_call(
+                    "{}/microk8s-enable.wrapper {}".format(snap_path, addon["name"]).split()
+                )
             if "disable" in addon and addon["disable"]:
                 print("Disabling {}".format(addon["name"]))
-                subprocess.check_call("{}/microk8s-disable.wrapper {}".format(snap_path, addon["name"]).split())
+                subprocess.check_call(
+                    "{}/microk8s-disable.wrapper {}".format(snap_path, addon["name"]).split()
+                )
 
     resp_date = {"result": "ok"}
     resp = Response(json.dumps(resp_date), status=200, mimetype='application/json')
@@ -451,9 +463,11 @@ def get_dqlite_voters():
         try:
             with open("{}/info.yaml".format(cluster_dir)) as f:
                 data = yaml.load(f, Loader=yaml.FullLoader)
-                out = subprocess.check_output("curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s"
-                                              .format(data['Address'], cluster_cert_file,
-                                                      cluster_key_file, cluster_cert_file).split())
+                out = subprocess.check_output(
+                    "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
+                        data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
+                    ).split()
+                )
                 if data['Address'] in out.decode():
                     break
                 else:
@@ -566,17 +580,19 @@ def join_node_dqlite():
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
 
-    return jsonify(ca=get_cert("ca.crt"),
-                   ca_key=get_cert("ca.key"),
-                   service_account_key=get_cert("serviceaccount.key"),
-                   cluster_cert=cluster_cert,
-                   cluster_key=cluster_key,
-                   voters=voters,
-                   callback_token=callback_token,
-                   apiport=api_port,
-                   kubelet_args=kubelet_args,
-                   hostname_override=node_addr,
-                   admin_token=get_token('admin'))
+    return jsonify(
+        ca=get_cert("ca.crt"),
+        ca_key=get_cert("ca.key"),
+        service_account_key=get_cert("serviceaccount.key"),
+        cluster_cert=cluster_cert,
+        cluster_key=cluster_key,
+        voters=voters,
+        callback_token=callback_token,
+        apiport=api_port,
+        kubelet_args=kubelet_args,
+        hostname_override=node_addr,
+        admin_token=get_token('admin'),
+    )
 
 
 @app.route('/{}/upgrade'.format(CLUSTER_API), methods=['POST'])
@@ -587,7 +603,7 @@ def upgrade():
     callback_token = request.json['callback']
     callback_token = callback_token.strip()
     if not is_valid(callback_token, callback_token_file):
-        error_msg={"error": "Invalid token"}
+        error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
     upgrade_request = request.json["upgrade"]
@@ -636,7 +652,9 @@ def upgrade():
 
 def usage():
     print("Agent responsible for setting up a cluster. Arguments:")
-    print("-l, --listen:   interfaces to listen to (defaults to {})".format(default_listen_interface))
+    print(
+        "-l, --listen:   interfaces to listen to (defaults to {})".format(default_listen_interface)
+    )
     print("-p, --port:     port to listen to (default {})".format(default_port))
 
 

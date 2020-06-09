@@ -54,7 +54,7 @@ def remove_token_from_file(token, file):
         with open(file, 'r') as fp:
             for _, line in enumerate(fp):
                 # Not considering cluster tokens with expiry in this method.
-                if "|" not in line :
+                if "|" not in line:
                     if line.strip() == token:
                         continue
                 back_fp.write("{}".format(line))
@@ -74,7 +74,7 @@ def is_token_expired(token_line):
         if int(round(time.time())) > int(expiry):
             return True
 
-    return False  
+    return False
 
 
 def get_callback_token():
