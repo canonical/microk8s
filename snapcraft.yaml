@@ -15,6 +15,12 @@ grade: stable
 confinement: classic
 base: core
 
+plugs:
+  images:
+    interface: content
+    content: images
+    target: $SNAP_COMMON/images/
+
 apps:
   microk8s:
     command: microk8s.wrapper
