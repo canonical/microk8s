@@ -13,21 +13,13 @@ mkdir -p "$BACKUP_DIR"
 
 mkdir -p "$BACKUP_DIR/args/cni-network/"
 cp "$SNAP_DATA"/args/cni-network/* "$BACKUP_DIR/args/cni-network/" 2>/dev/null || true
-rm -rf "$SNAP_DATA"/args/cni-network/*
+find "$SNAP_DATA"/args/cni-network/* -not -name '*multus*' -exec rm -f {} \;
 cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
-mkdir -p "$SNAP_DATA/opt/cni/bin/"
-cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
 
 echo "Restarting services"
 cp "$SNAP_DATA"/args/kube-apiserver "$BACKUP_DIR/args"
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
 snapctl restart ${SNAP_NAME}.daemon-apiserver
-
-# Reconfigure kubelet/containerd to pick up the new CNI config and binary.
-cp "$SNAP_DATA"/args/kubelet "$BACKUP_DIR/args"
-echo "Restarting kubelet"
-refresh_opt_in_config "cni-bin-dir" "\${SNAP_DATA}/opt/cni/bin/" kubelet
-snapctl restart ${SNAP_NAME}.daemon-kubelet
 
 cp "$SNAP_DATA"/args/kube-proxy "$BACKUP_DIR/args"
 echo "Restarting kube proxy"
@@ -37,13 +29,6 @@ snapctl restart ${SNAP_NAME}.daemon-proxy
 set_service_not_expected_to_start flanneld
 snapctl stop ${SNAP_NAME}.daemon-flanneld
 remove_vxlan_interfaces
-
-cp "$SNAP_DATA"/args/containerd-template.toml "$BACKUP_DIR/args"
-if grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
-  echo "Restarting containerd"
-  "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP}/opt;bin_dir = "${SNAP_DATA}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
-  snapctl restart ${SNAP_NAME}.daemon-containerd
-fi
 
 # Allow for services to restart
 sleep 15

@@ -34,7 +34,7 @@ cp "$SNAP"/default-args/etcd "$SNAP_DATA"/args/
 chmod 660 "$SNAP_DATA"/args/etcd
 
 cp -r "$SNAP_DATA"/args/cni-network "$BACKUP_DIR/args/"
-rm "$SNAP_DATA"/args/cni-network/*
+find "$SNAP_DATA"/args/cni-network/* -not -name '*multus*' -exec rm -f {} \;
 cp "$SNAP"/default-args/cni-network/* "$SNAP_DATA"/args/cni-network/
 chmod -R 660 "$SNAP_DATA"/args/cni-network
 
