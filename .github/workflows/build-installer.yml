@@ -40,7 +40,7 @@ jobs:
     - name: Download Multipass installer
       uses: carlosperate/download-file-action@v1.0.3
       with:
-        file-url: https://people.canonical.com/~msawicz/multipass/v1.2.1/multipass-1.2.1+win-win64.exe
+        file-url: https://github.com/canonical/multipass/releases/download/v1.3.0/multipass-1.3.0+win-win64.exe
         file-name: multipass.exe
         location: ${{ github.workspace }}/installer/windows
     - name: Create installer
