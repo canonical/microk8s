@@ -31,9 +31,12 @@ def do_op(remote_op):
             with open(callback_token_file, "r+") as fp:
                 token = fp.read()
 
-            subprocess.check_output("{}/microk8s-status.wrapper --wait-ready --timeout=60".format(snap_path).split())
+            subprocess.check_output(
+                "{}/microk8s-status.wrapper --wait-ready --timeout=60".format(snap_path).split()
+            )
             nodes_info = subprocess.check_output(
-                "{}/microk8s-kubectl.wrapper get no -o json".format(snap_path).split())
+                "{}/microk8s-kubectl.wrapper get no -o json".format(snap_path).split()
+            )
             info = json.loads(nodes_info.decode())
             for node_info in info["items"]:
                 node = node_info['metadata']['name']
@@ -45,13 +48,17 @@ def do_op(remote_op):
                 node_ep = "{}:{}".format(node, '25000')
                 remote_op["callback"] = token.rstrip()
                 # TODO: handle ssl verification
-                res = requests.post("https://{}/{}/configure".format(node_ep, CLUSTER_API),
-                                                                json=remote_op,
-                                                                verify=False)
+                res = requests.post(
+                    "https://{}/{}/configure".format(node_ep, CLUSTER_API),
+                    json=remote_op,
+                    verify=False,
+                )
                 if res.status_code != 200:
-                    print("Failed to perform a {} on node {} {}".format(remote_op["action_str"],
-                                                                        node_ep,
-                                                                        res.status_code))
+                    print(
+                        "Failed to perform a {} on node {} {}".format(
+                            remote_op["action_str"], node_ep, res.status_code
+                        )
+                    )
         except subprocess.CalledProcessError:
             print("Could not query for nodes")
 
@@ -79,7 +86,9 @@ def do_op(remote_op):
                     )
                     if res.status_code != 200:
                         print(
-                            "Failed to perform a {} on node {}".format(remote_op["action_str"], node_ep)
+                            "Failed to perform a {} on node {}".format(
+                                remote_op["action_str"], node_ep
+                            )
                         )
                 except subprocess.CalledProcessError:
                     print("Node {} not present".format(host))
