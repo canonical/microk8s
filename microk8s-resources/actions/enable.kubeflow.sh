@@ -9,10 +9,16 @@ import sys
 import tempfile
 import textwrap
 import time
-from itertools import count
 from distutils.util import strtobool
+from itertools import count
+from urllib.error import URLError
+from urllib.request import urlopen
+from urllib.parse import urlparse
 
 MIN_MEM_GB = 14
+CONNECTIVITY_CHECKS = [
+    'https://api.jujucharms.com/charmstore/v5/~kubeflow-charmers/ambassador-88/icon.svg',
+]
 
 
 def run(*args, die=True, debug=False, stdout=True):
@@ -122,6 +128,20 @@ def main():
             " if you'd like to proceed anyways."
         )
         sys.exit(1)
+
+    for url in CONNECTIVITY_CHECKS:
+        try:
+            response = urlopen(url)
+        except URLError:
+            host = urlparse(url).netloc
+            print("Couldn't contact %s" % host)
+            print("Please check your network connectivity before enabling Kubeflow.")
+            sys.exit(1)
+
+        if response.status != 200:
+            print("URL connectivity check failed with response %s" % response.status)
+            print("Please check your network connectivity before enabling Kubeflow.")
+            sys.exit(1)
 
     password_overlay = {
         "applications": {
