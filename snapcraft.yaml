@@ -267,7 +267,6 @@ parts:
     python-packages:
     - flask
     - PyYAML
-    - toml
     - netifaces
     stage-packages:
     - python3-openssl

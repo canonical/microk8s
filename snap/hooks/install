@@ -11,9 +11,6 @@ source $SNAP/actions/common/utils.sh
 
 cp -r ${SNAP}/default-args ${SNAP_DATA}/args
 
-# Create containerd custom config directory
-mkdir ${SNAP_DATA}/args/containerd-custom
-
 # Create the certificates
 mkdir ${SNAP_DATA}/certs
 # Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
