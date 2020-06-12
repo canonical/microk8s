@@ -19,7 +19,7 @@ plugs:
   images:
     interface: content
     content: images
-    target: $SNAP_COMMON/images/
+    target: $SNAP_COMMON/images
 
 apps:
   microk8s:
