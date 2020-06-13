@@ -375,6 +375,11 @@ then
     snapctl restart ${SNAP_NAME}.daemon-containerd
 fi
 
+if [ ! -f ${SNAP_DATA}/args/cluster-agent ]
+then
+   cp ${SNAP}/default-args/cluster-agent ${SNAP_DATA}/args/cluster-agent
+fi
+
 if ! grep -e "\-\-timeout" ${SNAP_DATA}/args/cluster-agent
 then
   refresh_opt_in_config timeout 240 cluster-agent
