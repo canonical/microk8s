@@ -505,7 +505,9 @@ function valid_ip() {
 init_cluster() {
   mkdir -p ${SNAP_DATA}/var/kubernetes/backend
   IP="127.0.0.1"
-  # TODO: make the port configurable
+  # To configure dqlite do:
+  # echo "Address: 1.2.3.4:6364" > $STORAGE_DIR/update.yaml
+  # after the initialisation but before connecting other nodes
   echo "Address: $IP:19001" > ${SNAP_DATA}/var/kubernetes/backend/init.yaml
   DNS=$($SNAP/bin/hostname)
   mkdir -p $SNAP_DATA/var/tmp/
