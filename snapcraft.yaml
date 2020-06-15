@@ -21,6 +21,13 @@ plugs:
     content: images
     target: $SNAP_COMMON/images
 
+slots:
+  microk8s:
+    interface: content
+    content: microk8s
+    source:
+      read: [$SNAP/.microk8s-info/microk8s]
+
 apps:
   microk8s:
     command: microk8s.wrapper
@@ -506,9 +513,3 @@ parts:
     prime:
       - bin/juju
 
-slots:
-  microk8s:
-    interface: content
-    content: microk8s
-    source:
-      read: [$SNAP/.microk8s-info/microk8s]
