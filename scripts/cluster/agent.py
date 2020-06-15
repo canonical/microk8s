@@ -19,6 +19,8 @@ from .common.utils import (
     get_callback_token,
     remove_token_from_file,
     is_token_expired,
+    get_dqlite_port,
+    get_cluster_agent_port,
 )
 
 from flask import Flask, jsonify, request, abort, Response
@@ -29,10 +31,11 @@ CLUSTER_API_V2 = "cluster/api/v2.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
-callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
+callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 certs_request_tokens_file = "{}/credentials/certs-request-tokens.txt".format(snapdata_path)
 default_port = 25000
+dqlite_default_port = 19001
 default_listen_interface = "0.0.0.0"
 
 
@@ -496,12 +499,13 @@ def update_dqlite_ip(host):
 
     :param : the host others see for this node
     """
+    dqlite_port = get_dqlite_port()
     subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
     time.sleep(10)
 
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
     # TODO make the port configurable
-    update_data = {'Address': "{}:19001".format(host)}
+    update_data = {'Address': "{}:{}".format(host, dqlite_port)}
     with open("{}/update.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(update_data, f)
     subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
@@ -567,6 +571,13 @@ def join_node_dqlite():
     if not is_node_running_dqlite():
         error_msg = {"error": "Not possible to join. This is not an HA dqlite cluster."}
         return Response(json.dumps(error_msg), mimetype='application/json', status=501)
+
+    agent_port = get_cluster_agent_port()
+    if port != agent_port:
+        error_msg = {
+            "error": "The port of the cluster agent has to be set to {}.".format(agent_port)
+        }
+        return Response(json.dumps(error_msg), mimetype='application/json', status=502)
 
     voters = get_dqlite_voters()  # type: List[str]
     # Check if we need to set dqlite with external IP
