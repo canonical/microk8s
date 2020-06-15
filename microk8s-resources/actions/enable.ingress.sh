@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 source $SNAP/actions/common/utils.sh
 
@@ -22,7 +22,7 @@ fi
 echo "Enabling Ingress"
 
 ARCH=$(arch)
-TAG="0.25.1"
+TAG="0.33.0"
 EXTRA_ARGS="- --publish-status-address=127.0.0.1"
 DEFAULT_CERT="- ' '"
 
