@@ -16,7 +16,12 @@ import urllib3
 import yaml
 import json
 
-from common.utils import try_set_file_permissions, is_node_running_dqlite
+from common.utils import (
+    try_set_file_permissions,
+    is_node_running_dqlite,
+    get_dqlite_port,
+    get_cluster_agent_port,
+)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
@@ -47,17 +52,14 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
 
     :return: the json response of the master
     """
-    cluster_agent_port = "25000"
-    filename = "{}/args/cluster-agent".format(snapdata_path)
-    with open(filename) as fp:
-        for _, line in enumerate(fp):
-            if line.startswith("--port"):
-                port_parse = line.split(' ')
-                port_parse = port_parse[-1].split('=')
-                cluster_agent_port = port_parse[0].rstrip()
+    cluster_agent_port = get_cluster_agent_port()
 
     if cluster_type == "dqlite":
-        req_data = {"token": token, "hostname": socket.gethostname(), "port": cluster_agent_port}
+        req_data = {
+            "token": token,
+            "hostname": socket.gethostname(),
+            "port": cluster_agent_port,
+        }
 
         # TODO: enable ssl verification
         connection_info = requests.post(
@@ -391,7 +393,7 @@ def reset_current_dqlite_installation():
             stderr=subprocess.DEVNULL,
         )
 
-    # TODO make this port configurable
+    # We reset to the default port and address
     init_data = {'Address': '127.0.0.1:19001'}  # type: Dict[str, str]
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
@@ -739,11 +741,15 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     shutil.move(cluster_dir, cluster_backup_dir)
     os.mkdir(cluster_dir)
     store_cluster_certs(cluster_cert, cluster_key)
+
+    # We get the dqlite port from the already existing deployment
+    port = 19001
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
+    if 'Address' in data:
+        port = data['Address'].split(':')[1]
 
-    # TODO make port configurable
-    init_data = {'Cluster': voters, 'Address': "{}:19001".format(host)}
+    init_data = {'Cluster': voters, 'Address': "{}:{}".format(host, port)}
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
