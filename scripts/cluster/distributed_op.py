@@ -166,8 +166,8 @@ def usage():
 
 if __name__ == "__main__":
     if is_node_running_dqlite() and not os.path.isfile(callback_token_file):
-        print("No callback token file.")
-        exit(1)
+        # print("Single node cluster.")
+        exit(0)
 
     if not is_node_running_dqlite() and not os.path.isfile(callback_tokens_file):
         print("No callback tokens file.")
