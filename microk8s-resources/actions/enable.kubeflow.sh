@@ -106,6 +106,7 @@ def get_hostname():
 
 def main():
     password = os.environ.get("KUBEFLOW_AUTH_PASSWORD") or get_random_pass()
+    bundle = os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-195"
     channel = os.environ.get("KUBEFLOW_CHANNEL") or "stable"
     no_proxy = os.environ.get("KUBEFLOW_NO_PROXY") or None
     hostname = os.environ.get("KUBEFLOW_HOSTNAME") or None
@@ -199,45 +200,7 @@ def main():
         json.dump(password_overlay, f)
         f.flush()
 
-        juju("deploy", "cs:kubeflow", "--channel", channel, "--overlay", f.name)
-
-    for _ in range(240):
-        try:
-            run(
-                "microk8s-kubectl.wrapper",
-                "wait",
-                "--namespace=kubeflow",
-                "--for=condition=ready",
-                "pod/cert-manager-webhook-operator-0",
-                die=False,
-            )
-            break
-        except subprocess.CalledProcessError:
-            time.sleep(5)
-    else:
-        print("Waited too long for cert manager webhook operator pod to appear.")
-        sys.exit(1)
-
-    run(
-        "microk8s-kubectl.wrapper",
-        "patch",
-        "role",
-        "--namespace=kubeflow",
-        "cert-manager-webhook-operator",
-        "-p",
-        json.dumps(
-            {
-                "apiVersion": "rbac.authorization.k8s.io/v1",
-                "kind": "Role",
-                "metadata": {"name": "cert-manager-webhook-operator"},
-                "rules": [
-                    {"apiGroups": [""], "resources": ["pods"], "verbs": ["get", "list"],},
-                    {"apiGroups": [""], "resources": ["pods/exec"], "verbs": ["create"],},
-                    {"apiGroups": [""], "resources": ["secrets"], "verbs": ["get", "list"],},
-                ],
-            }
-        ),
-    )
+        juju("deploy", bundle, "--channel", channel, "--overlay", f.name)
 
     print("Kubeflow deployed.")
     print("Waiting for operator pods to become ready.")
@@ -269,6 +232,33 @@ def main():
         "--timeout=-1s",
         "--all",
         debug=debug,
+    )
+
+    with tempfile.NamedTemporaryFile(mode='w+') as f:
+        json.dump(
+            {
+                'apiVersion': 'v1',
+                'kind': 'Service',
+                'metadata': {'labels': {'juju-app': 'pipelines-api'}, 'name': 'ml-pipeline',},
+                'spec': {
+                    'ports': [
+                        {'name': 'grpc', 'port': 8887, 'protocol': 'TCP', 'targetPort': 8887},
+                        {'name': 'http', 'port': 8888, 'protocol': 'TCP', 'targetPort': 8888},
+                    ],
+                    'selector': {'juju-app': 'pipelines-api'},
+                    'type': 'ClusterIP',
+                },
+            },
+            f,
+        )
+        f.flush()
+        run('microk8s-kubectl.wrapper', 'apply', '-f', f.name)
+
+    run(
+        'microk8s-kubectl.wrapper',
+        'delete',
+        'mutatingwebhookconfigurations/katib-mutating-webhook-config',
+        'validatingwebhookconfigurations/katib-validating-webhook-config',
     )
 
     hostname = hostname or get_hostname()
