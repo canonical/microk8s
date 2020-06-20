@@ -84,6 +84,7 @@ At the time of the v3.13.2 release. The `calico.yaml` manifest is a slightly mod
   1. host-local-net-dir to /var/snap/microk8s/current/var/lib/cni/networks
   1. policysync to /var/snap/microk8s/current/var/run/nodeagent
 - We enabled vxlan following the instructions in [the official docs.](https://docs.projectcalico.org/getting-started/kubernetes/installation/config-options#switching-from-ip-in-ip-to-vxlan)
+- FELIX_LOGSEVERITYSCREEN was set to "error"
 
 ## References
 
