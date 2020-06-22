@@ -169,10 +169,7 @@ class SnapRefreshError(RepoError):
 
 class SnapdConnectionError(RepoError):
 
-    fmt = (
-        "Failed to get information for snap {snap_name!r}: "
-        "could not connect to {url!r}."
-    )
+    fmt = "Failed to get information for snap {snap_name!r}: " "could not connect to {url!r}."
 
     def __init__(self, snap_name: str, url: str) -> None:
         super().__init__(snap_name=snap_name, url=url)

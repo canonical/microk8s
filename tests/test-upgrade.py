@@ -16,12 +16,7 @@ from validators import (
     validate_cilium,
 )
 from subprocess import check_call, CalledProcessError, check_output
-from utils import (
-    microk8s_enable,
-    wait_for_pod_state,
-    wait_for_installation,
-    run_until_success
-)
+from utils import microk8s_enable, wait_for_pod_state, wait_for_installation, run_until_success
 
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
 # Have UPGRADE_MICROK8S_TO point to a file to upgrade to that file

@@ -3,7 +3,6 @@ from subprocess import check_output
 
 
 class TestMicrok8sBranches(object):
-
     def test_branches(self):
         """
         We need to make sure the LP builders pointing to the master github branch are only pushing to the
@@ -20,14 +19,21 @@ class TestMicrok8sBranches(object):
         version_parts = upstream_version.split('.')
         major_minor_upstream_version = "{}.{}".format(version_parts[0][1:], version_parts[1])
         if version_parts[1] != "0":
-            prev_major_minor_version = "{}.{}".format(version_parts[0][1:], int(version_parts[1]) - 1)
+            prev_major_minor_version = "{}.{}".format(
+                version_parts[0][1:], int(version_parts[1]) - 1
+            )
         else:
             major = int(version_parts[0][1:]) - 1
             minor = self._get_max_minor(major)
             prev_major_minor_version = "{}.{}".format(major, minor)
-        print("Current stable is {}. Making sure we have a branch for {}".format(
-            major_minor_upstream_version, prev_major_minor_version))
-        cmd = "git ls-remote --heads http://github.com/ubuntu/microk8s.git {}".format(prev_major_minor_version)
+        print(
+            "Current stable is {}. Making sure we have a branch for {}".format(
+                major_minor_upstream_version, prev_major_minor_version
+            )
+        )
+        cmd = "git ls-remote --heads http://github.com/ubuntu/microk8s.git {}".format(
+            prev_major_minor_version
+        )
         branch = check_output(cmd.split()).decode("utf-8")
         assert prev_major_minor_version in branch
 

@@ -6,15 +6,12 @@ import time
 import platform
 import getpass
 
-kubeconfig = "--kubeconfig="+ os.path.expandvars("${SNAP_DATA}/credentials/client.config")
+kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/client.config")
 
 
 def get_current_arch():
     # architecture mapping
-    arch_mapping = {
-        'aarch64': 'arm64',
-        'x86_64': 'amd64'
-    }
+    arch_mapping = {'aarch64': 'arm64', 'x86_64': 'amd64'}
 
     return arch_mapping[platform.machine()]
 
@@ -24,11 +21,7 @@ def run(*args, die=True):
     env = os.environ.copy()
     env["PATH"] += ":%s" % os.environ["SNAP"]
     result = subprocess.run(
-        args,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env
+        args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
     )
 
     try:
@@ -49,7 +42,7 @@ def is_cluster_ready():
     try:
         service_output = kubectl_get("all")
         node_output = kubectl_get("nodes")
-        if "Ready" in node_output and "service/kubernetes" in  service_output:
+        if "Ready" in node_output and "service/kubernetes" in service_output:
             return True
         else:
             return False
@@ -60,22 +53,24 @@ def is_cluster_ready():
 def is_cluster_locked():
     clusterLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
     if os.path.isfile(clusterLockFile):
-        print("This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s status on the master.")
+        print(
+            "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s status on the master."
+        )
         exit(0)
 
 
-def wait_for_ready(wait_ready,timeout):
+def wait_for_ready(wait_ready, timeout):
     start_time = time.time()
     isReady = False
 
-    while True :
-        if (timeout >0 and (time.time() > (start_time + timeout))) or isReady:
+    while True:
+        if (timeout > 0 and (time.time() > (start_time + timeout))) or isReady:
             break
         try:
             isReady = is_cluster_ready()
         except Exception:
             time.sleep(2)
-    
+
     return isReady
 
 
@@ -84,13 +79,17 @@ def exit_if_no_permission():
     # test if we can access the default kubeconfig
     clientConfigFile = os.path.expandvars("${SNAP_DATA}/credentials/client.config")
     if os.access(clientConfigFile, os.R_OK) == False:
-        print ("Insufficient permissions to access MicroK8s.")
-        print ("You can either try again with sudo or add the user {} to the 'microk8s' group:".format(user))
-        print ("")
-        print ("    sudo usermod -a -G microk8s {}".format(user))
-        print ("")
-        print ("The new group will be available on the user's next login.")
-        exit(1)  
+        print("Insufficient permissions to access MicroK8s.")
+        print(
+            "You can either try again with sudo or add the user {} to the 'microk8s' group:".format(
+                user
+            )
+        )
+        print("")
+        print("    sudo usermod -a -G microk8s {}".format(user))
+        print("")
+        print("The new group will be available on the user's next login.")
+        exit(1)
 
 
 def kubectl_get(cmd, namespace="--all-namespaces"):
@@ -101,7 +100,9 @@ def kubectl_get(cmd, namespace="--all-namespaces"):
 
 
 def kubectl_get_clusterroles():
-    return run("kubectl", kubeconfig, "get", "clusterroles", "--show-kind","--no-headers", die=False)
+    return run(
+        "kubectl", kubeconfig, "get", "clusterroles", "--show-kind", "--no-headers", die=False
+    )
 
 
 def get_available_addons(arch):
@@ -113,9 +114,9 @@ def get_available_addons(arch):
         addons = yaml.load(file, Loader=yaml.FullLoader)
         for addon in addons["microk8s-addons"]["addons"]:
             if arch in addon["supported_architectures"]:
-               available.append(addon)
-    
-    available = sorted(available, key=lambda k: k['name'])                  
+                available.append(addon)
+
+    available = sorted(available, key=lambda k: k['name'])
     return available
 
 

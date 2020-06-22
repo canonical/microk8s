@@ -53,7 +53,11 @@ Section "Multipass (Required)" multipass_id
     beginMultipass:
         SetOutPath $INSTDIR
         File "multipass.exe"
-        ExecWait "multipass.exe /NoRestart"
+        ${If} ${Silent}
+            ExecWait "multipass.exe /NoRestart /S"
+        ${Else}
+            ExecWait "multipass.exe /NoRestart"
+        ${EndIf}
         IfErrors failedMultipass
         Delete "$INSTDIR\multipass.exe"
         Goto endMultipass

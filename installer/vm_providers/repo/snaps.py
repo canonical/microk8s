@@ -204,16 +204,12 @@ class SnapPackage:
         try:
             check_output(snap_download_cmd, cwd=directory)
         except CalledProcessError:
-            raise errors.SnapDownloadError(
-                snap_name=self.name, snap_channel=self.channel
-            )
+            raise errors.SnapDownloadError(snap_name=self.name, snap_channel=self.channel)
 
     def install(self):
         """Installs the snap onto the system."""
         if not self.is_valid():
-            raise errors.SnapUnavailableError(
-                snap_name=self.name, snap_channel=self.channel
-            )
+            raise errors.SnapUnavailableError(snap_name=self.name, snap_channel=self.channel)
 
         snap_install_cmd = []
         if _snap_command_requires_sudo():
@@ -227,9 +223,7 @@ class SnapPackage:
         try:
             check_call(snap_install_cmd)
         except CalledProcessError:
-            raise errors.SnapInstallError(
-                snap_name=self.name, snap_channel=self.channel
-            )
+            raise errors.SnapInstallError(snap_name=self.name, snap_channel=self.channel)
 
         # Now that the snap is installed, invalidate the data we had on it.
         self._is_installed = None
@@ -237,25 +231,19 @@ class SnapPackage:
     def refresh(self):
         """Refreshes a snap onto a channel on the system."""
         if not self.is_valid():
-            raise errors.SnapUnavailableError(
-                snap_name=self.name, snap_channel=self.channel
-            )
+            raise errors.SnapUnavailableError(snap_name=self.name, snap_channel=self.channel)
 
         snap_refresh_cmd = []
         if _snap_command_requires_sudo():
             snap_refresh_cmd = ["sudo"]
-        snap_refresh_cmd.extend(
-            ["snap", "refresh", self.name, "--channel", self.channel]
-        )
+        snap_refresh_cmd.extend(["snap", "refresh", self.name, "--channel", self.channel])
         if self.is_classic():
             # TODO make this a user explicit choice
             snap_refresh_cmd.append("--classic")
         try:
             check_call(snap_refresh_cmd)
         except CalledProcessError:
-            raise errors.SnapRefreshError(
-                snap_name=self.name, snap_channel=self.channel
-            )
+            raise errors.SnapRefreshError(snap_name=self.name, snap_channel=self.channel)
 
         # Now that the snap is refreshed, invalidate the data we had on it.
         self._is_installed = None
@@ -336,16 +324,14 @@ def get_assertion(assertion_params: Sequence[str]) -> bytes:
     try:
         return check_output(["snap", "known", *assertion_params])
     except CalledProcessError as call_error:
-        raise errors.SnapGetAssertionError(
-            assertion_params=assertion_params
-        ) from call_error
+        raise errors.SnapGetAssertionError(assertion_params=assertion_params) from call_error
 
 
 def _get_parsed_snap(snap):
     if "/" in snap:
         sep_index = snap.find("/")
         snap_name = snap[:sep_index]
-        snap_channel = snap[sep_index + 1:]
+        snap_channel = snap[sep_index + 1 :]
     else:
         snap_name = snap
         snap_channel = ""

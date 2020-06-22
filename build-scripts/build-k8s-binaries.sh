@@ -17,7 +17,14 @@ go get -d $KUBERNETES_REPOSITORY || true
   git checkout $KUBERNETES_TAG
   git config user.email "microk8s-builder-bot@ubuntu.com"
   git config user.name "MicroK8s builder bot"
-  for patch in "${SNAPCRAFT_PROJECT_DIR}"/build-scripts/patches/*.patch
+
+  PATCHES="patches"
+  if echo "$KUBE_VERSION" | grep -e beta -e rc -e alpha
+  then
+    PATCHES="pre-patches"
+  fi
+
+  for patch in "${SNAPCRAFT_PROJECT_DIR}"/build-scripts/"$PATCHES"/*.patch
   do
     echo "Applying patch $patch"
     git am < "$patch"
@@ -38,3 +45,5 @@ go get -d $KUBERNETES_REPOSITORY || true
 for app in $apps; do
   cp $GOPATH/src/$KUBERNETES_REPOSITORY/_output/bin/$app $KUBE_SNAP_BINS/$KUBE_ARCH/
 done
+
+rm -rf $GOPATH/src/$KUBERNETES_REPOSITORY/_output/

@@ -29,13 +29,8 @@ logger = logging.getLogger(__name__)
 
 
 class Provider(abc.ABC):
-
     def __init__(
-        self,
-        *,
-        echoer,
-        is_ephemeral: bool = False,
-        build_provider_flags: Dict[str, str] = None,
+        self, *, echoer, is_ephemeral: bool = False, build_provider_flags: Dict[str, str] = None,
     ) -> None:
         self.echoer = echoer
         self._is_ephemeral = is_ephemeral
@@ -93,9 +88,7 @@ class Provider(abc.ABC):
         """Return the instance info."""
 
     @abc.abstractmethod
-    def run(
-        self, command: Sequence[str], hide_output: bool = False
-    ) -> Optional[bytes]:
+    def run(self, command: Sequence[str], hide_output: bool = False) -> Optional[bytes]:
         """Run a command on the instance."""
 
     @abc.abstractmethod
@@ -152,7 +145,8 @@ class Provider(abc.ABC):
 
             if url:
                 raise errors.ConnectivityError(
-                    "The VM cannot connect to snapcraft.io, please see {}".format(url))
+                    "The VM cannot connect to snapcraft.io, please see {}".format(url)
+                )
             else:
                 raise
 

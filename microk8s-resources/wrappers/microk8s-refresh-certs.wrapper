@@ -18,7 +18,7 @@ BACKUP=$SNAP_DATA/var/log/ca-backup/
 INSTALL=false
 UNDO=false
 CHECK=false
-PARSED=$(getopt --options=iuhc --longoptions=install,undo,help,check: --name "$@" -- "$@")
+PARSED=$(getopt --options=iuhc --longoptions=install,undo,help,check --name "$@" -- "$@")
 eval set -- "$PARSED"
 while true; do
   case "$1" in

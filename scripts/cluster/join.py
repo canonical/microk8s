@@ -57,24 +57,28 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
                 cluster_agent_port = port_parse[0].rstrip()
 
     if cluster_type == "dqlite":
-        req_data = {"token": token,
-                    "hostname": socket.gethostname(),
-                    "port": cluster_agent_port}
+        req_data = {"token": token, "hostname": socket.gethostname(), "port": cluster_agent_port}
 
         # TODO: enable ssl verification
-        connection_info = requests.post("https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API_V2),
-                                        json=req_data,
-                                        verify=False)  # type: requests.models.Response
+        connection_info = requests.post(
+            "https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API_V2),
+            json=req_data,
+            verify=False,
+        )  # type: requests.models.Response
     else:
-        req_data = {"token": token,
-                    "hostname": socket.gethostname(),
-                    "port": cluster_agent_port,
-                    "callback": callback_token}
+        req_data = {
+            "token": token,
+            "hostname": socket.gethostname(),
+            "port": cluster_agent_port,
+            "callback": callback_token,
+        }
 
         # TODO: enable ssl verification
-        connection_info = requests.post("https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API),
-                                        json=req_data,
-                                        verify=False)
+        connection_info = requests.post(
+            "https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API),
+            json=req_data,
+            verify=False,
+        )
 
     if connection_info.status_code != 200:
         message = "Error code {}.".format(connection_info.status_code)  # type: str
@@ -130,16 +134,20 @@ def get_etcd_client_cert(master_ip, master_port, token):
     :param token: token to contact the master with
     """
     cer_req_file = "{}/certs/server.remote.csr".format(snapdata_path)
-    cmd_cert = "openssl req -new -sha256 -key {SNAP_DATA}/certs/server.key -out {csr} " \
-               "-config {SNAP_DATA}/certs/csr.conf".format(SNAP_DATA=snapdata_path, csr=cer_req_file)
+    cmd_cert = (
+        "openssl req -new -sha256 -key {SNAP_DATA}/certs/server.key -out {csr} "
+        "-config {SNAP_DATA}/certs/csr.conf".format(SNAP_DATA=snapdata_path, csr=cer_req_file)
+    )
     subprocess.check_call(cmd_cert.split())
     with open(cer_req_file) as fp:
         csr = fp.read()
         req_data = {'token': token, 'request': csr}
         # TODO: enable ssl verification
-        signed = requests.post("https://{}:{}/{}/sign-cert".format(master_ip, master_port, CLUSTER_API),
-                               json=req_data,
-                               verify=False)
+        signed = requests.post(
+            "https://{}:{}/{}/sign-cert".format(master_ip, master_port, CLUSTER_API),
+            json=req_data,
+            verify=False,
+        )
         if signed.status_code != 200:
             print("Failed to sign certificate. {}".format(signed.json()["error"]))
             exit(1)
@@ -302,8 +310,10 @@ def reset_current_etcd_installation():
     os.remove(server_cert_file)
 
     for config_file in ["kubelet", "flanneld", "kube-proxy"]:
-        shutil.copyfile("{}/default-args/{}".format(snap_path, config_file),
-                        "{}/args/{}".format(snapdata_path, config_file))
+        shutil.copyfile(
+            "{}/default-args/{}".format(snap_path, config_file),
+            "{}/args/{}".format(snapdata_path, config_file),
+        )
 
     for user in ["proxy", "kubelet"]:
         config = "{}/credentials/{}.config".format(snapdata_path, user)
@@ -335,37 +345,51 @@ def reset_current_dqlite_installation():
     subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
     time.sleep(10)
 
-    if len(my_ep) > 0 and "127.0.0.1" not in my_ep[0]:
-        for ep in other_ep:
-            try:
-                subprocess.check_output("curl -X 'DELETE' https://{}/cluster/{} --cacert {} --key {} --cert {}  -k -s"
-                                        .format(ep, my_ep[0], cluster_cert_file, cluster_key_file, cluster_cert_file)
-                                        .split())
-                break
-            except subprocess.CalledProcessError:
-                print("Contacting node {} failed.".format(ep))
+    delete_dqlite_node(my_ep, other_ep)
 
+    print("Generating new cluster certificates.", flush=True)
     shutil.rmtree(cluster_dir, ignore_errors=True)
     os.mkdir(cluster_dir)
     if os.path.isfile("{}/cluster.crt".format(cluster_backup_dir)):
         # reuse the certificates we had before the cluster formation
-        shutil.copy("{}/cluster.crt".format(cluster_backup_dir), "{}/cluster.crt".format(cluster_dir))
-        shutil.copy("{}/cluster.key".format(cluster_backup_dir), "{}/cluster.key".format(cluster_dir))
+        shutil.copy(
+            "{}/cluster.crt".format(cluster_backup_dir), "{}/cluster.crt".format(cluster_dir)
+        )
+        shutil.copy(
+            "{}/cluster.key".format(cluster_backup_dir), "{}/cluster.key".format(cluster_dir)
+        )
     else:
-        # This nod never joined a cluster. A cluster was formed around it.
+        # This node never joined a cluster. A cluster was formed around it.
         hostname = socket.gethostname()  # type: str
         ip = '127.0.0.1'  # type: str
-        shutil.copy('{}/microk8s-resources/certs/csr-dqlite.conf.template'.format(snap_path),
-                    '{}/var/tmp/csr-dqlite.conf'.format(snapdata_path))
-        subprocess.check_call("{}/bin/sed -i s/HOSTNAME/{}/g {}/var/tmp/csr-dqlite.conf"
-                              .format(snap_path, hostname, snapdata_path).split())
-        subprocess.check_call("{}/bin/sed -i s/HOSTIP/{}/g  {}/var/tmp/csr-dqlite.conf"
-                              .format(snap_path, ip, snapdata_path).split())
-        subprocess.check_call('{0}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes '
-                              '-keyout {1}/var/kubernetes/backend/cluster.key '
-                              '-out {1}/var/kubernetes/backend/cluster.crt '
-                              '-subj "/CN=k8s" -config {1}/var/tmp/csr-dqlite.conf -extensions v3_ext'
-                              .format(snap_path, snapdata_path).split())
+        shutil.copy(
+            '{}/microk8s-resources/certs/csr-dqlite.conf.template'.format(snap_path),
+            '{}/var/tmp/csr-dqlite.conf'.format(snapdata_path),
+        )
+        subprocess.check_call(
+            "{}/bin/sed -i s/HOSTNAME/{}/g {}/var/tmp/csr-dqlite.conf".format(
+                snap_path, hostname, snapdata_path
+            ).split(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.check_call(
+            "{}/bin/sed -i s/HOSTIP/{}/g  {}/var/tmp/csr-dqlite.conf".format(
+                snap_path, ip, snapdata_path
+            ).split(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.check_call(
+            '{0}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes '
+            '-keyout {1}/var/kubernetes/backend/cluster.key '
+            '-out {1}/var/kubernetes/backend/cluster.crt '
+            '-subj "/CN=k8s" -config {1}/var/tmp/csr-dqlite.conf -extensions v3_ext'.format(
+                snap_path, snapdata_path
+            ).split(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
     # TODO make this port configurable
     init_data = {'Address': '127.0.0.1:19001'}  # type: Dict[str, str]
@@ -379,9 +403,18 @@ def reset_current_dqlite_installation():
     time.sleep(10)
     while waits > 0:
         try:
-            subprocess.check_output("{}/microk8s-kubectl.wrapper get service/kubernetes".format(snap_path).split())
-            subprocess.check_output("{}/microk8s-kubectl.wrapper apply -f {}/args/cni-network/cni.yaml"
-                                  .format(snap_path, snapdata_path).split())
+            subprocess.check_call(
+                "{}/microk8s-kubectl.wrapper get service/kubernetes".format(snap_path).split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            subprocess.check_call(
+                "{}/microk8s-kubectl.wrapper apply -f {}/args/cni-network/cni.yaml".format(
+                    snap_path, snapdata_path
+                ).split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
             break
         except subprocess.CalledProcessError:
             print(".", end=" ", flush=True)
@@ -389,6 +422,25 @@ def reset_current_dqlite_installation():
             waits -= 1
     print(" ")
     restart_all_services()
+
+
+def delete_dqlite_node(delete_node, dqlite_ep):
+    if len(delete_node) > 0 and "127.0.0.1" not in delete_node[0]:
+        for ep in dqlite_ep:
+            try:
+                url = 'https://{}/cluster/{}'.format(ep, delete_node[0])
+                resp = requests.delete(
+                    url, cert=(cluster_cert_file, cluster_key_file), verify=False
+                )
+                if resp.status_code != 200:
+                    print("Contacting node {} failed. Exit code {}.".format(ep, resp.status_code))
+                    exit(2)
+                else:
+                    break
+            except Exception as err:
+                print("Contacting node {} failed. Error:".format(ep))
+                print(repr(err))
+                exit(2)
 
 
 def get_dqlite_endpoints():
@@ -399,9 +451,11 @@ def get_dqlite_endpoints():
     """
     with open("{}/info.yaml".format(cluster_dir)) as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
-    out = subprocess.check_output("curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s"
-                                  .format(data['Address'], cluster_cert_file, cluster_key_file,
-                                          cluster_cert_file).split())
+    out = subprocess.check_output(
+        "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
+            data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
+        ).split()
+    )
     data = json.loads(out.decode())
     ep_addresses = []
     for ep in data:
@@ -447,6 +501,27 @@ def remove_kubelet_token(node):
     shutil.copyfile(backup_file, file)
 
 
+def replace_admin_token(token):
+    """
+    Replaces the admin token in the known tokens
+
+    :param token: the admin token
+    """
+    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
+    backup_file = "{}.backup".format(file)
+    # That is a critical section. We need to protect it.
+    with open(backup_file, 'w') as back_fp:
+        with open(file, 'r') as fp:
+            for _, line in enumerate(fp):
+                if "admin,admin,\"system:masters\"" in line:
+                    continue
+                back_fp.write("{}".format(line))
+            back_fp.write("{},admin,admin,\"system:masters\"\n".format(token))
+
+    try_set_file_permissions(backup_file)
+    shutil.copyfile(backup_file, file)
+
+
 def remove_callback_token(node):
     """
     Remove a callback token
@@ -474,19 +549,65 @@ def remove_callback_token(node):
 def remove_node(node):
     try:
         # Make sure this node exists
-        subprocess.check_call("{}/microk8s-kubectl.wrapper get no {}".format(snap_path, node).split(),
-                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.check_call(
+            "{}/microk8s-kubectl.wrapper get no {}".format(snap_path, node).split(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
     except subprocess.CalledProcessError:
         print("Node {} does not exist.".format(node))
         exit(1)
 
     remove_kubelet_token(node)
     remove_callback_token(node)
-    subprocess.check_call("{}/microk8s-kubectl.wrapper delete no {}".format(snap_path, node).split(),
-                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.check_call(
+        "{}/microk8s-kubectl.wrapper delete no {}".format(snap_path, node).split(),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
-def get_token(name, tokens_file = "known_tokens.csv"):
+def remove_dqlite_node(node, force=False):
+    try:
+        # Make sure this node exists
+        node_info = subprocess.check_output(
+            "{}/microk8s-kubectl.wrapper get no {} -o json".format(snap_path, node).split()
+        )
+        info = json.loads(node_info.decode())
+        node_address = None
+        for a in info['status']['addresses']:
+            if a['type'] == 'InternalIP':
+                node_address = a['address']
+                break
+
+        if not node_address:
+            print("Could nod detect the IP of {}.".format(node))
+            exit(1)
+
+        node_ep = None
+        my_ep, other_ep = get_dqlite_endpoints()
+        for ep in other_ep:
+            if ep.startswith("{}:".format(node_address)):
+                node_ep = ep
+
+        if node_ep and force:
+            delete_dqlite_node([node_ep], my_ep)
+        elif node_ep and not force:
+            print(
+                "Removal failed. Node {} is registered with dqlite. Please, run first 'microk8s leave' on the departing node. \n"
+                "If the node is not available anymore and will never attempt to join the cluster in the future use the '--force' flag \n"
+                "to unregister the node while removing it.".format(node)
+            )
+            exit(1)
+
+    except subprocess.CalledProcessError:
+        print("Node {} does not exist in Kubernetes.".format(node))
+        exit(1)
+
+    remove_node(node)
+
+
+def get_token(name, tokens_file="known_tokens.csv"):
     """
     Get token from known_tokens file
 
@@ -534,16 +655,20 @@ def store_cluster_certs(cluster_cert, cluster_key):
     try_set_file_permissions(cluster_key_file)
 
 
-def create_admin_kubeconfig(ca):
+def create_admin_kubeconfig(ca, ha_admin_token=None):
     """
     Create a kubeconfig file. The file in stored under credentials named after the admin
 
     :param ca: the ca
+    :param ha_admin_token: the ha_cluster_token
     """
-    token = get_token("admin", "basic_auth.csv")
-    if not token:
-        print("Error, could not locate admin token. Joining cluster failed.")
-        exit(2)
+    if not ha_admin_token:
+        token = get_token("admin", "basic_auth.csv")
+        if not token:
+            print("Error, could not locate admin token. Joining cluster failed.")
+            exit(2)
+    else:
+        token = ha_admin_token
     assert token is not None
     config_template = "{}/microk8s-resources/{}".format(snap_path, "client.config.template")
     config = "{}/credentials/client.config".format(snapdata_path)
@@ -552,12 +677,15 @@ def create_admin_kubeconfig(ca):
     ca_line = ca_one_line(ca)
     with open(config_template, 'r') as tfp:
         with open(config, 'w+') as fp:
-            config_txt = tfp.read()
-            config_txt = config_txt.replace("CADATA", ca_line)
-            config_txt = config_txt.replace("NAME", "admin")
-            config_txt = config_txt.replace("AUTHTYPE", "password")
-            config_txt = config_txt.replace("PASSWORD", token)
-            fp.write(config_txt)
+            for _, config_txt in enumerate(tfp):
+                if config_txt.strip().startswith("username:"):
+                    continue
+                else:
+                    config_txt = config_txt.replace("CADATA", ca_line)
+                    config_txt = config_txt.replace("NAME", "admin")
+                    config_txt = config_txt.replace("AUTHTYPE", "token")
+                    config_txt = config_txt.replace("PASSWORD", token)
+                    fp.write(config_txt)
         try_set_file_permissions(config)
 
 
@@ -577,11 +705,19 @@ def restart_all_services():
     """
     Restart all services
     """
-    subprocess.check_call("{}/microk8s-stop.wrapper".format(snap_path).split())
+    subprocess.check_call(
+        "{}/microk8s-stop.wrapper".format(snap_path).split(),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
     waits = 10
     while waits > 0:
         try:
-            subprocess.check_call("{}/microk8s-start.wrapper".format(snap_path).split())
+            subprocess.check_call(
+                "{}/microk8s-start.wrapper".format(snap_path).split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
             break
         except subprocess.CalledProcessError:
             time.sleep(5)
@@ -617,9 +753,11 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     print("Waiting for node to join the cluster.", end=" ", flush=True)
     while waits > 0:
         try:
-            out = subprocess.check_output("curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s"
-                                    .format(data['Address'], cluster_cert_file, cluster_key_file,
-                                            cluster_cert_file).split());
+            out = subprocess.check_output(
+                "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
+                    data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
+                ).split()
+            )
             if data['Address'] in out.decode():
                 break
             else:
@@ -632,6 +770,10 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
             time.sleep(5)
             waits -= 1
     print(" ")
+
+    with open("{}//certs/csr.conf".format(snapdata_path), 'w') as f:
+        f.write("changeme")
+
     restart_all_services()
 
 
@@ -651,24 +793,26 @@ def join_dqlite(connection_parts):
 
     store_cert("ca.crt", info["ca"])
     store_cert("ca.key", info["ca_key"])
-    store_cert("server.crt", info["server_cert"])
-    store_cert("server.key", info["server_cert_key"])
     store_cert("serviceaccount.key", info["service_account_key"])
-    store_cert("front-proxy-client.crt", info["proxy_cert"])
-    store_cert("front-proxy-client.key", info["proxy_cert_key"])
     # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
-    for component in [("kube-proxy", "kubeproxy", "proxy.config"),
-                      ("kubelet", "kubelet", "kubelet.config"),
-                      ("kube-controller-manager", "controller", "controller.config"),
-                      ("kube-scheduler", "scheduler", "scheduler.config")]:
+    for component in [
+        ("kube-proxy", "kubeproxy", "proxy.config"),
+        ("kubelet", "kubelet", "kubelet.config"),
+        ("kube-controller-manager", "controller", "controller.config"),
+        ("kube-scheduler", "scheduler", "scheduler.config"),
+    ]:
         component_token = get_token(component[0])
         if not component_token:
             print("Error, could not locate {} token. Joining cluster failed.".format(component[0]))
             exit(3)
         assert token is not None
         # TODO make this configurable
-        create_kubeconfig(component_token, info["ca"], "127.0.0.1", "16443", component[2], component[1])
-    create_admin_kubeconfig(info["ca"])
+        create_kubeconfig(
+            component_token, info["ca"], "127.0.0.1", "16443", component[2], component[1]
+        )
+    if "admin_token" in info:
+        replace_admin_token(info["admin_token"])
+    create_admin_kubeconfig(info["ca"], info["admin_token"])
     store_base_kubelet_args(info["kubelet_args"])
     store_callback_token(info["callback_token"])
 
@@ -700,22 +844,30 @@ def join_etcd(connection_parts):
 
 if __name__ == "__main__":
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "h", ["help"])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "hf", ["help", "force"])
     except getopt.GetoptError as err:
         print(err)  # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
+
+    force = False
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
             sys.exit(1)
+        elif o in ("-f", "--force"):
+            force = True
         else:
             print("Unhandled option")
             sys.exit(1)
 
     if args[0] == "reset":
         if len(args) > 1:
-            remove_node(args[1])
+            if is_node_running_dqlite():
+                remove_dqlite_node(args[1], force)
+            else:
+                remove_node(args[1])
+
         else:
             if is_node_running_dqlite():
                 reset_current_dqlite_installation()

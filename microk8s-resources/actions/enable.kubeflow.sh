@@ -9,10 +9,16 @@ import sys
 import tempfile
 import textwrap
 import time
-from itertools import count
 from distutils.util import strtobool
+from itertools import count
+from urllib.error import URLError
+from urllib.request import urlopen
+from urllib.parse import urlparse
 
 MIN_MEM_GB = 14
+CONNECTIVITY_CHECKS = [
+    'https://api.jujucharms.com/charmstore/v5/~kubeflow-charmers/ambassador-88/icon.svg',
+]
 
 
 def run(*args, die=True, debug=False, stdout=True):
@@ -24,11 +30,7 @@ def run(*args, die=True, debug=False, stdout=True):
         print("\033[;1;32m+ %s\033[;0;0m" % " ".join(args))
 
     result = subprocess.run(
-        args,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
+        args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
     )
 
     try:
@@ -54,9 +56,7 @@ def run(*args, die=True, debug=False, stdout=True):
 
 
 def get_random_pass():
-    return "".join(
-        random.choice(string.ascii_uppercase + string.digits) for _ in range(30)
-    )
+    return "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
 
 
 def juju(*args, **kwargs):
@@ -106,6 +106,7 @@ def get_hostname():
 
 def main():
     password = os.environ.get("KUBEFLOW_AUTH_PASSWORD") or get_random_pass()
+    bundle = os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-195"
     channel = os.environ.get("KUBEFLOW_CHANNEL") or "stable"
     no_proxy = os.environ.get("KUBEFLOW_NO_PROXY") or None
     hostname = os.environ.get("KUBEFLOW_HOSTNAME") or None
@@ -129,11 +130,23 @@ def main():
         )
         sys.exit(1)
 
+    for url in CONNECTIVITY_CHECKS:
+        try:
+            response = urlopen(url)
+        except URLError:
+            host = urlparse(url).netloc
+            print("Couldn't contact %s" % host)
+            print("Please check your network connectivity before enabling Kubeflow.")
+            sys.exit(1)
+
+        if response.status != 200:
+            print("URL connectivity check failed with response %s" % response.status)
+            print("Please check your network connectivity before enabling Kubeflow.")
+            sys.exit(1)
+
     password_overlay = {
         "applications": {
-            "dex-auth": {
-                "options": {"static-username": "admin", "static-password": password}
-            },
+            "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
             "katib-db": {"options": {"root_password": get_random_pass()}},
             "modeldb-db": {"options": {"root_password": get_random_pass()}},
             "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
@@ -187,65 +200,13 @@ def main():
         json.dump(password_overlay, f)
         f.flush()
 
-        juju("deploy", "cs:kubeflow", "--channel", channel, "--overlay", f.name)
-
-    for _ in range(240):
-        try:
-            run(
-                "microk8s-kubectl.wrapper",
-                "wait",
-                "--namespace=kubeflow",
-                "--for=condition=ready",
-                "pod/cert-manager-webhook-operator-0",
-                die=False,
-            )
-            break
-        except subprocess.CalledProcessError:
-            time.sleep(5)
-    else:
-        print("Waited too long for cert manager webhook operator pod to appear.")
-        sys.exit(1)
-
-    run(
-        "microk8s-kubectl.wrapper",
-        "patch",
-        "role",
-        "--namespace=kubeflow",
-        "cert-manager-webhook-operator",
-        "-p",
-        json.dumps(
-            {
-                "apiVersion": "rbac.authorization.k8s.io/v1",
-                "kind": "Role",
-                "metadata": {"name": "cert-manager-webhook-operator"},
-                "rules": [
-                    {
-                        "apiGroups": [""],
-                        "resources": ["pods"],
-                        "verbs": ["get", "list"],
-                    },
-                    {
-                        "apiGroups": [""],
-                        "resources": ["pods/exec"],
-                        "verbs": ["create"],
-                    },
-                    {
-                        "apiGroups": [""],
-                        "resources": ["secrets"],
-                        "verbs": ["get", "list"],
-                    },
-                ],
-            }
-        ),
-    )
+        juju("deploy", bundle, "--channel", channel, "--overlay", f.name)
 
     print("Kubeflow deployed.")
     print("Waiting for operator pods to become ready.")
     wait_seconds = 15
     for i in count():
-        status = json.loads(
-            juju("status", "-m", "uk8s:kubeflow", "--format=json", stdout=False)
-        )
+        status = json.loads(juju("status", "-m", "uk8s:kubeflow", "--format=json", stdout=False))
         unready_apps = [
             name
             for name, app in status["applications"].items()
@@ -271,6 +232,33 @@ def main():
         "--timeout=-1s",
         "--all",
         debug=debug,
+    )
+
+    with tempfile.NamedTemporaryFile(mode='w+') as f:
+        json.dump(
+            {
+                'apiVersion': 'v1',
+                'kind': 'Service',
+                'metadata': {'labels': {'juju-app': 'pipelines-api'}, 'name': 'ml-pipeline',},
+                'spec': {
+                    'ports': [
+                        {'name': 'grpc', 'port': 8887, 'protocol': 'TCP', 'targetPort': 8887},
+                        {'name': 'http', 'port': 8888, 'protocol': 'TCP', 'targetPort': 8888},
+                    ],
+                    'selector': {'juju-app': 'pipelines-api'},
+                    'type': 'ClusterIP',
+                },
+            },
+            f,
+        )
+        f.flush()
+        run('microk8s-kubectl.wrapper', 'apply', '-f', f.name)
+
+    run(
+        'microk8s-kubectl.wrapper',
+        'delete',
+        'mutatingwebhookconfigurations/katib-mutating-webhook-config',
+        'validatingwebhookconfigurations/katib-validating-webhook-config',
     )
 
     hostname = hostname or get_hostname()

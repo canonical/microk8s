@@ -22,11 +22,12 @@ jobs:
         sudo /snap/bin/lxd.migrate -yes
         sudo /snap/bin/lxd waitready
         sudo /snap/bin/lxd init --auto
+        sudo usermod --append --groups lxd $USER
     - name: Install snapcraft
       run: sudo snap install snapcraft --classic
     - name: Build snap
       run: |
-        sudo snapcraft --use-lxd
+        sg lxd -c 'snapcraft --use-lxd'
         sudo mv microk8s*.snap microk8s.snap
     - name: Uploading snap
       uses: actions/upload-artifact@v1
