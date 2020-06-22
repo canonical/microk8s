@@ -641,9 +641,9 @@ spec:
             # Disable IPv6 on Kubernetes.
             - name: FELIX_IPV6SUPPORT
               value: "false"
-            # Set Felix logging to "info"
+            # Set Felix logging to "error"
             - name: FELIX_LOGSEVERITYSCREEN
-              value: "info"
+              value: "error"
             - name: FELIX_HEALTHENABLED
               value: "true"
           securityContext:
