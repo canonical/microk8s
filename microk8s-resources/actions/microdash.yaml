@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: microdash
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: microdash
+  name: microdash
+  namespace: microdash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microdash
+  template:
+    metadata:
+      labels:
+        app: microdash
+    spec:
+      containers:
+      - image: sastix/microdash:1.0
+        imagePullPolicy: Always
+        name: microdash
+        env:
+          - name: HOST_ACCESS_IP
+            valueFrom:
+              secretKeyRef:
+                name: cb-token
+                key: host_access_ip
+          - name: K8S_USER
+            valueFrom:
+              secretKeyRef:
+                name: cb-token
+                key: microdash_user
+          - name: K8S_USER_PASS
+            valueFrom:
+              secretKeyRef:
+                name: cb-token
+                key: microdash_pass
+          - name: CALLBACK_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cb-token
+                key: token.txt
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microdash-service
+  namespace: microdash
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: microdash
