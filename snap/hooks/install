@@ -89,3 +89,20 @@ done
 
 init_cluster
 
+mkdir -p "${SNAP_DATA}/var/lock"
+set_service_not_expected_to_start etcd
+set_service_not_expected_to_start flanneld
+
+touch "${SNAP_DATA}/var/lock/ha-cluster"
+
+RESOURCES="$SNAP/upgrade-scripts/000-switch-to-calico/resources"
+BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
+
+mkdir -p "$BACKUP_DIR"
+
+mkdir -p "$BACKUP_DIR/args/cni-network/"
+cp "$SNAP_DATA"/args/cni-network/* "$BACKUP_DIR/args/cni-network/" 2>/dev/null || true
+rm -rf "$SNAP_DATA"/args/cni-network/*
+cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
+mkdir -p "$SNAP_DATA/opt/cni/bin/"
+cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
