@@ -296,7 +296,7 @@ then
   chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ || true
 fi
 
-if ! [ -L "${SNAP_DATA}/opt/cni/bin/flanneld" ]
+if ! [ -e "${SNAP_DATA}/opt/cni/bin/flanneld" ]
 then
   # cover situation where cilium was installed prior to this update
   if [ -f "${SNAP_DATA}/opt/cni/bin/loopback" ] && [ -f "${SNAP}/opt/cni/bin/loopback" ]; then
@@ -422,3 +422,23 @@ then
   refresh_opt_in_config cluster-cidr 10.1.0.0/16 kube-proxy
   snapctl restart ${SNAP_NAME}.daemon-proxy
 fi
+
+if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ]
+then
+  echo "Setting up the CNI"
+  start_timer="$(date +%s)"
+  # Wait up to two minutes for the apiserver to come up.
+  # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
+  timeout="120"
+  KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
+  while ! ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null
+  do
+    sleep 5
+    now="$(date +%s)"
+    if [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
+      break
+    fi
+  done
+  $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+fi
+
