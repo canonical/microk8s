@@ -153,9 +153,9 @@ microk8s-addons:
       - arm64
 
     - name: "microdash"
-        description: "A dashboard for MicroK8s"
-        version: "1.0.0"
-        check_status: "pod/microdash"
-        supported_architectures:
-          - amd64
-          - arm64
+      description: "A dashboard for MicroK8s"
+      version: "1.0.0"
+      check_status: "pod/microdash"
+      supported_architectures:
+      - amd64
+      - arm64
