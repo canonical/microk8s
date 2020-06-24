@@ -1,0 +1,30 @@
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net1
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "name": "net1",
+    "type": "ptp",
+    "ipam": {
+      "type": "host-local",
+      "subnet": "10.111.111.0/24"
+    }
+  }'
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net2
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "name": "net2",
+    "type": "ptp",
+    "ipam": {
+      "type": "host-local",
+      "subnet": "10.222.222.0/24"
+    }
+  }'

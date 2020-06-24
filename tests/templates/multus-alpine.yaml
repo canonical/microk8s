@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: multus-alpine
+  name: multus-alpine
+  namespace: default
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+      {
+         "name" : "net1",
+         "interface": "eth1",
+         "ips": ["10.111.111.111"]
+      },
+      {
+         "name" : "net2",
+         "interface": "eth2",
+         "ips": ["10.222.222.222"]
+      }
+    ]'
+spec:
+  containers:
+    - name: multus-alpine
+      image: alpine:latest
+      command: ["sh"]
+      args: ["-c", "while [ true ]; do ifconfig; sleep 3; done"]
+  restartPolicy: Always

@@ -354,6 +354,13 @@ then
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
+if [ -f "${SNAP_DATA}/args/cni-network/00-multus.conf" ]
+then
+  echo "Multus is enabled we need to reconfigure it."
+  ${SNAP}/actions/disable.multus.sh
+  ${SNAP}/actions/enable.multus.sh
+fi
+
 if [ -L "${SNAP_DATA}/bin/cilium" ]
 then
   echo "Cilium is enabled we need to reconfigure it."

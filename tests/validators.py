@@ -396,6 +396,27 @@ def validate_cilium():
     kubectl("delete -f {}".format(manifest))
 
 
+def validate_multus():
+    """
+    Validate multus by deploying alpine pod with 3 interfaces.
+    """
+
+    wait_for_installation()
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    networks = os.path.join(here, "templates", "multus-networks.yaml")
+    kubectl("create -f {}".format(my_nets))
+    manifest = os.path.join(here, "templates", "multus-alpine.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=multus-alpine")
+    output = kubectl("exec multus-alpine -- ifconfig eth1", err_out='no')
+    assert "10.111.111.111" in output
+    output = kubectl("exec multus-alpine -- ifconfig eth2", err_out='no')
+    assert "10.222.222.222" in output
+    kubectl("delete -f {}".format(manifest))
+    kubectl("delete -f {}".format(networks))
+
+
 def validate_kubeflow():
     """
     Validate kubeflow
