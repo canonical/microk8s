@@ -1,4 +1,5 @@
 import yaml
+import json
 import os
 import subprocess
 import sys
@@ -57,8 +58,8 @@ def is_ha_enabled():
 
 def get_dqlite_info():
     cluster_dir = os.path.expandvars("${SNAP_DATA}/var/kubernetes/backend")
-    cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
-    cluster_key_file = "{}/cluster.key".format(cluster_dir)
+    snap_path = os.environ.get('SNAP')
+
     info = []
 
     if not is_ha_enabled():
@@ -70,23 +71,25 @@ def get_dqlite_info():
             with open("{}/info.yaml".format(cluster_dir), mode='r') as f:
                 data = yaml.load(f, Loader=yaml.FullLoader)
                 out = subprocess.check_output(
-                    "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
-                        data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
-                    ).split()
+                    "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+                    "-k {dbdir}/cluster.key -f json k8s .cluster".format(
+                        snappath=snap_path, dbdir=cluster_dir
+                    ).split(),
+                    timeout=4,
                 )
                 if data['Address'] in out.decode():
                     break
                 else:
                     time.sleep(5)
                     waits -= 1
-        except subprocess.CalledProcessError:
-            time.sleep(5)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            time.sleep(2)
             waits -= 1
 
     if waits == 0:
         return info
 
-    nodes = yaml.safe_load(out)
+    nodes = json.loads(out.decode())
     for n in nodes:
         if n["Role"] == 0:
             info.append((n["Address"], "voter"))

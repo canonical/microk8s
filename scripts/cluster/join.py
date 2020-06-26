@@ -430,15 +430,15 @@ def delete_dqlite_node(delete_node, dqlite_ep):
     if len(delete_node) > 0 and "127.0.0.1" not in delete_node[0]:
         for ep in dqlite_ep:
             try:
-                url = 'https://{}/cluster/{}'.format(ep, delete_node[0])
-                resp = requests.delete(
-                    url, cert=(cluster_cert_file, cluster_key_file), verify=False
+                cmd = (
+                    "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+                    "-k {dbdir}/cluster.key -f json k8s".format(
+                        snappath=snap_path, dbdir=cluster_dir
+                    ).split()
                 )
-                if resp.status_code != 200:
-                    print("Contacting node {} failed. Exit code {}.".format(ep, resp.status_code))
-                    exit(2)
-                else:
-                    break
+                cmd.append(".remove {}".format(delete_node[0]))
+                subprocess.check_output(cmd)
+                break
             except Exception as err:
                 print("Contacting node {} failed. Error:".format(ep))
                 print(repr(err))
@@ -451,11 +451,10 @@ def get_dqlite_endpoints():
 
     :return: two lists with the endpoints
     """
-    with open("{}/info.yaml".format(cluster_dir)) as f:
-        data = yaml.load(f, Loader=yaml.FullLoader)
     out = subprocess.check_output(
-        "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
-            data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
+        "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+        "-k {dbdir}/cluster.key -f json k8s .cluster".format(
+            snappath=snap_path, dbdir=cluster_dir
         ).split()
     )
     data = json.loads(out.decode())
@@ -760,20 +759,22 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     while waits > 0:
         try:
             out = subprocess.check_output(
-                "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
-                    data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
-                ).split()
+                "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+                "-k {dbdir}/cluster.key -f json k8s .cluster".format(
+                    snappath=snap_path, dbdir=cluster_dir
+                ).split(),
+                timeout=4,
             )
-            if data['Address'] in out.decode():
+            if host in out.decode():
                 break
             else:
                 print(".", end=" ", flush=True)
                 time.sleep(5)
                 waits -= 1
 
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             print("..", end=" ", flush=True)
-            time.sleep(5)
+            time.sleep(2)
             waits -= 1
     print(" ")
 

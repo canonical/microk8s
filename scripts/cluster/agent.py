@@ -457,8 +457,6 @@ def get_dqlite_voters():
     """
     snapdata_path = "/var/snap/microk8s/current"
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
-    cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
-    cluster_key_file = "{}/cluster.key".format(cluster_dir)
 
     waits = 10
     print("Waiting for access to cluster.", end=" ", flush=True)
@@ -467,9 +465,11 @@ def get_dqlite_voters():
             with open("{}/info.yaml".format(cluster_dir)) as f:
                 data = yaml.load(f, Loader=yaml.FullLoader)
                 out = subprocess.check_output(
-                    "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
-                        data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
-                    ).split()
+                    "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+                    "-k {dbdir}/cluster.key -f json k8s .cluster".format(
+                        snappath=snap_path, dbdir=cluster_dir
+                    ).split(),
+                    timeout=4,
                 )
                 if data['Address'] in out.decode():
                     break
@@ -477,15 +477,15 @@ def get_dqlite_voters():
                     print(".", end=" ", flush=True)
                     time.sleep(5)
                     waits -= 1
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             print("..", end=" ", flush=True)
-            time.sleep(5)
+            time.sleep(2)
             waits -= 1
     print(" ")
     if waits == 0:
         raise Exception("Could not get cluster info")
 
-    nodes = yaml.safe_load(out)
+    nodes = json.loads(out.decode())
     voters = []
     for n in nodes:
         if n["Role"] == 0:
