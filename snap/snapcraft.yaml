@@ -385,9 +385,13 @@ parts:
       source: https://github.com/sergiusens/snapcraft-preload.git
       plugin: cmake
       build-packages:
+        - curl
         - on amd64:
           - gcc-multilib
           - g++-multilib
+      stage-packages:
+        - on amd64:
+          - lib32stdc++6
   libnftnl:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
