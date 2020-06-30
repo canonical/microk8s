@@ -9,8 +9,8 @@ CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
 
 if [ -e "$BACKUP_DIR/args/cni-network/flannel.conflist" ]; then
-  rm -rf "$SNAP_DATA"/args/cni-network/*
-  cp "$BACKUP_DIR"/args/cni-network/* "$SNAP_DATA/args/cni-network/"
+  find "$SNAP_DATA"/args/cni-network/* -not -name '*multus*' -exec rm -f {} \;
+  cp -rf "$BACKUP_DIR"/args/cni-network/* "$SNAP_DATA/args/cni-network/"
 fi
 
 echo "Restarting kubelet"
@@ -35,12 +35,5 @@ echo "Restarting flannel"
 set_service_expected_to_start flanneld
 remove_vxlan_interfaces
 snapctl start ${SNAP_NAME}.daemon-flanneld
-
-echo "Restarting kubelet"
-if grep -qE "bin_dir.*SNAP_DATA}\/" $SNAP_DATA/args/containerd-template.toml; then
-  echo "Restarting containerd"
-  "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP_DATA}/opt;bin_dir = "${SNAP}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
-  snapctl restart ${SNAP_NAME}.daemon-containerd
-fi
 
 echo "Calico rolledback"

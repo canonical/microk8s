@@ -45,4 +45,4 @@ fi
 
 # This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/flanneld))"
-exec "$SNAP/opt/cni/bin/flanneld" "${args[@]}"
+exec "$SNAP_DATA/opt/cni/bin/flanneld" "${args[@]}"

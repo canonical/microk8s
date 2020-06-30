@@ -11,6 +11,7 @@ from validators import (
     validate_fluentd,
     validate_jaeger,
     validate_cilium,
+    validate_multus,
     validate_linkerd,
     validate_gpu,
     validate_kubeflow,
@@ -99,6 +100,12 @@ class TestLiveAddons(object):
         Validates Cilium works.
         """
         validate_cilium()
+
+    def test_multus(self):
+        """
+        Validates Multus works.
+        """
+        validate_multus()
 
     def test_linkerd(self):
         """

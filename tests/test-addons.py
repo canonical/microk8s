@@ -18,6 +18,7 @@ from validators import (
     validate_linkerd,
     validate_rbac,
     validate_cilium,
+    validate_multus,
     validate_kubeflow,
 )
 from utils import (
@@ -148,6 +149,23 @@ class TestAddons(object):
         print("Disabling Cilium")
         microk8s_disable("cilium")
 
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping multus tests as we are under time pressure",
+    )
+    def test_multus(self):
+        """
+        Sets up and validates Multus.
+        """
+        print("Enabling Multus")
+        p = Popen(
+            "/snap/bin/microk8s.enable multus".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT
+        )
+        print("Validating Multus")
+        validate_multus()
+        print("Disabling Multus")
+        microk8s_disable("multus")
+
     def test_metrics_server(self):
         """
         Test the metrics server.
@@ -166,7 +184,7 @@ class TestAddons(object):
     )
     @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping cilium tests as we are under time pressure",
+        reason="Skipping jaeger, prometheus and fluentd tests as we are under time pressure",
     )
     def test_monitoring_addons(self):
         """

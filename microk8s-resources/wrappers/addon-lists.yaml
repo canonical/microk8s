@@ -113,6 +113,14 @@ microk8s-addons:
       supported_architectures:
       - amd64
 
+    - name: "multus"
+      description: "Multus CNI enables attaching multiple network interfaces to pods"
+      version: "3.4.2"
+      check_status: "${SNAP_DATA}/args/cni-network/00-multus.conf"
+      supported_architectures:
+      - amd64
+      - arm64
+
     - name: "helm"
       description: "Helm 2 - the package manager for Kubernetes"
       version: "2.16.0"
