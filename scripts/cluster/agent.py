@@ -355,22 +355,20 @@ def configure():
     """
     Web call to configure the node
     """
+    # validate the callback token
+    ct = callback_token_validation()
+    if not ct["valid"]: return ct["response"]
+
+    # get the configuration
     if request.headers['Content-Type'] == 'application/json':
-        callback_token = request.json['callback']
         configuration = request.json
     else:
-        callback_token = request.form['callback']
         configuration = json.loads(request.form['configuration'])
-
-    callback_token = callback_token.strip()
-    if not is_valid(callback_token, callback_token_file):
-        error_msg = {"error": "Invalid token"}
-        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
     # We expect something like this:
     '''
     {
-      "callback": "xyztoken"
+      "callback": "xyztoken",
       "service":
       [
         {
@@ -444,6 +442,66 @@ def configure():
     resp_date = {"result": "ok"}
     resp = Response(json.dumps(resp_date), status=200, mimetype='application/json')
     return resp
+
+
+@app.route('/{}/services'.format(CLUSTER_API), methods=['POST'])
+def services():
+    """
+    Web call to get all microk8s services
+    """
+    ct = callback_token_validation()
+    if not ct["valid"]: return ct["response"]
+    output = {"services": ["apiserver", "apiserver-kicker", "cluster-agent", "containerd", "controller-manager", "etcd",
+                           "flanneld", "kubelet", "proxy", "scheduler"]}
+    return app.response_class(response=json.dumps(output, sort_keys=False, indent=4), status=200,
+                              mimetype='application/json')
+
+
+@app.route('/{}/status'.format(CLUSTER_API), methods=['POST'])
+def status():
+    """
+    Web call to get the microk8s status
+    """
+    cmd = "{}/microk8s-status.wrapper --format yaml --timeout 60".format(snap_path)
+
+    ct = callback_token_validation()
+    if not ct["valid"]: return ct["response"]
+    if "addon" in request.json:
+        cmd = "{}/microk8s-status.wrapper -a {}".format(snap_path, request.json["addon"])
+
+    output = subprocess.check_output(cmd.split())
+
+    if request.json and "addon" in request.json:
+        json_output = {"addon": request.json["addon"], "status": output.decode().strip('\n')}
+    else:
+        json_output = yaml.full_load(output)
+
+    return app.response_class(response=json.dumps(json_output, sort_keys=False, indent=4), status=200, mimetype='application/json')
+
+
+def callback_token_validation():
+    """
+    Validate the callback token. There are three ways for the API consumer to do so:
+    - 1. The token value can be passed using JSON in the body of the request.
+        eg.: {"callback":"xyztoken"}
+        * Additionally, "Content-Type: application/json" header must be defined
+    - 2. The token value can be passed as a header in the request.
+        eg. "Callback-Token: xyztoken"
+    - 3. Pass the token from a form based request with a field name 'callback'
+    """
+    if 'Content-Type' in request.headers and request.headers['Content-Type'] == 'application/json' and 'callback' in request.json:
+        callback_token = request.json['callback']
+    elif 'Callback-Token' in request.headers:
+        callback_token = request.headers['Callback-Token']
+    else:
+        callback_token = request.form['callback']
+    callback_token = callback_token.strip()
+    valid = is_valid(callback_token, callback_token_file)
+    resp = None
+    if not valid:
+        error_msg = {"error": "Invalid token"}
+        resp = Response(json.dumps(error_msg), mimetype='application/json', status=500)
+    return {"valid": valid, "response": resp}
 
 
 def get_dqlite_voters():

@@ -3,6 +3,7 @@ import os
 import re
 import requests
 import platform
+import utils_api
 import yaml
 
 from utils import (
@@ -426,3 +427,13 @@ def validate_kubeflow():
         return
 
     wait_for_pod_state("ambassador-operator-0", "kubeflow", "running")
+
+
+def validate_cluster_agent_api():
+    """
+    Validate basic API endpoints
+    """
+    api = utils_api.TestClusterAgentApi()
+    api.test_status()
+    api.test_services()
+
