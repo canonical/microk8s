@@ -12,8 +12,7 @@ description: |-
  them to MicroK8s on your boxes.
 
 grade: stable
-#confinement: strict
-confinement: classic
+confinement: strict
 base: core18
 
 plugs:
