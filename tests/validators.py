@@ -405,7 +405,7 @@ def validate_multus():
 
     here = os.path.dirname(os.path.abspath(__file__))
     networks = os.path.join(here, "templates", "multus-networks.yaml")
-    kubectl("create -f {}".format(my_nets))
+    kubectl("create -f {}".format(networks))
     manifest = os.path.join(here, "templates", "multus-alpine.yaml")
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "default", "running", label="app=multus-alpine")
