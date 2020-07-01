@@ -45,6 +45,32 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
     console_formatter = "{:>1} {:<20} # {}"
     if isReady:
         print("microk8s is running")
+        if not is_ha_enabled():
+            print("high-availability: no")
+        else:
+            info = get_dqlite_info()
+            if ha_cluster_formed(info):
+                print("high-availability: yes")
+            else:
+                print("high-availability: no")
+
+            masters = "none"
+            standby = "none"
+            for node in info:
+                if node[1] == "voter":
+                    if masters == "none":
+                        masters = "{}".format(node[0])
+                    else:
+                        masters = "{} {}".format(masters, node[0])
+                if node[1] == "standby":
+                    if standby == "none":
+                        standby = "{}".format(node[0])
+                    else:
+                        standby = "{} {}".format(standby, node[0])
+
+            print("{:>2}{} {}".format("", "datastore master nodes:", masters))
+            print("{:>2}{} {}".format("", "datastore standby nodes:", standby))
+
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
             print('{:>2}'.format("enabled:"))
@@ -61,7 +87,7 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
 
 def print_short_yaml(isReady, enabled_addons, disabled_addons):
     print("microk8s:")
-    print("{:>2} {} {}".format("", "running:", isReady))
+    print("{:>2}{} {}".format("", "running:", isReady))
 
     if isReady:
         print("addons:")
@@ -82,21 +108,33 @@ def print_short_yaml(isReady, enabled_addons, disabled_addons):
 
 def print_yaml(isReady, enabled_addons, disabled_addons):
     print("microk8s:")
-    print("{:>2} {} {}".format("", "running:", isReady))
+    print("{:>2}{} {}".format("", "running:", isReady))
+
+    print("{:>2}".format("ha:"))
+    ha_enabled = is_ha_enabled()
+    print("{:>2}{} {}".format("", "enabled:", ha_enabled))
+    if ha_enabled:
+        info = get_dqlite_info()
+        ha_formed = ha_cluster_formed(info)
+        print("{:>2}{} {}".format("", "completed:", ha_formed))
+        print("{:>2}{}".format("", "nodes:"))
+        for node in info:
+            print("{:>6}address: {:<1}".format("- ", node[0]))
+            print("{:>6}role: {:<1}".format("", node[1]))
 
     if isReady:
         print("{:>2}".format("addons:"))
         for enabled in enabled_addons:
-            print("{:>4} name: {:<1}".format("-", enabled["name"]))
-            print("{:>4} description: {:<1}".format("", enabled["description"]))
-            print("{:>4} version: {:<1}".format("", enabled["version"]))
-            print("{:>4} status: enabled".format(""))
+            print("{:>4}name: {:<1}".format("- ", enabled["name"]))
+            print("{:>4}description: {:<1}".format("", enabled["description"]))
+            print("{:>4}version: {:<1}".format("", enabled["version"]))
+            print("{:>4}status: enabled".format(""))
 
         for disabled in disabled_addons:
-            print("{:>4} name: {:<1}".format("-", disabled["name"]))
-            print("{:>4} description: {:<1}".format("", disabled["description"]))
-            print("{:>4} version: {:<1}".format("", disabled["version"]))
-            print("{:>4} status: disabled".format(""))
+            print("{:>4}name: {:<1}".format("- ", disabled["name"]))
+            print("{:>4}description: {:<1}".format("", disabled["description"]))
+            print("{:>4}version: {:<1}".format("", disabled["version"]))
+            print("{:>4}status: disabled".format(""))
     else:
         print(
             "{:>2} {} {}".format(
@@ -132,20 +170,6 @@ def get_status(available_addons, isReady):
                 disabled.append(addon)
 
     return enabled, disabled
-
-
-def print_ha_yaml(ha_ready, info):
-    ha_formed = ha_cluster_formed(info)
-
-    print("ha:")
-    print("{:>2} {} {}".format("", "enabled:", ha_ready))
-    print("{:>2} {} {}".format("", "completed:", ha_formed))
-
-    if ha_ready:
-        print("{:>2}".format("nodes:"))
-        for node in info:
-            print("{:>4} address: {:<1}".format("-", node[0]))
-            print("{:>4} role: {:<1}".format("", node[1]))
 
 
 def ha_cluster_formed(info):
@@ -186,7 +210,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--format",
         help="print cluster and addon status, output can be in yaml, pretty or short",
-        default="short",
+        default="pretty",
         choices={"pretty", "yaml", "short"},
     )
     parser.add_argument(
@@ -204,9 +228,6 @@ if __name__ == '__main__':
         "--yaml", action='store_true', help="DEPRECATED, use '--format yaml' instead"
     )
 
-    subparsers = parser.add_subparsers(help="show HA status", dest="command")
-    parser_ha = subparsers.add_parser('ha-cluster')
-
     # read arguments from the command line
     args = parser.parse_args()
 
@@ -218,15 +239,6 @@ if __name__ == '__main__':
         isReady = wait_for_ready(wait_ready, timeout)
     else:
         isReady = is_cluster_ready()
-
-    if isReady and args.command == "ha-cluster":
-        ha_ready = is_ha_enabled()
-        info = get_dqlite_info()
-        if args.format == "yaml":
-            print_ha_yaml(ha_ready, info)
-        else:
-            print_ha_pretty(ha_ready, info)
-        exit(0)
 
     available_addons = get_available_addons(get_current_arch())
 
@@ -240,10 +252,10 @@ if __name__ == '__main__':
     else:
         if args.format == "yaml":
             print_yaml(isReady, enabled, disabled)
-        elif args.format == "pretty":
-            print_pretty(isReady, enabled, disabled)
+        elif args.format == "short":
+            print_short(isReady, enabled, disabled)
         else:
             if yaml_short:
                 print_short_yaml(isReady, enabled, disabled)
             else:
-                print_short(isReady, enabled, disabled)
+                print_pretty(isReady, enabled, disabled)
