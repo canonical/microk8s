@@ -796,6 +796,7 @@ def join_dqlite(connection_parts):
     master_port = master_ep[1]
     info = get_connection_info(master_ip, master_port, token, cluster_type="dqlite")
 
+    call_addr = info['call_address']
     hostname_override = info['hostname_override']
 
     store_cert("ca.crt", info["ca"])
@@ -820,10 +821,11 @@ def join_dqlite(connection_parts):
     if "admin_token" in info:
         replace_admin_token(info["admin_token"])
     create_admin_kubeconfig(info["ca"], info["admin_token"])
+    set_arg("--hostname-override", hostname_override, "kube-proxy")
     store_base_kubelet_args(info["kubelet_args"])
     store_callback_token(info["callback_token"])
 
-    update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
+    update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], call_addr)
 
 
 def join_etcd(connection_parts):
