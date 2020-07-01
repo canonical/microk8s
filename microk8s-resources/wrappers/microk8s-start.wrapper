@@ -7,7 +7,7 @@ source $SNAP/actions/common/utils.sh
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.reset on the master."
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s reset on the master."
   exit 0
 fi
 
@@ -47,5 +47,4 @@ else
   fi
 fi
 
-echo "Enabling pod scheduling"
-uncordon_node
+wait_for_node

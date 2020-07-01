@@ -7,7 +7,7 @@ ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 
 if [ ! -f "${SNAP_DATA}/bin/istioctl" ]; then
-  echo "Istio not available, try enabling is with 'microk8s.enable istio'"
+  echo "Istio not available, try enabling is with 'microk8s enable istio'"
   exit 0
 fi
 
@@ -15,7 +15,7 @@ source $SNAP/actions/common/utils.sh
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.istioctl on the master."
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s istioctl on the master."
   exit 0
 fi
 

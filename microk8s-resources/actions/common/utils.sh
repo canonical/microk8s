@@ -7,6 +7,7 @@ exit_if_no_permissions() {
     echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:" >&2
     echo "" >&2
     echo "    sudo usermod -a -G microk8s $USER" >&2
+    echo "    sudo chown -f -R $USER ~/.kube" >&2
     echo "" >&2
     echo "The new group will be available on the user's next login." >&2
     exit 1
@@ -17,7 +18,7 @@ exit_if_stopped() {
   # test if the snap is marked as stopped
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
   then
-    echo "microk8s is not running, try microk8s.start" >&2
+    echo "microk8s is not running, try microk8s start" >&2
     exit 1
   fi
 }
@@ -56,7 +57,7 @@ set_service_expected_to_start() {
 
 remove_vxlan_interfaces() {
   links="$(${SNAP}/sbin/ip link show type vxlan | $SNAP/bin/grep -E 'flannel|cilium_vxlan' | $SNAP/usr/bin/gawk '{print $2}' | $SNAP/usr/bin/tr -d :)"
-  for link in "$links"
+  for link in $links
   do
     if ! [ -z "$link" ] && $SNAP/sbin/ip link show ${link} &> /dev/null
     then
@@ -147,6 +148,17 @@ arch() {
 }
 
 
+snapshotter() {
+  # Determine the underlying filesystem that containerd will be running on
+  FSTYPE=$(stat -f -c %T "${SNAP_COMMON}")
+  # ZFS is supported through the native snapshotter
+  if [ "$FSTYPE" = "zfs" ]; then
+    echo "native"
+  else
+    echo "overlayfs"
+  fi
+}
+
 use_manifest() {
     # Perform an action (apply or delete) on a manifest.
     # Optionally replace strings in the manifest
@@ -213,7 +225,11 @@ wait_for_service() {
     # Return fail if the service did not start in 30 seconds
     local service_name="$1"
     local TRY_ATTEMPT=0
+<<<<<<< HEAD
     while ! (snapctl services ${SNAP_NAME}.daemon-${service_name} | grep active) &&
+=======
+    while ! (run_with_sudo preserve_env snapctl services ${SNAP_NAME}.daemon-${service_name} | grep active) &&
+>>>>>>> master
           ! [ ${TRY_ATTEMPT} -eq 30 ]
     do
         TRY_ATTEMPT=$((TRY_ATTEMPT+1))
@@ -280,14 +296,14 @@ get_ips() {
 
 gen_server_cert() (
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
-    ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 gen_proxy_client_cert() (
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
-    ${SNAP}/usr/bin/openssl req -new -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
-    ${SNAP}/usr/bin/openssl x509 -req -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 100000 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
+    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 produce_certs() {
@@ -301,24 +317,24 @@ produce_certs() {
 
     # Generate apiserver CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -days 10000 -out ${SNAP_DATA}/certs/ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt
     fi
 
     # Generate front proxy CA
     if ! [ -f ${SNAP_DATA}/certs/front-proxy-ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -nodes -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -days 10000 -out ${SNAP_DATA}/certs/front-proxy-ca.crt
+        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.
     # The file csr.conf.rendered is compared with csr.conf to determine if a regeneration of the certs must be done.
     #
-    # Returns 
+    # Returns
     #  0 if no change
-    #  1 otherwise. 
+    #  1 otherwise.
 
     render_csr_conf
     if ! [ -f "${SNAP_DATA}/certs/csr.conf" ]; then
-        echo "changeme" >  "${SNAP_DATA}/certs/csr.conf" 
+        echo "changeme" >  "${SNAP_DATA}/certs/csr.conf"
     fi
 
     local force
@@ -388,6 +404,9 @@ get_node() {
     fi
 }
 
+wait_for_node() {
+  get_node &> /dev/null
+}
 
 drain_node() {
     # Drain node
@@ -417,3 +436,47 @@ get_all_addons() {
     actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
     echo $actions
 }
+
+
+function valid_ip() {
+# Test an IP address for validity:
+# Usage:
+#      valid_ip IP_ADDRESS
+#      if [[ $? -eq 0 ]]; then echo good; else echo bad; fi
+#   OR
+#      if valid_ip IP_ADDRESS; then echo good; else echo bad; fi
+#
+    local  ip=$1
+    local  stat=1
+
+    if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        OIFS=$IFS
+        IFS='.'
+        ip=($ip)
+        IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 \
+            && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+    return $stat
+}
+
+
+init_cluster() {
+  mkdir -p ${SNAP_DATA}/var/kubernetes/backend
+  IP="127.0.0.1"
+  # TODO: make the port configurable
+  echo "Address: $IP:19001" > ${SNAP_DATA}/var/kubernetes/backend/init.yaml
+  DNS=$($SNAP/bin/hostname)
+  mkdir -p $SNAP_DATA/var/tmp/
+  cp $SNAP/microk8s-resources/certs/csr-dqlite.conf.template $SNAP_DATA/var/tmp/csr-dqlite.conf
+  $SNAP/bin/sed -i 's/HOSTNAME/'"${DNS}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
+  $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
+  ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
+  chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
+  if getent group microk8s >/dev/null 2>&1
+  then
+    chgrp microk8s -R ${SNAP_DATA}/var/kubernetes/backend/ || true
+  fi
+}
+

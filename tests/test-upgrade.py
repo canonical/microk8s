@@ -14,14 +14,10 @@ from validators import (
     validate_jaeger,
     validate_kubeflow,
     validate_cilium,
+    validate_multus,
 )
 from subprocess import check_call, CalledProcessError, check_output
-from utils import (
-    microk8s_enable,
-    wait_for_pod_state,
-    wait_for_installation,
-    run_until_success
-)
+from utils import microk8s_enable, wait_for_pod_state, wait_for_installation, run_until_success
 
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
 # Have UPGRADE_MICROK8S_TO point to a file to upgrade to that file
@@ -159,6 +155,14 @@ class TestUpgrade(object):
                 test_matrix['cilium'] = validate_cilium
             except:
                 print('Will not test the cilium addon')
+
+            try:
+                enable = microk8s_enable("multus", timeout_insec=150)
+                assert "Nothing to do for" not in enable
+                validate_multus()
+                test_matrix['multus'] = validate_multus
+            except:
+                print('Will not test the multus addon')
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

@@ -13,7 +13,7 @@ function print_help {
 
 
 function check_service {
-  # Check the service passed as the firsr argument is up and running and collect its logs.
+  # Check the service passed as the first argument is up and running and collect its logs.
   local service=$1
   mkdir -p $INSPECT_DUMP/$service
   journalctl -n $JOURNALCTL_LIMIT -u $service &> $INSPECT_DUMP/$service/journal.log
@@ -94,12 +94,12 @@ function store_kubernetes_info {
   # Collect some in-k8s details
   printf -- '  Inspect kubernetes cluster\n'
   mkdir -p $INSPECT_DUMP/k8s
-  sudo -E /snap/bin/microk8s.kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
-  sudo -E /snap/bin/microk8s.kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
-  sudo -E /snap/bin/microk8s.kubectl cluster-info dump 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
-  sudo -E /snap/bin/microk8s.kubectl get all --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
-  sudo -E /snap/bin/microk8s.kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
-  sudo -E /snap/bin/microk8s.kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+  sudo -E /snap/bin/microk8s kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
+  sudo -E /snap/bin/microk8s kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
+  sudo -E /snap/bin/microk8s kubectl cluster-info dump 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+  sudo -E /snap/bin/microk8s kubectl get all --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
+  sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+  sudo -E /snap/bin/microk8s kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
 
 
@@ -139,7 +139,7 @@ function suggest_fixes {
 
   # check for docker
   # if docker is installed
-  if [ -d "/etc/docker/" ]; then 
+  if [ -d "/etc/docker/" ]; then
     # if docker/daemon.json file doesn't exist print prompt to create it and mark the registry as insecure
     if [ ! -f "/etc/docker/daemon.json" ]; then
       printf -- '\033[0;33mWARNING: \033[0m Docker is installed. \n'
@@ -203,6 +203,19 @@ function build_report_tarball {
   printf -- '  Report tarball is at %s/inspection-report-%s.tar.gz\n' "${SNAP_DATA}" "${now_is}"
 }
 
+function check_certificates {
+  exp_date_str="$(openssl x509 -enddate -noout -in /var/snap/microk8s/current/certs/ca.crt | cut -d= -f 2)"
+  exp_date_secs="$(date -d "$exp_date_str" +%s)"
+  now_secs=$(date +%s)
+  difference=$(($exp_date_secs-$now_secs))
+  days=$(($difference/(3600*24)))
+  if [ "3" -ge $days ];
+  then
+    printf -- '\033[0;33mWARNING: \033[0m This deployments certificates will expire in $days days. \n'
+    printf -- 'Either redeploy MicroK8s or attempt a refresh with "microk8s refresh-certs"\n'
+  fi
+}
+
 
 if [ ${#@} -ne 0 ] && [ "${@#"--help"}" = "" ]; then
   print_help
@@ -212,9 +225,11 @@ fi;
 rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
 
+printf -- 'Inspecting Certificates\n'
+check_certificates
+
 printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"
-check_service "snap.microk8s.daemon-flanneld"
 check_service "snap.microk8s.daemon-containerd"
 check_service "snap.microk8s.daemon-apiserver"
 check_service "snap.microk8s.daemon-apiserver-kicker"
@@ -222,7 +237,12 @@ check_service "snap.microk8s.daemon-proxy"
 check_service "snap.microk8s.daemon-kubelet"
 check_service "snap.microk8s.daemon-scheduler"
 check_service "snap.microk8s.daemon-controller-manager"
-check_service "snap.microk8s.daemon-etcd"
+if ! [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
+then
+  check_service "snap.microk8s.daemon-flanneld"
+  check_service "snap.microk8s.daemon-etcd"
+fi
+
 store_args
 
 printf -- 'Inspecting AppArmor configuration\n'

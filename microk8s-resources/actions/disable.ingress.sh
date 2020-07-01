@@ -8,6 +8,7 @@ echo "Disabling Ingress"
 
 ARCH=$(arch)
 TAG="0.25.1"
+DEFAULT_CERT="- ' '" # This default value is always fine when deleting resources.
 EXTRA_ARGS="- --publish-status-address=127.0.0.1"
 
 
@@ -24,6 +25,7 @@ $KUBECTL delete daemonset -n default nginx-ingress-microk8s-controller || true
 
 declare -A map
 map[\$TAG]="$TAG"
+map[\$DEFAULT_CERT]="$DEFAULT_CERT"
 map[\$EXTRA_ARGS]="$EXTRA_ARGS"
 use_manifest ingress delete "$(declare -p map)"
 

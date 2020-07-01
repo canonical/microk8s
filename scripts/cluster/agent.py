@@ -2,19 +2,30 @@
 import getopt
 import json
 import os
+import random
 import shutil
 import socket
 import string
-import random
 import subprocess
 import sys
+import time
 
-from .common.utils import try_set_file_permissions
+import yaml
+
+from .common.utils import (
+    try_set_file_permissions,
+    remove_expired_token_from_file,
+    is_node_running_dqlite,
+    get_callback_token,
+    remove_token_from_file,
+    is_token_expired,
+)
 
 from flask import Flask, jsonify, request, abort, Response
 
 app = Flask(__name__)
-CLUSTER_API="cluster/api/v1.0"
+CLUSTER_API = "cluster/api/v1.0"
+CLUSTER_API_V2 = "cluster/api/v2.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
@@ -97,20 +108,24 @@ def store_callback_token(node, callback_token):
 def sign_client_cert(cert_request, token):
     """
     Sign a certificate request
-    
+
     :param cert_request: the request
     :param token: a token acting as a request uuid
     :returns: the certificate
     """
     req_file = "{}/certs/request.{}.csr".format(snapdata_path, token)
-    sign_cmd = "openssl x509 -req -in {csr} -CA {SNAP_DATA}/certs/ca.crt -CAkey" \
-               " {SNAP_DATA}/certs/ca.key -CAcreateserial -out {SNAP_DATA}/certs/server.{token}.crt" \
-               " -days 100000".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
+    sign_cmd = (
+        "openssl x509 -sha256 -req -in {csr} -CA {SNAP_DATA}/certs/ca.crt -CAkey"
+        " {SNAP_DATA}/certs/ca.key -CAcreateserial -out {SNAP_DATA}/certs/server.{token}.crt"
+        " -days 365".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
+    )
 
     with open(req_file, 'w') as fp:
         fp.write(cert_request)
     subprocess.check_call(sign_cmd.split())
-    with open("{SNAP_DATA}/certs/server.{token}.crt".format(SNAP_DATA=snapdata_path, token=token)) as fp:
+    with open(
+        "{SNAP_DATA}/certs/server.{token}.crt".format(SNAP_DATA=snapdata_path, token=token)
+    ) as fp:
         cert = fp.read()
     return cert
 
@@ -118,31 +133,11 @@ def sign_client_cert(cert_request, token):
 def add_token_to_certs_request(token):
     """
     Add a token to the file holding the nodes we expect a certificate request from
-    
+
     :param token: the token
     """
     with open(certs_request_tokens_file, "a+") as fp:
         fp.write("{}\n".format(token))
-
-
-def remove_token_from_file(token, file):
-    """
-    Remove a token from the valid tokens set
-    
-    :param token: the token to be removed
-    :param file: the file to be removed from
-    """
-    backup_file = "{}.backup".format(file)
-    # That is a critical section. We need to protect it.
-    # We are safe for now because flask serves one request at a time.
-    with open(backup_file, 'w') as back_fp:
-        with open(file, 'r') as fp:
-            for _, line in enumerate(fp):
-                if line.startswith(token):
-                    continue
-                back_fp.write("{}".format(line))
-
-    shutil.copyfile(backup_file, file)
 
 
 def get_token(name):
@@ -154,10 +149,10 @@ def get_token(name):
     """
     file = "{}/credentials/known_tokens.csv".format(snapdata_path)
     with open(file) as fp:
-        line = fp.readline()
-        if name in line:
-            parts = line.split(',')
-            return parts[0].rstrip()
+        for _, line in enumerate(fp):
+            if name in line:
+                parts = line.split(',')
+                return parts[0].rstrip()
     return None
 
 
@@ -186,7 +181,7 @@ def add_kubelet_token(hostname):
 def getCA():
     """
     Return the CA
-    
+
     :returns: the CA file contents
     """
     ca_file = "{}/certs/ca.crt".format(snapdata_path)
@@ -213,7 +208,7 @@ def get_arg(key, file):
     return None
 
 
-def is_valid(token, token_type=cluster_tokens_file):
+def is_valid(token_line, token_type=cluster_tokens_file):
     """
     Check whether a token is valid
 
@@ -221,9 +216,18 @@ def is_valid(token, token_type=cluster_tokens_file):
     :param token_type: the type of token (bootstrap or signature)
     :returns: True for a valid token, False otherwise
     """
+    token = token_line.strip()
+    # Ensure token is not empty
+    if not token:
+        return False
+
     with open(token_type) as fp:
         for _, line in enumerate(fp):
-            if line.startswith(token):
+            token_in_file = line.strip()
+            if "|" in line:
+                if not is_token_expired(line):
+                    token_in_file = line.strip().split('|')[0]
+            if token == token_in_file:
                 return True
     return False
 
@@ -231,7 +235,7 @@ def is_valid(token, token_type=cluster_tokens_file):
 def read_kubelet_args_file(node=None):
     """
     Return the contents of the kubelet arguments file
-    
+
     :param node: node to add a host override (defaults to None)
     :returns: the kubelet args file
     """
@@ -246,7 +250,7 @@ def read_kubelet_args_file(node=None):
 def get_node_ep(hostname, remote_addr):
     """
     Return the endpoint to be used for the node based by trying to resolve the hostname provided
-    
+
     :param hostname: the provided hostname
     :param remote_addr: the address the request came from
     :returns: the node's location
@@ -260,7 +264,7 @@ def get_node_ep(hostname, remote_addr):
 
 
 @app.route('/{}/join'.format(CLUSTER_API), methods=['POST'])
-def join_node():
+def join_node_etcd():
     """
     Web call to join a node to the cluster
     """
@@ -275,11 +279,23 @@ def join_node():
         port = request.form['port']
         callback_token = request.form['callback']
 
+    # Remove expired tokens
+    remove_expired_token_from_file(cluster_tokens_file)
+
     if not is_valid(token):
-        error_msg={"error": "Invalid token"}
+        error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
+    if is_node_running_dqlite():
+        msg = (
+            "Failed to join the cluster. This is an HA dqlite cluster. \n"
+            "Please, retry after enabling HA on this joining node with 'microk8s enable ha-cluster'."
+        )
+        error_msg = {"error": msg}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=501)
+
     add_token_to_certs_request(token)
+    # remove token for backwards compatibility way of adding a node
     remove_token_from_file(token, cluster_tokens_file)
 
     node_addr = get_node_ep(hostname, request.remote_addr)
@@ -297,13 +313,15 @@ def join_node():
     else:
         kubelet_args = read_kubelet_args_file()
 
-    return jsonify(ca=ca,
-                   etcd=etcd_ep,
-                   kubeproxy=proxy_token,
-                   apiport=api_port,
-                   kubelet=kubelet_token,
-                   kubelet_args=kubelet_args,
-                   hostname_override=node_addr)
+    return jsonify(
+        ca=ca,
+        etcd=etcd_ep,
+        kubeproxy=proxy_token,
+        apiport=api_port,
+        kubelet=kubelet_token,
+        kubelet_args=kubelet_args,
+        hostname_override=node_addr,
+    )
 
 
 @app.route('/{}/sign-cert'.format(CLUSTER_API), methods=['POST'])
@@ -318,9 +336,14 @@ def sign_cert():
         token = request.form['token']
         cert_request = request.form['request']
 
+    token = token.strip()
     if not is_valid(token, certs_request_tokens_file):
-        error_msg={"error": "Invalid token"}
+        error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+
+    if is_node_running_dqlite():
+        error_msg = {"error": "Not possible to join. This is an HA dqlite cluster."}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=501)
 
     remove_token_from_file(token, certs_request_tokens_file)
     signed_cert = sign_client_cert(cert_request, token)
@@ -339,8 +362,9 @@ def configure():
         callback_token = request.form['callback']
         configuration = json.loads(request.form['configuration'])
 
+    callback_token = callback_token.strip()
     if not is_valid(callback_token, callback_token_file):
-        error_msg={"error": "Invalid token"}
+        error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
 
     # We expect something like this:
@@ -399,26 +423,238 @@ def configure():
             if "restart" in service and service["restart"]:
                 service_name = get_service_name(service["name"])
                 print("restarting {}".format(service["name"]))
-                subprocess.check_call("snapctl restart microk8s.daemon-{}".format(service_name).split())
+                subprocess.check_call(
+                    "snapctl restart microk8s.daemon-{}".format(service_name).split()
+                )
 
     if "addon" in configuration:
         for addon in configuration["addon"]:
             print("{}".format(addon["name"]))
             if "enable" in addon and addon["enable"]:
                 print("Enabling {}".format(addon["name"]))
-                subprocess.check_call("{}/microk8s-enable.wrapper {}".format(snap_path, addon["name"]).split())
+                subprocess.check_call(
+                    "{}/microk8s-enable.wrapper {}".format(snap_path, addon["name"]).split()
+                )
             if "disable" in addon and addon["disable"]:
                 print("Disabling {}".format(addon["name"]))
-                subprocess.check_call("{}/microk8s-disable.wrapper {}".format(snap_path, addon["name"]).split())
+                subprocess.check_call(
+                    "{}/microk8s-disable.wrapper {}".format(snap_path, addon["name"]).split()
+                )
 
     resp_date = {"result": "ok"}
     resp = Response(json.dumps(resp_date), status=200, mimetype='application/json')
     return resp
 
 
+def get_dqlite_voters():
+    """
+    Get the voting members of the dqlite cluster
+
+    :param : the list with the voting members
+    """
+    snapdata_path = "/var/snap/microk8s/current"
+    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+    cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
+    cluster_key_file = "{}/cluster.key".format(cluster_dir)
+
+    waits = 10
+    print("Waiting for access to cluster.", end=" ", flush=True)
+    while waits > 0:
+        try:
+            with open("{}/info.yaml".format(cluster_dir)) as f:
+                data = yaml.load(f, Loader=yaml.FullLoader)
+                out = subprocess.check_output(
+                    "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
+                        data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
+                    ).split()
+                )
+                if data['Address'] in out.decode():
+                    break
+                else:
+                    print(".", end=" ", flush=True)
+                    time.sleep(5)
+                    waits -= 1
+        except subprocess.CalledProcessError:
+            print("..", end=" ", flush=True)
+            time.sleep(5)
+            waits -= 1
+    print(" ")
+    if waits == 0:
+        raise Exception("Could not get cluster info")
+
+    nodes = yaml.safe_load(out)
+    voters = []
+    for n in nodes:
+        if n["Role"] == 0:
+            voters.append(n["Address"])
+    return voters
+
+
+def update_dqlite_ip(host):
+    """
+    Update dqlite so it listens on the default interface and not on localhost
+
+    :param : the host others see for this node
+    """
+    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
+    time.sleep(10)
+
+    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+    # TODO make the port configurable
+    update_data = {'Address': "{}:19001".format(host)}
+    with open("{}/update.yaml".format(cluster_dir), 'w') as f:
+        yaml.dump(update_data, f)
+    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
+    time.sleep(10)
+    attempts = 12
+    while True:
+        voters = get_dqlite_voters()
+        if len(voters) > 0 and not voters[0].startswith("127.0.0.1"):
+            break
+        else:
+            time.sleep(5)
+            attempts -= 1
+        if attempts <= 0:
+            break
+
+
+def get_cert(certificate):
+    """
+    Return the data of the certificate
+
+    :returns: the certificate file contents
+    """
+    cert_file = "{}/certs/{}".format(snapdata_path, certificate)
+    with open(cert_file) as fp:
+        cert = fp.read()
+    return cert
+
+
+def get_cluster_certs():
+    """
+    Return the cluster certificates
+
+    :returns: the cluster certificate files
+    """
+    file = "{}/var/kubernetes/backend/cluster.crt".format(snapdata_path)
+    with open(file) as fp:
+        cluster_cert = fp.read()
+    file = "{}/var/kubernetes/backend/cluster.key".format(snapdata_path)
+    with open(file) as fp:
+        cluster_key = fp.read()
+
+    return cluster_cert, cluster_key
+
+
+@app.route('/{}/join'.format(CLUSTER_API_V2), methods=['POST'])
+def join_node_dqlite():
+    """
+    Web call to join a node to the cluster
+    """
+    if request.headers['Content-Type'] == 'application/json':
+        token = request.json['token']
+        hostname = request.json['hostname']
+        port = request.json['port']
+    else:
+        token = request.form['token']
+        hostname = request.form['hostname']
+        port = request.form['port']
+
+    if not is_valid(token):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+
+    if not is_node_running_dqlite():
+        error_msg = {"error": "Not possible to join. This is not an HA dqlite cluster."}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=501)
+
+    voters = get_dqlite_voters()  # type: List[str]
+    # Check if we need to set dqlite with external IP
+    if len(voters) == 1 and voters[0].startswith("127.0.0.1"):
+        update_dqlite_ip(request.host.split(":")[0])
+        voters = get_dqlite_voters()
+    callback_token = get_callback_token()
+    remove_token_from_file(token, cluster_tokens_file)
+    node_addr = request.remote_addr
+    api_port = get_arg('--secure-port', 'kube-apiserver')
+    kubelet_args = read_kubelet_args_file()
+    cluster_cert, cluster_key = get_cluster_certs()
+
+    return jsonify(
+        ca=get_cert("ca.crt"),
+        ca_key=get_cert("ca.key"),
+        service_account_key=get_cert("serviceaccount.key"),
+        cluster_cert=cluster_cert,
+        cluster_key=cluster_key,
+        voters=voters,
+        callback_token=callback_token,
+        apiport=api_port,
+        kubelet_args=kubelet_args,
+        hostname_override=node_addr,
+        admin_token=get_token('admin'),
+    )
+
+
+@app.route('/{}/upgrade'.format(CLUSTER_API), methods=['POST'])
+def upgrade():
+    """
+    Web call to upgrade the node
+    """
+    callback_token = request.json['callback']
+    callback_token = callback_token.strip()
+    if not is_valid(callback_token, callback_token_file):
+        error_msg = {"error": "Invalid token"}
+        return Response(json.dumps(error_msg), mimetype='application/json', status=500)
+
+    upgrade_request = request.json["upgrade"]
+    phase = request.json["phase"]
+
+    # We expect something like this:
+    '''
+    {
+      "callback": "xyztoken"
+      "phase": "prepare", "commit" or "rollback"
+      "upgrade": "XYZ-upgrade-name"
+    }
+    '''
+    if phase == "prepare":
+        upgrade_script = '{}/upgrade-scripts/{}/prepare-node.sh'.format(snap_path, upgrade_request)
+        if not os.path.isfile(upgrade_script):
+            print("Not ready to execute {}".format(upgrade_script))
+            resp_data = {"result": "not ok"}
+            resp = Response(json.dumps(resp_data), status=404, mimetype='application/json')
+            return resp
+        else:
+            print("Executing {}".format(upgrade_script))
+            subprocess.check_call(upgrade_script)
+            resp_data = {"result": "ok"}
+            resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
+            return resp
+
+    elif phase == "commit":
+        upgrade_script = '{}/upgrade-scripts/{}/commit-node.sh'.format(snap_path, upgrade_request)
+        print("Ready to execute {}".format(upgrade_script))
+        print("Executing {}".format(upgrade_script))
+        subprocess.check_call(upgrade_script)
+        resp_data = {"result": "ok"}
+        resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
+        return resp
+
+    elif phase == "rollback":
+        upgrade_script = '{}/upgrade-scripts/{}/rollback-node.sh'.format(snap_path, upgrade_request)
+        print("Ready to execute {}".format(upgrade_script))
+        print("Executing {}".format(upgrade_script))
+        subprocess.check_call(upgrade_script)
+        resp_data = {"result": "ok"}
+        resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
+        return resp
+
+
 def usage():
     print("Agent responsible for setting up a cluster. Arguments:")
-    print("-l, --listen:   interfaces to listen to (defaults to {})".format(default_listen_interface))
+    print(
+        "-l, --listen:   interfaces to listen to (defaults to {})".format(default_listen_interface)
+    )
     print("-p, --port:     port to listen to (default {})".format(default_port))
 
 

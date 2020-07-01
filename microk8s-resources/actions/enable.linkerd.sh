@@ -9,7 +9,7 @@ argz=("${ARGUMENTS[@]/#/--}")
 
 # check if linkerd cli is already in the system.  Download if it doesn't exist.
 if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
-  LINKERD_VERSION="${LINKERD_VERSION:-v2.6.0}"
+  LINKERD_VERSION="${LINKERD_VERSION:-v2.8.0}"
   echo "Fetching Linkerd2 version $LINKERD_VERSION."
   mkdir -p "$SNAP_DATA/bin"
   LINKERD_VERSION=$(echo $LINKERD_VERSION | sed 's/v//g')

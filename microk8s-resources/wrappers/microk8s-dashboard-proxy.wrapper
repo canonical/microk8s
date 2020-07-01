@@ -1,0 +1,12 @@
+#!/bin/bash
+set -eu
+
+ARCH="$($SNAP/bin/uname -m)"
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+export PYTHONNOUSERSITE=false
+source $SNAP/actions/common/utils.sh
+
+exit_if_no_permissions
+
+LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH  ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/dashboard-proxy.py

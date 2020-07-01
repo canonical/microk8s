@@ -24,7 +24,7 @@ then
   snapctl restart ${SNAP_NAME}.daemon-controller-manager
 fi
 
-#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA 
+#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
 if [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
 then
    cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
@@ -70,7 +70,7 @@ fi
 mkdir -p ${SNAP_DATA}/var/lock/
 
 # This will allow us to refresh the snap to the more secure version.
-# We need to make sure the client certificate used in microk8s.kubectl is available under $SNAP_DATA
+# We need to make sure the client certificate used in microk8s kubectl is available under $SNAP_DATA
 if [ ! -f ${SNAP_DATA}/credentials/client.config ]
 then
   echo "Patching client config location"
@@ -293,7 +293,23 @@ fi
 
 if getent group microk8s >/dev/null 2>&1
 then
-  chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ || true
+  chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ || true
+fi
+
+if ! [ -L "${SNAP_DATA}/opt/cni/bin/flanneld" ]
+then
+  # cover situation where cilium was installed prior to this update
+  if [ -f "${SNAP_DATA}/opt/cni/bin/loopback" ] && [ -f "${SNAP}/opt/cni/bin/loopback" ]; then
+    rm -f "${SNAP_DATA}/opt/cni/bin/loopback"
+  fi
+  # as only one cni bin dir can be used we will use the one in SNAP_DATA but have links to
+  # the real CNI plugins we distribute in SNAP
+  mkdir -p "${SNAP_DATA}/opt/cni/bin/"
+  (
+    cd "${SNAP}/opt/cni/bin/"
+    MY_SNAP_DIR=$(dirname "${SNAP}")
+    for i in *; do ln -s "${MY_SNAP_DIR}/current/opt/cni/bin/$i" "${SNAP_DATA}/opt/cni/bin/${i}"; done
+  )
 fi
 
 if ! [ -f "${SNAP_DATA}/args/flanneld" ]
@@ -338,18 +354,18 @@ then
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
+if [ -f "${SNAP_DATA}/args/cni-network/00-multus.conf" ]
+then
+  echo "Multus is enabled we need to reconfigure it."
+  ${SNAP}/actions/disable.multus.sh
+  ${SNAP}/actions/enable.multus.sh
+fi
+
 if [ -L "${SNAP_DATA}/bin/cilium" ]
 then
   echo "Cilium is enabled we need to reconfigure it."
   rm -rf $SNAP_DATA/bin/cilium*
   ${SNAP}/actions/enable.cilium.sh
-fi
-
-# modify the containerd localhost:32000 mirror registry
-if [ -e ${SNAP_DATA}/args/containerd-template.toml ] && grep -e "plugins.cri.registry.mirrors.\"local.insecure-registry.io\"" ${SNAP_DATA}/args/containerd-template.toml
-then
-    "$SNAP/bin/sed" -i 's@plugins.cri.registry.mirrors."local.insecure-registry.io"@plugins.cri.registry.mirrors."localhost:32000"@g' ${SNAP_DATA}/args/containerd-template.toml
-    snapctl restart ${SNAP_NAME}.daemon-containerd
 fi
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
@@ -375,6 +391,17 @@ then
     snapctl restart ${SNAP_NAME}.daemon-containerd
 fi
 
+if [ ! -f ${SNAP_DATA}/args/cluster-agent ]
+then
+   cp ${SNAP}/default-args/cluster-agent ${SNAP_DATA}/args/cluster-agent
+fi
+
+if ! grep -e "\-\-timeout" ${SNAP_DATA}/args/cluster-agent
+then
+  refresh_opt_in_config timeout 240 cluster-agent
+  snapctl restart ${SNAP_NAME}.daemon-containerd
+fi
+
 mkdir -p "$SNAP_DATA/juju/share/juju" "$SNAP_DATA/juju-home"
 chmod -R ug+rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"
 chmod -R o-rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"
@@ -382,4 +409,16 @@ chmod -R o-rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"
 if getent group microk8s >/dev/null 2>&1
 then
     chgrp microk8s -R "$SNAP_DATA/juju" "$SNAP_DATA/juju-home" || true
+fi
+
+if ! grep -e "\-\-ip-masq" ${SNAP_DATA}/args/flanneld
+then
+  refresh_opt_in_config ip-masq true flanneld
+  snapctl restart ${SNAP_NAME}.daemon-flanneld
+fi
+
+if grep -e "\-\-cluster-cidr=10.152.183.0/24" ${SNAP_DATA}/args/kube-proxy
+then
+  refresh_opt_in_config cluster-cidr 10.1.0.0/16 kube-proxy
+  snapctl restart ${SNAP_NAME}.daemon-proxy
 fi

@@ -1,6 +1,6 @@
 # MicroK8s
 
-![](https://img.shields.io/badge/Kubernetes-1.17-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg?branch=master)
+![](https://img.shields.io/badge/Kubernetes-1.18-326de6.svg) ![Build Status](https://travis-ci.org/ubuntu/microk8s.svg?branch=master)
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">
 
@@ -55,17 +55,17 @@ Install MicroK8s with:
 snap install microk8s --classic
 ```
 
-MicroK8s includes a `microk8s.kubectl` command:
+MicroK8s includes a `microk8s kubectl` command:
 
 ```
-sudo microk8s.kubectl get nodes
-sudo microk8s.kubectl get services
+sudo microk8s kubectl get nodes
+sudo microk8s kubectl get services
 ```
 
 To use MicroK8s with your existing kubectl:
 
 ```
-sudo microk8s.kubectl config view --raw > $HOME/.kube/config
+sudo microk8s kubectl config view --raw > $HOME/.kube/config
 ```
 
 #### User access without sudo
@@ -78,13 +78,13 @@ sudo usermod -a -G microk8s <username>
 
 #### Kubernetes add-ons
 
-MicroK8s installs a barebones upstream Kubernetes. Additional services like dns and the Kubernetes dashboard can be enabled using the `microk8s.enable` command.
+MicroK8s installs a barebones upstream Kubernetes. Additional services like dns and the Kubernetes dashboard can be enabled using the `microk8s enable` command.
 
 ```
-sudo microk8s.enable dns dashboard
+sudo microk8s enable dns dashboard
 ```
 
-Use `microk8s.status` to see a list of enabled and available addons. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
+Use `microk8s status` to see a list of enabled and available addons. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
 
 ## Documentation
 

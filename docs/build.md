@@ -5,12 +5,14 @@ A VM managed by Multipass is spawned to contain the build process. If you don’
 snapcraft will first prompt for its automatic installation.
 
 Alternatively, you can build the snap in an LXC container.
-LXD is needed in this case:
+Snapcraft and LXD are needed in this case:
 ```
+sudo snap install snapcraft --classic
 sudo snap install lxd
 sudo apt-get remove lxd* -y
 sudo apt-get remove lxc* -y
 sudo lxd init
+sudo usermod -a -G lxd ${USER}
 ```
 
 Build the snap with:
@@ -18,6 +20,11 @@ Build the snap with:
 git clone http://github.com/ubuntu/microk8s
 cd ./microk8s/
 snapcraft --use-lxd
+```
+
+Install the newly compiled snap:
+```
+sudo snap install microk8s_*_amd64.snap --classic --dangerous
 ```
 
 ## Building a custom MicroK8s package
@@ -68,8 +75,26 @@ sudo snap install microk8s_latest_amd64.snap --dangerous
 for i in docker-privileged docker-support kubernetes-support k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe kernel-module-control mount-observe hardware-observe system-observe home opengl k8s-journald ld-cache; do sudo snap connect microk8s:$i; done
 ```
 
+## Assembling the Calico CNI manifest
+
+The calico CNI manifest can be found under `upgrade-scripts/000-switch-to-calico/resources/calico.yaml`.
+Building the manifest is subject to the upstream calico project k8s installation process.
+At the time of the v3.13.2 release. The `calico.yaml` manifest is a slightly modifies version of:
+`https://docs.projectcalico.org/manifests/calico.yaml`:
+- CALICO_IPV4POOL_CIDR was set to "10.1.0.0/16"
+- CNI_NET_DIR was set to "/var/snap/microk8s/current/args/cni-network"
+- We set the following mount paths:
+  1. var-run-calico to /var/snap/microk8s/current/var/run/calico
+  1. var-lib-calico to /var/snap/microk8s/current/var/lib/calico
+  1. cni-bin-dir to /var/snap/microk8s/current/opt/cni/bin
+  1. cni-net-dir to /var/snap/microk8s/current/args/cni-network
+  1. host-local-net-dir to /var/snap/microk8s/current/var/lib/cni/networks
+  1. policysync to /var/snap/microk8s/current/var/run/nodeagent
+- We enabled vxlan following the instructions in [the official docs.](https://docs.projectcalico.org/getting-started/kubernetes/installation/config-options#switching-from-ip-in-ip-to-vxlan)
+- FELIX_LOGSEVERITYSCREEN was set to "error"
 
 ## References
 
 - https://snapcraft.io/docs/snapcraft-overview
 - https://forum.snapcraft.io/t/how-to-create-a-lxd-container-for-snap-development/4658
+- https://docs.projectcalico.org/getting-started/kubernetes/installation/config-options#switching-from-ip-in-ip-to-vxlan

@@ -25,9 +25,9 @@ disable_addons() {
     addon_arguments=""
     if [ "$action" = "storage" ] && [ ${destroy_storage_enabled} ]
     then
-       microk8s.disable $action:destroy-storage > /dev/null 2>&1 || true
+       microk8s disable $action:destroy-storage > /dev/null 2>&1 || true
     else
-       microk8s.disable $action > /dev/null 2>&1 || true
+       microk8s disable $action > /dev/null 2>&1 || true
     fi
   done
   echo "All addons disabled."
@@ -70,7 +70,7 @@ clean_cluster() {
   then
     $KUBECTL delete $REMOVEABLE_SCS
   fi
-  
+
   # Finally clean up the namespaces
   REMOVEABLE_NSES=$($KUBECTL get ns -o=name | awk -F/ '{if ($2 !~ /^(default|kube-public|kube-system|kube-node-lease)$/) print}' | paste -s --delimiters=' ')
   if [ -n "$REMOVEABLE_NSES" ]
@@ -99,9 +99,17 @@ clean_cluster() {
   fi
 }
 
+apply_cni() {
+  if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ]
+  then
+    echo "Setting up the CNI"
+    $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+  fi
+}
+
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.reset on the master."
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s reset on the master."
   exit 0
 fi
 
@@ -143,3 +151,4 @@ exit_if_no_permissions
 disable_addons
 clean_cluster
 
+apply_cni

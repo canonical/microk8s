@@ -10,8 +10,9 @@ from cli.microk8s import cli
 
 
 class TestClass:
-
-    @pytest.mark.skipif(platform.system() != 'Linux', reason='Add/remove multipass is available on Linux')
+    @pytest.mark.skipif(
+        platform.system() != 'Linux', reason='Add/remove multipass is available on Linux'
+    )
     @pytest.mark.skipif(os.getuid() != 0, reason='Add/remove multipass is possible to root')
     @mock.patch("sys.stdin.isatty", return_value=True)
     def test_install_remove_multipass(self, tty_mock):

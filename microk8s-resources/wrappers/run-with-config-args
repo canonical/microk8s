@@ -83,13 +83,55 @@ then
       n=$[$n+1]
       sleep 6
     done
-
   fi
+
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
   then
     # Mark the api server as starting. This is needed incase you
-    # microk8s.stop and then snap start microk8s
+    # microk8s stop and then snap start microk8s
     rm -f ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+  fi
+
+  if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]
+  then
+    ipvs="ipv4 ipv6"
+    for ipv in $ipvs
+    do
+      if [ -e "/proc/sys/net/$ipv/conf/all/forwarding" ] &&
+         ! grep -e "1" "/proc/sys/net/$ipv/conf/all/forwarding"
+      then
+        echo "Enable ip forwarding for $ipv"
+        echo "1" > "/proc/sys/net/$ipv/conf/all/forwarding"
+      fi
+    done
+  fi
+
+  if [ "${app}" = "kube-proxy" ] &&
+     [ -f "${SNAP_DATA}/var/lock/host-access-enabled" ] &&
+     ! ip link show lo:microk8s &> /dev/null
+  then
+    IP_ADDRESS=$(<"${SNAP_DATA}/var/lock/host-access-enabled")
+    if ! "$SNAP/sbin/ifconfig" lo:microk8s "$IP_ADDRESS" up
+    then
+      echo "Failed to enable host-access"
+    else
+      echo "Host-access enabled [${IP_ADDRESS}]"
+    fi
+  fi
+
+  if [ "${app}" = "kube-proxy" ] &&
+     ! [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ]
+  then
+    if ! modprobe br_netfilter
+    then
+      refresh_opt_in_config "proxy-mode" "userspace" kube-proxy
+    fi
+  fi
+  if [ "${app}" = "kube-proxy" ] &&
+     [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ] &&
+     grep 0 /proc/sys/net/bridge/bridge-nf-call-iptables
+  then
+    echo "1" > /proc/sys/net/bridge/bridge-nf-call-iptables
   fi
 fi
 

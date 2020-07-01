@@ -29,18 +29,13 @@ logger = logging.getLogger(__name__)
 
 
 class Provider(abc.ABC):
-
     def __init__(
-        self,
-        *,
-        echoer,
-        is_ephemeral: bool = False,
-        build_provider_flags: Dict[str, str] = None,
+        self, *, echoer, is_ephemeral: bool = False, build_provider_flags: Dict[str, str] = None,
     ) -> None:
         self.echoer = echoer
         self._is_ephemeral = is_ephemeral
 
-        self.instance_name = "MicroK8sVM"
+        self.instance_name = "microk8s-vm"
 
         if build_provider_flags is None:
             build_provider_flags = dict()
@@ -93,9 +88,7 @@ class Provider(abc.ABC):
         """Return the instance info."""
 
     @abc.abstractmethod
-    def run(
-        self, command: Sequence[str], hide_output: bool = False
-    ) -> Optional[bytes]:
+    def run(self, command: Sequence[str], hide_output: bool = False) -> Optional[bytes]:
         """Run a command on the instance."""
 
     @abc.abstractmethod
@@ -134,11 +127,31 @@ class Provider(abc.ABC):
             self._start()
         except errors.ProviderInstanceNotFoundError:
             self._launch(specs)
+            self._check_connectivity()
             # We need to setup MicroK8s and scan for cli commands
-            self._setup_microk8s()
+            self._setup_microk8s(specs)
 
-    def _setup_microk8s(self) -> None:
-        self.run("snap install microk8s --classic".split())
+    def _check_connectivity(self) -> None:
+        """Check that the VM can access the internet."""
+        try:
+            self.run("ping -c 1 snapcraft.io".split(), hide_output=True)
+        except errors.ProviderLaunchError:
+            self.destroy()
+            url = None
+            if sys.platform == "win32":
+                url = "https://multipass.run/docs/troubleshooting-networking-on-windows"
+            elif sys.platform == "darwin":
+                url = "https://multipass.run/docs/troubleshooting-networking-on-macos"
+
+            if url:
+                raise errors.ConnectivityError(
+                    "The VM cannot connect to snapcraft.io, please see {}".format(url)
+                )
+            else:
+                raise
+
+    def _setup_microk8s(self, specs: Dict) -> None:
+        self.run("snap install microk8s --classic --channel {}".format(specs['channel']).split())
 
     def _get_env_command(self) -> Sequence[str]:
         """Get command sequence for `env` with configured flags."""

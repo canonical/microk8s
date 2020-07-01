@@ -10,22 +10,12 @@ source $SNAP/actions/common/utils.sh
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s.enable on the master."
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s enable on the master."
   exit 0
 fi
 
 if echo "$*" | grep -q -- '--help'; then
-    prog=$(basename -s.wrapper "$0" | tr - .)
-    echo "Usage: $prog ADDON..."
-    echo "Enable one or more ADDON included with microk8s"
-    echo "Example: $prog dns storage"
-    echo
-    echo "Available addons:"
-    echo
-    actions="$(get_all_addons)"
-    for action in $actions; do
-        echo "  $action"
-    done
+    LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/enable.py $@
     exit
 fi
 
@@ -34,20 +24,18 @@ exit_if_no_permissions
 
 result=1
 for addon in "$@"; do
-  # Making sure the cluster is up and running befor each addon
-  STATUS=$(${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30)
-  if echo $STATUS | grep "$addon: enabled" >/dev/null
-  then
-    echo "$addon is already enabled"
+  # Making sure the cluster is up and running before each addon
+  action="$(addon_name $addon)"
+  arguments="$(addon_arguments $addon)"
+  # Check if the addon is already enabled, then skip.
+  if ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 --addon $action | grep "enabled" >/dev/null; then
+    echo "Addon $action is already enabled."
     result=0
     continue
   fi
-
-  action="$(addon_name $addon)"
-  arguments="$(addon_arguments $addon)"
+  
   # If there is a script to execute for the $action run the script and ignore any yamls
   if [ -f "${SNAP}/actions/enable.$action.sh" ]; then
-
     "${SNAP}/actions/enable.$action.sh" "${arguments}"
     enable_result="$?"
     if [ "$enable_result" = "0" ]

@@ -2,7 +2,7 @@
 
 
 virtualenv -p python3 .venv
-source ./bin/activate
+source ./.venv/bin/activate
 pip install -r requirements.txt
 pyinstaller ./microk8s.spec
 deactivate

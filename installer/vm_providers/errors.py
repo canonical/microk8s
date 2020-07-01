@@ -21,6 +21,10 @@ from typing import Sequence  # noqa: F401
 from common.errors import BaseError
 
 
+class ConnectivityError(BaseError):
+    pass
+
+
 class ProviderBaseError(BaseError):
     pass
 
@@ -40,13 +44,9 @@ class ProviderNotFound(ProviderBaseError):
 
     fmt = "You need {provider!r} set-up to build snaps: {error_message}."
 
-    def __init__(
-        self, *, provider: str, prompt_installable: bool, error_message: str
-    ) -> None:
+    def __init__(self, *, provider: str, prompt_installable: bool, error_message: str) -> None:
         super().__init__(
-            provider=provider,
-            prompt_installable=prompt_installable,
-            error_message=error_message,
+            provider=provider, prompt_installable=prompt_installable, error_message=error_message,
         )
         self.prompt_installable = prompt_installable
         self.provider = provider
@@ -181,9 +181,7 @@ class ProviderExecError(ProviderBaseError):
         "{provider_name!r}: returned exit code {exit_code!r}."
     )
 
-    def __init__(
-        self, *, provider_name: str, command: Sequence[str], exit_code: int
-    ) -> None:
+    def __init__(self, *, provider_name: str, command: Sequence[str], exit_code: int) -> None:
         command_string = " ".join(shlex.quote(i) for i in command)
         super().__init__(
             provider_name=provider_name,
@@ -265,9 +263,7 @@ class ProviderInfoError(ProviderBaseError):
     )
 
     def __init__(self, *, provider_name: str, exit_code: int, stderr: bytes) -> None:
-        super().__init__(
-            provider_name=provider_name, exit_code=exit_code, stderr=stderr.decode()
-        )
+        super().__init__(provider_name=provider_name, exit_code=exit_code, stderr=stderr.decode())
 
 
 class ProviderInstanceNotFoundError(ProviderBaseError):
@@ -285,12 +281,8 @@ class ProviderInfoDataKeyError(ProviderBaseError):
         "It is missing a required key {missing_key!r} in {data!r}."
     )
 
-    def __init__(
-        self, *, provider_name: str, missing_key: str, data: Dict[str, Any]
-    ) -> None:
-        super().__init__(
-            provider_name=provider_name, missing_key=missing_key, data=data
-        )
+    def __init__(self, *, provider_name: str, missing_key: str, data: Dict[str, Any]) -> None:
+        super().__init__(provider_name=provider_name, missing_key=missing_key, data=data)
 
 
 class ProviderBadDataError(ProviderBaseError):
