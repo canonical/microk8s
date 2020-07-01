@@ -11,7 +11,7 @@ echo "Reconfiguring apiserver"
 refresh_opt_in_config "authorization-mode" "AlwaysAllow" kube-apiserver
 if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then
-  restart_service "kube-apiserver"
+  restart_service "apiserver"
 else
   run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-apiserver"
 fi
