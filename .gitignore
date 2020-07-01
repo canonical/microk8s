@@ -2,7 +2,6 @@
 /parts/
 /prime/
 /stage/
-/snap/*
 !/snap/hooks/
 *.snap
 microk8s.egg-info/
