@@ -225,11 +225,7 @@ wait_for_service() {
     # Return fail if the service did not start in 30 seconds
     local service_name="$1"
     local TRY_ATTEMPT=0
-<<<<<<< HEAD
     while ! (snapctl services ${SNAP_NAME}.daemon-${service_name} | grep active) &&
-=======
-    while ! (run_with_sudo preserve_env snapctl services ${SNAP_NAME}.daemon-${service_name} | grep active) &&
->>>>>>> master
           ! [ ${TRY_ATTEMPT} -eq 30 ]
     do
         TRY_ATTEMPT=$((TRY_ATTEMPT+1))
