@@ -21,6 +21,7 @@ from .common.utils import (
     is_token_expired,
     get_dqlite_port,
     get_cluster_agent_port,
+    get_arg,
 )
 
 from flask import Flask, jsonify, request, abort, Response
@@ -191,24 +192,6 @@ def getCA():
     with open(ca_file) as fp:
         ca = fp.read()
     return ca
-
-
-def get_arg(key, file):
-    """
-    Get an argument from an arguments file
-
-    :param key: the argument we look for
-    :param file: the arguments file to search in
-    :returns: the value of the argument or None(if the key doesn't exist)
-    """
-    filename = "{}/args/{}".format(snapdata_path, file)
-    with open(filename) as fp:
-        for _, line in enumerate(fp):
-            if line.startswith(key):
-                args = line.split(' ')
-                args = args[-1].split('=')
-                return args[-1].rstrip()
-    return None
 
 
 def is_valid(token_line, token_type=cluster_tokens_file):
@@ -590,6 +573,7 @@ def join_node_dqlite():
     remove_token_from_file(token, cluster_tokens_file)
     api_port = get_arg('--secure-port', 'kube-apiserver')
     node_addr = request.remote_addr
+    api_authz = get_arg('--authorization-mode', 'kube-apiserver')
     node_name = get_node_ep(hostname, node_addr)
     if node_name != hostname:
         kubelet_args = read_kubelet_args_file(node_name)
@@ -606,6 +590,7 @@ def join_node_dqlite():
         voters=voters,
         callback_token=callback_token,
         apiport=api_port,
+        apiauthz=api_authz,
         kubelet_args=kubelet_args,
         call_address=node_addr,
         admin_token=get_token('admin'),

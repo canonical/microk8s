@@ -146,3 +146,22 @@ def get_cluster_agent_port():
                 if len(port_parse) > 1:
                     cluster_agent_port = port_parse[1].rstrip()
     return cluster_agent_port
+
+
+def get_arg(key, file):
+    """
+    Get an argument from an arguments file
+
+    :param key: the argument we look for
+    :param file: the arguments file to search in
+    :returns: the value of the argument or None(if the key doesn't exist)
+    """
+    snapdata_path = os.environ.get('SNAP_DATA')
+    filename = "{}/args/{}".format(snapdata_path, file)
+    with open(filename) as fp:
+        for _, line in enumerate(fp):
+            if line.startswith(key):
+                args = line.split(' ')
+                args = args[-1].split('=')
+                return args[-1].rstrip()
+    return None

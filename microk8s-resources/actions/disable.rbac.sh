@@ -9,7 +9,13 @@ echo "Disabling RBAC"
 
 echo "Reconfiguring apiserver"
 refresh_opt_in_config "authorization-mode" "AlwaysAllow" kube-apiserver
-run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-apiserver"
+if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
+then
+  restart_service "kube-apiserver"
+else
+  run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-apiserver"
+fi
+
 apiserver=$(wait_for_service apiserver)
 if [[ $apiserver == fail ]]
 then

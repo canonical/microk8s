@@ -21,6 +21,7 @@ from common.utils import (
     is_node_running_dqlite,
     get_dqlite_port,
     get_cluster_agent_port,
+    get_arg,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -33,6 +34,7 @@ callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 server_cert_file_via_env = "${SNAP_DATA}/certs/server.remote.crt"
 server_cert_file = "{}/certs/server.remote.crt".format(snapdata_path)
+default_api_port = "16443"
 
 CLUSTER_API_V2 = "cluster/api/v2.0"
 cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
@@ -246,6 +248,15 @@ def update_kubelet(token, ca, master_ip, api_port):
     create_kubeconfig(token, ca, master_ip, api_port, "kubelet.config", "kubelet")
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
     subprocess.check_call("snapctl restart microk8s.daemon-kubelet".split())
+
+
+def update_apiserver(api_authz):
+    """
+    Configure the apiserver. Note this method does not restart the api server
+
+    :param api_authz: the authorization mode
+    """
+    set_arg('--authorization-mode', api_authz, 'kube-apiserver')
 
 
 def store_remote_ca(ca):
@@ -802,6 +813,9 @@ def join_dqlite(connection_parts):
     store_cert("ca.crt", info["ca"])
     store_cert("ca.key", info["ca_key"])
     store_cert("serviceaccount.key", info["service_account_key"])
+    api_port = get_arg('--secure-port', 'kube-apiserver')
+    if not api_port:
+        api_port = default_api_port
     # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
     for component in [
         ("kube-proxy", "kubeproxy", "proxy.config"),
@@ -814,12 +828,13 @@ def join_dqlite(connection_parts):
             print("Error, could not locate {} token. Joining cluster failed.".format(component[0]))
             exit(3)
         assert token is not None
-        # TODO make this configurable
         create_kubeconfig(
-            component_token, info["ca"], "127.0.0.1", "16443", component[2], component[1]
+            component_token, info["ca"], "127.0.0.1", api_port, component[2], component[1]
         )
     if "admin_token" in info:
         replace_admin_token(info["admin_token"])
+    if "apiauthz" in info:
+        update_apiserver(info["apiauthz"])
     create_admin_kubeconfig(info["ca"], info["admin_token"])
     set_arg("--hostname-override", hostname_override, "kube-proxy")
     store_base_kubelet_args(info["kubelet_args"])
