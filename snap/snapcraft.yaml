@@ -435,7 +435,7 @@ parts:
   # Use apt-cache show <package> to make sure
   # a) the dockerd we ship in this snap is supported by nvidia-container-runtime
   # b) the version dependencies of each package is met.
-    nvidia-runtime:
+  nvidia-runtime:
     plugin: dump
     source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime_3.2.0-1_amd64.deb
     source-type: deb
