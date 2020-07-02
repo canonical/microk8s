@@ -506,3 +506,4 @@ slots:
     content: microk8s
     source:
       read: [$SNAP/.microk8s-info/microk8s]
+
