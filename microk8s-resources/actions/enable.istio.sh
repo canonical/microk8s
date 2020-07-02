@@ -18,7 +18,7 @@ then
  -o "$SNAP_DATA/tmp/istio/istio.tar.gz"
   run_with_sudo gzip -d "$SNAP_DATA/tmp/istio/istio.tar.gz"
   run_with_sudo tar -xvf "$SNAP_DATA/tmp/istio/istio.tar"
-  run_with_sudo chmod 777 "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}")
+  run_with_sudo chmod 777 "$SNAP_DATA/tmp/istio/istio-${ISTIO_VERSION}")
   run_with_sudo mkdir -p "$SNAP_DATA/bin/"
   run_with_sudo mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/bin/istioctl" "$SNAP_DATA/bin/"
   run_with_sudo chmod +x "$SNAP_DATA/bin/"
