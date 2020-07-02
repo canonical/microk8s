@@ -22,8 +22,10 @@ jobs:
       run: sudo /snap/bin/lxd init --auto
     - name: Install snapcraft
       run: sudo snap install snapcraft --classic
+    - name: New group
+      run: newgrp lxd
     - name: Build snap
-      run: sg lxd -c 'snapcraft --use-lxd'
+      run: snapcraft --use-lxd
     - name: Make built snap name generic
       run: sudo mv microk8s*.snap microk8s.snap
     - name: Uploading snap
