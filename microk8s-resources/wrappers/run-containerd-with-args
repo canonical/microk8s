@@ -7,6 +7,7 @@ ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 export XDG_RUNTIME_DIR="${SNAP_COMMON}/run"
+export XDG_CONFIG_HOME="${SNAP_DATA}/args/"
 mkdir -p "${XDG_RUNTIME_DIR}"
 
 source $SNAP/actions/common/utils.sh
