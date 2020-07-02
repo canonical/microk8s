@@ -540,10 +540,17 @@ parts:
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
 
       # Build runc
-      go get -d github.com/opencontainers/runc
+      go get github.com/opencontainers/runc
       (
         cd $GOPATH/src/github.com/opencontainers/runc
         git checkout ${RUNC_COMMIT}
+
+        for patch in "$SNAPCRAFT_STAGE"/runc-patches/*.patch; do
+          echo "Applying $(basename "$patch") ..."
+          git apply --ignore-space-change --ignore-whitespace "$patch"
+          echo
+        done
+
         make BUILDTAGS='seccomp apparmor'
       )
       cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
@@ -560,24 +567,6 @@ parts:
       cp $GOPATH/src/github.com/containerd/containerd/bin/* $SNAPCRAFT_PART_INSTALL/bin/
       rm $SNAPCRAFT_PART_INSTALL/bin/containerd-stress
 
-      # Build runc
-      go get github.com/opencontainers/runc
-      (
-        cd $GOPATH/src/github.com/opencontainers/runc
-        git checkout ${RUNC_COMMIT}
-
-        for patch in "$SNAPCRAFT_STAGE"/runc-patches/*.patch; do
-          echo "Applying $(basename "$patch") ..."
-          git apply --ignore-space-change --ignore-whitespace "$patch"
-          echo
-        done
-
-        make BUILDTAGS='seccomp apparmor'
-      )
-      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
-
-      # Assemble the snap
-      # snapcraftctl build
     organize:
       containerd/install/bin/*: bin/
     stage-packages:
