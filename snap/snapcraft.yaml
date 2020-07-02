@@ -12,47 +12,8 @@ description: |-
  them to MicroK8s on your boxes.
 
 grade: stable
-confinement: strict
-base: core18
-
-plugs:
-  docker-privileged:
-    interface: docker-support
-    privileged-containers: true
-  k8s-kubelet:
-    interface: kubernetes-support
-    flavor: kubelet
-  k8s-kubeproxy:
-    interface: kubernetes-support
-    flavor: kubeproxy
-  k8s-journald:
-    interface: kubernetes-support
-    flavor: autobind-unix
-  dot-kube:
-    interface: personal-files
-    write:
-    - $HOME/.kube
-  ld-cache:
-    interface: system-files
-    read:
-    - /etc/ld.so.cache
-
-hooks:
-  configure:
-    plugs:
-    - dot-kube
-  install:
-    plugs:
-    - network-bind
-    - network-control
-    - firewall-control
-  remove:
-    plugs:
-    - k8s-kubelet
-    - mount-observe
-    - network-bind
-    - network-control
-    - firewall-control
+confinement: classic
+base: core
 
 apps:
   microk8s:
@@ -60,367 +21,80 @@ apps:
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
-    plugs:
-    - network-bind
   daemon-flanneld:
     command: run-flanneld-with-args
     daemon: simple
-    plugs:
-    - network-bind
-    - network-control
-    - firewall-control
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
-    plugs:
-    - ld-cache
-    - k8s-journald
-    - network-bind
-    - docker-support
-    - docker-privileged
-    - firewall-control
-    - kernel-module-control
-    - network-control
-    - mount-observe
-    - kubernetes-support
-    - opengl
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
     daemon: simple
-    plugs:
-    - network-bind
-    - network-observe
-    - k8s-journald
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
-    plugs:
-    - network-bind
-    - network-observe
-    - network-control
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
-    plugs:
-    - mount-observe
-    - network-bind
-    - network-observe
-    - network-control
   daemon-controller-manager:
     command: run-with-config-args kube-controller-manager
     daemon: simple
-    plugs:
-    - network-bind
-    - docker-support
-    - docker-privileged
-    - firewall-control
-    - kernel-module-control
-    - network-control
   daemon-scheduler:
     command: run-with-config-args kube-scheduler
     daemon: simple
-    plugs:
-    - network-bind
-    - k8s-journald
   daemon-kubelet:
     command: run-with-config-args kubelet
     daemon: simple
-    plugs:
-    - dot-kube
-    - firewall-control
-    - hardware-observe
-    - k8s-kubelet
-    - k8s-journald
-    - mount-observe
-    - network-bind
-    - network-control
-    - process-control
-    - system-observe
-    - opengl
   daemon-proxy:
     command: run-with-config-args kube-proxy
     daemon: simple
-    plugs:
-    - network-bind
-    - network-control
-    - network-observe
-    - firewall-control
-    - k8s-kubeproxy
-    - kernel-module-observe
-    - mount-observe
-    - system-observe
-    - kernel-module-control
   dashboard-proxy:
     command: microk8s-dashboard-proxy.wrapper
-    plugs:
-    - network-bind
-    - network-control
-    - network-observe
-    - firewall-control
-    - k8s-kubeproxy
-    - kernel-module-observe
-    - mount-observe
-    - system-observe
-    - kernel-module-control
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
-    plugs:
-    - dot-kube
-    - home
-    - firewall-control
-    - network-bind
-    - k8s-kubelet
-    - hardware-observe
-    - mount-observe
-    - network-control
-    - process-control
-    - system-observe
   add-node:
     command: microk8s-add-node.wrapper
-    plugs:
-    - network
-    - network-bind
-    - network-observe
-    - mount-observe
   refresh-certs:
     command: microk8s-refresh-certs.wrapper
   join:
     command: microk8s-join.wrapper
-    plugs:
-    - network
-    - mount-observe
   remove-node:
     command: microk8s-remove-node.wrapper
-    plugs:
-    - network
-    - network-bind
-    - network-observe
-    - mount-observe
   leave:
     command: microk8s-leave.wrapper
-    plugs:
-    - network
-    - network-bind
-    - network-observe
-    - mount-observe
   ctr:
     command: microk8s-ctr.wrapper
-    plugs:
-    - dot-kube
-    - home
-    - firewall-control
-    - network-bind
-    - k8s-kubelet
-    - hardware-observe
-    - mount-observe
-    - network-control
-    - process-control
-    - system-observe
   inspect:
     command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
   enable:
     command: microk8s-enable.wrapper
-    plugs:
-    - home
-    - network
-    - network-control
-    - kernel-module-observe
-    - opengl
   disable:
     command: microk8s-disable.wrapper
-    plugs:
-    - network
-    - network-control
   start:
     command: microk8s-start.wrapper
-    plugs:
-    - network
   stop:
     command: microk8s-stop.wrapper
-    plugs:
-    - network
   status:
     command: microk8s-status.wrapper
-    plugs:
-    - network
   config:
     command: microk8s-config.wrapper
   reset:
     command: microk8s-reset.wrapper
-    plugs:
-    - network
   istioctl:
     command: microk8s-istioctl.wrapper
-    plugs:
-    - network
   linkerd:
     command: microk8s-linkerd.wrapper
-    plugs:
-    - network
   helm:
     command: microk8s-helm.wrapper
-    plugs:
-    - network
   helm3:
     command: microk8s-helm3.wrapper
-    plugs:
-    - network
   cilium:
     command: microk8s-cilium.wrapper
-    plugs:
-    - network
   juju:
     command: microk8s-juju.wrapper
-    plugs:
-    - network
-
-passthrough:
-  system-usernames:
-    snap_daemon: shared
-  layout:
-    /usr/libexec:
-      symlink: $SNAP_COMMON/usr/libexec
-    /usr/local/lib:
-      bind: $SNAP_COMMON/usr/local/lib
-    /var/lib/cni:
-      bind: $SNAP_COMMON/var/lib/cni
-    /var/log/pods:
-      bind: $SNAP_COMMON/var/log/pods
-    /var/log/containers:
-      bind: $SNAP_COMMON/var/log/containers
-    /var/lib/kubelet:
-      bind: $SNAP_DATA/kubelet
-    /var/lib/kube-proxy:
-      bind: $SNAP_DATA/kube-proxy
-    /etc/nvidia-container-runtime/config.toml:
-      bind-file: $SNAP_COMMON/etc/nvidia-container-runtime/config.toml
-    /var/log/nvidia-container-runtime.log:
-      bind-file: $SNAP_COMMON/var/log/nvidia-container-runtime.log
-    /usr/lib/x86_64-linux-gnu/libnvoptix.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvoptix.so.1
-    /usr/lib/x86_64-linux-gnu/libnvoptix.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvoptix.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opticalflow.so
-    /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opticalflow.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opticalflow.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-tls.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-tls.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvcuvid.so:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so
-    /usr/lib/x86_64-linux-gnu/libnvcuvid.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so.1
-    /usr/lib/x86_64-linux-gnu/libnvcuvid.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so
-    /usr/lib/x86_64-linux-gnu/libnvidia-rtcore.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-rtcore.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-rtcore.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-rtcore.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-compiler.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-compiler.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-eglcore.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-eglcore.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-encode.so:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-encode.so
-    /usr/lib/x86_64-linux-gnu/libnvidia-encode.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-encode.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-encode.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-encode.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-fatbinaryloader.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fatbinaryloader.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fbc.so
-    /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fbc.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fbc.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-glcore.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glcore.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-glsi.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glsi.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-glvkspirv.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glvkspirv.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-ifr.so:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ifr.so
-    /usr/lib/x86_64-linux-gnu/libnvidia-ifr.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ifr.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-ifr.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ifr.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-ml.so:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ml.so
-    /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ml.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ml.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opencl.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opencl.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ptxjitcompiler.so
-    /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ptxjitcompiler.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ptxjitcompiler.so.435.21
-    /usr/lib/x86_64-linux-gnu/libcuda.so:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libcuda.so
-    /usr/lib/x86_64-linux-gnu/libcuda.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libcuda.so.1
-    /usr/lib/x86_64-linux-gnu/libcuda.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libcuda.so.435.21
-    /usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.0:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libEGL_nvidia.so.0
-    /usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libEGL_nvidia.so.435.21
-    /usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.0:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLX_nvidia.so.0
-    /usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLX_nvidia.so.435.21
-    /usr/lib/x86_64-linux-gnu/libGLESv1_CM_nvidia.so.1:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv1_CM_nvidia.so.1
-    /usr/lib/x86_64-linux-gnu/libGLESv1_CM_nvidia.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv1_CM_nvidia.so.435.21
-    /usr/lib/x86_64-linux-gnu/libGLESv2_nvidia.so.2:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv2_nvidia.so.2
-    /usr/lib/x86_64-linux-gnu/libGLESv2_nvidia.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv2_nvidia.so.435.21
 
 parts:
-  patches:
-    plugin: dump
-    source: patches/
-    prime: ["-*"]
-  libnftnl:
-    plugin: autotools
-    source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
-    build-packages:
-    - libjansson-dev
-    - libmnl-dev
-  iptables:
-    after:
-    - libnftnl
-    source: https://www.netfilter.org/projects/iptables/files/iptables-1.6.1.tar.bz2
-    plugin: autotools
-    build-packages:
-    - bison
-    - flex
-    - libmnl-dev
-    - libnfnetlink-dev
-    - libnetfilter-conntrack3
-    - libnetfilter-conntrack-dev
-    configflags:
-    - "--disable-shared"
-    - "--enable-static"
-    prime: [ -bin/iptables-xml ]
   libco:
     source: https://github.com/canonical/libco
     build-attributes: [no-patchelf]
@@ -523,7 +197,7 @@ parts:
       - bin/migrator
   containerd:
     build-snaps: [go]
-    after: [iptables, patches]
+    after: [iptables]
     source: https://github.com/containerd/containerd
     source-type: git
     plugin: go
@@ -559,22 +233,6 @@ parts:
       )
       cp $GOPATH/src/github.com/containerd/containerd/bin/* $SNAPCRAFT_PART_INSTALL/bin/
       rm $SNAPCRAFT_PART_INSTALL/bin/containerd-stress
-
-      # Build runc
-      go get github.com/opencontainers/runc
-      (
-        cd $GOPATH/src/github.com/opencontainers/runc
-        git checkout ${RUNC_COMMIT}
-
-        for patch in "$SNAPCRAFT_STAGE"/runc-patches/*.patch; do
-          echo "Applying $(basename "$patch") ..."
-          git apply --ignore-space-change --ignore-whitespace "$patch"
-          echo
-        done
-
-        make BUILDTAGS='seccomp apparmor'
-      )
-      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
 
       # Assemble the snap
       # snapcraftctl build
@@ -768,79 +426,70 @@ parts:
       fi
       snapcraftctl build
 
+  # Unfortunately we cannot add package repositories to our snaps
+  # https://forum.snapcraft.io/t/proposal-additional-package-sources/2199
+  # We handpick the debs we need.
+  # To update these debs add the repository
+  # Follow the instructions in https://github.com/NVIDIA/nvidia-docker and
+  # install the https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list repo.
+  # Use apt-cache show <package> to make sure
+  # a) the dockerd we ship in this snap is supported by nvidia-container-runtime
+  # b) the version dependencies of each package is met.
   nvidia-runtime:
-    plugin: nil
-    build-packages:
-      - gcc
-      - make
-      - pkg-config
-    build-snaps:
-      - go
-    source: https://github.com/NVIDIA/nvidia-container-runtime
-    source-type: git
-    source-tag: "3.1.0"
+    plugin: dump
+    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime_2.0.0+docker18.06.1-1_amd64.deb
+    source-type: deb
     override-build: |
       set -eu
-      mkdir go
-      export GOPATH="$(pwd)/go"
-      export PATH="${GOPATH}/bin:${PATH}"
-      cd runtime/src/
-      go get -u github.com/pelletier/go-toml
-      go get -u github.com/opencontainers/runtime-spec/specs-go
-      make
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/bin/
-      cp nvidia-container-runtime $SNAPCRAFT_PART_INSTALL/usr/bin/nvidia-container-runtime
-      # cd ../../hook/nvidia-container-runtime-hook
-      # go get -u github.com/BurntSushi/toml
-      # go build
-      # cp nvidia-container-runtime-hook $SNAPCRAFT_PART_INSTALL/usr/bin/nvidia-container-runtime-hook
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 
-  nvidia-runtime-toolkit:
-    plugin: nil
-    build-packages:
-      - curl
-      - gcc
-      - make
-      - pkg-config
-    build-snaps:
-      - go
-    source: https://github.com/NVIDIA/container-toolkit
-    source-type: git
+  nvidia-runtime-hook:
+    plugin: dump
+    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime-hook_1.4.0-1_amd64.deb
+    source-type: deb
     override-build: |
       set -eu
-      mkdir go
-      export GOPATH="$(pwd)/go"
-      export PATH="${GOPATH}/bin:${PATH}"
-      go get -u github.com/BurntSushi/toml
-      cd pkg
-      go build -ldflags "-s -w" -o nvidia-container-toolkit
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/bin/
-      cp nvidia-container-toolkit $SNAPCRAFT_PART_INSTALL/usr/bin/nvidia-container-toolkit
-      cp nvidia-container-toolkit $SNAPCRAFT_PART_INSTALL/usr/bin/nvidia-container-runtime-hook
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 
   libnvidia:
-    after: [patches]
-    plugin: nil
-    build-packages:
-      - gcc
-      - make
-      - bmake
-      - m4
-      - pkg-config
-      - lsb-core
-      - libcap-dev
-      - libseccomp-dev
-    source: https://github.com/NVIDIA/libnvidia-container
-    source-type: git
-    source-tag: v1.0.6
+    plugin: dump
+    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container1_1.0.0-1_amd64.deb
+    source-type: deb
     override-build: |
-      for patch in "$SNAPCRAFT_STAGE"/libnvidia-patches/*.patch; do
-        echo "Applying $(basename "$patch") ..."
-        git apply --ignore-space-change --ignore-whitespace "$patch"
-        echo
-      done
-      make
-      make install
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
+
+  libnvidia-tools:
+    plugin: dump
+    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container-tools_1.0.0-1_amd64.deb
+    source-type: deb
+    override-build: |
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      if ! [ "${ARCH}" = "arm64" ]
+      then
+        snapcraftctl build
+      else
+        echo "Skipped"
+      fi
 
   juju:
     plugin: dump
@@ -857,3 +506,4 @@ slots:
     content: microk8s
     source:
       read: [$SNAP/.microk8s-info/microk8s]
+
