@@ -73,11 +73,11 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
 
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
-            print('{:>4}'.format("enabled:"))
+            print('{:>2}{}'.format("", "enabled:"))
             for enabled in enabled_addons:
                 print(console_formatter.format("", enabled["name"], enabled["description"]))
         if disabled_addons and len(disabled_addons) > 0:
-            print('{:>4}'.format("disabled:"))
+            print('{:>2}{}'.format("", "disabled:"))
             for disabled in disabled_addons:
                 print(console_formatter.format("", disabled["name"], disabled["description"]))
     else:
