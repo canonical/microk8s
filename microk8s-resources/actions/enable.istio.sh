@@ -8,7 +8,7 @@ echo "Enabling Istio"
 
 if [ ! -f "${SNAP_DATA}/bin/istioctl" ]
 then
-  ISTIO_VERSION="v1.5.1"
+  ISTIO_VERSION="v1.5.7"
   echo "Fetching istioctl version $ISTIO_VERSION."
   ISTIO_ERSION=$(echo $ISTIO_VERSION | sed 's/v//g')
   mkdir -p "${SNAP_DATA}/tmp/istio"

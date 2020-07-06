@@ -84,6 +84,8 @@ apps:
     - mount-observe
     - kubernetes-support
     - opengl
+    - cifs-mount
+    - fuse-support
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
     daemon: simple
