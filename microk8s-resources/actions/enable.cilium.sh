@@ -24,7 +24,7 @@ echo "Enabling Cilium"
 
 read -ra CILIUM_VERSION <<< "$1"
 if [ -z "$CILIUM_VERSION" ]; then
-  CILIUM_VERSION="v1.6"
+  CILIUM_VERSION="v1.7.6"
 fi
 CILIUM_ERSION=$(echo $CILIUM_VERSION | sed 's/v//g')
 
