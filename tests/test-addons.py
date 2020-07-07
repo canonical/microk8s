@@ -19,6 +19,7 @@ from validators import (
     validate_rbac,
     validate_cilium,
     validate_kubeflow,
+    validate_metallb_config
 )
 from utils import (
     microk8s_enable,
@@ -247,3 +248,20 @@ class TestAddons(object):
         validate_kubeflow()
         print("Disabling kubeflow")
         microk8s_disable("kubeflow")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64',
+        reason="Metallb tests are only relevant in x86 architectures",
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping metallb test as we are under time pressure",
+    )
+    def test_metallb_addon(self):
+        addon = "metallb"
+        ip_ranges = "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111"
+        print("Enabling metallb")
+        microk8s_enable( "{}:{}".format(addon,ip_ranges), timeout_insec = 500 )
+        validate_metallb_config(ip_ranges)
+        print("Disabling metallb")
+        microk8s_disable("metallb")
