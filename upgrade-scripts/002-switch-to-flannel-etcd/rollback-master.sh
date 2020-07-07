@@ -22,8 +22,8 @@ fi
 
 set_service_not_expected_to_start flanneld
 if [ -e "$BACKUP_DIR/args/cni-network" ]; then
-  rm "$SNAP_DATA"/args/cni-network/*
-  cp "$BACKUP_DIR"/args/cni-network/* "$SNAP_DATA/args/cni-network/"
+  find "$SNAP_DATA"/args/cni-network/* -not -name '*multus*' -exec rm -f {} \;
+  cp -rf "$BACKUP_DIR"/args/cni-network/* "$SNAP_DATA/args/cni-network/"
 fi
 
 chmod -R ug+rwX "${SNAP_DATA}/args/"

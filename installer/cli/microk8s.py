@@ -289,8 +289,6 @@ def _not_installed(echo) -> None:
 
 
 def _get_microk8s_commands() -> List:
-    additional_commands = ['dashboard-proxy']
-
     vm_provider_name = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
     echo = Echo()
@@ -305,7 +303,9 @@ def _get_microk8s_commands() -> List:
                 for c in commands.split()
                 if c.decode().startswith("microk8s.")
             ]
-            complete = mk8s + additional_commands
+            complete = mk8s
+            if 'dashboard-proxy' not in mk8s:
+                complete += ['dashboard-proxy']
             complete.sort()
             return complete
         else:

@@ -6,7 +6,7 @@
 --root-dir=${SNAP_COMMON}/var/lib/kubelet
 --fail-swap-on=false
 --cni-conf-dir=${SNAP_DATA}/args/cni-network/
---cni-bin-dir=${SNAP}/opt/cni/bin/
+--cni-bin-dir=${SNAP_DATA}/opt/cni/bin/
 --feature-gates=DevicePlugins=true
 --eviction-hard="memory.available<100Mi,nodefs.available<1Gi,imagefs.available<1Gi"
 --container-runtime=remote

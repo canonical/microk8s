@@ -62,7 +62,7 @@ oom_score = 0
   # 'plugins."io.containerd.grpc.v1.cri".cni' contains config related to cni
   [plugins."io.containerd.grpc.v1.cri".cni]
     # bin_dir is the directory in which the binaries for the plugin is kept.
-    bin_dir = "${SNAP}/opt/cni/bin"
+    bin_dir = "${SNAP_DATA}/opt/cni/bin"
 
     # conf_dir is the directory in which the admin places a CNI conf.
     conf_dir = "${SNAP_DATA}/args/cni-network"

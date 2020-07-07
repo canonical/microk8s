@@ -396,6 +396,27 @@ def validate_cilium():
     kubectl("delete -f {}".format(manifest))
 
 
+def validate_multus():
+    """
+    Validate multus by deploying alpine pod with 3 interfaces.
+    """
+
+    wait_for_installation()
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    networks = os.path.join(here, "templates", "multus-networks.yaml")
+    kubectl("create -f {}".format(networks))
+    manifest = os.path.join(here, "templates", "multus-alpine.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=multus-alpine")
+    output = kubectl("exec multus-alpine -- ifconfig eth1", err_out='no')
+    assert "10.111.111.111" in output
+    output = kubectl("exec multus-alpine -- ifconfig eth2", err_out='no')
+    assert "10.222.222.222" in output
+    kubectl("delete -f {}".format(manifest))
+    kubectl("delete -f {}".format(networks))
+
+
 def validate_kubeflow():
     """
     Validate kubeflow
@@ -414,8 +435,6 @@ def validate_metallb_config(ip_ranges="192.168.0.105"):
     if platform.machine() != 'x86_64':
         print("Metallb tests are only relevant in x86 architectures")
         return
-    out = kubectl("get configmap config -n metallb-system -o yaml")
-    yml = yaml.safe_load(out)
-    cfg = yml['data']['config']
+    out = kubectl("get configmap config -n metallb-system -o jsonpath='{.data.config}'")
     for ip_range in ip_ranges.split(","):
-        assert ip_range in cfg
+        assert ip_range in out

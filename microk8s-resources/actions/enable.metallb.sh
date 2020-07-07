@@ -46,7 +46,7 @@ do
     echo "Your input value ($ip_range) is not a valid IP Range"
     exit 1
   fi
-  echo "Applying registry manifest"
-  cat $SNAP/actions/metallb.yaml | $SNAP/bin/sed "s/{{allow_escalation}}/$ALLOWESCALATION/g" | $SNAP/bin/sed "s/{{addresses}}/$ip_range_str/g" | $KUBECTL apply -f -
-  echo "MetalLB is enabled"
 done
+echo "Applying registry manifest"
+cat $SNAP/actions/metallb.yaml | $SNAP/bin/sed "s/{{allow_escalation}}/$ALLOWESCALATION/g" | $SNAP/bin/sed "s/{{addresses}}/$ip_range_str/g" | $KUBECTL apply -f -
+echo "MetalLB is enabled"
