@@ -259,6 +259,8 @@ def get_node_ep(hostname, remote_addr):
     :returns: the node's location
     """
     try:
+        if any(c.isupper() for c in hostname):
+            return remote_addr
         socket.gethostbyname(hostname)
         return hostname
     except socket.gaierror:
@@ -586,9 +588,13 @@ def join_node_dqlite():
         voters = get_dqlite_voters()
     callback_token = get_callback_token()
     remove_token_from_file(token, cluster_tokens_file)
-    node_addr = request.remote_addr
     api_port = get_arg('--secure-port', 'kube-apiserver')
-    kubelet_args = read_kubelet_args_file()
+    node_addr = request.remote_addr
+    node_name = get_node_ep(hostname, node_addr)
+    if node_name != hostname:
+        kubelet_args = read_kubelet_args_file(node_name)
+    else:
+        kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
 
     return jsonify(
@@ -601,8 +607,9 @@ def join_node_dqlite():
         callback_token=callback_token,
         apiport=api_port,
         kubelet_args=kubelet_args,
-        hostname_override=node_addr,
+        call_address=node_addr,
         admin_token=get_token('admin'),
+        hostname_override=node_name,
     )
 
 
