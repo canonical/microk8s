@@ -97,6 +97,7 @@ apps:
     command: apiservice-kicker
     daemon: simple
     plugs:
+    - account-control
     - network-bind
     - network-observe
     - network-control
