@@ -90,15 +90,21 @@ function refresh {
 
   # Create the basic tokens
   echo "Creating new kubeconfig file"
-  admin_token=`grep admin ${SNAP_DATA}/credentials/basic_auth.csv | cut -d, -f1`
   ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
 
   # Create the client kubeconfig
   run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
-  $SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
   $SNAP/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
-  $SNAP/bin/sed -i 's/AUTHTYPE/password/g' ${SNAP_DATA}/credentials/client.config
+  if grep admin ${SNAP_DATA}/credentials/known_tokens.csv 2>&1 > /dev/null
+  then
+    admin_token=`grep admin ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
+    $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/client.config
+    $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/client.config
+  else
+    admin_token=`grep admin ${SNAP_DATA}/credentials/basic_auth.csv | cut -d, -f1`
+    $SNAP/bin/sed -i 's/AUTHTYPE/password/g' ${SNAP_DATA}/credentials/client.config
+  fi
   $SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
 
   # Create the known tokens
