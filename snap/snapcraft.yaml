@@ -16,6 +16,10 @@ confinement: strict
 base: core18
 
 plugs:
+  ca-cert:
+    interface: system-files
+    read:
+    - /etc/ssl/certs/ca-certificates.crt
   docker-privileged:
     interface: docker-support
     privileged-containers: true
@@ -228,7 +232,7 @@ apps:
     - home
     - network
     - network-control
-    - system-files
+    - ca-cert
     - kernel-module-observe
     - opengl
   disable:
@@ -237,7 +241,7 @@ apps:
     - home
     - network
     - network-control
-    - system-files
+    - ca-cert
     - kernel-module-observe
     - opengl
   start:
