@@ -65,8 +65,8 @@ function revert {
   fi
 
   echo "Reverting certificates"
-  run_with_sudo cp -r $BACKUP/certs/ ${SNAP_DATA}/
-  run_with_sudo cp -r $BACKUP/credentials/ ${SNAP_DATA}/
+  cp -r $BACKUP/certs/ ${SNAP_DATA}/
+  cp -r $BACKUP/credentials/ ${SNAP_DATA}/
 
   echo "Restarting"
   $SNAP/microk8s-stop.wrapper || true
@@ -77,14 +77,14 @@ function revert {
 function refresh {
   # Backup
   echo "Backing up certificates under $BACKUP"
-  run_with_sudo mkdir -p $SNAP_DATA/var/log/ca-backup/
-  run_with_sudo cp -r ${SNAP_DATA}/certs $BACKUP
-  run_with_sudo cp -r ${SNAP_DATA}/credentials $BACKUP/
+  mkdir -p $SNAP_DATA/var/log/ca-backup/
+  cp -r ${SNAP_DATA}/certs $BACKUP
+  cp -r ${SNAP_DATA}/credentials $BACKUP/
 
   echo "Creating new certificates"
-  run_with_sudo rm -rf ${SNAP_DATA}/certs/ca.crt
-  run_with_sudo rm -rf ${SNAP_DATA}/certs/front-proxy-ca.crt
-  run_with_sudo rm -rf ${SNAP_DATA}/certs/csr.conf
+  rm -rf ${SNAP_DATA}/certs/ca.crt
+  rm -rf ${SNAP_DATA}/certs/front-proxy-ca.crt
+  rm -rf ${SNAP_DATA}/certs/csr.conf
   produce_certs
   rm -rf .srl
 
@@ -94,7 +94,7 @@ function refresh {
   ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
 
   # Create the client kubeconfig
-  run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
   $SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
   $SNAP/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
@@ -109,7 +109,7 @@ function refresh {
   scheduler_token=`grep kube-scheduler ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
 
   # Create the client kubeconfig for the controller
-  run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/controller.config
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/controller.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/controller.config
   $SNAP/bin/sed -i 's/NAME/controller/g' ${SNAP_DATA}/credentials/controller.config
   $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/controller.config
@@ -117,7 +117,7 @@ function refresh {
   $SNAP/bin/sed -i 's/PASSWORD/'"${controller_token}"'/g' ${SNAP_DATA}/credentials/controller.config
 
   # Create the client kubeconfig for the scheduler
-  run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/scheduler.config
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/scheduler.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/scheduler.config
   $SNAP/bin/sed -i 's/NAME/scheduler/g' ${SNAP_DATA}/credentials/scheduler.config
   $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/scheduler.config
@@ -125,14 +125,14 @@ function refresh {
   $SNAP/bin/sed -i 's/PASSWORD/'"${scheduler_token}"'/g' ${SNAP_DATA}/credentials/scheduler.config
 
   # Create the proxy and kubelet kubeconfig
-  run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/kubelet.config
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/kubelet.config
   $SNAP/bin/sed -i 's/NAME/kubelet/g' ${SNAP_DATA}/credentials/kubelet.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/kubelet.config
   $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/kubelet.config
   $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/kubelet.config
   $SNAP/bin/sed -i 's/PASSWORD/'"${kubelet_token}"'/g' ${SNAP_DATA}/credentials/kubelet.config
 
-  run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/proxy.config
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/proxy.config
   $SNAP/bin/sed -i 's/NAME/kubeproxy/g' ${SNAP_DATA}/credentials/proxy.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/proxy.config
   $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/proxy.config

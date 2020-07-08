@@ -15,7 +15,7 @@ mkdir -p "$BACKUP_DIR"
 mkdir -p "$BACKUP_DIR/args/cni-network/"
 cp "$SNAP_DATA"/args/cni-network/* "$BACKUP_DIR/args/cni-network/" 2>/dev/null || true
 find "$SNAP_DATA"/args/cni-network/* -not -name '*multus*' -exec rm -f {} \;
-run_with_sudo cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
+cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
 
 cp "$SNAP_DATA"/args/kube-apiserver "$BACKUP_DIR/args"
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
