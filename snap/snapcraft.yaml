@@ -228,13 +228,18 @@ apps:
     - home
     - network
     - network-control
+    - system-files
     - kernel-module-observe
     - opengl
   disable:
     command: microk8s-disable.wrapper
     plugs:
+    - home
     - network
     - network-control
+    - system-files
+    - kernel-module-observe
+    - opengl
   start:
     command: microk8s-start.wrapper
     plugs:
