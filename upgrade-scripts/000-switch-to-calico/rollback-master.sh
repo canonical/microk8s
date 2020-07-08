@@ -4,7 +4,7 @@ set -ex
 echo "Rolling back calico upgrade on master"
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
+CA_CERT=/var/lib/snapd/hostfs//snap/core/current/etc/ssl/certs/ca-certificates.crt
 
 
 if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]; then

@@ -5,7 +5,7 @@ set -ex
 echo "Switching node to dqlite"
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
+CA_CERT=/var/lib/snapd/hostfs//snap/core/current/etc/ssl/certs/ca-certificates.crt
 
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/001-switch-to-dqlite"
 
