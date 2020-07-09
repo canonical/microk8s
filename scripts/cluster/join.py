@@ -135,8 +135,10 @@ def get_etcd_client_cert(master_ip, master_port, token):
     """
     cer_req_file = "{}/certs/server.remote.csr".format(snapdata_path)
     cmd_cert = (
-        "openssl req -new -sha256 -key {SNAP_DATA}/certs/server.key -out {csr} "
-        "-config {SNAP_DATA}/certs/csr.conf".format(SNAP_DATA=snapdata_path, csr=cer_req_file)
+        "{snap}/usr/bin/openssl req -new -sha256 -key {snapdata}/certs/server.key -out {csr} "
+        "-config {snapdata}/certs/csr.conf".format(
+            snap=snap_path, snapdata=snapdata_path, csr=cer_req_file
+        )
     )
     subprocess.check_call(cmd_cert.split())
     with open(cer_req_file) as fp:
