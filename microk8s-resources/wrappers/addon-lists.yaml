@@ -159,3 +159,10 @@ microk8s-addons:
       supported_architectures:
       - amd64
       - arm64
+
+    - name: "ambassador"
+      description: "Ambassador API Gateway and Ingress"
+      version: ""
+      check_status: "deployment.apps/ambassador-operator"
+      supported_architectures:
+      - amd64

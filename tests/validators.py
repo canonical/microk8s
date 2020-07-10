@@ -69,23 +69,11 @@ def validate_storage():
     kubectl("delete -f {}".format(manifest))
 
 
-def validate_ingress():
+def common_ingress():
     """
-    Validate ingress by creating a ingress rule.
+    Perform the Ingress validations that are common for all
+    the Ingress controllers.
     """
-    daemonset = kubectl("get ds")
-    if "nginx-ingress-microk8s-controller" in daemonset:
-        wait_for_pod_state("", "default", "running", label="app=default-http-backend")
-        wait_for_pod_state("", "default", "running", label="name=nginx-ingress-microk8s")
-    else:
-        wait_for_pod_state("", "ingress", "running", label="name=nginx-ingress-microk8s")
-
-    here = os.path.dirname(os.path.abspath(__file__))
-    manifest = os.path.join(here, "templates", "ingress.yaml")
-    update_yaml_with_arch(manifest)
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=microbot")
-
     attempt = 50
     while attempt >= 0:
         output = kubectl("get ing")
@@ -127,6 +115,52 @@ def validate_ingress():
                 attempt -= 1
 
     assert service_ok
+
+
+def validate_ingress():
+    """
+    Validate ingress by creating a ingress rule.
+    """
+    daemonset = kubectl("get ds")
+    if "nginx-ingress-microk8s-controller" in daemonset:
+        wait_for_pod_state("", "default", "running", label="app=default-http-backend")
+        wait_for_pod_state("", "default", "running", label="name=nginx-ingress-microk8s")
+    else:
+        wait_for_pod_state("", "ingress", "running", label="name=nginx-ingress-microk8s")
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "ingress.yaml")
+    update_yaml_with_arch(manifest)
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=microbot")
+
+    common_ingress()
+
+    kubectl("delete -f {}".format(manifest))
+
+
+def validate_ambassador():
+    """
+    Validate the Ambassador API Gateway by creating a ingress rule.
+    """
+
+    if platform.machine() != 'x86_64':
+        print("Ambassador tests are only relevant in x86 architectures")
+        return
+
+    wait_for_pod_state("", "ambassador", "running", label="product=aes")
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "ingress.yaml")
+    update_yaml_with_arch(manifest)
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=microbot")
+
+    # `Ingress`es must be annotatated for being recognized by Ambassador
+    kubectl("annotate ingress microbot-ingress-nip kubernetes.io/ingress.class=ambassador")
+    kubectl("annotate ingress microbot-ingress-xip kubernetes.io/ingress.class=ambassador")
+
+    common_ingress()
 
     kubectl("delete -f {}".format(manifest))
 

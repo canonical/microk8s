@@ -6,6 +6,7 @@ from validators import (
     validate_dns_dashboard,
     validate_storage,
     validate_ingress,
+    validate_ambassador,
     validate_gpu,
     validate_istio,
     validate_knative,
@@ -79,6 +80,22 @@ class TestAddons(object):
         print("Disabling DNS")
         microk8s_disable("dns")
         '''
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64',
+        reason="Ambassador tests are only relevant in x86 architectures",
+    )
+    def test_ambassador(self):
+        """
+        Test Ambassador.
+
+        """
+        print("Enabling Ambassador")
+        microk8s_enable("ambassador")
+        print("Validating ambassador")
+        validate_ambassador()
+        print("Disabling Ambassador")
+        microk8s_disable("ambassador")
 
     @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',

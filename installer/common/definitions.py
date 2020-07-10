@@ -1,6 +1,7 @@
 MAX_CHARACTERS_WRAP: int = 120
 command_descriptions = {
     'add-node': "Adds a node to a cluster",
+    'ambassador': "Ambassador API Gateway and Ingress",
     'cilium': "The cilium client",
     'config': "Print the kubeconfig",
     'ctr': "The containerd client",

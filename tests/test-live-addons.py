@@ -2,6 +2,7 @@ from validators import (
     validate_dns_dashboard,
     validate_storage,
     validate_ingress,
+    validate_ambassador,
     validate_istio,
     validate_knative,
     validate_registry,
@@ -45,6 +46,13 @@ class TestLiveAddons(object):
 
         """
         validate_ingress()
+
+    def test_ambassador(self):
+        """
+        Validates Ambassador works.
+
+        """
+        validate_ambassador()
 
     def test_istio(self):
         """
