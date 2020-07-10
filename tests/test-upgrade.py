@@ -7,6 +7,7 @@ from validators import (
     validate_dns_dashboard,
     validate_storage,
     validate_ingress,
+    validate_ambassador,
     validate_gpu,
     validate_registry,
     validate_forward,
@@ -193,7 +194,7 @@ class TestUpgrade(object):
 
             # The kubeflow deployment is huge. It will not fit comfortably
             # with the rest of the addons on the same machine during an upgrade
-            # we will need to find another way to test it. 
+            # we will need to find another way to test it.
             try:
                 enable = microk8s_enable("kubeflow", timeout_insec=30)
                 assert "Nothing to do for" not in enable
