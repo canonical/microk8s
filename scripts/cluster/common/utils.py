@@ -4,6 +4,7 @@ import time
 import string
 import random
 import yaml
+import socket
 
 
 def try_set_file_permissions(file):
@@ -146,3 +147,26 @@ def get_cluster_agent_port():
                 if len(port_parse) > 1:
                     cluster_agent_port = port_parse[1].rstrip()
     return cluster_agent_port
+
+def get_internal_ip_from_get_node(node_info):
+    """
+    Retrieves the InternalIp returned by kubectl get no -o json
+    """
+    for status_addresses in node_info['status']['addresses']:
+        if status_addresses["type"] == "InternalIP":
+            return status_addresses["address"]
+
+
+def is_same_server(hostname, ip):
+    """
+    Check if the hostname is the same as the current node's hostname
+    """
+    try:
+        hname, _, _ = socket.gethostbyaddr(ip) 
+        if hname == hostname:
+            return True
+    except:
+        # Ignore any unresolvable IP by host, surely this is not from the same node.
+        pass
+
+    return False
