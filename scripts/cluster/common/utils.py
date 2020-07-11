@@ -148,6 +148,7 @@ def get_cluster_agent_port():
                     cluster_agent_port = port_parse[1].rstrip()
     return cluster_agent_port
 
+
 def get_internal_ip_from_get_node(node_info):
     """
     Retrieves the InternalIp returned by kubectl get no -o json
@@ -162,7 +163,7 @@ def is_same_server(hostname, ip):
     Check if the hostname is the same as the current node's hostname
     """
     try:
-        hname, _, _ = socket.gethostbyaddr(ip) 
+        hname, _, _ = socket.gethostbyaddr(ip)
         if hname == hostname:
             return True
     except:
