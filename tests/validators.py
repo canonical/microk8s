@@ -460,3 +460,15 @@ def validate_kubeflow():
         return
 
     wait_for_pod_state("ambassador-operator-0", "kubeflow", "running")
+
+
+def validate_metallb_config(ip_ranges="192.168.0.105"):
+    """
+    Validate Metallb
+    """
+    if platform.machine() != 'x86_64':
+        print("Metallb tests are only relevant in x86 architectures")
+        return
+    out = kubectl("get configmap config -n metallb-system -o jsonpath='{.data.config}'")
+    for ip_range in ip_ranges.split(","):
+        assert ip_range in out

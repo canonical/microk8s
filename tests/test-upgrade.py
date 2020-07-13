@@ -17,6 +17,7 @@ from validators import (
     validate_jaeger,
     validate_kubeflow,
     validate_cilium,
+    validate_metallb_config,
     validate_multus,
 )
 from subprocess import check_call, CalledProcessError, check_output
@@ -227,6 +228,14 @@ class TestUpgrade(object):
                 test_matrix['cilium'] = validate_cilium
             except:
                 print('Will not test the cilium addon')
+            try:
+                ip_ranges = "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111"
+                enable = microk8s_enable("{}:{}".format("metallb", ip_ranges), timeout_insec=500)
+                assert "MetalLB is enabled" in enable and "Nothing to do for" not in enable
+                validate_metallb_config(ip_ranges)
+                test_matrix['metallb'] = validate_metallb_config
+            except:
+                print("Will not test the metallb addon")
 
             try:
                 enable = microk8s_enable("multus", timeout_insec=150)

@@ -302,5 +302,4 @@ data:
     address-pools:
     - name: default
       protocol: layer2
-      addresses:
-      - {{ip_range}}
+      {{addresses}}
