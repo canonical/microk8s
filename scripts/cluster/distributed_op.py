@@ -9,7 +9,11 @@ import sys
 import json
 import socket
 
-from common.utils import is_node_running_dqlite
+from common.utils import (
+    is_node_running_dqlite,
+    get_internal_ip_from_get_node,
+    is_same_server,
+)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
@@ -39,13 +43,12 @@ def do_op(remote_op):
             )
             info = json.loads(nodes_info.decode())
             for node_info in info["items"]:
-                node = node_info['metadata']['name']
-                # TODO: What if the user has set a hostname override in the kubelet args?
-                if node == hostname:
+                node_ip = get_internal_ip_from_get_node(node_info)
+                if is_same_server(hostname, node_ip):
                     continue
-                print("Configuring node {}".format(node))
+                print("Configuring node {}".format(node_ip))
                 # TODO: make port configurable
-                node_ep = "{}:{}".format(node, '25000')
+                node_ep = "{}:{}".format(node_ip, '25000')
                 remote_op["callback"] = token.rstrip()
                 # TODO: handle ssl verification
                 res = requests.post(
