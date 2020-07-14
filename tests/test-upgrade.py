@@ -38,6 +38,7 @@ class TestUpgrade(object):
     """
     Validates a microk8s upgrade path
     """
+
     def test_upgrade(self):
         """
         Deploy, probe, upgrade, validate nothing broke.
