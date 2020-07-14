@@ -60,6 +60,13 @@ create_machine $NAME $PROXY
 lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade.py"
 lxc delete $NAME --force
 
+# Test upgrade-path
+NAME=machine-$RANDOM
+create_machine $NAME $PROXY
+# use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
+lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade-path.py"
+lxc delete $NAME --force
+
 # Test addons
 NAME=machine-$RANDOM
 create_machine $NAME $PROXY
