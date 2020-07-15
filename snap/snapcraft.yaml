@@ -33,6 +33,9 @@ apps:
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
+  daemon-control-plane-kicker:
+    command: control-plane-kicker
+    daemon: simple
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple

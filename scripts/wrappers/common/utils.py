@@ -176,3 +176,19 @@ def get_addon_by_name(addons, name):
         if name == addon["name"]:
             filtered_addon.append(addon)
     return filtered_addon
+
+
+def is_service_expected_to_start(service):
+    lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
+    lock = "{}/{}".format(lock_path, service)
+    return os.path.exists(lock_path) and os.path.isfile(lock)
+
+
+def set_service_expected_to_start(service, start=True):
+    lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
+    lock = "{}/{}".format(lock_path, service)
+    if start:
+        os.remove(lock)
+    else:
+        os.open(lock, mode=0o700)
+
