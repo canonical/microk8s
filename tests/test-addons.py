@@ -83,22 +83,6 @@ class TestAddons(object):
         '''
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
-        reason="Ambassador tests are only relevant in x86 architectures",
-    )
-    def test_ambassador(self):
-        """
-        Test Ambassador.
-
-        """
-        print("Enabling Ambassador")
-        microk8s_enable("ambassador")
-        print("Validating ambassador")
-        validate_ambassador()
-        print("Disabling Ambassador")
-        microk8s_disable("ambassador")
-
-    @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
         reason="Skipping GPU tests as we are under time pressure",
     )
@@ -300,3 +284,19 @@ class TestAddons(object):
         validate_metallb_config(ip_ranges)
         print("Disabling metallb")
         microk8s_disable("metallb")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64',
+        reason="Ambassador tests are only relevant in x86 architectures",
+    )
+    def test_ambassador(self):
+        """
+        Test Ambassador.
+
+        """
+        print("Enabling Ambassador")
+        microk8s_enable("ambassador")
+        print("Validating ambassador")
+        validate_ambassador()
+        print("Disabling Ambassador")
+        microk8s_disable("ambassador")
