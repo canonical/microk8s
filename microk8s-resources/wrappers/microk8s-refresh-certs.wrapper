@@ -18,7 +18,8 @@ BACKUP=$SNAP_DATA/var/log/ca-backup/
 INSTALL=false
 UNDO=false
 CHECK=false
-PARSED=$(getopt --options=iuhc --longoptions=install,undo,help,check --name "$@" -- "$@")
+REFRESH=false
+PARSED=$(getopt --options=iuhcr: --longoptions=install,undo,help,check,refresh: --name "$@" -- "$@")
 eval set -- "$PARSED"
 while true; do
   case "$1" in
@@ -34,6 +35,11 @@ while true; do
         CHECK=true
         shift
         ;;
+    -r|--refresh)
+        REFRESH=true
+        CAPATH=$2
+        shift 2
+        ;;
     -h|--help)
         echo "Usage: $0 [OPTIONS]"
         echo
@@ -43,6 +49,7 @@ while true; do
         echo " -h, --help          Show this help"
         echo " -u, --undo          Revert the last refresh performed"
         echo " -c, --check         Check the expiration time of the installed CA"
+        echo " -r, --refresh path  Change CA cert and key"
         echo " -i, --install       Install new CA certificates"
         exit 0
         ;;
@@ -73,6 +80,43 @@ function revert {
   $SNAP/microk8s-start.wrapper
 }
 
+function refresh_ca {
+  echo "Backing up CA cert and key under $BACKUP"
+  run_with_sudo mkdir -p $SNAP_DATA/var/log/ca-backup/
+  if [ -e ${SNAP_DATA}/certs/ca.crt ]
+  then
+      run_with_sudo cp ${SNAP_DATA}/certs/ca.crt $BACKUP
+  fi
+  if [ -e ${SNAP_DATA}/certs/ca.key ]
+  then
+      run_with_sudo cp ${SNAP_DATA}/certs/ca.key $BACKUP
+  fi
+
+  echo "Creating new CA certificate and key"
+  run_with_sudo rm -f ${SNAP_DATA}/certs/ca.crt
+  run_with_sudo rm -f ${SNAP_DATA}/certs/ca.key
+
+  if [ -e ${CAPATH}/ca.crt ]
+  then
+      run_with_sudo cp ${CAPATH}/ca.crt ${SNAP_DATA}/certs/ca.crt
+  else
+      echo "Could not find ca.crt in $CAPATH, aborting cert update"
+      run_with_sudo cp ${BACKUP}/ca.crt ${SNAP_DATA}/certs/ca.crt
+      exit 1
+  fi
+
+  if [ -e ${CAPATH}/ca.key ]
+  then
+      run_with_sudo cp ${CAPATH}/ca.key ${SNAP_DATA}/certs/ca.key
+  else
+      echo "Could not find ca.key in $CAPATH, aborting cert update"
+      run_with_sudo cp ${BACKUP}/ca.crt ${SNAP_DATA}/certs/ca.crt
+      run_with_sudo cp ${BACKUP}/ca.key ${SNAP_DATA}/certs/ca.key
+      exit 1
+  fi
+
+  update_configs
+}
 
 function refresh {
   # Backup
@@ -88,6 +132,10 @@ function refresh {
   produce_certs
   rm -rf .srl
 
+  update_configs
+}
+
+function update_configs {
   # Create the basic tokens
   echo "Creating new kubeconfig file"
   ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
@@ -170,6 +218,10 @@ then
 elif [[ "$INSTALL" == "true" ]]
 then
   refresh
+  exit 0
+elif [[ "$REFRESH" == "true" ]]
+then
+  refresh_ca
   exit 0
 else
   echo "Use the --help to see the available options."
