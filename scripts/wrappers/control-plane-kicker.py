@@ -24,7 +24,7 @@ def start_control_plane_services():
             systemd_service_name = "microk8s.daemon-{}".format(service)
             print("Starting {}".format(systemd_service_name), flush=True)
             cmd = "snapctl start {}".format(systemd_service_name)
-            subprocess.check_output((cmd.split())
+            subprocess.check_output((cmd.split()))
             set_service_expected_to_start(service, True)
 
 
@@ -43,7 +43,11 @@ if __name__ == '__main__':
         sleep(10)
 
         try:
-            if not is_cluster_ready() or not is_ha_enabled() or not is_service_expected_to_start('control-plane-kicker'):
+            if (
+                not is_cluster_ready()
+                or not is_ha_enabled()
+                or not is_service_expected_to_start('control-plane-kicker')
+            ):
                 start_control_plane_services()
                 continue
 

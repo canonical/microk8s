@@ -192,4 +192,3 @@ def set_service_expected_to_start(service, start=True):
     else:
         fd = os.open(lock, os.O_CREAT, mode=0o700)
         os.close(fd)
-
