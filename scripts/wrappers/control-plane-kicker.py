@@ -4,7 +4,7 @@ import subprocess
 
 from time import sleep
 
-from .common.utils import (
+from common.utils import (
     is_cluster_ready,
     get_dqlite_info,
     is_ha_enabled,
@@ -22,9 +22,9 @@ def start_control_plane_services():
     for service in services:
         if not is_service_expected_to_start(service):
             systemd_service_name = "microk8s.daemon-{}".format(service)
-            print("Starting {}".format(systemd_service_name))
+            print("Starting {}".format(systemd_service_name), flush=True)
             cmd = "snapctl start {}".format(systemd_service_name)
-            subprocess.check_call(cmd.split())
+            subprocess.check_output((cmd.split())
             set_service_expected_to_start(service, True)
 
 
@@ -32,9 +32,9 @@ def stop_control_plane_services():
     for service in services:
         if is_service_expected_to_start(service):
             systemd_service_name = "microk8s.daemon-{}".format(service)
-            print("Stopping {}".format(systemd_service_name))
+            print("Stopping {}".format(systemd_service_name), flush=True)
             cmd = "snapctl stop {}".format(systemd_service_name)
-            subprocess.check_call(cmd.split())
+            subprocess.check_output(cmd.split())
             set_service_expected_to_start(service, False)
 
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         sleep(10)
 
         try:
-            if not is_cluster_ready() or not is_ha_enabled() or is_service_expected_to_start('control-plane-kicker'):
+            if not is_cluster_ready() or not is_ha_enabled() or not is_service_expected_to_start('control-plane-kicker'):
                 start_control_plane_services()
                 continue
 
@@ -62,7 +62,7 @@ if __name__ == '__main__':
             voter_ips = []
             for node in info:
                 if node[1] == "voter":
-                    ip_parts = node[2].split(':')
+                    ip_parts = node[0].split(':')
                     voter_ips.append(ip_parts[0])
 
             print(voter_ips)
@@ -79,4 +79,4 @@ if __name__ == '__main__':
                 stop_control_plane_services()
 
         except Exception as e:
-            print(e)
+            print(e, flush=True)

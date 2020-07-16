@@ -181,7 +181,7 @@ def get_addon_by_name(addons, name):
 def is_service_expected_to_start(service):
     lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
     lock = "{}/{}".format(lock_path, service)
-    return os.path.exists(lock_path) and os.path.isfile(lock)
+    return os.path.exists(lock_path) and not os.path.isfile(lock)
 
 
 def set_service_expected_to_start(service, start=True):
@@ -190,5 +190,6 @@ def set_service_expected_to_start(service, start=True):
     if start:
         os.remove(lock)
     else:
-        os.open(lock, mode=0o700)
+        fd = os.open(lock, os.O_CREAT, mode=0o700)
+        os.close(fd)
 
