@@ -106,7 +106,7 @@ def get_hostname():
 
 def main():
     password = os.environ.get("KUBEFLOW_AUTH_PASSWORD") or get_random_pass()
-    bundle = os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-195"
+    bundle = os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-206"
     channel = os.environ.get("KUBEFLOW_CHANNEL") or "stable"
     no_proxy = os.environ.get("KUBEFLOW_NO_PROXY") or None
     hostname = os.environ.get("KUBEFLOW_HOSTNAME") or None
@@ -144,16 +144,56 @@ def main():
             print("Please check your network connectivity before enabling Kubeflow.")
             sys.exit(1)
 
-    password_overlay = {
-        "applications": {
-            "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
-            "katib-db": {"options": {"root_password": get_random_pass()}},
-            "modeldb-db": {"options": {"root_password": get_random_pass()}},
-            "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
-            "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
-            "pipelines-db": {"options": {"root_password": get_random_pass()}},
+    # Allow specifying the bundle as one of the main types of kubeflow bundles
+    # that we create in the charm store, namely full, lite, or edge. The user
+    # shoudn't have to specify a version for those bundles. However, allow the
+    # user to specify a full charm store URL if they'd like, such as
+    # `cs:kubeflow-lite-123`.
+    if bundle == 'full':
+        bundle = 'cs:kubeflow-206'
+        bundle_type = 'full'
+        password_overlay = {
+            "applications": {
+                "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
+                "katib-db": {"options": {"root_password": get_random_pass()}},
+                "modeldb-db": {"options": {"root_password": get_random_pass()}},
+                "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
+                "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
+                "pipelines-db": {"options": {"root_password": get_random_pass()}},
+            }
         }
-    }
+    elif bundle == 'lite':
+        bundle = 'cs:~kubeflow-charmers/bundle/kubeflow-lite-6'
+        bundle_type = 'lite'
+        password_overlay = {
+            "applications": {
+                "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
+                "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
+                "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
+                "pipelines-db": {"options": {"root_password": get_random_pass()}},
+            }
+        }
+    elif bundle == 'edge':
+        bundle = 'cs:~kubeflow-charmers/bundle/kubeflow-edge-12'
+        bundle_type = 'edge'
+        password_overlay = {
+            "applications": {
+                "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
+                "pipelines-db": {"options": {"root_password": get_random_pass()}},
+            }
+        }
+    else:
+        bundle_type = 'full'
+        password_overlay = {
+            "applications": {
+                "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
+                "katib-db": {"options": {"root_password": get_random_pass()}},
+                "modeldb-db": {"options": {"root_password": get_random_pass()}},
+                "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
+                "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
+                "pipelines-db": {"options": {"root_password": get_random_pass()}},
+            }
+        }
 
     for service in [
         "dns",
@@ -223,6 +263,28 @@ def main():
 
     print("Operator pods ready.")
     print("Waiting for service pods to become ready.")
+
+    if bundle_type in ('full', 'lite'):
+        with tempfile.NamedTemporaryFile(mode='w+') as f:
+            json.dump(
+                {
+                    'apiVersion': 'v1',
+                    'kind': 'Service',
+                    'metadata': {'labels': {'juju-app': 'pipelines-api'}, 'name': 'ml-pipeline'},
+                    'spec': {
+                        'ports': [
+                            {'name': 'grpc', 'port': 8887, 'protocol': 'TCP', 'targetPort': 8887},
+                            {'name': 'http', 'port': 8888, 'protocol': 'TCP', 'targetPort': 8888},
+                        ],
+                        'selector': {'juju-app': 'pipelines-api'},
+                        'type': 'ClusterIP',
+                    },
+                },
+                f,
+            )
+            f.flush()
+            run('microk8s-kubectl.wrapper', 'apply', '-f', f.name)
+
     run(
         "microk8s-kubectl.wrapper",
         "wait",
@@ -234,58 +296,51 @@ def main():
         debug=debug,
     )
 
-    with tempfile.NamedTemporaryFile(mode='w+') as f:
-        json.dump(
-            {
-                'apiVersion': 'v1',
-                'kind': 'Service',
-                'metadata': {'labels': {'juju-app': 'pipelines-api'}, 'name': 'ml-pipeline',},
-                'spec': {
-                    'ports': [
-                        {'name': 'grpc', 'port': 8887, 'protocol': 'TCP', 'targetPort': 8887},
-                        {'name': 'http', 'port': 8888, 'protocol': 'TCP', 'targetPort': 8888},
-                    ],
-                    'selector': {'juju-app': 'pipelines-api'},
-                    'type': 'ClusterIP',
-                },
-            },
-            f,
+    if bundle_type == 'full':
+        run(
+            'microk8s-kubectl.wrapper',
+            'delete',
+            'mutatingwebhookconfigurations/katib-mutating-webhook-config',
+            'validatingwebhookconfigurations/katib-validating-webhook-config',
         )
-        f.flush()
-        run('microk8s-kubectl.wrapper', 'apply', '-f', f.name)
 
-    run(
-        'microk8s-kubectl.wrapper',
-        'delete',
-        'mutatingwebhookconfigurations/katib-mutating-webhook-config',
-        'validatingwebhookconfigurations/katib-validating-webhook-config',
-    )
+    print("Congratulations, Kubeflow is now available.")
 
-    hostname = hostname or get_hostname()
-    juju("config", "dex-auth", "public-url=http://%s:80" % hostname)
-    juju("config", "oidc-gatekeeper", "public-url=http://%s:80" % hostname)
-    juju("config", "ambassador", "juju-external-hostname=%s" % hostname)
-    juju("expose", "ambassador")
+    if bundle_type in ('full', 'lite'):
+        hostname = hostname or get_hostname()
+        juju("config", "dex-auth", "public-url=http://%s:80" % hostname)
+        juju("config", "oidc-gatekeeper", "public-url=http://%s:80" % hostname)
+        juju("config", "ambassador", "juju-external-hostname=%s" % hostname)
+        juju("expose", "ambassador")
+
+        print(
+            textwrap.dedent(
+                """
+        The dashboard is available at http://%s/
+
+            Username: admin
+            Password: %s
+
+        To see these values again, run:
+
+            microk8s juju config dex-auth static-username
+            microk8s juju config dex-auth static-password
+
+        """
+                % (hostname, password)
+            )
+        )
+    else:
+        print("\nYou have deployed the edge bundle.")
+        print("For more information on how to use Kubeflow, see https://www.kubeflow.org/docs/")
 
     print(
         textwrap.dedent(
             """
-    Congratulations, Kubeflow is now available.
-    The dashboard is available at http://%s/
+        To tear down Kubeflow and associated infrastructure, run:
 
-        Username: admin
-        Password: %s
-
-    To see these values again, run:
-
-        microk8s juju config dex-auth static-username
-        microk8s juju config dex-auth static-password
-
-    To tear down Kubeflow and associated infrastructure, run:
-
-       microk8s disable kubeflow
+            microk8s disable kubeflow
     """
-            % (hostname, password)
         )
     )
 
