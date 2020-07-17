@@ -179,12 +179,22 @@ def get_addon_by_name(addons, name):
 
 
 def is_service_expected_to_start(service):
+    """
+    Check if a service is supposed to start
+    :param service: the service name
+    :return: True if the service is meant to start
+    """
     lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
     lock = "{}/{}".format(lock_path, service)
     return os.path.exists(lock_path) and not os.path.isfile(lock)
 
 
 def set_service_expected_to_start(service, start=True):
+    """
+    Check if a service is not expected to start.
+    :param service: the service name
+    :param start: should the service start or not
+    """
     lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
     lock = "{}/{}".format(lock_path, service)
     if start:
