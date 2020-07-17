@@ -863,7 +863,11 @@ if __name__ == "__main__":
             print("Unhandled option")
             sys.exit(1)
 
-    if args[0] == "reset":
+    if len(args) <= 0:
+        print("Please provide a connection string.")
+        usage()
+        sys.exit(4)
+    elif args[0] == "reset":
         if len(args) > 1:
             if is_node_running_dqlite():
                 remove_dqlite_node(args[1], force)
@@ -876,11 +880,6 @@ if __name__ == "__main__":
             else:
                 reset_current_etcd_installation()
     else:
-        if len(args) <= 0:
-            print("Please provide a connection string.")
-            usage()
-            sys.exit(4)
-
         connection_parts = args[0].split("/")
         if is_node_running_dqlite():
             join_dqlite(connection_parts)
