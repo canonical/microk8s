@@ -4,6 +4,7 @@ import random
 import string
 import subprocess
 import os
+import platform
 import getopt
 import sys
 import time
@@ -47,6 +48,10 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
 
     :return: the json response of the master
     """
+    can_connect = ping(master_ip)
+    if not can_connect:
+        print("Master node is not reachable {}".format(master_ip))
+        exit(1)
     cluster_agent_port = "25000"
     filename = "{}/args/cluster-agent".format(snapdata_path)
     with open(filename) as fp:
@@ -93,6 +98,18 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
 
 def usage():
     print("Join a cluster: microk8s join <master>:<port>/<token>")
+
+
+def ping(ip):
+    """
+    Check if an IP is reachable
+
+    :param ip: ip of the node we're testing connection to
+    :return: whether or not the IP is reachable (True or False)
+    """
+    param = '-n' if platform.system().lower()=='windows' else '-c'
+    command = ['ping', param, '1', ip]
+    return subprocess.call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
 
 
 def set_arg(key, value, file):
