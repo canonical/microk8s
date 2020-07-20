@@ -60,11 +60,16 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
         req_data = {"token": token, "hostname": socket.gethostname(), "port": cluster_agent_port}
 
         # TODO: enable ssl verification
-        connection_info = requests.post(
-            "https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API_V2),
-            json=req_data,
-            verify=False,
-        )  # type: requests.models.Response
+        try:
+            connection_info = requests.post(
+                "https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API_V2),
+                json=req_data,
+                verify=False,
+            )  # type: requests.models.Response
+        except requests.exceptions.ConnectionError:
+            print("Please ensure the master node is reachable.")
+            usage()
+            exit(1)
     else:
         req_data = {
             "token": token,
@@ -74,11 +79,16 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
         }
 
         # TODO: enable ssl verification
-        connection_info = requests.post(
-            "https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API),
-            json=req_data,
-            verify=False,
-        )
+        try:
+            connection_info = requests.post(
+                "https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API),
+                json=req_data,
+                verify=False,
+            )
+        except requests.exceptions.ConnectionError:
+            print("Please ensure the master node is reachable.")
+            usage()
+            exit(1)
 
     if connection_info.status_code != 200:
         message = "Error code {}.".format(connection_info.status_code)  # type: str
