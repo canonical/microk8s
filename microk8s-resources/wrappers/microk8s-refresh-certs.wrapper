@@ -80,38 +80,35 @@ function revert {
   $SNAP/microk8s-start.wrapper
 }
 
-function refresh_ca {
+function backup_ca_crt_and_key {
   echo "Backing up CA cert and key under $BACKUP"
-  run_with_sudo mkdir -p $SNAP_DATA/var/log/ca-backup/
-  if [ -e ${SNAP_DATA}/certs/ca.crt ]
+  run_with_sudo mkdir -p "${BACKUP}"
+
+  if [ -e "${SNAP_DATA}/certs/ca.crt" ]
   then
-      run_with_sudo cp ${SNAP_DATA}/certs/ca.crt $BACKUP
-  fi
-  if [ -e ${SNAP_DATA}/certs/ca.key ]
-  then
-      run_with_sudo cp ${SNAP_DATA}/certs/ca.key $BACKUP
+      run_with_sudo cp "${SNAP_DATA}/certs/ca.crt" "$BACKUP"
   fi
 
-  echo "Creating new CA certificate and key"
-  run_with_sudo rm -f ${SNAP_DATA}/certs/ca.crt
-  run_with_sudo rm -f ${SNAP_DATA}/certs/ca.key
-
-  if [ -e ${CAPATH}/ca.crt ]
+  if [ -e "${SNAP_DATA}/certs/ca.key" ]
   then
-      run_with_sudo cp ${CAPATH}/ca.crt ${SNAP_DATA}/certs/ca.crt
+      run_with_sudo cp "${SNAP_DATA}/certs/ca.key" "$BACKUP"
+  fi
+}
+
+function refresh_ca {
+  if [ -e "${CAPATH}/ca.crt" ] && [ -e "${CAPATH}/ca.key" ]
+  then
+      backup_ca_crt_and_key
+
+      echo "Removing old CA certificate and key"
+      run_with_sudo rm -f "${SNAP_DATA}/certs/ca.crt"
+      run_with_sudo rm -f "${SNAP_DATA}/certs/ca.key"
+
+      echo "Copying new CA certificate and key"
+      run_with_sudo cp "${CAPATH}/ca.crt" "${SNAP_DATA}/certs/ca.crt"
+      run_with_sudo cp "${CAPATH}/ca.key" "${SNAP_DATA}/certs/ca.key"
   else
-      echo "Could not find ca.crt in $CAPATH, aborting cert update"
-      run_with_sudo cp ${BACKUP}/ca.crt ${SNAP_DATA}/certs/ca.crt
-      exit 1
-  fi
-
-  if [ -e ${CAPATH}/ca.key ]
-  then
-      run_with_sudo cp ${CAPATH}/ca.key ${SNAP_DATA}/certs/ca.key
-  else
-      echo "Could not find ca.key in $CAPATH, aborting cert update"
-      run_with_sudo cp ${BACKUP}/ca.crt ${SNAP_DATA}/certs/ca.crt
-      run_with_sudo cp ${BACKUP}/ca.key ${SNAP_DATA}/certs/ca.key
+      echo "Could not find ca.crt and ca.key in $CAPATH, aborting CA certificate update"
       exit 1
   fi
 
