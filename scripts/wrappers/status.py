@@ -180,22 +180,6 @@ def ha_cluster_formed(info):
     return ha_formed
 
 
-def print_ha_pretty(ha_ready, info):
-    ha_formed = ha_cluster_formed(info)
-
-    if ha_ready and ha_formed:
-        print("The cluster is highly available.")
-    elif ha_ready and not ha_formed:
-        print("HA is enabled on this node but an HA cluster has not formed yet.")
-    elif not ha_ready:
-        print("HA is not enabled on this node, enable it with 'microk8s enable ha-cluster'.")
-
-    if ha_ready:
-        print("Cluster nodes:")
-        for node in info:
-            print("  - {} is a {} node".format(node[0], node[1]))
-
-
 if __name__ == '__main__':
     exit_if_no_permission()
     is_cluster_locked()
