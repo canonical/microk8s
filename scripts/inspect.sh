@@ -191,8 +191,8 @@ function suggest_fixes {
     # make sure the /dev/kmsg is available, indicating a potential missing profile
     if [ ! -c "/dev/kmsg" ]  # kmsg is a character device
     then
-      printf -- '\033[0;33mWARNING: \033[0m microk8s profile might be missing. \n'
-      printf -- '\t  Refer to this help document to get microk8s working in with LXD: \n'
+      printf -- '\033[0;33mWARNING: \033[0m the lxc profile for MicroK8s might be missing. \n'
+      printf -- '\t  Refer to this help document to get MicroK8s working in with LXD: \n'
       printf -- '\t  https://microk8s.io/docs/lxd \n'
     fi
   fi
