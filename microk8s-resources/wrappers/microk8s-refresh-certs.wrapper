@@ -112,6 +112,7 @@ function refresh_ca {
       exit 1
   fi
 
+  gen_server_cert
   update_configs
 }
 
