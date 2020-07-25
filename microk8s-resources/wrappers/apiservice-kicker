@@ -16,6 +16,7 @@ then
 fi
 
 restart_attempt=0
+installed_registry_help=0
 while true
 do
     if [ $restart_attempt -ge 5 ]
@@ -44,5 +45,18 @@ do
         else
             restart_attempt=0
         fi
+    fi
+
+    # If no local-registry-hosting documentation has been installed,
+    # install a help guide that points to the microk8s registry docs.
+    if [ $installed_registry_help -eq 0 ] &&
+       snapctl services microk8s.daemon-apiserver | grep active &> /dev/null
+    then
+      if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kubepublic
+      then
+        use_manifest registry-help apply
+      fi
+      
+      installed_registry_help=1
     fi
 done
