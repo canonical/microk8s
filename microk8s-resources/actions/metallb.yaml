@@ -327,7 +327,7 @@ spec:
               name: memberlist
               key: secretkey
         image: metallb/speaker:v0.9.3
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: speaker
         ports:
         - containerPort: 7472
@@ -383,7 +383,7 @@ spec:
         - --port=7472
         - --config=config
         image: metallb/controller:v0.9.3
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: controller
         ports:
         - containerPort: 7472
