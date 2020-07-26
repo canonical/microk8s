@@ -96,6 +96,8 @@ apps:
     command: microk8s-cilium.wrapper
   juju:
     command: microk8s-juju.wrapper
+  dbctl:
+    command: microk8s-dbctl.wrapper
 
 parts:
   libco:
