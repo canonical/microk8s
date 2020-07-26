@@ -165,7 +165,7 @@ class TestUpgrade(object):
             except:
                 print('Will not test the cilium addon')
             try:
-                ip_ranges = "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111"
+                ip_ranges = "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111,192.168.1.240/28"
                 enable = microk8s_enable("{}:{}".format("metallb", ip_ranges), timeout_insec=500)
                 assert "MetalLB is enabled" in enable and "Nothing to do for" not in enable
                 validate_metallb_config(ip_ranges)
