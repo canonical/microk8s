@@ -145,7 +145,7 @@ microk8s-addons:
 
     - name: "metallb"
       description: "Loadbalancer for your Kubernetes cluster"
-      version: "0.8.2"
+      version: "0.9.3"
       check_status: "pod/speaker"
       supported_architectures:
       - amd64
