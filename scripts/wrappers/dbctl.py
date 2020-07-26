@@ -8,7 +8,7 @@ import subprocess
 import tarfile
 import os.path
 
-from .common.utils import (
+from common.utils import (
     exit_if_no_permission,
     is_cluster_locked,
     is_ha_enabled,
