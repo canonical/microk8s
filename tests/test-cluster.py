@@ -139,11 +139,6 @@ class TestCluster(object):
                 for vm_name in reuse_vms:
                     self.VM.append(VM(vm_name))
 
-            # enable HA
-            for vm in self.VM:
-                print('Enabling ha-cluster on machine {}'.format(vm.vm_name))
-                vm.run('/snap/bin/microk8s.enable ha-cluster')
-
             # Form cluster
             vm_master = self.VM[0]
             connected_nodes = vm_master.run('/snap/bin/microk8s.kubectl get no')
@@ -246,8 +241,8 @@ class TestCluster(object):
         while True:
             assert attempt > 0
             for vm in leftVMs:
-                status = vm.run('/snap/bin/microk8s.status ha-cluster')
-                if "HA cluster has not formed yet" not in status.decode():
+                status = vm.run('/snap/bin/microk8s.status')
+                if "high-availability: no" not in status.decode():
                     attempt += 1
                     time.sleep(2)
                     continue
@@ -295,8 +290,8 @@ class TestCluster(object):
         while True:
             assert attempt > 0
             for vm in self.VM:
-                status = vm.run('/snap/bin/microk8s.status ha-cluster')
-                if "The cluster is highly available" not in status.decode():
+                status = vm.run('/snap/bin/microk8s.status')
+                if "high-availability: yes" not in status.decode():
                     attempt += 1
                     time.sleep(2)
                     continue

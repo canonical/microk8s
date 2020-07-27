@@ -303,3 +303,17 @@ class TestAddons(object):
         validate_ambassador()
         print("Disabling Ambassador")
         microk8s_disable("ambassador")
+
+    def test_backup_restore(self):
+        """
+        Test backup and restore commands.
+        """
+        print('Checking dbctl backup and restore')
+        if os.path.exists('backupfile.tar.gz'):
+            os.remove('backupfile.tar.gz')
+        p = Popen(
+            "/snap/bin/microk8s.dbctl backup -o backupfile".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT
+        )
+        p = Popen(
+            "/snap/bin/microk8s.dbctl restore backupfile".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT
+        )
