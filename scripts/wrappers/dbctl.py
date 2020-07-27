@@ -132,7 +132,7 @@ if __name__ == '__main__':
 
     # initiate the parser with a description
     parser = argparse.ArgumentParser(
-        description="Manage MicroK8s' datastore.", prog='microk8s dbctl'
+        description="backup and restore the Kubernetes datastore.", prog='microk8s dbctl'
     )
     parser.add_argument('--debug', action='store_true', help='print debug output')
     commands = parser.add_subparsers(title='commands', help='backup and restore operations')
