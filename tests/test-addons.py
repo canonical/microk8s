@@ -30,7 +30,7 @@ from utils import (
     microk8s_disable,
     microk8s_reset,
 )
-from subprocess import Popen, PIPE, STDOUT, CalledProcessError
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError, check_call
 
 
 class TestAddons(object):
@@ -311,9 +311,5 @@ class TestAddons(object):
         print('Checking dbctl backup and restore')
         if os.path.exists('backupfile.tar.gz'):
             os.remove('backupfile.tar.gz')
-        p = Popen(
-            "/snap/bin/microk8s.dbctl backup -o backupfile".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT
-        )
-        p = Popen(
-            "/snap/bin/microk8s.dbctl restore backupfile".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT
-        )
+        check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
+        check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
