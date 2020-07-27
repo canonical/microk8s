@@ -80,6 +80,60 @@ function revert {
   $SNAP/microk8s-start.wrapper
 }
 
+function check_ca_crt_dates {
+    IFS=$'\n'
+    date_range=()
+    for line in $(openssl x509 -noout -in ${CAPATH}/ca.crt -dates | sed -e 's/^.*=//')
+    do
+        dt=$(date "+%s" -d "$line")
+        date_range+=("${dt}")
+    done
+    unset IFS
+    date_now=$(date "+%s")
+    if [ ${date_range[0]} -gt ${date_now} ]
+    then
+        echo "Certificate is valid in the future so rejecting now"
+        exit 1
+    fi
+    if  [ ${date_now} -gt ${date_range[1]} ]
+    then
+        echo "Rejecting expired certificate"
+        exit 1
+    fi
+}
+
+function exit_if {
+    if [ $? -ne 0 ]; then
+        echo "$1"
+        exit 1
+    fi;
+}
+
+function validate_ca_crt_and_key {
+    # Check CA private key
+    openssl rsa -in "${CAPATH}/ca.key" -check -noout -out /dev/null
+    exit_if "CA Private key is invalid"
+
+    # Check CA certificate
+    openssl x509 -in "${CAPATH}/ca.crt" -text -noout -out /dev/null
+    exit_if "CA certificate is invalid"
+
+    # Check that CA private key matches CA certificate
+    md5cert=$(openssl x509 -noout -modulus -in ${CAPATH}/ca.crt | openssl md5)
+    md5key=$(openssl rsa -noout -modulus -in ${CAPATH}/ca.key | openssl md5)
+    test "$md5cert" = "$md5key"
+    exit_if "CA Private Key does not match CA Certifiate"
+
+    # Verify that the public keys contained in the CA private key file and the CA certificate are the same
+    md5cert=$(openssl x509 -in "${CAPATH}/ca.crt" -noout -pubkey | openssl md5)
+    md5key=$(openssl rsa -in "${CAPATH}/ca.key" -pubout 2>&1 | grep -v 'writing RSA key' | openssl md5)
+    test "$md5cert" = "$md5key"
+    exit_if "CA Public key does not match CA Certifiate"
+
+    # Check certificate date is currently valid
+    check_ca_crt_dates
+}
+
 function backup_ca_crt_and_key {
   echo "Backing up CA cert and key under $BACKUP"
   run_with_sudo mkdir -p "${BACKUP}"
@@ -98,6 +152,10 @@ function backup_ca_crt_and_key {
 function refresh_ca {
   if [ -e "${CAPATH}/ca.crt" ] && [ -e "${CAPATH}/ca.key" ]
   then
+      # validate CA certificate and CA key
+      validate_ca_crt_and_key
+
+      # backup CA certificate and CA key
       backup_ca_crt_and_key
 
       echo "Removing old CA certificate and key"
