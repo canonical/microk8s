@@ -21,6 +21,7 @@ from validators import (
     validate_cilium,
     validate_multus,
     validate_kubeflow,
+    validate_metallb_config,
 )
 from utils import (
     microk8s_enable,
@@ -80,22 +81,6 @@ class TestAddons(object):
         print("Disabling DNS")
         microk8s_disable("dns")
         '''
-
-    @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
-        reason="Ambassador tests are only relevant in x86 architectures",
-    )
-    def test_ambassador(self):
-        """
-        Test Ambassador.
-
-        """
-        print("Enabling Ambassador")
-        microk8s_enable("ambassador")
-        print("Validating ambassador")
-        validate_ambassador()
-        print("Disabling Ambassador")
-        microk8s_disable("ambassador")
 
     @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
@@ -166,6 +151,9 @@ class TestAddons(object):
         print("Disabling Cilium")
         microk8s_disable("cilium")
 
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64', reason="Multus tests are only relevant in x86 architectures"
+    )
     @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
         reason="Skipping multus tests as we are under time pressure",
@@ -282,3 +270,36 @@ class TestAddons(object):
         validate_kubeflow()
         print("Disabling kubeflow")
         microk8s_disable("kubeflow")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64',
+        reason="Metallb tests are only relevant in x86 architectures",
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping metallb test as we are under time pressure",
+    )
+    def test_metallb_addon(self):
+        addon = "metallb"
+        ip_ranges = "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111"
+        print("Enabling metallb")
+        microk8s_enable("{}:{}".format(addon, ip_ranges), timeout_insec=500)
+        validate_metallb_config(ip_ranges)
+        print("Disabling metallb")
+        microk8s_disable("metallb")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64',
+        reason="Ambassador tests are only relevant in x86 architectures",
+    )
+    def test_ambassador(self):
+        """
+        Test Ambassador.
+
+        """
+        print("Enabling Ambassador")
+        microk8s_enable("ambassador")
+        print("Validating ambassador")
+        validate_ambassador()
+        print("Disabling Ambassador")
+        microk8s_disable("ambassador")

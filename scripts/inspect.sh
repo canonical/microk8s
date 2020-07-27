@@ -183,6 +183,19 @@ function suggest_fixes {
       printf -- '\tgrubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0" \n'
     fi
   fi
+
+  # LXD Specific Checks
+  if cat /proc/1/environ | grep "container=lxc" &> /dev/null
+    then
+
+    # make sure the /dev/kmsg is available, indicating a potential missing profile
+    if [ ! -c "/dev/kmsg" ]  # kmsg is a character device
+    then
+      printf -- '\033[0;33mWARNING: \033[0m the lxc profile for MicroK8s might be missing. \n'
+      printf -- '\t  Refer to this help document to get MicroK8s working in with LXD: \n'
+      printf -- '\t  https://microk8s.io/docs/lxd \n'
+    fi
+  fi
 }
 
 function fedora_release {

@@ -23,24 +23,30 @@ fi
 read -ra ARGUMENTS <<< "$1"
 if [ -z "${ARGUMENTS[@]}" ]
 then
-  read -p "Enter the IP address range (e.g., 10.64.140.43-10.64.140.49): " ip_range
-  if [ -z "${ip_range}" ]
+  read -p "Enter each IP address range delimited by comma (e.g. '10.64.140.43-10.64.140.49,192.168.0.105-192.168.0.111'): " ip_range_input
+  if [ -z "${ip_range_input}" ]
   then
     echo "You have to input an IP Range value when asked, or provide it as an argument to the enable command, eg:"
-    echo "  microk8s enable metallb:10.64.140.43-10.64.140.49"
+    echo "  microk8s enable metallb:10.64.140.43-10.64.140.49,192.168.0.105-192.168.0.111"
     exit 1
   fi
 else
-  ip_range="${ARGUMENTS[@]}"
+  ip_range_input="${ARGUMENTS[@]}"
 fi
 
 REGEX_IP_RANGE='^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*-[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$'
-if [[ $ip_range =~ $REGEX_IP_RANGE ]]
-then
-  echo "Applying registry manifest"
-  cat $SNAP/actions/metallb.yaml | $SNAP/bin/sed "s/{{allow_escalation}}/$ALLOWESCALATION/g" | $SNAP/bin/sed "s/{{ip_range}}/$ip_range/g" | $KUBECTL apply -f -
-  echo "MetalLB is enabled"
-else
-  echo "You input value ($ip_range) is not a valid IP Range"
-  exit 1
-fi
+ip_ranges=(`echo $ip_range_input | sed 's/,/\n/g'`)
+ip_range_str="addresses:"
+for ip_range in "${ip_ranges[@]}"
+do
+  if [[ $ip_range =~ $REGEX_IP_RANGE ]]
+  then
+    ip_range_str="${ip_range_str}\n      - ${ip_range}"
+  else
+    echo "Your input value ($ip_range) is not a valid IP Range"
+    exit 1
+  fi
+done
+echo "Applying registry manifest"
+cat $SNAP/actions/metallb.yaml | $SNAP/bin/sed "s/{{allow_escalation}}/$ALLOWESCALATION/g" | $SNAP/bin/sed "s/{{addresses}}/$ip_range_str/g" | $KUBECTL apply -f -
+echo "MetalLB is enabled"
