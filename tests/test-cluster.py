@@ -208,8 +208,8 @@ class TestCluster(object):
         while True:
             assert attempt > 0
             for vm in self.VM:
-                status = vm.run('/snap/bin/microk8s.status ha-cluster')
-                if "The cluster is highly available" not in status.decode():
+                status = vm.run('/snap/bin/microk8s.status')
+                if "high-availability: yes" not in status.decode():
                     attempt += 1
                     continue
             break
