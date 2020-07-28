@@ -13,8 +13,8 @@ import time
 from distutils.util import strtobool
 from itertools import count
 from urllib.error import URLError
+from urllib.parse import urlparse, ParseResult
 from urllib.request import urlopen
-from urllib.parse import urlparse
 
 MIN_MEM_GB = 14
 CONNECTIVITY_CHECKS = [
@@ -65,6 +65,41 @@ def juju(*args, **kwargs):
         return run("microk8s-juju.wrapper", "--debug", *args, debug=True, **kwargs)
     else:
         return run("microk8s-juju.wrapper", *args, **kwargs)
+
+
+def parse_hostname(hostname: str) -> ParseResult:
+    if '//' in hostname:
+        parsed = urlparse(hostname)
+    else:
+        parsed = urlparse('//' + hostname)
+
+    if not parsed.scheme:
+        parsed = parsed._replace(scheme='http')
+
+    if not parsed.hostname:
+        print("Manual hostname `%s` leaves hostname unspecified" % hostname)
+        sys.exit(1)
+
+    if not parsed.port:
+        parsed = parsed._replace(netloc=parsed.hostname or '' + (parsed.port or ''))
+
+    if parsed.path not in ('', '/'):
+        print("WARNING: The path `%s` was set on the hostname, but was ignored." % parsed.path)
+
+    if parsed.params:
+        print(
+            "WARNING: The params `%s` were set on the hostname, but were ignored." % parsed.params
+        )
+
+    if parsed.query:
+        print("WARNING: The query `%s` was set on the hostname, but was ignored." % parsed.query)
+
+    if parsed.params:
+        print(
+            "WARNING: The fragment `%s` was set on the hostname, but was ignored." % parsed.fragment
+        )
+
+    return parsed._replace(path='', params='', query='', fragment='')
 
 
 def get_hostname():
@@ -329,16 +364,16 @@ def main():
     print("Congratulations, Kubeflow is now available.")
 
     if bundle_type in ('full', 'lite'):
-        hostname = args['hostname'] or get_hostname()
-        juju("config", "dex-auth", "public-url=http://%s:80" % hostname)
-        juju("config", "oidc-gatekeeper", "public-url=http://%s:80" % hostname)
-        juju("config", "ambassador", "juju-external-hostname=%s" % hostname)
+        hostname = parse_hostname(args['hostname'] or get_hostname())
+        juju("config", "dex-auth", "public-url=%s" % hostname.geturl())
+        juju("config", "oidc-gatekeeper", "public-url=%s" % hostname.geturl())
+        juju("config", "ambassador", "juju-external-hostname=%s" % hostname.hostname)
         juju("expose", "ambassador")
 
         print(
             textwrap.dedent(
                 """
-        The dashboard is available at http://%s/
+        The dashboard is available at %s
 
             Username: admin
             Password: %s
@@ -349,7 +384,7 @@ def main():
             microk8s juju config dex-auth static-password
 
         """
-                % (hostname, args['password'])
+                % (hostname.geturl(), args['password'])
             )
         )
     else:
