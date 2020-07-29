@@ -202,6 +202,7 @@ def main():
             }
         }
     else:
+        bundle = args['bundle']
         bundle_type = 'full'
         password_overlay = {
             "applications": {
