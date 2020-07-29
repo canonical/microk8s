@@ -19,7 +19,7 @@ INSTALL=false
 UNDO=false
 CHECK=false
 REFRESH=false
-PARSED=$(getopt --options=iuhcr: --longoptions=install,undo,help,check,refresh: --name "$@" -- "$@")
+PARSED=$(getopt --options=iuhcr: --longoptions=install,undo,help,check,refresh: --name "refresh-certs" -- "$@")
 eval set -- "$PARSED"
 while true; do
   case "$1" in
@@ -108,11 +108,11 @@ function exit_if {
 
 function validate_ca_crt_and_key {
     # Check CA private key
-    openssl rsa -in "${CAPATH}/ca.key" -check -noout -out /dev/null
+    openssl rsa -in "${CAPATH}/ca.key" -check -noout -out /dev/null 2>/dev/null
     exit_if "CA Private key is invalid"
 
     # Check CA certificate
-    openssl x509 -in "${CAPATH}/ca.crt" -text -noout -out /dev/null
+    openssl x509 -in "${CAPATH}/ca.crt" -text -noout -out /dev/null > /dev/null
     exit_if "CA certificate is invalid"
 
     # Check that CA private key matches CA certificate
@@ -167,7 +167,9 @@ function refresh_ca {
       exit 1
   fi
 
+  echo "Generating auxilary certificates"
   gen_server_cert
+  echo "Restarting "
   update_configs
 }
 
