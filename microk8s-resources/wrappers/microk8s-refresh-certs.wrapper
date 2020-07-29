@@ -81,6 +81,7 @@ function revert {
 }
 
 function check_ca_crt_dates {
+    # parse date range in certificate
     IFS=$'\n'
     date_range=()
     for line in $(openssl x509 -noout -in ${CAPATH}/ca.crt -dates | sed -e 's/^.*=//')
@@ -89,17 +90,13 @@ function check_ca_crt_dates {
         date_range+=("${dt}")
     done
     unset IFS
+
+    # compare current date with date range in certificate
     date_now=$(date "+%s")
-    if [ ${date_range[0]} -gt ${date_now} ]
-    then
-        echo "Certificate is valid in the future so rejecting now"
-        exit 1
-    fi
-    if  [ ${date_now} -gt ${date_range[1]} ]
-    then
-        echo "Rejecting expired certificate"
-        exit 1
-    fi
+    test ${date_now} -gt ${date_range[0]}
+    exit_if "Certificate is valid in the future but not now"
+    test ${date_range[1]} -gt ${date_now}
+    exit_if "Certificate has expired"
 }
 
 function exit_if {
