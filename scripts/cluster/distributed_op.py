@@ -62,9 +62,12 @@ def do_op(remote_op):
                             remote_op["action_str"], node_ep, res.status_code
                         )
                     )
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             print("Could not query for nodes")
-
+            raise SystemExit(e)
+        except requests.exceptions.RequestException as e:
+            print("Failed to reach node.")
+            raise SystemExit(e)
     else:
         with open(callback_tokens_file, "r+") as fp:
             for _, line in enumerate(fp):
