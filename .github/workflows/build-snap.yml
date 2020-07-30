@@ -20,6 +20,7 @@ jobs:
       run: |
         set -x
         sudo pip3 install --upgrade pip
+        sudo pip3 install -U iniconfig
         sudo pip3 install -U pytest
     - name: Install lxd
       run: |
