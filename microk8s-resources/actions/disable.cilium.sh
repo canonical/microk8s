@@ -35,7 +35,7 @@ then
   run_with_sudo $SNAP/sbin/ip link delete "cilium_vxlan"
 fi
 
-if [ e "$SNAP_DATA/var/lock/ha-cluster" ] && [ -e "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ]
+if [ -e "$SNAP_DATA/var/lock/ha-cluster" ] && [ -e "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ]
 then
   echo "Restarting default cni"
   run_with_sudo mv "$SNAP_DATA/args/cni-network/cni.yaml.disabled" "$SNAP_DATA/args/cni-network/cni.yaml"
