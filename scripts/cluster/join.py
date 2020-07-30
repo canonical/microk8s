@@ -767,7 +767,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
 
     waits = 10
-    print("Waiting for node to join the cluster.", end=" ", flush=True)
+    print("Waiting for this node to finish joining the cluster.", end=" ", flush=True)
     while waits > 0:
         try:
             out = subprocess.check_output(
@@ -806,6 +806,8 @@ def join_dqlite(connection_parts):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
+
+    print("Contacting cluster at {}".format(master_ip))
     info = get_connection_info(master_ip, master_port, token, cluster_type="dqlite")
 
     hostname_override = info['hostname_override']
