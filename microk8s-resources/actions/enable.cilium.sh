@@ -75,7 +75,7 @@ else
 
   if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]
   then
-    "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" delete "$SNAP_DATA/args/cni-network/cni.yaml"
+    "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" delete -f "$SNAP_DATA/args/cni-network/cni.yaml"
     run_with_sudo mv "$SNAP_DATA/args/cni-network/cni.yaml" "$SNAP_DATA/args/cni-network/cni.yaml.disabled"
   fi
 
