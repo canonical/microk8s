@@ -806,6 +806,8 @@ def join_dqlite(connection_parts):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
+
+    print("Contacting cluster at {}".format(master_ip))
     info = get_connection_info(master_ip, master_port, token, cluster_type="dqlite")
 
     hostname_override = info['hostname_override']
