@@ -162,6 +162,8 @@ function refresh_ca {
       echo "Copying new CA certificate and key"
       run_with_sudo cp "${CAPATH}/ca.crt" "${SNAP_DATA}/certs/ca.crt"
       run_with_sudo cp "${CAPATH}/ca.key" "${SNAP_DATA}/certs/ca.key"
+      run_with_sudo chgrp microk8s "${SNAP_DATA}/certs/ca.crt"
+      run_with_sudo chgrp microk8s "${SNAP_DATA}/certs/ca.key"
   else
       echo "Could not find ca.crt and ca.key in $CAPATH, aborting CA certificate update"
       exit 1
