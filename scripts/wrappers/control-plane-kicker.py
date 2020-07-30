@@ -11,6 +11,7 @@ from common.utils import (
     is_service_expected_to_start,
     set_service_expected_to_start,
 )
+import os
 
 services = [
     'controller-manager',
@@ -44,11 +45,43 @@ def stop_control_plane_services():
             set_service_expected_to_start(service, False)
 
 
+def microk8s_group_exists():
+    """
+    Check the existence of the microk8s group
+    :return: True is the microk8s group exists
+    """
+    try:
+        cmd = "getent group microk8s"
+        subprocess.check_call(cmd.split())
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
+def set_dqlite_file_permissions():
+    """
+    Set the file permissions in the dqlite backend directory
+    """
+    dqlite_path = os.path.expandvars("${SNAP_DATA}/var/kubernetes/backend")
+    try:
+        cmd = "chmod -R ug+rwX {}".format(dqlite_path)
+        subprocess.check_call(cmd.split())
+        cmd = "chgrp microk8s -R {}".format(dqlite_path)
+        subprocess.check_call(cmd.split())
+    except Exception as e:
+        print("Failed to set the file permissions in dqlite.")
+        print(e)
+
+
 if __name__ == '__main__':
     while True:
         # Check for changes every 10 seconds
         sleep(10)
         try:
+
+            if microk8s_group_exists():
+                set_dqlite_file_permissions()
+
             # We will not attempt to stop services if:
             # 1. The cluster is not ready
             # 2. We are not on an HA cluster
