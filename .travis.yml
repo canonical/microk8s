@@ -19,7 +19,7 @@ script:
   - sudo /snap/bin/lxd waitready
   - sudo /snap/bin/lxd init --auto
   - sudo usermod --append --groups lxd $USER
-  - sg lxd -c 'snapcraft --use-lxd'
+  - sg lxd -c 'SNAPCRAFT_ENABLE_DEVELOPER_DEBUG=yes snapcraft --use-lxd'
   - sudo apt update
   - sudo snap install *.snap --classic --dangerous
   - sudo pip3 install --upgrade pip
