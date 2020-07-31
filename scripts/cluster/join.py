@@ -349,6 +349,11 @@ def reset_current_dqlite_installation():
     """
     Take a node out of a dqlite cluster
     """
+    if is_leader_without_successor():
+        print("This node currently holds the only copy of the Kubernetes database so it cannot leave the cluster.")
+        print("To remove this node you can either first remove all other nodes with 'microk8s remove-node' or")
+        print("form a highly available cluster by adding at least three nodes.")
+        exit(3)
 
     # We need to:
     # 1. Stop the apiserver
@@ -491,6 +496,52 @@ def get_dqlite_endpoints():
             other_ep.append(ep)
 
     return my_ep, other_ep
+
+
+def is_leader_without_successor():
+    """
+    Check if the current node is safe to be removed. Check if this node acts as a leader to a cluster
+    with more than one nodes where there is no other node to take over the leadership.
+
+    :return: True if this node is the leader without a successor.
+    """
+    out = subprocess.check_output(
+        "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+        "-k {dbdir}/cluster.key -f json k8s .cluster".format(
+            snappath=snap_path, dbdir=cluster_dir
+        ).split()
+    )
+    voters = 0
+    data = json.loads(out.decode())
+    ep_addresses = []
+    for ep in data:
+        ep_addresses.append((ep["Address"], ep["Role"]))
+        # Role == 0 means we are voters
+        if ep["Role"] == 0:
+            voters += 1
+
+    local_ips = []
+    for interface in netifaces.interfaces():
+        if netifaces.AF_INET not in netifaces.ifaddresses(interface):
+            continue
+        for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
+            local_ips.append(link['addr'])
+
+    is_voter = False
+    for ep in ep_addresses:
+        found = False
+        for ip in local_ips:
+            if "{}:".format(ip) in ep[0]:
+                # ep[1] == ep[Role] == 0 means we are voters
+                if ep[1] == 0:
+                    is_voter = True
+
+    if voters == 1 and is_voter and len(ep_addresses) > 1:
+        # We have one voter in the cluster and the current node is the only voter
+        # and there are other nodes that depend on this node.
+        return True
+    else:
+        return False
 
 
 def remove_kubelet_token(node):
