@@ -10,7 +10,7 @@ elif [ "$ARCH" = "armhf" ]; then
   KUBE_ARCH="arm"
 fi
 export KUBE_ARCH
-export ETCD_VERSION="${ETCD_VERSION:-v3.3.4}"
+export ETCD_VERSION="${ETCD_VERSION:-v3.3.7}"
 export FLANNELD_VERSION="${FLANNELD_VERSION:-v0.11.0}"
 export CNI_VERSION="${CNI_VERSION:-v0.7.1}"
 export KNATIVE_SERVING_VERSION="${KNATIVE_SERVING_VERSION:-v0.9.0}"

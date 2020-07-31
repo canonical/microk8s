@@ -126,7 +126,7 @@ parts:
       export GOPATH=$(realpath ../go)
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       # Build containerd
-      go get github.com/containerd/containerd
+      go get -d github.com/containerd/containerd
       (
         cd $GOPATH/src/github.com/containerd/containerd
         git checkout ${CONTAINERD_COMMIT}
@@ -138,7 +138,7 @@ parts:
       rm $SNAPCRAFT_PART_INSTALL/bin/containerd-stress
 
       # Build runc
-      go get github.com/opencontainers/runc
+      go get -d github.com/opencontainers/runc
       (
         cd $GOPATH/src/github.com/opencontainers/runc
         git checkout ${RUNC_COMMIT}

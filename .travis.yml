@@ -14,7 +14,9 @@ script:
   - sudo /snap/bin/lxd.migrate -yes
   - sudo /snap/bin/lxd waitready
   - sudo /snap/bin/lxd init --auto
-  - sudo snapcraft cleanbuild
+  - sudo usermod --append --groups lxd $USER
+  - sg lxd -c 'SNAPCRAFT_ENABLE_DEVELOPER_DEBUG=yes snapcraft version'
+  - sg lxd -c 'SNAPCRAFT_ENABLE_DEVELOPER_DEBUG=yes snapcraft cleanbuild'
   - sudo snap install *.snap --classic --dangerous
   - sudo pip install -U pytest
   - pwd
