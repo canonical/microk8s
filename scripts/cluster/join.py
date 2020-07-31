@@ -350,8 +350,12 @@ def reset_current_dqlite_installation():
     Take a node out of a dqlite cluster
     """
     if is_leader_without_successor():
-        print("This node currently holds the only copy of the Kubernetes database so it cannot leave the cluster.")
-        print("To remove this node you can either first remove all other nodes with 'microk8s remove-node' or")
+        print(
+            "This node currently holds the only copy of the Kubernetes database so it cannot leave the cluster."
+        )
+        print(
+            "To remove this node you can either first remove all other nodes with 'microk8s remove-node' or"
+        )
         print("form a highly available cluster by adding at least three nodes.")
         exit(3)
 
