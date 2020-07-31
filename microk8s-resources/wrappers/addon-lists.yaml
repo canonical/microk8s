@@ -87,8 +87,8 @@ microk8s-addons:
 
     - name: "fluentd"
       description: "Elasticsearch-Fluentd-Kibana logging and monitoring"
-      version: ""
-      check_status: "daemonset.apps/fluentd-es-v2.2.0"
+      version: "3.0.2"
+      check_status: "daemonset.apps/fluentd-es-v3.0.2"
       supported_architectures:
       - amd64
 
