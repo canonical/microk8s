@@ -43,7 +43,8 @@ def is_cluster_ready():
     try:
         service_output = kubectl_get("all")
         node_output = kubectl_get("nodes")
-        if "Ready" in node_output and "service/kubernetes" in service_output:
+        # Make sure to compare with the word " Ready " with spaces.
+        if " Ready " in node_output and "service/kubernetes" in service_output:
             return True
         else:
             return False
