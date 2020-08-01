@@ -4,15 +4,15 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.34.0
+    app.kubernetes.io/version: v0.40.0
   name: prometheus-operator
   namespace: monitoring
 spec:
   clusterIP: None
   ports:
-  - name: http
-    port: 8080
-    targetPort: http
+  - name: https
+    port: 8443
+    targetPort: https
   selector:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator

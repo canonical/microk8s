@@ -4,15 +4,19 @@ metadata:
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
-    app.kubernetes.io/version: v0.34.0
+    app.kubernetes.io/version: v0.40.0
   name: prometheus-operator
   namespace: monitoring
 spec:
   endpoints:
-  - honorLabels: true
-    port: http
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    honorLabels: true
+    port: https
+    scheme: https
+    tlsConfig:
+      insecureSkipVerify: true
   selector:
     matchLabels:
       app.kubernetes.io/component: controller
       app.kubernetes.io/name: prometheus-operator
-      app.kubernetes.io/version: v0.34.0
+      app.kubernetes.io/version: v0.40.0
