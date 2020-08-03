@@ -424,6 +424,7 @@ parts:
     - util-linux
     - zfsutils-linux
     - iproute2
+    - python3-click
     source: .
     prime:
       - -README*
