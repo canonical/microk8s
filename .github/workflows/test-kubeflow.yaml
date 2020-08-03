@@ -59,12 +59,7 @@ jobs:
         sudo snap install juju-helpers --classic
 
     - name: Enable kubeflow
-      run: |
-        set -eux
-        export KUBEFLOW_BUNDLE=edge
-        export KUBEFLOW_DEBUG=true
-        export KUBEFLOW_IGNORE_MIN_MEM=true
-        sg microk8s -c 'microk8s enable kubeflow'
+      run: sg microk8s -c 'microk8s enable kubeflow --debug --bundle=edge --ignore-min-mem --password=hunter2'
 
     - name: Test kubeflow
       run: |
@@ -170,6 +165,7 @@ jobs:
           export KUBEFLOW_BUNDLE=${{ matrix.bundle }}
           export KUBEFLOW_DEBUG=true
           export KUBEFLOW_IGNORE_MIN_MEM=true
+          export KUBEFLOW_AUTH_PASSWORD=hunter2
           microk8s enable kubeflow
         EOF
 

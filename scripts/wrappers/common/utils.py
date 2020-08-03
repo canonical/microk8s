@@ -1,11 +1,15 @@
-import yaml
+import getpass
 import json
 import os
+import platform
 import subprocess
 import sys
+import textwrap
 import time
-import platform
-import getpass
+from pathlib import Path
+
+import click
+import yaml
 
 kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/client.config")
 
@@ -15,6 +19,13 @@ def get_current_arch():
     arch_mapping = {'aarch64': 'arm64', 'x86_64': 'amd64'}
 
     return arch_mapping[platform.machine()]
+
+
+def snap_data() -> Path:
+    try:
+        return Path(os.environ['SNAP_DATA'])
+    except KeyError:
+        return Path('/var/snap/microk8s/current')
 
 
 def run(*args, die=True):
@@ -102,13 +113,10 @@ def get_dqlite_info():
 
 
 def is_cluster_locked():
-    clusterLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
-    if os.path.isfile(clusterLockFile):
-        print(
-            "This MicroK8s deployment is acting as a node in a cluster. "
-            "Please use the microk8s status on the master."
-        )
-        exit(0)
+    if (snap_data() / 'var/lock/clustered.lock').exists():
+        click.echo('This MicroK8s deployment is acting as a node in a cluster.')
+        click.echo('Please use `microk8s enable` on the master.')
+        sys.exit(1)
 
 
 def wait_for_ready(wait_ready, timeout):
@@ -149,6 +157,12 @@ def exit_if_no_permission():
         print("")
         print("The new group will be available on the user's next login.")
         exit(1)
+
+
+def ensure_started():
+    if (snap_data() / 'var/lock/stopped.lock').exists():
+        click.secho('microk8s is not running, try microk8s start', fg='red', err=True)
+        sys.exit(1)
 
 
 def kubectl_get(cmd, namespace="--all-namespaces"):
@@ -211,3 +225,64 @@ def set_service_expected_to_start(service, start=True):
     else:
         fd = os.open(lock, os.O_CREAT, mode=0o700)
         os.close(fd)
+
+
+def xable(action: str, addons: list, xabled_addons: list):
+    """Enables or disables the given addons.
+
+    Collated into a single function since the logic is identical other than
+    the script names.
+    """
+    actions = Path(__file__).absolute().parent / "../../../microk8s-resources/actions"
+    existing_addons = {sh.with_suffix('').name[7:] for sh in actions.glob('enable.*.sh')}
+
+    # Backwards compatibility with enabling multiple addons at once, e.g.
+    # `microk8s.enable foo bar:"baz"`
+    if all(a.split(':')[0] in existing_addons for a in addons) and len(addons) > 1:
+        for addon in addons:
+            if addon in xabled_addons and addon != 'kubeflow':
+                click.echo("Addon %s is already %sd." % (addon, action))
+            else:
+                addon, *args = addon.split(':')
+                subprocess.run([str(actions / ('%s.%s.sh' % (action, addon)))] + args)
+
+    # The new way of xabling addons, that allows for unix-style argument passing,
+    # such as `microk8s.enable foo --bar`.
+    else:
+        addon, *args = addons[0].split(':')
+
+        if addon in xabled_addons and addon != 'kubeflow':
+            click.echo("Addon %s is already %sd." % (addon, action))
+            sys.exit(0)
+
+        if addon not in existing_addons:
+            click.secho("Addon `%s` not found." % addon, fg='red', err=True)
+            click.echo("The available addons are:\n - %s" % '\n - '.join(existing_addons), err=True)
+            sys.exit(1)
+
+        if args and addons[1:]:
+            click.secho(
+                click.style(
+                    "Can't pass string arguments and flag arguments simultaneously!\n", fg='red'
+                )
+                + textwrap.dedent(
+                    """
+                    {0} an addon with only one argument style at a time:
+
+                        microk8s {1} foo:'bar'
+                    or
+
+                        microk8s {1} foo --bar
+                """.format(
+                        action.title(), action
+                    )
+                ),
+                err=True,
+            )
+            sys.exit(1)
+
+        script = [str(actions / ('%s.%s.sh' % (action, addon)))]
+        if args:
+            subprocess.run(script + args)
+        else:
+            subprocess.run(script + list(addons[1:]))
