@@ -121,6 +121,7 @@ apps:
     - docker-support
     - docker-privileged
     - firewall-control
+    - k8s-journald
     - kernel-module-control
     - network-control
   daemon-scheduler:
