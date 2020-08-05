@@ -8,5 +8,5 @@ echo "Disabling Helm"
 
 if [ -f "${SNAP_DATA}/bin/helm" ]
 then
-  sudo rm -f "$SNAP_DATA/bin/helm"
+  rm -f "$SNAP_DATA/bin/helm"
 fi
