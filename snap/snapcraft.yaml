@@ -90,6 +90,7 @@ apps:
     - opengl
     - cifs-mount
     - fuse-support
+    - kernel-crypto-api
   daemon-apiserver:
     command: run-with-config-args kube-apiserver
     daemon: simple
