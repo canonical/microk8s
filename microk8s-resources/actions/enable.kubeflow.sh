@@ -110,6 +110,16 @@ def check_connectivity():
             sys.exit(1)
 
 
+def check_is_root():
+    """Checks the user has root permissions and fails gracefully.
+
+    This is a mitigation to https://github.com/ubuntu/microk8s/issues/1396
+    """
+    if os.geteuid() != 0:
+        print("You need to have root permissions to enable kubeflow. Please try again using 'sudo'")
+        sys.exit(1)
+
+
 def parse_hostname(hostname: str) -> ParseResult:
     if '//' in hostname:
         parsed = urlparse(hostname)
@@ -184,6 +194,8 @@ def get_hostname():
 
 
 def main():
+
+    check_is_root()
     args = {
         'bundle': os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-206",
         'channel': os.environ.get("KUBEFLOW_CHANNEL") or "stable",
