@@ -55,7 +55,7 @@ def undo_refresh():
 
     try:
         subprocess.check_call('{}/microk8s-stop.wrapper'.format(snap_path).split())
-    except:
+    except subprocess.CalledProcessError:
         pass
 
     try:

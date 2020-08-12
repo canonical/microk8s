@@ -4,6 +4,7 @@ import re
 import requests
 import platform
 import yaml
+import subprocess
 
 from utils import (
     kubectl,
@@ -33,7 +34,7 @@ def validate_dns_dashboard():
             )
             if "Kubernetes Dashboard" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(10)
         attempt -= 1
@@ -101,7 +102,7 @@ def common_ingress():
             if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                 service_ok = True
                 break
-        except:
+        except requests.RequestException:
             time.sleep(5)
             attempt -= 1
     if resp.status_code != 200 or "microbot.png" not in resp.content.decode("utf-8"):
@@ -112,7 +113,7 @@ def common_ingress():
                 if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                     service_ok = True
                     break
-            except:
+            except requests.RequestException:
                 time.sleep(5)
                 attempt -= 1
 
@@ -280,7 +281,7 @@ def validate_forward():
             resp = requests.get("http://localhost:5123")
             if resp.status_code == 200:
                 break
-        except:
+        except requests.RequestException:
             pass
         attempt -= 1
         time.sleep(2)
@@ -299,7 +300,7 @@ def validate_metrics_server():
             output = kubectl("get --raw /apis/metrics.k8s.io/v1beta1/pods")
             if "PodMetricsList" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(10)
         attempt -= 1
@@ -347,7 +348,7 @@ def validate_jaeger():
             output = kubectl("get ingress")
             if "simplest-query" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(2)
         attempt -= 1
