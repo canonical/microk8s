@@ -144,7 +144,7 @@ def get_nodes_info(safe=True):
                             continue
                         node_info = [(parts[0], parts[1])]
         except subprocess.CalledProcessError:
-            print("Error in gathering cluster node information. Upgrade aborted.".format(host))
+            print("Error in gathering cluster node information. Upgrade aborted.")
             exit(1)
     else:
         if os.path.isfile(callback_tokens_file):
