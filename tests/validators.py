@@ -381,7 +381,6 @@ def validate_linkerd():
         timeout_insec=300,
     )
     print("Linkerd proxy injector up and running.")
-    ### Disabling this test because the deletion of the namespace get stuck.
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "emojivoto.yaml")
     kubectl("apply -f {}".format(manifest))
