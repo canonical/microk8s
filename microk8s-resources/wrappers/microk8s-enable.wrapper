@@ -6,6 +6,9 @@ ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
+# avoid AppArmor denial in strict mode when running under sudo without -H
+cd "$SNAP"
+
 source $SNAP/actions/common/utils.sh
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
