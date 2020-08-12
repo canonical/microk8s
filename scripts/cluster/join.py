@@ -7,6 +7,7 @@ import os
 import getopt
 import sys
 import time
+from typing import Dict
 
 import netifaces
 import requests
