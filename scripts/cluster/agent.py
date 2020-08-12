@@ -292,8 +292,8 @@ def join_node_etcd():
 
     if is_node_running_dqlite():
         msg = (
-            "Failed to join the cluster. This is an HA dqlite cluster. \n"
-            "Please, retry after enabling HA on this joining node with 'microk8s enable ha-cluster'."
+            "Failed to join the cluster. This is an HA dqlite cluster.\n"
+            "Please retry after enabling HA on this joining node with 'microk8s enable ha-cluster'."
         )
         error_msg = {"error": msg}
         return Response(json.dumps(error_msg), mimetype='application/json', status=501)

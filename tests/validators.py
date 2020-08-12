@@ -27,7 +27,9 @@ def validate_dns_dashboard():
     while attempt > 0:
         try:
             output = kubectl(
-                "get --raw /api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
+                "get "
+                "--raw "
+                "/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
             )
             if "Kubernetes Dashboard" in output:
                 break

@@ -352,10 +352,12 @@ def reset_current_dqlite_installation():
     """
     if is_leader_without_successor():
         print(
-            "This node currently holds the only copy of the Kubernetes database so it cannot leave the cluster."
+            "This node currently holds the only copy of the Kubernetes "
+            "database so it cannot leave the cluster."
         )
         print(
-            "To remove this node you can either first remove all other nodes with 'microk8s remove-node' or"
+            "To remove this node you can either first remove all other "
+            "nodes with 'microk8s remove-node' or"
         )
         print("form a highly available cluster by adding at least three nodes.")
         exit(3)
@@ -504,9 +506,10 @@ def get_dqlite_endpoints():
 
 
 def is_leader_without_successor():
-    """
-    Check if the current node is safe to be removed. Check if this node acts as a leader to a cluster
-    with more than one nodes where there is no other node to take over the leadership.
+    """Checks if the current node is safe to be removed.
+
+    Check if this node acts as a leader to a cluster with more than one nodes where there
+    is no other node to take over the leadership.
 
     :return: True if this node is the leader without a successor.
     """
@@ -663,8 +666,10 @@ def remove_dqlite_node(node, force=False):
             delete_dqlite_node([node_ep], my_ep)
         elif node_ep and not force:
             print(
-                "Removal failed. Node {} is registered with dqlite. Please, run first 'microk8s leave' on the departing node. \n"
-                "If the node is not available anymore and will never attempt to join the cluster in the future use the '--force' flag \n"
+                "Removal failed. Node {} is registered with dqlite. "
+                "Please, run first 'microk8s leave' on the departing node. \n"
+                "If the node is not available anymore and will never attempt to join the cluster "
+                "in the future use the '--force' flag \n"
                 "to unregister the node while removing it.".format(node)
             )
             exit(1)
@@ -894,8 +899,8 @@ def join_dqlite(connection_parts):
     store_callback_token(info["callback_token"])
 
     update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
-    # We want to update the local CNI yaml but we do not want to apply it. The cni is applied already
-    # in the cluster we join
+    # We want to update the local CNI yaml but we do not want to apply it.
+    # The cni is applied already in the cluster we join
     try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
 
 

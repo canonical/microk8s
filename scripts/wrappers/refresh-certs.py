@@ -119,7 +119,8 @@ def refresh_ca():
     update_configs()
     msg = """
 The CA certificates have been replaced. Kubernetes will restart the pods of your workloads.
-Any worker nodes you may have in your cluster need to be removed and re-joined to become aware of the new CA.
+Any worker nodes you may have in your cluster need to be removed and \
+re-joined to become aware of the new CA.
 """
     click.echo(msg)
 
@@ -187,7 +188,8 @@ def install_ca(ca_dir):
     update_configs()
     msg = """
     The CA certificates have been replaced. Kubernetes will restart the pods of your workloads.
-    Any worker nodes you may have in your cluster need to be removed and re-joined to become aware of the new CA.
+    Any worker nodes you may have in your cluster need to be removed and \
+    re-joined to become aware of the new CA.
     """
     click.echo(msg)
 
@@ -224,7 +226,8 @@ def refresh_certs(ca_dir, undo, check, help):
         click.echo("Please select either one of the options -c or -u, not both.")
         exit(2)
 
-    # Operations here will need root privileges as some of the credentials and certificates are used by system services.
+    # Operations here will need root privileges as some of the credentials
+    # and certificates are used by system services.
     exit_if_no_root()
     if check:
         check_certificate()

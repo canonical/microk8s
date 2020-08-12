@@ -21,9 +21,9 @@ class VM:
     """
 
     def __init__(self, attach_vm=None):
-        """
-        Detect the available backends and instantiate a VM. If attach_vm is provided we just make sure the right
-        MicroK8s is deployed.
+        """Detect the available backends and instantiate a VM.
+
+        If `attach_vm` is provided we just make sure the right MicroK8s is deployed.
         :param attach_vm: the name of the VM we want to reuse
         """
         rnd_letters = ''.join(random.choice(string.ascii_lowercase) for i in range(6))

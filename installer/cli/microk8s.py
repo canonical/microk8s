@@ -99,7 +99,7 @@ def _show_install_help():
       --help     Show this message and exit.
       --cpu      Cores used by MicroK8s (default={})
       --mem      RAM in GB used by MicroK8s (default={})
-      --disk     Maximum volume in GB of the dynamically expandable hard disk to be used (default={})
+      --disk     Max volume in GB of the dynamically expandable hard disk to be used (default={})
       --channel  Kubernetes version to install (default={})
        -y, --assume-yes  Automatic yes to prompts"""
     Echo.info(
