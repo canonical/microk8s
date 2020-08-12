@@ -49,7 +49,7 @@ def undo_refresh():
     try:
         subprocess.check_call('cp -r {}/certs {}/'.format(backup_dir, snapdata_path).split())
         subprocess.check_call('cp -r {}/credentials {}'.format(backup_dir, snapdata_path).split())
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         click.echo('Failed to recover certificates')
         exit(4)
 
@@ -60,7 +60,7 @@ def undo_refresh():
 
     try:
         subprocess.check_call('{}/microk8s-start.wrapper'.format(snap_path).split())
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         click.echo('Failed to start MicroK8s after reverting the certificates')
         exit(4)
 
@@ -111,7 +111,7 @@ def refresh_ca():
     click.echo("Creating new certificates")
     try:
         produce_certs()
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         click.echo("Failed to produce new certificates. Reverting.")
         undo_refresh()
         exit(20)
@@ -180,7 +180,7 @@ def install_ca(ca_dir):
     click.echo("Installing provided certificates")
     try:
         install_certs(ca_dir)
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         click.echo("Failed to produce new certificates. Reverting.")
         undo_refresh()
         exit(20)

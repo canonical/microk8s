@@ -536,7 +536,6 @@ def is_leader_without_successor():
 
     is_voter = False
     for ep in ep_addresses:
-        found = False
         for ip in local_ips:
             if "{}:".format(ip) in ep[0]:
                 # ep[1] == ep[Role] == 0 means we are voters

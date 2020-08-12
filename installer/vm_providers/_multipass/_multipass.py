@@ -47,8 +47,6 @@ class Multipass(Provider):
         return "multipass"
 
     def run(self, command: Sequence[str], hide_output: bool = False) -> Optional[bytes]:
-        env_command = self._get_env_command()
-
         cmd = ["sudo"]
         cmd.extend(command)
         self._log_run(cmd)

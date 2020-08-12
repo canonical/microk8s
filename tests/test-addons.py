@@ -29,7 +29,7 @@ from utils import (
     microk8s_disable,
     microk8s_reset,
 )
-from subprocess import Popen, PIPE, STDOUT, CalledProcessError, check_call
+from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
 
 
 class TestAddons(object):
@@ -95,7 +95,7 @@ class TestAddons(object):
         """
         try:
             print("Enabling gpu")
-            gpu_enable_outcome = microk8s_enable("gpu")
+            microk8s_enable("gpu")
         except CalledProcessError:
             # Failed to enable gpu. Skip the test.
             print("Could not enable GPU support")
@@ -141,10 +141,13 @@ class TestAddons(object):
         Sets up and validates Cilium.
         """
         print("Enabling Cilium")
-        p = Popen(
-            "/snap/bin/microk8s.enable cilium".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT
+        run(
+            "/snap/bin/microk8s.enable cilium".split(),
+            stdout=PIPE,
+            input=b'N\n',
+            stderr=STDOUT,
+            check=True,
         )
-        p.communicate(input=b'N\n')[0]
         print("Validating Cilium")
         validate_cilium()
         print("Disabling Cilium")
@@ -162,8 +165,12 @@ class TestAddons(object):
         Sets up and validates Multus.
         """
         print("Enabling Multus")
-        p = Popen(
-            "/snap/bin/microk8s.enable multus".split(), stdout=PIPE, stdin=PIPE, stderr=STDOUT
+        run(
+            "/snap/bin/microk8s.enable multus".split(),
+            stdout=PIPE,
+            stdin=PIPE,
+            stderr=STDOUT,
+            check=True,
         )
         print("Validating Multus")
         validate_multus()
