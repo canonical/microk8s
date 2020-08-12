@@ -24,7 +24,7 @@ from .common.utils import (
     try_initialise_cni_autodetect_for_clustering,
 )
 
-from flask import Flask, jsonify, request, abort, Response
+from flask import Flask, jsonify, request, Response
 
 app = Flask(__name__)
 CLUSTER_API = "cluster/api/v1.0"

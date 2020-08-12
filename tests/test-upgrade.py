@@ -1,21 +1,16 @@
-import pytest
 import os
 import platform
 import time
-import requests
 from validators import (
     validate_dns_dashboard,
     validate_storage,
     validate_ingress,
-    validate_ambassador,
     validate_gpu,
     validate_registry,
     validate_forward,
     validate_metrics_server,
-    validate_prometheus,
     validate_fluentd,
     validate_jaeger,
-    validate_kubeflow,
     validate_cilium,
     validate_metallb_config,
     validate_multus,

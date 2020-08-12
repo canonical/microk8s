@@ -13,7 +13,6 @@ from validators import (
     validate_registry,
     validate_forward,
     validate_metrics_server,
-    validate_prometheus,
     validate_fluentd,
     validate_jaeger,
     validate_linkerd,

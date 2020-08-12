@@ -19,7 +19,6 @@ import json
 from common.utils import (
     try_set_file_permissions,
     is_node_running_dqlite,
-    get_dqlite_port,
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
 )
