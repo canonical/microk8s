@@ -65,7 +65,8 @@ fi
 default_ip="$(get_default_ip)"
 all_ips="$(get_ips)"
 
-echo "Join node with: microk8s join ${default_ip}:$port/${token}"
+echo "From the node you wish to join to this cluster, run the following:"
+echo "microk8s join ${default_ip}:$port/${token}"
 echo ""
 echo "If the node you are adding is not reachable through the default interface you can use one of the following:"
 for addr in $(echo "${all_ips}"); do
@@ -73,4 +74,3 @@ for addr in $(echo "${all_ips}"); do
     echo " microk8s join ${addr}:$port/${token}"
   fi
 done
-

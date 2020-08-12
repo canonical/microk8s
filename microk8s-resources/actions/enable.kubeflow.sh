@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import csv
 import json
 import os
 import random
@@ -12,8 +13,8 @@ import time
 from distutils.util import strtobool
 from itertools import count
 from urllib.error import URLError
+from urllib.parse import urlparse, ParseResult
 from urllib.request import urlopen
-from urllib.parse import urlparse
 
 MIN_MEM_GB = 14
 CONNECTIVITY_CHECKS = [
@@ -66,6 +67,41 @@ def juju(*args, **kwargs):
         return run("microk8s-juju.wrapper", *args, **kwargs)
 
 
+def parse_hostname(hostname: str) -> ParseResult:
+    if '//' in hostname:
+        parsed = urlparse(hostname)
+    else:
+        parsed = urlparse('//' + hostname)
+
+    if not parsed.scheme:
+        parsed = parsed._replace(scheme='http')
+
+    if not parsed.hostname:
+        print("Manual hostname `%s` leaves hostname unspecified" % hostname)
+        sys.exit(1)
+
+    if not parsed.port:
+        parsed = parsed._replace(netloc=parsed.hostname or '' + (parsed.port or ''))
+
+    if parsed.path not in ('', '/'):
+        print("WARNING: The path `%s` was set on the hostname, but was ignored." % parsed.path)
+
+    if parsed.params:
+        print(
+            "WARNING: The params `%s` were set on the hostname, but were ignored." % parsed.params
+        )
+
+    if parsed.query:
+        print("WARNING: The query `%s` was set on the hostname, but was ignored." % parsed.query)
+
+    if parsed.params:
+        print(
+            "WARNING: The fragment `%s` was set on the hostname, but was ignored." % parsed.fragment
+        )
+
+    return parsed._replace(path='', params='', query='', fragment='')
+
+
 def get_hostname():
     """Gets the hostname that Ambassador will respond to."""
 
@@ -105,13 +141,27 @@ def get_hostname():
 
 
 def main():
-    password = os.environ.get("KUBEFLOW_AUTH_PASSWORD") or get_random_pass()
-    bundle = os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-206"
-    channel = os.environ.get("KUBEFLOW_CHANNEL") or "stable"
-    no_proxy = os.environ.get("KUBEFLOW_NO_PROXY") or None
-    hostname = os.environ.get("KUBEFLOW_HOSTNAME") or None
-    debug = strtobool(os.environ.get("KUBEFLOW_DEBUG") or "false")
-    ignore_min_mem = strtobool(os.environ.get("KUBEFLOW_IGNORE_MIN_MEM") or "false")
+    args = {
+        'bundle': os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-206",
+        'channel': os.environ.get("KUBEFLOW_CHANNEL") or "stable",
+        'debug': os.environ.get("KUBEFLOW_DEBUG") or "false",
+        'hostname': os.environ.get("KUBEFLOW_HOSTNAME") or None,
+        'ignore_min_mem': os.environ.get("KUBEFLOW_IGNORE_MIN_MEM") or "false",
+        'no_proxy': os.environ.get("KUBEFLOW_NO_PROXY") or None,
+        'password': os.environ.get("KUBEFLOW_AUTH_PASSWORD") or get_random_pass(),
+    }
+    for pair in list(csv.reader(sys.argv[1:]))[0]:
+        key, val = pair.split('=', maxsplit=1)
+        if key not in args:
+            print("Invalid argument `%s`." % key)
+            print("Valid arguments options are:\n - " + "\n - ".join(args.keys()))
+            sys.exit(1)
+        args[key] = val
+
+    # Coerce the boolean args to actual bools
+    for arg in ['debug', 'ignore_min_mem']:
+        if not isinstance(args[arg], bool):
+            args[arg] = strtobool(args[arg])
 
     with open("/proc/meminfo") as f:
         memtotal_lines = [l for l in f.readlines() if "MemTotal" in l]
@@ -122,7 +172,7 @@ def main():
         print("Couldn't determine total memory.")
         print("Kubeflow recommends at least %s GB of memory." % MIN_MEM_GB)
 
-    if total_mem < MIN_MEM_GB * 1024 * 1024 and not ignore_min_mem:
+    if total_mem < MIN_MEM_GB * 1024 * 1024 and not args['ignore_min_mem']:
         print("Kubeflow recommends at least %s GB of memory." % MIN_MEM_GB)
         print(
             "Run `KUBEFLOW_IGNORE_MIN_MEM=true microk8s.enable kubeflow`"
@@ -149,12 +199,14 @@ def main():
     # shoudn't have to specify a version for those bundles. However, allow the
     # user to specify a full charm store URL if they'd like, such as
     # `cs:kubeflow-lite-123`.
-    if bundle == 'full':
+    if args['bundle'] == 'full':
         bundle = 'cs:kubeflow-206'
         bundle_type = 'full'
         password_overlay = {
             "applications": {
-                "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
+                "dex-auth": {
+                    "options": {"static-username": "admin", "static-password": args['password']}
+                },
                 "katib-db": {"options": {"root_password": get_random_pass()}},
                 "modeldb-db": {"options": {"root_password": get_random_pass()}},
                 "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
@@ -162,18 +214,20 @@ def main():
                 "pipelines-db": {"options": {"root_password": get_random_pass()}},
             }
         }
-    elif bundle == 'lite':
+    elif args['bundle'] == 'lite':
         bundle = 'cs:~kubeflow-charmers/bundle/kubeflow-lite-6'
         bundle_type = 'lite'
         password_overlay = {
             "applications": {
-                "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
+                "dex-auth": {
+                    "options": {"static-username": "admin", "static-password": args['password']}
+                },
                 "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
                 "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
                 "pipelines-db": {"options": {"root_password": get_random_pass()}},
             }
         }
-    elif bundle == 'edge':
+    elif args['bundle'] == 'edge':
         bundle = 'cs:~kubeflow-charmers/bundle/kubeflow-edge-12'
         bundle_type = 'edge'
         password_overlay = {
@@ -183,10 +237,13 @@ def main():
             }
         }
     else:
+        bundle = args['bundle']
         bundle_type = 'full'
         password_overlay = {
             "applications": {
-                "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
+                "dex-auth": {
+                    "options": {"static-username": "admin", "static-password": args['password']}
+                },
                 "katib-db": {"options": {"root_password": get_random_pass()}},
                 "modeldb-db": {"options": {"root_password": get_random_pass()}},
                 "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
@@ -203,9 +260,9 @@ def main():
         "metallb:10.64.140.43-10.64.140.49",
     ]:
         print("Enabling %s..." % service)
-        run("microk8s-enable.wrapper", service, debug=debug)
+        run("microk8s-enable.wrapper", service, debug=args['debug'])
 
-    run("microk8s-status.wrapper", "--wait-ready", debug=debug)
+    run("microk8s-status.wrapper", "--wait-ready", debug=args['debug'])
 
     print("Waiting for DNS and storage plugins to finish setting up")
     run(
@@ -216,7 +273,7 @@ def main():
         "deployment/coredns",
         "deployment/hostpath-provisioner",
         "--timeout=10m",
-        debug=debug,
+        debug=args['debug'],
     )
 
     try:
@@ -228,10 +285,10 @@ def main():
         sys.exit(1)
 
     print("Deploying Kubeflow...")
-    if no_proxy is not None:
-        juju("bootstrap", "microk8s", "uk8s", "--config=juju-no-proxy=%s" % no_proxy)
+    if args['no_proxy'] is not None:
+        juju("bootstrap", "microk8s", "uk8s", "--config=juju-no-proxy=%s" % args['no_proxy'])
         juju("add-model", "kubeflow", "microk8s")
-        juju("model-config", "-m", "kubeflow", "juju-no-proxy=%s" % no_proxy)
+        juju("model-config", "-m", "kubeflow", "juju-no-proxy=%s" % args['no_proxy'])
     else:
         juju("bootstrap", "microk8s", "uk8s")
         juju("add-model", "kubeflow", "microk8s")
@@ -240,7 +297,7 @@ def main():
         json.dump(password_overlay, f)
         f.flush()
 
-        juju("deploy", bundle, "--channel", channel, "--overlay", f.name)
+        juju("deploy", bundle, "--channel", args['channel'], "--overlay", f.name)
 
     print("Kubeflow deployed.")
     print("Waiting for operator pods to become ready.")
@@ -293,7 +350,7 @@ def main():
         "pod",
         "--timeout=-1s",
         "--all",
-        debug=debug,
+        debug=args['debug'],
     )
 
     if bundle_type == 'full':
@@ -307,16 +364,16 @@ def main():
     print("Congratulations, Kubeflow is now available.")
 
     if bundle_type in ('full', 'lite'):
-        hostname = hostname or get_hostname()
-        juju("config", "dex-auth", "public-url=http://%s:80" % hostname)
-        juju("config", "oidc-gatekeeper", "public-url=http://%s:80" % hostname)
-        juju("config", "ambassador", "juju-external-hostname=%s" % hostname)
+        hostname = parse_hostname(args['hostname'] or get_hostname())
+        juju("config", "dex-auth", "public-url=%s" % hostname.geturl())
+        juju("config", "oidc-gatekeeper", "public-url=%s" % hostname.geturl())
+        juju("config", "ambassador", "juju-external-hostname=%s" % hostname.hostname)
         juju("expose", "ambassador")
 
         print(
             textwrap.dedent(
                 """
-        The dashboard is available at http://%s/
+        The dashboard is available at %s
 
             Username: admin
             Password: %s
@@ -327,7 +384,7 @@ def main():
             microk8s juju config dex-auth static-password
 
         """
-                % (hostname, password)
+                % (hostname.geturl(), args['password'])
             )
         )
     else:
