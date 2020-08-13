@@ -161,6 +161,7 @@ parts:
       - libuv1
     build-packages:
       - libuv1-dev
+      - pkg-config
     organize:
       usr/lib/: lib/
       include/: usr/include/
@@ -226,6 +227,53 @@ parts:
       flanneld: opt/cni/bin/
     stage:
       - opt/cni/bin/flanneld
+
+  k8s-binaries:
+    after: [dqlite]
+    build-snaps: [go]
+    plugin: dump
+    build-attributes: [no-patchelf]
+    source: build-scripts/
+    build-packages:
+      - build-essential
+      - curl
+      - git
+    override-build: |
+      set -eux
+      . ./set-env-variables.sh
+
+      # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
+      # if "${KUBE_SNAP_BINS}" does not exist but it is set we will put the k8s binaries there
+      # if "${KUBE_SNAP_BINS}" does not exist and it is not set we do not need to keep the created binaries
+      if [ ! -e "${KUBE_SNAP_BINS}" ]; then
+        if [ -z "${KUBE_SNAP_BINS}" ]; then
+          . ./set-env-binaries-location.sh
+        fi
+        echo "Downloading binaries"
+        . ./fetch-other-binaries.sh
+        echo "Building k8s binaries"
+        . ./build-k8s-binaries.sh
+      else
+        echo "Binaries provided in $KUBE_SNAP_BINS"
+      fi
+      mkdir bins/
+      cp build/kube_bins/$KUBERNETES_TAG/$KUBE_ARCH/* bins/
+
+      # Add bash completion for microk8s kubectl.
+      bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
+      bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
+
+      snapcraftctl build
+    organize:
+      bins/*: .
+    stage:
+      - kube-apiserver
+      - kube-controller-manager
+      - kube-proxy
+      - kube-scheduler
+      - kubectl
+      - kubectl.bash
+      - kubelet
 
   libnftnl:
     plugin: autotools
@@ -342,7 +390,7 @@ parts:
     - python3-click
     - python3-dateutil
   microk8s:
-    after: [containerd, dqlite]
+    after: [containerd, dqlite, k8s-binaries]
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
@@ -369,26 +417,9 @@ parts:
       - -go*
     override-build: |
       set -eux
-      . build-scripts/set-env-variables.sh
 
-      REMOVE_KUBE_SNAP_BINS=false
-      echo "Reached here"
-      # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
-      # if "${KUBE_SNAP_BINS}" does not exist but it is set we will put the k8s binaries there
-      # if "${KUBE_SNAP_BINS}" does not exist and it is not set we do not need to keep the created binaries
-      if [ ! -e "${KUBE_SNAP_BINS}" ]; then
-        if [ -z "${KUBE_SNAP_BINS}" ]; then
-          # "${KUBE_SNAP_BINS}" not set, we will remove the binaries after we build them.
-          REMOVE_KUBE_SNAP_BINS=true
-          . build-scripts/set-env-binaries-location.sh
-        fi
-        echo "Downloading binaries"
-        . build-scripts/fetch-other-binaries.sh
-        echo "Building k8s binaries"
-        . build-scripts/build-k8s-binaries.sh
-      else
-        echo "Binaries provided in $KUBE_SNAP_BINS"
-      fi
+      . build-scripts/set-env-variables.sh
+      KUBE_SNAP_BINS="/root/parts/k8s-binaries/build/build/kube_bins/$KUBE_VERSION"
 
       echo "Setting default daemon configs"
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/default-args .
@@ -399,29 +430,6 @@ parts:
 
       echo "Preparing containerd"
       cp $KUBE_SNAP_ROOT/microk8s-resources/containerd-profile .
-
-      echo "Preparing kube-apiserver"
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-apiserver .
-      # Old versions will be pointing to these .csv files from inside their kube-apiserver config
-      # Keep them around for a couple of releases.
-      touch known_token.csv
-      cp $KUBE_SNAP_ROOT/microk8s-resources/basic_auth.csv .
-
-      echo "Preparing kube-controller-manager"
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-controller-manager .
-
-      echo "Preparing kube-scheduler"
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-scheduler .
-
-      echo "Preparing kubelet"
-      mkdir -p configs
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kubelet .
-
-      echo "Preparing kube-proxy"
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-proxy .
-
-      echo "Preparing kubelet"
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kubectl .
 
       echo "Preparing user config"
       cp $KUBE_SNAP_ROOT/microk8s-resources/client.config.template .
@@ -477,13 +485,6 @@ parts:
       echo "Creating inspect hook"
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
-      # Add bash completion for microk8s kubectl.
-      ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
-      ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
-
-      if $REMOVE_KUBE_SNAP_BINS; then
-        rm -rf "$KUBE_SNAP_BINS"
-      fi
       snapcraftctl build
 
   # Unfortunately we cannot add package repositories to our snaps
