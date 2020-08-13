@@ -4,11 +4,17 @@ import subprocess
 from dateutil.parser import parse
 import datetime
 
-#snapdata_path = os.environ.get('SNAP_DATA')
-#snap_path = os.environ.get('SNAP')
-snapdata_path = '/var/snap/microk8s/current/'
-snap_path = '/snap/microk8s/current/'
+snapdata_path = os.environ.get('SNAP_DATA')
+snap_path = os.environ.get('SNAP')
+#snapdata_path = '/var/snap/microk8s/current/'
+#snap_path = '/snap/microk8s/current/'
 backup_dir = '{}/var/log/ca-backup/'.format(snapdata_path)
+
+
+def exit_if_no_root():
+    if not os.geteuid() == 0:
+        click.echo('Elevated permissions is needed for this operation. Please run this command with sudo.')
+        exit(50)
 
 
 def check_certificate():
@@ -96,7 +102,23 @@ def install_certs(ca_dir):
 
 
 def validate_certificates(ca_dir):
-    pass
+    if not os.path.isfile('{}/ca.crt') or not os.path.isfile('{}/ca.key'):
+        click.echo('Could not find ca.crt and ca.key files in {}'.format(ca_dir))
+        exit(30)
+
+    try:
+        cmd = '{}/usr/bin/openssl rsa -in {}/ca.key -check -noout -out'.format(snap_path, ca_dir)
+        subprocess.check_call(cmd.split())
+    except subprocess.CalledProcessError as e:
+        click.echo('CA private key is invalid. {}'.format(e))
+        exit(31)
+
+    try:
+        cmd = '{}/usr/bin/openssl x509 -in "{}/ca.crt" -text -noout -out'.format(snap_path, ca_dir)
+        subprocess.check_call(cmd.split())
+    except subprocess.CalledProcessError as e:
+        click.echo('CA certificate is invalid. {}'.format(e))
+        exit(32)
 
 
 def install_ca(ca_dir):
@@ -163,6 +185,7 @@ def refresh_certs(ca_dir, undo, check, help):
         click.echo("Please select either one of the options -c or -u, not both.")
         exit(2)
 
+    exit_if_no_root()
     if check:
         check_certificate()
         exit(0)
@@ -175,8 +198,6 @@ def refresh_certs(ca_dir, undo, check, help):
         refresh_ca()
     else:
         install_ca(ca_dir)
-
-    print(ca_dir, undo, check)
 
 
 def show_help():
