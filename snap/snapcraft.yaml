@@ -273,6 +273,8 @@ parts:
     - openssl
     - python3-requests
     - gunicorn3
+    - python3-click
+    - python-dateutil
   microk8s:
     after: [containerd, dqlite]
     plugin: dump
@@ -291,8 +293,6 @@ parts:
     - util-linux
     - zfsutils-linux
     - iproute2
-    - python3-click
-    - python-dateutil
     source: .
     prime:
       - -README*
