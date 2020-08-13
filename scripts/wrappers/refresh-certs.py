@@ -55,7 +55,8 @@ def undo_refresh():
 
 
 def update_configs():
-    subprocess.Popen(['bash', '-c', '. {}/actions/common/utils.sh; update_configs'.format(snap_path)])
+    p = subprocess.Popen(['bash', '-c', '. {}/actions/common/utils.sh; update_configs'.format(snap_path)])
+    p.communicate()
 
 
 def take_backup():
@@ -72,7 +73,8 @@ def produce_certs():
     subprocess.check_call('rm -rf {}/certs/ca.crt'.format(snapdata_path).split())
     subprocess.check_call('rm -rf {}/certs/front-proxy-ca.crt'.format(snapdata_path).split())
     subprocess.check_call('rm -rf {}/certs/csr.conf'.format(snapdata_path).split())
-    subprocess.Popen(['bash', '-c', '. {}/actions/common/utils.sh; produce_certs'.format(snap_path)])
+    p = subprocess.Popen(['bash', '-c', '. {}/actions/common/utils.sh; produce_certs'.format(snap_path)])
+    p.communicate()
     subprocess.check_call('rm -rf .slr'.split())
 
 
@@ -98,24 +100,25 @@ Any worker nodes you may have in your cluster need to be removed and re-joined t
 def install_certs(ca_dir):
     subprocess.check_call('cp {}/ca.crt {}/certs/'.format(ca_dir, snapdata_path).split())
     subprocess.check_call('cp {}/ca.key {}/certs/'.format(ca_dir, snapdata_path).split())
-    subprocess.Popen(['bash', '-c', '. {}/actions/common/utils.sh; gen_server_cert'.format(snap_path)])
+    p = subprocess.Popen(['bash', '-c', '. {}/actions/common/utils.sh; gen_server_cert'.format(snap_path)])
+    p.communicate()
 
 
 def validate_certificates(ca_dir):
-    if not os.path.isfile('{}/ca.crt') or not os.path.isfile('{}/ca.key'):
+    if not os.path.isfile('{}/ca.crt'.format(ca_dir)) or not os.path.isfile('{}/ca.key'.format(ca_dir)):
         click.echo('Could not find ca.crt and ca.key files in {}'.format(ca_dir))
         exit(30)
 
     try:
-        cmd = '{}/usr/bin/openssl rsa -in {}/ca.key -check -noout -out'.format(snap_path, ca_dir)
-        subprocess.check_call(cmd.split())
+        cmd = '{}/usr/bin/openssl rsa -in {}/ca.key -check -noout -out /dev/null'.format(snap_path, ca_dir)
+        subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError as e:
         click.echo('CA private key is invalid. {}'.format(e))
         exit(31)
 
     try:
-        cmd = '{}/usr/bin/openssl x509 -in "{}/ca.crt" -text -noout -out'.format(snap_path, ca_dir)
-        subprocess.check_call(cmd.split())
+        cmd = '{}/usr/bin/openssl x509 -in {}/ca.crt -text -noout -out /dev/null'.format(snap_path, ca_dir)
+        subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError as e:
         click.echo('CA certificate is invalid. {}'.format(e))
         exit(32)
