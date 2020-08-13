@@ -274,7 +274,7 @@ parts:
     - python3-requests
     - gunicorn3
     - python3-click
-    - python-dateutil
+    - python3-dateutil
   microk8s:
     after: [containerd, dqlite]
     plugin: dump
