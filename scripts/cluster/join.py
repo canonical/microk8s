@@ -127,7 +127,9 @@ def usage():
     print("Join a cluster: microk8s join <master>:<port>/<token> [options]")
     print("")
     print("Options:")
-    print("--skip-verify  skip the certificate verification of the node we are joining to (default: false).")
+    print(
+        "--skip-verify  skip the certificate verification of the node we are joining to (default: false)."
+    )
 
 
 def set_arg(key, value, file):
@@ -928,12 +930,16 @@ def verify_server(fingerprint, master_ip, master_port):
     try:
         sum = get_fingerprint(master_ip, int(master_port))
         if sum != fingerprint:
-            print("Joining cluster failed. Could not verify the identity of {}."
-                  " Use '--skip-verify' to skip server certificate check.".format(master_ip))
+            print(
+                "Joining cluster failed. Could not verify the identity of {}."
+                " Use '--skip-verify' to skip server certificate check.".format(master_ip)
+            )
             exit(4)
     except Exception as err:
-        print("Joining cluster failed. Could not get the identity of {}."
-              " Use '--skip-verify' to skip server certificate check.".format(master_ip))
+        print(
+            "Joining cluster failed. Could not get the identity of {}."
+            " Use '--skip-verify' to skip server certificate check.".format(master_ip)
+        )
         exit(5)
 
 
