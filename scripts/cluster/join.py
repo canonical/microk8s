@@ -7,7 +7,6 @@ import os
 import getopt
 import sys
 import time
-from typing import Dict
 
 import netifaces
 import requests
@@ -20,6 +19,7 @@ import json
 from common.utils import (
     try_set_file_permissions,
     is_node_running_dqlite,
+    get_dqlite_port,
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
     service,
@@ -27,8 +27,8 @@ from common.utils import (
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
-snapdata_path = os.environ.get("SNAP_DATA")
-snap_path = os.environ.get("SNAP")
+snapdata_path = os.environ.get('SNAP_DATA')
+snap_path = os.environ.get('SNAP')
 ca_cert_file_via_env = "${SNAP_DATA}/certs/ca.remote.crt"
 ca_cert_file = "{}/certs/ca.remote.crt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
@@ -106,7 +106,10 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
 
 
 def usage():
-    print("Join a cluster: microk8s join <master>:<port>/<token>")
+    print("Join a cluster: microk8s join <master>:<port>/<token> [options]")
+    print("")
+    print("Options:")
+    print("--skip-verify  skip the certificate verification of the node we are joining to (default: false).")
 
 
 def set_arg(key, value, file):
@@ -707,7 +710,7 @@ def store_cert(filename, payload):
     backup_file_with_path = "{}.backup".format(file_with_path)
     shutil.copyfile(file_with_path, backup_file_with_path)
     try_set_file_permissions(backup_file_with_path)
-    with open(file_with_path, "w+") as fp:
+    with open(file_with_path, 'w+') as fp:
         fp.write(payload)
     try_set_file_permissions(file_with_path)
 
@@ -855,7 +858,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     restart_all_services()
 
 
-def join_dqlite(connection_parts):
+def join_dqlite(connection_parts, verify=True):
     """
     Configure node to join a dqlite cluster.
 
@@ -867,6 +870,9 @@ def join_dqlite(connection_parts):
     master_port = master_ep[1]
 
     print("Contacting cluster at {}".format(master_ip))
+    if len(connection_parts) > 2 and verify:
+        verify_server(connection_parts[2], master_ip, master_port)
+
     info = get_connection_info(master_ip, master_port, token, cluster_type="dqlite")
 
     hostname_override = info["hostname_override"]
@@ -902,7 +908,20 @@ def join_dqlite(connection_parts):
     try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
 
 
-def join_etcd(connection_parts):
+def verify_server(fingerprint, master_ip, master_port):
+    try:
+        sum = get_fingerprint(master_ip, int(master_port))
+        if sum != fingerprint:
+            print("Joining cluster failed. Could not verify the identity of {}."
+                  " Use '--skip-verify' to skip server certificate check.".format(master_ip))
+            exit(4)
+    except Exception as err:
+        print("Joining cluster failed. Could not get the identity of {}."
+              " Use '--skip-verify' to skip server certificate check.".format(master_ip))
+        exit(5)
+
+
+def join_etcd(connection_parts, verify=True):
     """
     Configure node to join an etcd cluster.
 
@@ -912,6 +931,10 @@ def join_etcd(connection_parts):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
+
+    if len(connection_parts) > 2 and verify:
+        verify_server(connection_parts[2], master_ip, master_port)
+
     callback_token = generate_callback_token()
     info = get_connection_info(master_ip, master_port, token, callback_token=callback_token)
     store_base_kubelet_args(info["kubelet_args"])
@@ -927,19 +950,22 @@ def join_etcd(connection_parts):
 
 if __name__ == "__main__":
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "hf", ["help", "force"])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "hfs", ["help", "force", "skip-verify"])
     except getopt.GetoptError as err:
         print(err)  # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
 
     force = False
+    verify = True
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
             sys.exit(1)
         elif o in ("-f", "--force"):
             force = True
+        elif o in ("-s", "--skip-verify"):
+            verify = False
         else:
             print("Unhandled option")
             sys.exit(1)
@@ -963,8 +989,8 @@ if __name__ == "__main__":
     else:
         connection_parts = args[0].split("/")
         if is_node_running_dqlite():
-            join_dqlite(connection_parts)
+            join_dqlite(connection_parts, verify)
         else:
-            join_etcd(connection_parts)
+            join_etcd(connection_parts, verify)
 
     sys.exit(0)
