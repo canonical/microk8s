@@ -65,12 +65,14 @@ fi
 default_ip="$(get_default_ip)"
 all_ips="$(get_ips)"
 
+check=$(openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1)
+
 echo "From the node you wish to join to this cluster, run the following:"
-echo "microk8s join ${default_ip}:$port/${token}"
+echo "microk8s join ${default_ip}:$port/${token}/${check}"
 echo ""
 echo "If the node you are adding is not reachable through the default interface you can use one of the following:"
 for addr in $(echo "${all_ips}"); do
   if ! [[ $addr == *":"* ]]; then
-    echo " microk8s join ${addr}:$port/${token}"
+    echo " microk8s join ${addr}:$port/${token}/${check}"
   fi
 done
