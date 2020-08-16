@@ -87,8 +87,8 @@ microk8s-addons:
 
     - name: "fluentd"
       description: "Elasticsearch-Fluentd-Kibana logging and monitoring"
-      version: ""
-      check_status: "daemonset.apps/fluentd-es-v2.2.0"
+      version: "3.0.2"
+      check_status: "daemonset.apps/fluentd-es-v3.0.2"
       supported_architectures:
       - amd64
 
@@ -145,7 +145,7 @@ microk8s-addons:
 
     - name: "metallb"
       description: "Loadbalancer for your Kubernetes cluster"
-      version: "0.8.2"
+      version: "0.9.3"
       check_status: "pod/speaker"
       supported_architectures:
       - amd64
