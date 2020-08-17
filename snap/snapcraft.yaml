@@ -97,6 +97,7 @@ apps:
     plugs:
     - network-bind
     - network-observe
+    - network-control
     - k8s-journald
   daemon-apiserver-kicker:
     command: apiservice-kicker
@@ -106,6 +107,7 @@ apps:
     - network-bind
     - network-observe
     - network-control
+    - kernel-module-control
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
@@ -228,6 +230,9 @@ apps:
     - system-observe
   inspect:
     command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    plugs:
+    - system-observe
+    - firewall-control
   enable:
     command: microk8s-enable.wrapper
     plugs:
@@ -313,100 +318,100 @@ passthrough:
       bind-file: $SNAP_COMMON/var/log/nvidia-container-runtime.log
     /usr/lib/x86_64-linux-gnu/libnvoptix.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvoptix.so.1
-    /usr/lib/x86_64-linux-gnu/libnvoptix.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvoptix.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvoptix.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvoptix.so.440.100
     /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opticalflow.so
     /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opticalflow.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opticalflow.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-tls.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-tls.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-opticalflow.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opticalflow.so.440.100
+    /usr/lib/x86_64-linux-gnu/libnvidia-tls.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-tls.so.440.100
     /usr/lib/x86_64-linux-gnu/libnvcuvid.so:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so
     /usr/lib/x86_64-linux-gnu/libnvcuvid.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so.1
-    /usr/lib/x86_64-linux-gnu/libnvcuvid.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvcuvid.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvcuvid.so.440.100
     /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so
     /usr/lib/x86_64-linux-gnu/libnvidia-rtcore.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-rtcore.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-rtcore.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-rtcore.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-rtcore.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-rtcore.so.440.100
     /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-compiler.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-compiler.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-eglcore.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-eglcore.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-cfg.so.440.100
+    /usr/lib/x86_64-linux-gnu/libnvidia-compiler.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-compiler.so.440.100
+    /usr/lib/x86_64-linux-gnu/libnvidia-eglcore.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-eglcore.so.440.100
     /usr/lib/x86_64-linux-gnu/libnvidia-encode.so:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-encode.so
     /usr/lib/x86_64-linux-gnu/libnvidia-encode.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-encode.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-encode.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-encode.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-fatbinaryloader.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fatbinaryloader.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-encode.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-encode.so.440.100
+    /usr/lib/x86_64-linux-gnu/libnvidia-fatbinaryloader.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fatbinaryloader.so.440.100
     /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fbc.so
     /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fbc.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fbc.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-glcore.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glcore.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-glsi.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glsi.so.435.21
-    /usr/lib/x86_64-linux-gnu/libnvidia-glvkspirv.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glvkspirv.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-fbc.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-fbc.so.440.100
+    /usr/lib/x86_64-linux-gnu/libnvidia-glcore.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glcore.so.440.100
+    /usr/lib/x86_64-linux-gnu/libnvidia-glsi.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glsi.so.440.100
+    /usr/lib/x86_64-linux-gnu/libnvidia-glvkspirv.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-glvkspirv.so.440.100
     /usr/lib/x86_64-linux-gnu/libnvidia-ifr.so:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ifr.so
     /usr/lib/x86_64-linux-gnu/libnvidia-ifr.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ifr.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-ifr.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ifr.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-ifr.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ifr.so.440.100
     /usr/lib/x86_64-linux-gnu/libnvidia-ml.so:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ml.so
     /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ml.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ml.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-ml.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ml.so.440.100
     /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opencl.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opencl.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-opencl.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-opencl.so.440.100
     /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ptxjitcompiler.so
     /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ptxjitcompiler.so.1
-    /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ptxjitcompiler.so.435.21
+    /usr/lib/x86_64-linux-gnu/libnvidia-ptxjitcompiler.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libnvidia-ptxjitcompiler.so.440.100
     /usr/lib/x86_64-linux-gnu/libcuda.so:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libcuda.so
     /usr/lib/x86_64-linux-gnu/libcuda.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libcuda.so.1
-    /usr/lib/x86_64-linux-gnu/libcuda.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libcuda.so.435.21
+    /usr/lib/x86_64-linux-gnu/libcuda.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libcuda.so.440.100
     /usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.0:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libEGL_nvidia.so.0
-    /usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libEGL_nvidia.so.435.21
+    /usr/lib/x86_64-linux-gnu/libEGL_nvidia.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libEGL_nvidia.so.440.100
     /usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.0:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libGLX_nvidia.so.0
-    /usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLX_nvidia.so.435.21
+    /usr/lib/x86_64-linux-gnu/libGLX_nvidia.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLX_nvidia.so.440.100
     /usr/lib/x86_64-linux-gnu/libGLESv1_CM_nvidia.so.1:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv1_CM_nvidia.so.1
-    /usr/lib/x86_64-linux-gnu/libGLESv1_CM_nvidia.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv1_CM_nvidia.so.435.21
+    /usr/lib/x86_64-linux-gnu/libGLESv1_CM_nvidia.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv1_CM_nvidia.so.440.100
     /usr/lib/x86_64-linux-gnu/libGLESv2_nvidia.so.2:
       bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv2_nvidia.so.2
-    /usr/lib/x86_64-linux-gnu/libGLESv2_nvidia.so.435.21:
-      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv2_nvidia.so.435.21
+    /usr/lib/x86_64-linux-gnu/libGLESv2_nvidia.so.440.100:
+      bind-file: $SNAP/var/lib/snapd/lib/gl/libGLESv2_nvidia.so.440.100
 
 parts:
   patches:

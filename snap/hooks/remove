@@ -32,7 +32,14 @@ rm -rf ${SNAP_COMMON}/run/containerd/* || true
 (cat /proc/mounts | grep ${SNAP_COMMON}/var/lib/containerd | cut -d ' ' -f 2 | xargs umount -l) || true
 (cat /proc/mounts | grep ${SNAP_COMMON}/run/containerd | cut -d ' ' -f 2 | xargs umount) || true
 
-if $SNAP/sbin/ip link show cni0
+if snapctl is-connected network-control
 then
-  $SNAP/sbin/ip link delete cni0
+  if $SNAP/sbin/ip link show cni0
+  then
+    $SNAP/sbin/ip link delete cni0
+  fi
+else
+  echo "MicroK8s does not have permission to clean up the cni0 interface"
+  echo "Please run the following command to complete the remove process:"
+  echo -e "\tip link delete cni0"
 fi

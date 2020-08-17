@@ -79,13 +79,20 @@ do
   chmod -R o-rwX ${dir}
 done
 
-for link in cni0 cilium_vxlan
-do
-  if $SNAP/sbin/ip link show ${link}
+if snapctl is-connected network-control
   then
-    $SNAP/sbin/ip link delete ${link}
-  fi
-done
+  for link in cni0 cilium_vxlan
+  do
+    if $SNAP/sbin/ip link show ${link}
+    then
+      $SNAP/sbin/ip link delete ${link}
+    fi
+  done
+fi
+
+if snapctl is-connected k8s-kubelet
+then
+  snapctl restart microk8s.daemon-containerd
+fi
 
 init_cluster
-
