@@ -17,5 +17,7 @@ $KUBECTL -n kube-system delete daemonset fluentd-es-v2.2.0 || true
 $KUBECTL label nodes "$NODENAME" beta.kubernetes.io/fluentd-ds-ready- || true
 
 $KUBECTL delete -f "${SNAP}/actions/fluentd"
+# Allow for a few seconds for the deletion to take place
+sleep 10
 
 echo "Fluentd-Elasticsearch is disabled"
