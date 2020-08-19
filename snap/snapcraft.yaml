@@ -83,7 +83,6 @@ apps:
     - docker-support
     - docker-privileged
     - firewall-control
-    - kernel-module-control
     - network-control
     - mount-observe
     - kubernetes-support
@@ -103,11 +102,9 @@ apps:
     command: apiservice-kicker
     daemon: simple
     plugs:
-    - account-control
     - network-bind
     - network-observe
     - network-control
-    - kernel-module-control
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
@@ -125,7 +122,6 @@ apps:
     - docker-privileged
     - firewall-control
     - k8s-journald
-    - kernel-module-control
     - network-control
   daemon-scheduler:
     command: run-with-config-args kube-scheduler
@@ -160,7 +156,6 @@ apps:
     - kernel-module-observe
     - mount-observe
     - system-observe
-    - kernel-module-control
   dashboard-proxy:
     command: microk8s-dashboard-proxy.wrapper
     plugs:
@@ -172,7 +167,6 @@ apps:
     - kernel-module-observe
     - mount-observe
     - system-observe
-    - kernel-module-control
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash

@@ -72,7 +72,7 @@ sudo snap install microk8s_latest_amd64.snap --dangerous
 #### Connecting the required interfaces
 
 ```
-for i in docker-privileged docker-support kubernetes-support k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe kernel-module-control mount-observe hardware-observe system-observe ca-cert home opengl k8s-journald ld-cache cifs-mount fuse-support account-control kernel-crypto-api; do sudo snap connect microk8s:$i; done
+for i in docker-privileged docker-support kubernetes-support k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe ca-cert home opengl k8s-journald ld-cache cifs-mount fuse-support kernel-crypto-api; do sudo snap connect microk8s:$i; done
 ```
 
 ## Assembling the Calico CNI manifest
