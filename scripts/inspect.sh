@@ -164,6 +164,16 @@ function suggest_fixes {
     fi
   fi
 
+  list="arm aarch64_be aarch64 armv8b armv8l"
+  for item in $list; do
+    if [ "$(uname -m)" == "$item" ] && ! mount | egrep -q 'cgroup/memory'; then
+      printf -- "\033[0;33mWARNING: \033[0m ARM ($(uname -m)) architecture detected. \n"
+      printf -- 'The memory cgroup is not enabled, therefore cluster could have an operational problems. \n'
+      printf -- 'More info: https://microk8s.io/docs/install-alternatives#heading--arm \n'
+      break
+    fi
+  done
+
   # Fedora Specific Checks
   if fedora_release
   then
