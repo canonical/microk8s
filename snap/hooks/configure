@@ -354,26 +354,6 @@ then
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
-if [ -f "${SNAP_DATA}/args/cni-network/00-multus.conf" ]
-then
-  echo "Multus is enabled we need to reconfigure it."
-  start_timer="$(date +%s)"
-  # Wait up to a minute for the apiserver to come up.
-  timeout="60"
-  KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-  while ! ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null
-  do
-    sleep 5
-    now="$(date +%s)"
-    if [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
-      break
-    fi
-  done
-
-  ${SNAP}/actions/disable.multus.sh
-  ${SNAP}/actions/enable.multus.sh
-fi
-
 if [ -L "${SNAP_DATA}/bin/cilium" ]
 then
   echo "Cilium is enabled we need to reconfigure it."
