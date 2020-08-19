@@ -4,6 +4,8 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
+export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
+
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
 if $KUBECTL get ns metallb-system >/dev/null 2>&1
