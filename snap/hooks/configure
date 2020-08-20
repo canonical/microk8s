@@ -343,6 +343,25 @@ then
   need_api_restart=true
 fi
 
+if grep -e "basic-auth-file" ${SNAP_DATA}/args/kube-apiserver
+then
+  echo "Removing basic auth"
+  # Create the client kubeconfig
+  ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
+  admin_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+  echo "${admin_token},admin,admin,\"system:masters\"" >> ${SNAP_DATA}/credentials/known_tokens.csv
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
+  chmod 660 ${SNAP_DATA}/credentials/client.config
+  $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
+  $SNAP/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
+  $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/client.config
+  $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/client.config
+  $SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
+
+  skip_opt_in_config basic-auth-file kube-apiserver
+  need_api_restart=true
+fi
+
 if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
 then
   refresh_opt_in_config enable-v2 true etcd
