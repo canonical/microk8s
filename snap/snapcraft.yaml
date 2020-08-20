@@ -294,6 +294,8 @@ parts:
     - openssl
     - python3-requests
     - gunicorn3
+    - python3-click
+    - python3-dateutil
   microk8s:
     after: [containerd, dqlite]
     plugin: dump
