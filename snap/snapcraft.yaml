@@ -33,6 +33,9 @@ apps:
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
+  daemon-control-plane-kicker:
+    command: control-plane-kicker
+    daemon: simple
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
@@ -93,6 +96,8 @@ apps:
     command: microk8s-cilium.wrapper
   juju:
     command: microk8s-juju.wrapper
+  dbctl:
+    command: microk8s-dbctl.wrapper
 
 parts:
   libco:
@@ -163,6 +168,22 @@ parts:
       - lib/libdqlite*so*
       - lib/*/libuv*
       - usr/include/
+  dqlite-client:
+    build-snaps: [go]
+    after: [sqlite, dqlite]
+    source: https://github.com/canonical/go-dqlite
+    source-type: git
+    plugin: go
+    build-packages:
+      - libsqlite3-dev
+    go-importpath: github.com/canonical/go-dqlite
+    override-build: |
+      set -eux
+      go version
+      export GOPATH=${SNAPCRAFT_STAGE}
+      CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      cp $GOPATH/bin/dqlite $SNAPCRAFT_PART_INSTALL/bin/
   libnftnl:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2

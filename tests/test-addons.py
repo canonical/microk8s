@@ -30,7 +30,7 @@ from utils import (
     microk8s_disable,
     microk8s_reset,
 )
-from subprocess import Popen, PIPE, STDOUT, CalledProcessError
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError, check_call
 
 
 class TestAddons(object):
@@ -303,3 +303,13 @@ class TestAddons(object):
         validate_ambassador()
         print("Disabling Ambassador")
         microk8s_disable("ambassador")
+
+    def test_backup_restore(self):
+        """
+        Test backup and restore commands.
+        """
+        print('Checking dbctl backup and restore')
+        if os.path.exists('backupfile.tar.gz'):
+            os.remove('backupfile.tar.gz')
+        check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
+        check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())

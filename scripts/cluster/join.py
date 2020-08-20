@@ -16,7 +16,12 @@ import urllib3
 import yaml
 import json
 
-from common.utils import try_set_file_permissions, is_node_running_dqlite
+from common.utils import (
+    try_set_file_permissions,
+    is_node_running_dqlite,
+    get_dqlite_port,
+    get_cluster_agent_port,
+)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
@@ -47,17 +52,14 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
 
     :return: the json response of the master
     """
-    cluster_agent_port = "25000"
-    filename = "{}/args/cluster-agent".format(snapdata_path)
-    with open(filename) as fp:
-        for _, line in enumerate(fp):
-            if line.startswith("--port"):
-                port_parse = line.split(' ')
-                port_parse = port_parse[-1].split('=')
-                cluster_agent_port = port_parse[0].rstrip()
+    cluster_agent_port = get_cluster_agent_port()
 
     if cluster_type == "dqlite":
-        req_data = {"token": token, "hostname": socket.gethostname(), "port": cluster_agent_port}
+        req_data = {
+            "token": token,
+            "hostname": socket.gethostname(),
+            "port": cluster_agent_port,
+        }
 
         # TODO: enable ssl verification
         try:
@@ -347,6 +349,15 @@ def reset_current_dqlite_installation():
     """
     Take a node out of a dqlite cluster
     """
+    if is_leader_without_successor():
+        print(
+            "This node currently holds the only copy of the Kubernetes database so it cannot leave the cluster."
+        )
+        print(
+            "To remove this node you can either first remove all other nodes with 'microk8s remove-node' or"
+        )
+        print("form a highly available cluster by adding at least three nodes.")
+        exit(3)
 
     # We need to:
     # 1. Stop the apiserver
@@ -403,7 +414,7 @@ def reset_current_dqlite_installation():
             stderr=subprocess.DEVNULL,
         )
 
-    # TODO make this port configurable
+    # We reset to the default port and address
     init_data = {'Address': '127.0.0.1:19001'}  # type: Dict[str, str]
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
@@ -440,15 +451,15 @@ def delete_dqlite_node(delete_node, dqlite_ep):
     if len(delete_node) > 0 and "127.0.0.1" not in delete_node[0]:
         for ep in dqlite_ep:
             try:
-                url = 'https://{}/cluster/{}'.format(ep, delete_node[0])
-                resp = requests.delete(
-                    url, cert=(cluster_cert_file, cluster_key_file), verify=False
+                cmd = (
+                    "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+                    "-k {dbdir}/cluster.key -f json k8s".format(
+                        snappath=snap_path, dbdir=cluster_dir
+                    ).split()
                 )
-                if resp.status_code != 200:
-                    print("Contacting node {} failed. Exit code {}.".format(ep, resp.status_code))
-                    exit(2)
-                else:
-                    break
+                cmd.append(".remove {}".format(delete_node[0]))
+                subprocess.check_output(cmd)
+                break
             except Exception as err:
                 print("Contacting node {} failed. Error:".format(ep))
                 print(repr(err))
@@ -461,11 +472,10 @@ def get_dqlite_endpoints():
 
     :return: two lists with the endpoints
     """
-    with open("{}/info.yaml".format(cluster_dir)) as f:
-        data = yaml.load(f, Loader=yaml.FullLoader)
     out = subprocess.check_output(
-        "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
-            data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
+        "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+        "-k {dbdir}/cluster.key -f json k8s .cluster".format(
+            snappath=snap_path, dbdir=cluster_dir
         ).split()
     )
     data = json.loads(out.decode())
@@ -490,6 +500,52 @@ def get_dqlite_endpoints():
             other_ep.append(ep)
 
     return my_ep, other_ep
+
+
+def is_leader_without_successor():
+    """
+    Check if the current node is safe to be removed. Check if this node acts as a leader to a cluster
+    with more than one nodes where there is no other node to take over the leadership.
+
+    :return: True if this node is the leader without a successor.
+    """
+    out = subprocess.check_output(
+        "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+        "-k {dbdir}/cluster.key -f json k8s .cluster".format(
+            snappath=snap_path, dbdir=cluster_dir
+        ).split()
+    )
+    voters = 0
+    data = json.loads(out.decode())
+    ep_addresses = []
+    for ep in data:
+        ep_addresses.append((ep["Address"], ep["Role"]))
+        # Role == 0 means we are voters
+        if ep["Role"] == 0:
+            voters += 1
+
+    local_ips = []
+    for interface in netifaces.interfaces():
+        if netifaces.AF_INET not in netifaces.ifaddresses(interface):
+            continue
+        for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
+            local_ips.append(link['addr'])
+
+    is_voter = False
+    for ep in ep_addresses:
+        found = False
+        for ip in local_ips:
+            if "{}:".format(ip) in ep[0]:
+                # ep[1] == ep[Role] == 0 means we are voters
+                if ep[1] == 0:
+                    is_voter = True
+
+    if voters == 1 and is_voter and len(ep_addresses) > 1:
+        # We have one voter in the cluster and the current node is the only voter
+        # and there are other nodes that depend on this node.
+        return True
+    else:
+        return False
 
 
 def remove_kubelet_token(node):
@@ -751,35 +807,41 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     shutil.move(cluster_dir, cluster_backup_dir)
     os.mkdir(cluster_dir)
     store_cluster_certs(cluster_cert, cluster_key)
+
+    # We get the dqlite port from the already existing deployment
+    port = 19001
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
+    if 'Address' in data:
+        port = data['Address'].split(':')[1]
 
-    # TODO make port configurable
-    init_data = {'Cluster': voters, 'Address': "{}:19001".format(host)}
+    init_data = {'Cluster': voters, 'Address': "{}:{}".format(host, port)}
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
     subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
 
     waits = 10
-    print("Waiting for node to join the cluster.", end=" ", flush=True)
+    print("Waiting for this node to finish joining the cluster.", end=" ", flush=True)
     while waits > 0:
         try:
             out = subprocess.check_output(
-                "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
-                    data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
-                ).split()
+                "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+                "-k {dbdir}/cluster.key -f json k8s .cluster".format(
+                    snappath=snap_path, dbdir=cluster_dir
+                ).split(),
+                timeout=4,
             )
-            if data['Address'] in out.decode():
+            if host in out.decode():
                 break
             else:
                 print(".", end=" ", flush=True)
                 time.sleep(5)
                 waits -= 1
 
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             print("..", end=" ", flush=True)
-            time.sleep(5)
+            time.sleep(2)
             waits -= 1
     print(" ")
 
@@ -799,6 +861,8 @@ def join_dqlite(connection_parts):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
+
+    print("Contacting cluster at {}".format(master_ip))
     info = get_connection_info(master_ip, master_port, token, cluster_type="dqlite")
 
     hostname_override = info['hostname_override']

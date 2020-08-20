@@ -35,9 +35,15 @@ then
   run_with_sudo $SNAP/sbin/ip link delete "cilium_vxlan"
 fi
 
-set_service_expected_to_start flanneld
+if [ -e "$SNAP_DATA/var/lock/ha-cluster" ] && [ -e "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ]
+then
+  echo "Restarting default cni"
+  run_with_sudo mv "$SNAP_DATA/args/cni-network/cni.yaml.disabled" "$SNAP_DATA/args/cni-network/cni.yaml"
+  "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" apply -f "$SNAP_DATA/args/cni-network/cni.yaml"
+else
+  echo "Restarting flanneld"
+  set_service_expected_to_start flanneld
 
-echo "Restarting flanneld"
-run_with_sudo preserve_env snapctl stop "${SNAP_NAME}.daemon-flanneld"
-
+  run_with_sudo preserve_env snapctl start "${SNAP_NAME}.daemon-flanneld"
+fi
 echo "Cilium is terminating"

@@ -3,6 +3,8 @@ import shutil
 import time
 import string
 import random
+import yaml
+import socket
 
 
 def try_set_file_permissions(file):
@@ -103,11 +105,69 @@ def is_node_running_dqlite():
 
     :returns: True if dqlite is to be used, otherwise False
     """
+    ha_lock = os.path.expandvars("${SNAP_DATA}/var/lock/ha-cluster")
+    return os.path.isfile(ha_lock)
+
+
+def get_dqlite_port():
+    """
+    What is the port dqlite listens on
+
+    :return: the dqlite port
+    """
+    # We get the dqlite port from the already existing deployment
     snapdata_path = os.environ.get('SNAP_DATA')
-    apiserver_conf_file = "{}/args/kube-apiserver".format(snapdata_path)
-    with open(apiserver_conf_file) as f:
-        for line in f:
-            if line.startswith("--storage-backend") and line.rstrip().endswith("dqlite"):
-                return True
+    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+    dqlite_info = "{}/info.yaml".format(cluster_dir)
+    port = 19001
+    if os.path.exists(dqlite_info):
+        with open(dqlite_info) as f:
+            data = yaml.load(f, Loader=yaml.FullLoader)
+        if 'Address' in data:
+            port = data['Address'].split(':')[1]
+
+    return port
+
+
+def get_cluster_agent_port():
+    """
+    What is the cluster agent port
+
+    :return: the port
+    """
+    cluster_agent_port = "25000"
+    snapdata_path = os.environ.get('SNAP_DATA')
+    filename = "{}/args/cluster-agent".format(snapdata_path)
+    with open(filename) as fp:
+        for _, line in enumerate(fp):
+            if line.startswith("--bind"):
+                port_parse = line.split(' ')
+                port_parse = port_parse[-1].split('=')
+                port_parse = port_parse[-1].split(':')
+                if len(port_parse) > 1:
+                    cluster_agent_port = port_parse[1].rstrip()
+    return cluster_agent_port
+
+
+def get_internal_ip_from_get_node(node_info):
+    """
+    Retrieves the InternalIp returned by kubectl get no -o json
+    """
+    for status_addresses in node_info['status']['addresses']:
+        if status_addresses["type"] == "InternalIP":
+            return status_addresses["address"]
+
+
+def is_same_server(hostname, ip):
+    """
+    Check if the hostname is the same as the current node's hostname
+    """
+    try:
+        hname, _, _ = socket.gethostbyaddr(ip)
+        if hname == hostname:
+            return True
+    except:
+        # Ignore any unresolvable IP by host, surely this is not from the same node.
+        pass
 
     return False
