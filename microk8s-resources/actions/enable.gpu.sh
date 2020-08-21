@@ -17,11 +17,11 @@ mkdir -p ${SNAP_DATA}/var/lock
 touch ${SNAP_DATA}/var/lock/gpu
 
 # Copy Nvidia drivers into the correct place.
-cp /var/lib/snapd/lib/gl/libnv* /usr/lib/x86_64-linux-gnu/
-cp /var/lib/snapd/lib/gl/libcuda* /usr/lib/x86_64-linux-gnu/
-cp /var/lib/snapd/lib/gl/libEGL_nvidia.so* /usr/lib/x86_64-linux-gnu/
-cp /var/lib/snapd/lib/gl/libGLX_nvidia.so* /usr/lib/x86_64-linux-gnu/
-cp /var/lib/snapd/lib/gl/libGLESv*_nvidia.so* /usr/lib/x86_64-linux-gnu/
+cp /var/lib/snapd/lib/gl/libnv* /lib/x86_64-linux-gnu/
+cp /var/lib/snapd/lib/gl/libcuda* /lib/x86_64-linux-gnu/
+cp /var/lib/snapd/lib/gl/libEGL_nvidia.so* /lib/x86_64-linux-gnu/
+cp /var/lib/snapd/lib/gl/libGLX_nvidia.so* /lib/x86_64-linux-gnu/
+cp /var/lib/snapd/lib/gl/libGLESv*_nvidia.so* /lib/x86_64-linux-gnu/
 
 snapctl restart "${SNAP_NAME}.daemon-containerd"
 containerd_up=$(wait_for_service containerd)
