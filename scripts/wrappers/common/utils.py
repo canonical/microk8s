@@ -192,7 +192,7 @@ def is_service_expected_to_start(service):
 
 def set_service_expected_to_start(service, start=True):
     """
-    Check if a service is not expected to start.
+    Set service as expected to start or not.
     :param service: the service name
     :param start: should the service start or not
     """
