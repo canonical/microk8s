@@ -64,6 +64,12 @@ hooks:
     - network-bind
     - network-control
     - firewall-control
+  connect-plug-network-control:
+    plugs:
+      - network-control
+  disconnect-plug-network-control:
+    plugs:
+      - network-control
 
 apps:
   microk8s:
