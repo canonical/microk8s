@@ -21,6 +21,7 @@ from .common.utils import (
     is_token_expired,
     get_dqlite_port,
     get_cluster_agent_port,
+    set_cni_autodetect,
 )
 
 from flask import Flask, jsonify, request, abort, Response
@@ -590,6 +591,7 @@ def join_node_dqlite():
     api_port = get_arg('--secure-port', 'kube-apiserver')
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
+    set_cni_autodetect(node_addr, apply_cni=True)
 
     return jsonify(
         ca=get_cert("ca.crt"),

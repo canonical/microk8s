@@ -21,6 +21,7 @@ from common.utils import (
     is_node_running_dqlite,
     get_dqlite_port,
     get_cluster_agent_port,
+    set_cni_autodetect,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -893,6 +894,8 @@ def join_dqlite(connection_parts):
     store_callback_token(info["callback_token"])
 
     update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
+    set_cni_autodetect(master_ip, apply_cni=False)
+
 
 
 def join_etcd(connection_parts):
