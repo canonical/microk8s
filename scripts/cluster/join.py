@@ -21,7 +21,7 @@ from common.utils import (
     is_node_running_dqlite,
     get_dqlite_port,
     get_cluster_agent_port,
-    set_cni_autodetect,
+    try_initialise_cni_autodetect_for_clustering,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -894,8 +894,9 @@ def join_dqlite(connection_parts):
     store_callback_token(info["callback_token"])
 
     update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
-    set_cni_autodetect(master_ip, apply_cni=False)
-
+    # We want to update the local CNI yaml but we do not want to apply it. The cni is applied already
+    # in the cluster we join
+    try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
 
 
 def join_etcd(connection_parts):
