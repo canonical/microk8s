@@ -72,3 +72,14 @@ spec:
     port: 5000
     targetPort: 5000
     nodePort: 32000
+---
+# https://github.com/kubernetes/enhancements/issues/1755
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-registry-hosting
+  namespace: kube-public
+data:
+  localRegistryHosting.v1: |
+    help: "https://microk8s.io/docs/registry-built-in"
+    host: "localhost:32000"

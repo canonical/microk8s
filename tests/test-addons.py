@@ -30,7 +30,7 @@ from utils import (
     microk8s_disable,
     microk8s_reset,
 )
-from subprocess import Popen, PIPE, STDOUT, CalledProcessError
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError, check_call
 
 
 class TestAddons(object):
@@ -281,7 +281,7 @@ class TestAddons(object):
     )
     def test_metallb_addon(self):
         addon = "metallb"
-        ip_ranges = "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111"
+        ip_ranges = "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111,192.168.1.240/28"
         print("Enabling metallb")
         microk8s_enable("{}:{}".format(addon, ip_ranges), timeout_insec=500)
         validate_metallb_config(ip_ranges)
@@ -303,3 +303,13 @@ class TestAddons(object):
         validate_ambassador()
         print("Disabling Ambassador")
         microk8s_disable("ambassador")
+
+    def test_backup_restore(self):
+        """
+        Test backup and restore commands.
+        """
+        print('Checking dbctl backup and restore')
+        if os.path.exists('backupfile.tar.gz'):
+            os.remove('backupfile.tar.gz')
+        check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
+        check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())

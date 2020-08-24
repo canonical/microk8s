@@ -21,12 +21,14 @@ echo "Configuring services"
 ${SNAP}/microk8s-stop.wrapper
 
 cp "$SNAP_DATA"/args/kube-apiserver "$BACKUP_DIR/args"
-skip_opt_in_config "storage-backend" kube-apiserver
-skip_opt_in_config "storage-dir" kube-apiserver
-refresh_opt_in_config "etcd-servers" 'https://127.0.0.1:12379' kube-apiserver
-refresh_opt_in_config "etcd-cafile" "\${SNAP_DATA}/certs/ca.crt" kube-apiserver
-refresh_opt_in_config "etcd-certfile" "\${SNAP_DATA}/certs/server.crt" kube-apiserver
-refresh_opt_in_config "etcd-keyfile" "\${SNAP_DATA}/certs/server.key" kube-apiserver
+
+"${SNAP}/bin/sed" -i '/--storage-backend/d' "$SNAP_DATA/args/kube-apiserver"
+"${SNAP}/bin/sed" -i '/--storage-dir/d' "$SNAP_DATA/args/kube-apiserver"
+
+echo "--etcd-servers=https://127.0.0.1:12379" >> "$SNAP_DATA/args/kube-apiserver"
+echo "--etcd-cafile=\${SNAP_DATA}/certs/ca.crt" >> "$SNAP_DATA/args/kube-apiserver"
+echo "--etcd-certfile=\${SNAP_DATA}/certs/server.crt" >> "$SNAP_DATA/args/kube-apiserver"
+echo "--etcd-keyfile=\${SNAP_DATA}/certs/server.key" >> "$SNAP_DATA/args/kube-apiserver"
 
 cp "$SNAP_DATA"/args/etcd "$BACKUP_DIR/args"
 rm -rf ${SNAP_COMMON}/var/run/etcd/*

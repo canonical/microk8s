@@ -296,7 +296,7 @@ then
   chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ || true
 fi
 
-if ! [ -L "${SNAP_DATA}/opt/cni/bin/flanneld" ]
+if ! [ -e "${SNAP_DATA}/opt/cni/bin/flanneld" ]
 then
   # cover situation where cilium was installed prior to this update
   if [ -f "${SNAP_DATA}/opt/cni/bin/loopback" ] && [ -f "${SNAP}/opt/cni/bin/loopback" ]; then
@@ -343,6 +343,25 @@ then
   need_api_restart=true
 fi
 
+if grep -e "basic-auth-file" ${SNAP_DATA}/args/kube-apiserver
+then
+  echo "Removing basic auth"
+  # Create the client kubeconfig
+  ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
+  admin_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
+  echo "${admin_token},admin,admin,\"system:masters\"" >> ${SNAP_DATA}/credentials/known_tokens.csv
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
+  chmod 660 ${SNAP_DATA}/credentials/client.config
+  $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
+  $SNAP/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
+  $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/client.config
+  $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/client.config
+  $SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
+
+  skip_opt_in_config basic-auth-file kube-apiserver
+  need_api_restart=true
+fi
+
 if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
 then
   refresh_opt_in_config enable-v2 true etcd
@@ -352,13 +371,6 @@ fi
 if ${need_api_restart}
 then
   snapctl restart ${SNAP_NAME}.daemon-apiserver
-fi
-
-if [ -f "${SNAP_DATA}/args/cni-network/00-multus.conf" ]
-then
-  echo "Multus is enabled we need to reconfigure it."
-  ${SNAP}/actions/disable.multus.sh
-  ${SNAP}/actions/enable.multus.sh
 fi
 
 if [ -L "${SNAP_DATA}/bin/cilium" ]
@@ -422,3 +434,23 @@ then
   refresh_opt_in_config cluster-cidr 10.1.0.0/16 kube-proxy
   snapctl restart ${SNAP_NAME}.daemon-proxy
 fi
+
+if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ]
+then
+  echo "Setting up the CNI"
+  start_timer="$(date +%s)"
+  # Wait up to two minutes for the apiserver to come up.
+  # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
+  timeout="120"
+  KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
+  while ! ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null
+  do
+    sleep 5
+    now="$(date +%s)"
+    if [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
+      break
+    fi
+  done
+  $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+fi
+

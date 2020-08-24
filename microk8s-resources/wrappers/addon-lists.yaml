@@ -80,15 +80,15 @@ microk8s-addons:
 
     - name: "prometheus"
       description: "Prometheus operator for monitoring and logging"
-      version: ""
+      version: "v0.6.0"
       check_status: "pod/prometheus-k8s-0"
       supported_architectures:
       - amd64
 
     - name: "fluentd"
       description: "Elasticsearch-Fluentd-Kibana logging and monitoring"
-      version: ""
-      check_status: "daemonset.apps/fluentd-es-v2.2.0"
+      version: "3.0.2"
+      check_status: "daemonset.apps/fluentd-es-v3.0.2"
       supported_architectures:
       - amd64
 
@@ -145,7 +145,7 @@ microk8s-addons:
 
     - name: "metallb"
       description: "Loadbalancer for your Kubernetes cluster"
-      version: "0.8.2"
+      version: "0.9.3"
       check_status: "pod/speaker"
       supported_architectures:
       - amd64
@@ -164,4 +164,11 @@ microk8s-addons:
       version: ""
       check_status: "deployment.apps/ambassador-operator"
       supported_architectures:
+      - amd64
+    - name: "ha-cluster"
+      description: "Configure high availability on the current node"
+      version: "0.1.0"
+      check_status: "${SNAP_DATA}/var/lock/ha-cluster"
+      supported_architectures:
+      - arm64
       - amd64

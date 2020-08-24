@@ -19,6 +19,9 @@ from .common.utils import (
     get_callback_token,
     remove_token_from_file,
     is_token_expired,
+    get_dqlite_port,
+    get_cluster_agent_port,
+    try_initialise_cni_autodetect_for_clustering,
 )
 
 from flask import Flask, jsonify, request, abort, Response
@@ -29,10 +32,11 @@ CLUSTER_API_V2 = "cluster/api/v2.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
-callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
+callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 certs_request_tokens_file = "{}/credentials/certs-request-tokens.txt".format(snapdata_path)
 default_port = 25000
+dqlite_default_port = 19001
 default_listen_interface = "0.0.0.0"
 
 
@@ -454,8 +458,6 @@ def get_dqlite_voters():
     """
     snapdata_path = "/var/snap/microk8s/current"
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
-    cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
-    cluster_key_file = "{}/cluster.key".format(cluster_dir)
 
     waits = 10
     print("Waiting for access to cluster.", end=" ", flush=True)
@@ -464,9 +466,11 @@ def get_dqlite_voters():
             with open("{}/info.yaml".format(cluster_dir)) as f:
                 data = yaml.load(f, Loader=yaml.FullLoader)
                 out = subprocess.check_output(
-                    "curl https://{}/cluster/ --cacert {} --key {} --cert {} -k -s".format(
-                        data['Address'], cluster_cert_file, cluster_key_file, cluster_cert_file
-                    ).split()
+                    "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
+                    "-k {dbdir}/cluster.key -f json k8s .cluster".format(
+                        snappath=snap_path, dbdir=cluster_dir
+                    ).split(),
+                    timeout=4,
                 )
                 if data['Address'] in out.decode():
                     break
@@ -474,15 +478,15 @@ def get_dqlite_voters():
                     print(".", end=" ", flush=True)
                     time.sleep(5)
                     waits -= 1
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             print("..", end=" ", flush=True)
-            time.sleep(5)
+            time.sleep(2)
             waits -= 1
     print(" ")
     if waits == 0:
         raise Exception("Could not get cluster info")
 
-    nodes = yaml.safe_load(out)
+    nodes = json.loads(out.decode())
     voters = []
     for n in nodes:
         if n["Role"] == 0:
@@ -496,12 +500,13 @@ def update_dqlite_ip(host):
 
     :param : the host others see for this node
     """
+    dqlite_port = get_dqlite_port()
     subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
     time.sleep(10)
 
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
     # TODO make the port configurable
-    update_data = {'Address': "{}:19001".format(host)}
+    update_data = {'Address': "{}:{}".format(host, dqlite_port)}
     with open("{}/update.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(update_data, f)
     subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
@@ -568,6 +573,13 @@ def join_node_dqlite():
         error_msg = {"error": "Not possible to join. This is not an HA dqlite cluster."}
         return Response(json.dumps(error_msg), mimetype='application/json', status=501)
 
+    agent_port = get_cluster_agent_port()
+    if port != agent_port:
+        error_msg = {
+            "error": "The port of the cluster agent has to be set to {}.".format(agent_port)
+        }
+        return Response(json.dumps(error_msg), mimetype='application/json', status=502)
+
     voters = get_dqlite_voters()  # type: List[str]
     # Check if we need to set dqlite with external IP
     if len(voters) == 1 and voters[0].startswith("127.0.0.1"):
@@ -579,6 +591,8 @@ def join_node_dqlite():
     api_port = get_arg('--secure-port', 'kube-apiserver')
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
+    # Make sure calico can autodetect the right interface for packet routing
+    try_initialise_cni_autodetect_for_clustering(node_addr, apply_cni=True)
 
     return jsonify(
         ca=get_cert("ca.crt"),

@@ -67,6 +67,49 @@ def juju(*args, **kwargs):
         return run("microk8s-juju.wrapper", *args, **kwargs)
 
 
+def check_connectivity():
+    """Checks connectivity to URLs from within and without the cluster.
+
+    For each URL in `CONNECTIVITY_CHECKS`, checks that the URL is reachable from
+    the host, then spins up a pod and checks from within MicroK8s.
+    """
+
+    for url in CONNECTIVITY_CHECKS:
+        host = urlparse(url).netloc
+        try:
+            response = urlopen(url)
+        except URLError:
+            print("Couldn't contact %s" % host)
+            print("Please check your network connectivity before enabling Kubeflow.")
+            sys.exit(1)
+
+        if response.status != 200:
+            print("URL connectivity check failed with response %s" % response.status)
+            print("Please check your network connectivity before enabling Kubeflow.")
+            sys.exit(1)
+
+        try:
+            run(
+                'microk8s-kubectl.wrapper',
+                'run',
+                '--rm',
+                '-i',
+                '--restart=Never',
+                '--image=ubuntu',
+                'connectivity-check',
+                '--',
+                'bash',
+                '-c',
+                'apt update && apt install -y curl && curl %s' % url,
+                die=False,
+                stdout=False,
+            )
+        except subprocess.CalledProcessError:
+            print("Couldn't contact %s from within the Kubernetes cluster" % host)
+            print("Please check your network connectivity before enabling Kubeflow.")
+            sys.exit(1)
+
+
 def parse_hostname(hostname: str) -> ParseResult:
     if '//' in hostname:
         parsed = urlparse(hostname)
@@ -180,20 +223,6 @@ def main():
         )
         sys.exit(1)
 
-    for url in CONNECTIVITY_CHECKS:
-        try:
-            response = urlopen(url)
-        except URLError:
-            host = urlparse(url).netloc
-            print("Couldn't contact %s" % host)
-            print("Please check your network connectivity before enabling Kubeflow.")
-            sys.exit(1)
-
-        if response.status != 200:
-            print("URL connectivity check failed with response %s" % response.status)
-            print("Please check your network connectivity before enabling Kubeflow.")
-            sys.exit(1)
-
     # Allow specifying the bundle as one of the main types of kubeflow bundles
     # that we create in the charm store, namely full, lite, or edge. The user
     # shoudn't have to specify a version for those bundles. However, allow the
@@ -275,6 +304,8 @@ def main():
         "--timeout=10m",
         debug=args['debug'],
     )
+
+    check_connectivity()
 
     try:
         juju("show-controller", "uk8s", die=False, stdout=False)
