@@ -3,6 +3,9 @@ import shutil
 import time
 import string
 import random
+import datetime
+from subprocess import check_output, CalledProcessError
+
 import yaml
 import socket
 
@@ -171,3 +174,72 @@ def is_same_server(hostname, ip):
         pass
 
     return False
+
+
+def apply_cni_manifest(timeout_insec=60):
+    """
+    Apply the CNI yaml. If applying the manifest fails an exception is raised.
+    :param timeout_insec: Try up to timeout seconds to apply the manifest.
+    """
+    yaml = '{}/args/cni-network/cni.yaml'.format(os.environ.get('SNAP_DATA'))
+    snap_path = os.environ.get('SNAP')
+    cmd = '{}/microk8s-kubectl.wrapper apply -f {}'.format(snap_path, yaml)
+    deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
+    while True:
+        try:
+            check_output(cmd.split()).strip().decode('utf8')
+            break
+        except CalledProcessError as err:
+            output = err.output.strip().decode('utf8').replace('\\n', '\n')
+            print("Applying {} failed with {}".format(yaml, output))
+            if datetime.datetime.now() > deadline:
+                raise
+            print("Retrying {}".format(cmd))
+            time.sleep(3)
+
+
+def cni_is_patched():
+    """
+    Detect if the cni.yaml manifest already has the hint for detecting nodes routing paths
+    :return: True if calico knows where the rest of the nodes are.
+    """
+    yaml = '{}/args/cni-network/cni.yaml'.format(os.environ.get('SNAP_DATA'))
+    with open(yaml) as f:
+        if 'can-reach' in f.read():
+            return True
+        else:
+            return False
+
+
+def patch_cni(ip):
+    """
+    Patch the cni.yaml manifest with the proper hint on where the rest of the nodes are
+    :param ip: The IP another k8s node has.
+    """
+    cni_yaml = '{}/args/cni-network/cni.yaml'.format(os.environ.get('SNAP_DATA'))
+    backup_file = "{}.backup".format(cni_yaml)
+    with open(backup_file, 'w') as back_fp:
+        with open(cni_yaml, 'r') as fp:
+            for _, line in enumerate(fp):
+                if "first-found" in line:
+                    line = line.replace("first-found", "can-reach={}".format(ip))
+                back_fp.write("{}".format(line))
+
+    try_set_file_permissions(backup_file)
+    shutil.copyfile(backup_file, cni_yaml)
+
+
+def try_initialise_cni_autodetect_for_clustering(ip, apply_cni=True):
+    """
+    Try to initialise the calico route autodetection based on the IP
+    provided, see https://docs.projectcalico.org/networking/ip-autodetection.
+    If the cni manifest got changed by default it gets reapplied.
+    :param ip: The IP another k8s node has.
+    :param apply_cni: Should we apply the the manifest
+    """
+    if cni_is_patched():
+        return True
+
+    patch_cni(ip)
+    if apply_cni:
+        apply_cni_manifest()
