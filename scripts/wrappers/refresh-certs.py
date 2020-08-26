@@ -218,7 +218,7 @@ def refresh_certs(ca_dir, undo, check, help):
         show_help()
         exit(0)
 
-    if not ca_dir is None and (undo or check):
+    if ca_dir is not None and (undo or check):
         click.echo("Please do not set any options in combination with the CA_DIR.")
         exit(1)
 
