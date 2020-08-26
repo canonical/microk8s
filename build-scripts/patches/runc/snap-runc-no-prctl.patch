@@ -1,0 +1,42 @@
+diff -Naur a/libcontainer/setns_init_linux.go b/libcontainer/setns_init_linux.go
+--- a/libcontainer/setns_init_linux.go	2020-08-04 15:53:52.419656110 -0500
++++ b/libcontainer/setns_init_linux.go	2020-08-05 08:34:55.799786404 -0500
+@@ -56,11 +56,12 @@
+ 			return err
+ 		}
+ 	}
+-	if l.config.NoNewPrivileges {
+-		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+-			return err
+-		}
+-	}
++	// incompatible with snapd
++	//if l.config.NoNewPrivileges {
++	//	if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
++	//		return err
++	//	}
++	//}
+ 	if err := selinux.SetExecLabel(l.config.ProcessLabel); err != nil {
+ 		return err
+ 	}
+diff -Naur a/libcontainer/standard_init_linux.go b/libcontainer/standard_init_linux.go
+--- a/libcontainer/standard_init_linux.go	2020-08-04 15:54:57.552256956 -0500
++++ b/libcontainer/standard_init_linux.go	2020-08-05 08:32:02.134205845 -0500
+@@ -135,11 +135,12 @@
+ 	if err != nil {
+ 		return errors.Wrap(err, "get pdeath signal")
+ 	}
+-	if l.config.NoNewPrivileges {
+-		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+-			return errors.Wrap(err, "set nonewprivileges")
+-		}
+-	}
++	// incompatible with snapd
++	//if l.config.NoNewPrivileges {
++	//	if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
++	//		return errors.Wrap(err, "set nonewprivileges")
++	//	}
++	//}
+ 	// Tell our parent that we're ready to Execv. This must be done before the
+ 	// Seccomp rules have been applied, because we need to be able to read and
+ 	// write to a socket.

@@ -25,7 +25,7 @@ git clone --depth 1 https://github.com/kubernetes/kubernetes $GOPATH/src/github.
     PATCHES="pre-patches"
   fi
 
-  for patch in "${SNAPCRAFT_PROJECT_DIR}"/build-scripts/"$PATCHES"/*.patch
+  for patch in "${SNAPCRAFT_PROJECT_DIR}"/build-scripts/"$PATCHES"/kubernetes/*.patch
   do
     echo "Applying patch $patch"
     git am < "$patch"

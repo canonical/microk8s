@@ -347,6 +347,13 @@ parts:
       (
         cd $GOPATH/src/github.com/opencontainers/runc
         git checkout ${RUNC_COMMIT}
+
+        for patch in "${SNAPCRAFT_PROJECT_DIR}"/build-scripts/patches/runc/*.patch; do
+          echo "Applying $(basename "$patch") ..."
+          git apply --ignore-space-change --ignore-whitespace "$patch"
+          echo
+        done
+
         make BUILDTAGS='seccomp apparmor'
       )
       cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
