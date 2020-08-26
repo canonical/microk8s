@@ -66,10 +66,104 @@ hooks:
     - firewall-control
   connect-plug-network-control:
     plugs:
+      - dot-kube
       - network-control
   disconnect-plug-network-control:
     plugs:
+      - dot-kube
       - network-control
+  connect-plug-docker-privileged:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-docker-support:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-kubernetes-support:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-k8s-kubelet:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-k8s-kubeproxy:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-dot-kube:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-network:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-network-bind:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-network-observe:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-firewall-control:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-process-control:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-kernel-module-observe:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-mount-observe:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-hardware-observe:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-system-observe:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-ca-cert:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-home:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-opengl:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-k8s-journald:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-ld-cache:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-cifs-mount:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-fuse-support:
+    plugs:
+      - dot-kube
+      - network-bind
+  connect-plug-kernel-crypto-api:
+    plugs:
+      - dot-kube
+      - network-bind
 
 apps:
   microk8s:
@@ -239,7 +333,7 @@ apps:
     - process-control
     - system-observe
   inspect:
-    command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    command: SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
     plugs:
     - system-observe
     - firewall-control

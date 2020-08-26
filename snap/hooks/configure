@@ -4,6 +4,20 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
+# Check whether all of the required interfaces are connected before proceeding.
+# This is to address https://forum.snapcraft.io/t/mimic-sequence-of-hook-calls-with-auto-connected-interfaces/19618
+readonly interfaces="docker-privileged docker-support kubernetes-support k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe ca-cert home opengl k8s-journald ld-cache cifs-mount fuse-support kernel-crypto-api"
+for interface in ${interfaces}
+do
+  if ! snapctl is-connected ${interface}
+  then
+    snapctl set-health blocked "You need to connect ${interface} before proceeding"
+    exit 0  # Don't run the rest yet, but don't cause snapd to panic.
+  fi
+done
+snapctl restart microk8s
+snapctl set-health okay
+
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
 # and make sure the respective services use them.
