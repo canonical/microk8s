@@ -112,7 +112,7 @@ def store_callback_token(node, callback_token):
 def sign_client_cert(cert_request, token):
     """
     Sign a certificate request
-    
+
     :param cert_request: the request
     :param token: a token acting as a request uuid
     :returns: the certificate
@@ -137,7 +137,7 @@ def sign_client_cert(cert_request, token):
 def add_token_to_certs_request(token):
     """
     Add a token to the file holding the nodes we expect a certificate request from
-    
+
     :param token: the token
     """
     with open(certs_request_tokens_file, "a+") as fp:
@@ -185,7 +185,7 @@ def add_kubelet_token(hostname):
 def getCA():
     """
     Return the CA
-    
+
     :returns: the CA file contents
     """
     ca_file = "{}/certs/ca.crt".format(snapdata_path)
@@ -239,7 +239,7 @@ def is_valid(token_line, token_type=cluster_tokens_file):
 def read_kubelet_args_file(node=None):
     """
     Return the contents of the kubelet arguments file
-    
+
     :param node: node to add a host override (defaults to None)
     :returns: the kubelet args file
     """
@@ -254,7 +254,7 @@ def read_kubelet_args_file(node=None):
 def get_node_ep(hostname, remote_addr):
     """
     Return the endpoint to be used for the node based by trying to resolve the hostname provided
-    
+
     :param hostname: the provided hostname
     :param remote_addr: the address the request came from
     :returns: the node's location

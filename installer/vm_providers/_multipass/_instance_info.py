@@ -59,7 +59,9 @@ class InstanceInfo:
             )
         except KeyError as missing_key:
             raise errors.ProviderInfoDataKeyError(
-                provider_name="multipass", missing_key=str(missing_key), data=instance_info,
+                provider_name="multipass",
+                missing_key=str(missing_key),
+                data=instance_info,
             ) from missing_key
 
     def __init__(

@@ -28,7 +28,7 @@ def try_set_file_permissions(file):
 def remove_expired_token_from_file(file):
     """
     Remove expired token from the valid tokens set
-    
+
     :param file: the file to be removed from
     """
     backup_file = "{}.backup".format(file)
@@ -48,7 +48,7 @@ def remove_expired_token_from_file(file):
 def remove_token_from_file(token, file):
     """
     Remove a token from the valid tokens set
-    
+
     :param token: the token to be removed
     :param file: the file to be removed from
     """
@@ -71,7 +71,7 @@ def remove_token_from_file(token, file):
 def is_token_expired(token_line):
     """
     Checks if the token in the file is expired, when using the TTL based.
-    
+
     :returns: True if the token is expired, otherwise False
     """
     if "|" in token_line:

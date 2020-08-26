@@ -119,7 +119,7 @@ class TestUpgrade(object):
 
         # AMD64 only tests
         if platform.machine() == 'x86_64' and under_time_pressure == 'False':
-            '''
+            """
             # Prometheus operator on our lxc is chashlooping disabling the test for now.
             try:
                 enable = microk8s_enable("prometheus", timeout_insec=30)
@@ -139,7 +139,7 @@ class TestUpgrade(object):
                 test_matrix['kubeflow'] = validate_kubeflow
             except:
                 print('Will not test kubeflow')
-            '''
+            """
 
             try:
                 enable = microk8s_enable("fluentd", timeout_insec=30)
@@ -204,10 +204,10 @@ class TestUpgrade(object):
 
 
 def is_container():
-    '''
+    """
     Returns: True if the deployment is in a VM/container.
 
-    '''
+    """
     try:
         if os.path.isdir('/run/systemd/system'):
             container = check_output('sudo systemd-detect-virt --container'.split())
