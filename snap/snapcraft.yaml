@@ -180,6 +180,7 @@ parts:
     go-importpath: github.com/canonical/go-dqlite
     override-build: |
       set -eux
+      snap refresh go --channel=1.15/stable || true
       go version
       export GOPATH=${SNAPCRAFT_STAGE}
       CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
@@ -232,7 +233,7 @@ parts:
     override-build: |
       set -eux
       . $SNAPCRAFT_PROJECT_DIR/build-scripts/set-env-variables.sh
-
+      snap refresh go --channel=1.15/stable || true
       go version
       export GOPATH=$(realpath ../go)
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin

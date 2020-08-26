@@ -53,6 +53,8 @@ class TestUpgradePath(object):
             print(channel_parts)
             last_stable_minor = int(channel_parts[0])
 
+        last_stable_minor -= 1
+
         print("")
         print(
             "Testing refresh path from 1.{} to 1.{} and finally refresh to {}".format(
