@@ -34,17 +34,12 @@ jobs:
       with:
         name: microk8s.snap
         path: microk8s.snap
-    - name: Running upgrade path test
+    - name: Running addons tests
       run: |
         set -x
         sudo apt-get install python3-setuptools
         sudo pip3 install --upgrade pip
         sudo pip3 install -U pytest
-        sudo -E UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade-path.py
-        sudo snap remove microk8s
-    - name: Running addons tests
-      run: |
-        set -x
         sudo snap install *.snap --classic --dangerous
         ./tests/smoke-test.sh
         export UNDER_TIME_PRESSURE="True"
@@ -57,4 +52,9 @@ jobs:
         set -x
         export UNDER_TIME_PRESSURE="True"
         sudo -E UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade.py
-
+        sudo snap remove microk8s
+    - name: Running upgrade path test
+      run: |
+        set -x
+        sudo -E UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade-path.py
+        sudo snap remove microk8s
