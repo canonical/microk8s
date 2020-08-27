@@ -333,7 +333,7 @@ apps:
     - process-control
     - system-observe
   inspect:
-    command: SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    command: inspect.sh
     plugs:
     - system-observe
     - firewall-control
