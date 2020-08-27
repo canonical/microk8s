@@ -620,11 +620,13 @@ parts:
     source: https://github.com/canonical/go-dqlite
     source-type: git
     plugin: go
+    go-channel: 1.15/stable
     build-packages:
       - libsqlite3-dev
     go-importpath: github.com/canonical/go-dqlite
     override-build: |
       set -eux
+      snap refresh go --channel=1.15/stable || true
       go version
       export GOPATH=${SNAPCRAFT_STAGE}
       CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
@@ -657,6 +659,7 @@ parts:
     source: https://github.com/ktsakalozos/go-migrator
     source-type: git
     plugin: go
+    go-channel: 1.15/stable
     go-importpath: github.com/ktsakalozos/go-migrator
     build-packages:
       - gcc
@@ -668,6 +671,7 @@ parts:
     source: https://github.com/containerd/containerd
     source-type: git
     plugin: go
+    go-channel: 1.15/stable
     go-importpath: github.com/containerd/containerd
     build-packages:
     - btrfs-tools
@@ -675,7 +679,7 @@ parts:
     override-build: |
       set -eux
       . $SNAPCRAFT_PROJECT_DIR/build-scripts/set-env-variables.sh
-
+      snap refresh go --channel=1.15/stable || true
       go version
       export GOPATH=$(realpath ../go)
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
