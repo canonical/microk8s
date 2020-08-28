@@ -186,6 +186,47 @@ parts:
       CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       cp $GOPATH/bin/dqlite $SNAPCRAFT_PART_INSTALL/bin/
+
+  etcd:
+    plugin: dump
+    source: build-scripts/
+    override-build: |
+      . ./set-env-variables.sh
+      curl -LO https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
+      tar -xzvf etcd-*.tar.gz --strip-components=1
+      snapcraftctl build
+    stage:
+      - etcd
+      - etcdctl
+
+  cni:
+    plugin: dump
+    source: build-scripts/
+    override-build: |
+      . ./set-env-variables.sh
+      curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-$KUBE_ARCH-${CNI_VERSION}.tgz
+      mkdir cni
+      tar -xzvf cni-*.tgz -C cni/
+      snapcraftctl build
+    organize:
+      ./cni/*: opt/cni/bin/
+    filesets:
+      bins: [ ./opt/cni/bin/* ]
+    stage: [ $bins ]
+
+  flanneld:
+    plugin: dump
+    source: build-scripts/
+    override-build: |
+      . ./set-env-variables.sh
+      curl -LO https://github.com/coreos/flannel/releases/download/${FLANNELD_VERSION}/flannel-${FLANNELD_VERSION}-linux-${KUBE_ARCH}.tar.gz
+      tar -xzvf flannel-*.tar.gz
+      snapcraftctl build
+    organize:
+      flanneld: opt/cni/bin/
+    stage:
+      - opt/cni/bin/flanneld
+
   libnftnl:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
@@ -356,20 +397,8 @@ parts:
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs .
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs-beta .
 
-      echo "Preparing cni"
-      mkdir -p opt/cni/bin/
-      cp $KUBE_SNAP_BINS/cni/* opt/cni/bin/
-
-      echo "Preparing flanneld"
-      mkdir -p opt/cni/bin/
-      cp $KUBE_SNAP_BINS/flanneld/flanneld opt/cni/bin/
-
       echo "Preparing containerd"
       cp $KUBE_SNAP_ROOT/microk8s-resources/containerd-profile .
-
-      echo "Preparing etcd"
-      cp $KUBE_SNAP_BINS/etcd/etcd .
-      cp $KUBE_SNAP_BINS/etcd/etcdctl .
 
       echo "Preparing kube-apiserver"
       cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-apiserver .
