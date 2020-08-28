@@ -109,6 +109,7 @@ parts:
       usr/lib/: lib/
     prime:
       - lib/libco*so*
+
   raft:
     source: https://github.com/canonical/raft
     build-attributes: [no-patchelf]
@@ -122,6 +123,7 @@ parts:
     prime:
       - lib/libraft*so*
       - usr/include/
+
   sqlite:
     source: https://github.com/canonical/sqlite
     source-type: git
@@ -148,6 +150,7 @@ parts:
       - bin/sqlite3
       - lib/libsqlite3*so*
       - usr/include/
+
   dqlite:
     after:
       - libco
@@ -169,6 +172,7 @@ parts:
       - lib/libdqlite*so*
       - lib/*/libuv*
       - usr/include/
+
   dqlite-client:
     build-snaps: [go]
     after: [sqlite, dqlite]
@@ -263,6 +267,13 @@ parts:
       bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
       bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
 
+      mkdir -p ./actions/
+      if [ "${ARCH}" = "amd64" ]
+      then
+        # Knative support
+        echo "Preparing knative"
+        cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
+      fi
       snapcraftctl build
     organize:
       bins/*: .
@@ -274,6 +285,7 @@ parts:
       - kubectl
       - kubectl.bash
       - kubelet
+      - actions
 
   libnftnl:
     plugin: autotools
@@ -281,6 +293,7 @@ parts:
     build-packages:
     - libjansson-dev
     - libmnl-dev
+
   iptables:
     after:
     - libnftnl
@@ -297,6 +310,7 @@ parts:
     - "--disable-shared"
     - "--enable-static"
     prime: [ -bin/iptables-xml ]
+
   migrator:
     build-snaps: [go]
     source: https://github.com/ktsakalozos/go-migrator
@@ -308,6 +322,7 @@ parts:
       - gcc
     prime:
       - bin/migrator
+
   containerd:
     build-snaps: [go]
     after: [iptables]
@@ -374,6 +389,7 @@ parts:
     - -sbin/xtables-multi
     - -sbin/iptables*
     - -lib/xtables
+
   cluster-agent:
     plugin: python
     python-version: python3
@@ -389,6 +405,7 @@ parts:
     - gunicorn3
     - python3-click
     - python3-dateutil
+
   microk8s:
     after: [containerd, dqlite, k8s-binaries]
     plugin: dump
@@ -415,11 +432,11 @@ parts:
       - -docs*
       - -build*
       - -go*
+      - -snap*
     override-build: |
       set -eux
 
       . build-scripts/set-env-variables.sh
-      KUBE_SNAP_BINS="/root/parts/k8s-binaries/build/build/kube_bins/$KUBE_VERSION"
 
       echo "Setting default daemon configs"
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/default-args .
@@ -476,10 +493,6 @@ parts:
         rm "actions/enable.multus.sh"
         rm "actions/disable.multus.sh"
         rm "actions/multus.yaml"
-      else
-        # Knative support
-        echo "Preparing knative"
-        cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
       fi
 
       echo "Creating inspect hook"
