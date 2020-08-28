@@ -217,7 +217,9 @@ class TestAddons(object):
         print("Disabling fluentd")
         microk8s_disable("fluentd")
 
-    @pytest.mark.skip("disabling the linkerd test due to https://github.com/linkerd/linkerd2/issues/4918")
+    @pytest.mark.skip(
+        "disabling the linkerd test due to https://github.com/linkerd/linkerd2/issues/4918"
+    )
     @pytest.mark.skipif(
         platform.machine() != 'x86_64',
         reason="Linkerd tests are only relevant in x86 architectures",
