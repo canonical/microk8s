@@ -8,13 +8,14 @@ export KUBE_SNAP_BINS="build/kube_bins/$KUBE_VERSION"
 mkdir -p $KUBE_SNAP_BINS/$KUBE_ARCH
 echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
 
-export GOPATH=$SNAPCRAFT_PART_INSTALL/go
+export GOPATH=$SNAPCRAFT_PART_BUILD/go
+
+rm -rf $GOPATH
 mkdir -p $GOPATH
 
-go get -d $KUBERNETES_REPOSITORY || true
+git clone --depth 1 https://github.com/kubernetes/kubernetes $GOPATH/src/github.com/kubernetes/kubernetes/ -b $KUBERNETES_TAG
 
 (cd $GOPATH/src/$KUBERNETES_REPOSITORY
-  git checkout $KUBERNETES_TAG
   git config user.email "microk8s-builder-bot@ubuntu.com"
   git config user.name "MicroK8s builder bot"
 
