@@ -205,6 +205,7 @@ apps:
     - network-observe
     - network-control
     - k8s-journald
+    - kubernetes-support
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
@@ -212,9 +213,17 @@ apps:
     - network-bind
     - network-observe
     - network-control
+    - k8s-journald
+    - kubernetes-support
   daemon-control-plane-kicker:
     command: control-plane-kicker
     daemon: simple
+    plugs:
+    - network-bind
+    - network-observe
+    - network-control
+    - k8s-journald
+    - kubernetes-support
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
@@ -405,7 +414,7 @@ passthrough:
     snap_daemon: shared
   layout:
     /usr/libexec:
-      symlink: $SNAP_COMMON/usr/libexec
+      bind: $SNAP_COMMON/usr/libexec
     /usr/local/lib:
       bind: $SNAP_COMMON/usr/local/lib
     /var/lib/cni:
@@ -418,6 +427,8 @@ passthrough:
       bind: $SNAP_DATA/kubelet
     /var/lib/kube-proxy:
       bind: $SNAP_DATA/kube-proxy
+    /etc/service/enabled/felix/supervise/lock:
+      bind-file: $SNAP_COMMON/etc/service/enabled/felix/supervise/lock
     /etc/nvidia-container-runtime/config.toml:
       bind-file: $SNAP_COMMON/etc/nvidia-container-runtime/config.toml
     /var/log/nvidia-container-runtime.log:
