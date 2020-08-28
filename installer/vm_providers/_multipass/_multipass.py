@@ -117,10 +117,16 @@ class Multipass(Provider):
         self._multipass_cmd.copy_files(source=source, destination=destination)
 
     def __init__(
-        self, *, echoer, is_ephemeral: bool = False, build_provider_flags: Dict[str, str] = None,
+        self,
+        *,
+        echoer,
+        is_ephemeral: bool = False,
+        build_provider_flags: Dict[str, str] = None,
     ) -> None:
         super().__init__(
-            echoer=echoer, is_ephemeral=is_ephemeral, build_provider_flags=build_provider_flags,
+            echoer=echoer,
+            is_ephemeral=is_ephemeral,
+            build_provider_flags=build_provider_flags,
         )
         self._multipass_cmd = MultipassCommand(platform=sys.platform)
         self._instance_info: Optional[InstanceInfo] = None

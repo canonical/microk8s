@@ -46,7 +46,9 @@ class ProviderNotFound(ProviderBaseError):
 
     def __init__(self, *, provider: str, prompt_installable: bool, error_message: str) -> None:
         super().__init__(
-            provider=provider, prompt_installable=prompt_installable, error_message=error_message,
+            provider=provider,
+            prompt_installable=prompt_installable,
+            error_message=error_message,
         )
         self.prompt_installable = prompt_installable
         self.provider = provider
