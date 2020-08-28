@@ -30,7 +30,11 @@ logger = logging.getLogger(__name__)
 
 class Provider(abc.ABC):
     def __init__(
-        self, *, echoer, is_ephemeral: bool = False, build_provider_flags: Dict[str, str] = None,
+        self,
+        *,
+        echoer,
+        is_ephemeral: bool = False,
+        build_provider_flags: Dict[str, str] = None,
     ) -> None:
         self.echoer = echoer
         self._is_ephemeral = is_ephemeral

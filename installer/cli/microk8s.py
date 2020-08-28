@@ -17,7 +17,11 @@ logger = logging.getLogger(__name__)
 
 
 @click.command(
-    name="microk8s", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True,)
+    name="microk8s",
+    context_settings=dict(
+        ignore_unknown_options=True,
+        allow_extra_args=True,
+    ),
 )
 @click.option("-h", "--help", is_flag=True)
 @click.pass_context

@@ -26,7 +26,7 @@ callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 def do_op(remote_op):
     """
     Perform an operation on a remote node
-    
+
     :param remote_op: the operation json string
     """
     if is_node_running_dqlite():
@@ -103,7 +103,7 @@ def do_op(remote_op):
 def restart(service):
     """
     Restart service on all nodes
-    
+
     :param service: the service name
     """
     print("Restarting nodes.")

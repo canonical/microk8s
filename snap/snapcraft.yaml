@@ -555,6 +555,7 @@ parts:
       usr/lib/: lib/
     prime:
       - lib/libco*so*
+
   raft:
     source: https://github.com/canonical/raft
     build-attributes: [no-patchelf]
@@ -568,6 +569,7 @@ parts:
     prime:
       - lib/libraft*so*
       - usr/include/
+
   sqlite:
     source: https://github.com/canonical/sqlite
     source-type: git
@@ -594,6 +596,7 @@ parts:
       - bin/sqlite3
       - lib/libsqlite3*so*
       - usr/include/
+
   dqlite:
     after:
       - libco
@@ -607,6 +610,7 @@ parts:
       - libuv1
     build-packages:
       - libuv1-dev
+      - pkg-config
     organize:
       usr/lib/: lib/
       include/: usr/include/
@@ -614,6 +618,7 @@ parts:
       - lib/libdqlite*so*
       - lib/*/libuv*
       - usr/include/
+
   dqlite-client:
     build-snaps: [go]
     after: [sqlite, dqlite]
@@ -632,12 +637,109 @@ parts:
       CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       cp $GOPATH/bin/dqlite $SNAPCRAFT_PART_INSTALL/bin/
+
+  etcd:
+    plugin: dump
+    source: build-scripts/
+    override-build: |
+      . ./set-env-variables.sh
+      curl -LO https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
+      tar -xzvf etcd-*.tar.gz --strip-components=1
+      snapcraftctl build
+    stage:
+      - etcd
+      - etcdctl
+
+  cni:
+    plugin: dump
+    source: build-scripts/
+    override-build: |
+      . ./set-env-variables.sh
+      curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-$KUBE_ARCH-${CNI_VERSION}.tgz
+      mkdir cni
+      tar -xzvf cni-*.tgz -C cni/
+      snapcraftctl build
+    organize:
+      ./cni/*: opt/cni/bin/
+    filesets:
+      bins: [ ./opt/cni/bin/* ]
+    stage: [ $bins ]
+
+  flanneld:
+    plugin: dump
+    source: build-scripts/
+    override-build: |
+      . ./set-env-variables.sh
+      curl -LO https://github.com/coreos/flannel/releases/download/${FLANNELD_VERSION}/flannel-${FLANNELD_VERSION}-linux-${KUBE_ARCH}.tar.gz
+      tar -xzvf flannel-*.tar.gz
+      snapcraftctl build
+    organize:
+      flanneld: opt/cni/bin/
+    stage:
+      - opt/cni/bin/flanneld
+
+  k8s-binaries:
+    after: [dqlite]
+    build-snaps: [go]
+    plugin: dump
+    build-attributes: [no-patchelf]
+    source: build-scripts/
+    build-packages:
+      - build-essential
+      - curl
+      - git
+    override-build: |
+      set -eux
+      . ./set-env-variables.sh
+
+      # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
+      # if "${KUBE_SNAP_BINS}" does not exist but it is set we will put the k8s binaries there
+      # if "${KUBE_SNAP_BINS}" does not exist and it is not set we do not need to keep the created binaries
+      if [ ! -e "${KUBE_SNAP_BINS}" ]; then
+        if [ -z "${KUBE_SNAP_BINS}" ]; then
+          . ./set-env-binaries-location.sh
+        fi
+        echo "Downloading binaries"
+        . ./fetch-other-binaries.sh
+        echo "Building k8s binaries"
+        . ./build-k8s-binaries.sh
+      else
+        echo "Binaries provided in $KUBE_SNAP_BINS"
+      fi
+      mkdir bins/
+      cp build/kube_bins/$KUBERNETES_TAG/$KUBE_ARCH/* bins/
+
+      # Add bash completion for microk8s kubectl.
+      bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
+      bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
+
+      mkdir -p ./actions/
+      if [ "${ARCH}" = "amd64" ]
+      then
+        # Knative support
+        echo "Preparing knative"
+        cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
+      fi
+      snapcraftctl build
+    organize:
+      bins/*: .
+    stage:
+      - kube-apiserver
+      - kube-controller-manager
+      - kube-proxy
+      - kube-scheduler
+      - kubectl
+      - kubectl.bash
+      - kubelet
+      - actions
+
   libnftnl:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
     build-packages:
     - libjansson-dev
     - libmnl-dev
+
   iptables:
     after:
     - libnftnl
@@ -654,6 +756,7 @@ parts:
     - "--disable-shared"
     - "--enable-static"
     prime: [ -bin/iptables-xml ]
+
   migrator:
     build-snaps: [go]
     source: https://github.com/ktsakalozos/go-migrator
@@ -665,6 +768,7 @@ parts:
       - gcc
     prime:
       - bin/migrator
+
   containerd:
     build-snaps: [go]
     after: [iptables, patches]
@@ -736,6 +840,7 @@ parts:
     - -sbin/xtables-multi
     - -sbin/iptables*
     - -lib/xtables
+
   cluster-agent:
     plugin: python
     python-version: python3
@@ -751,8 +856,9 @@ parts:
     - gunicorn3
     - python3-click
     - python3-dateutil
+
   microk8s:
-    after: [containerd, dqlite]
+    after: [containerd, dqlite, k8s-binaries]
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
@@ -777,28 +883,11 @@ parts:
       - -docs*
       - -build*
       - -go*
+      - -snap*
     override-build: |
       set -eux
-      . build-scripts/set-env-variables.sh
 
-      REMOVE_KUBE_SNAP_BINS=false
-      echo "Reached here"
-      # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
-      # if "${KUBE_SNAP_BINS}" does not exist but it is set we will put the k8s binaries there
-      # if "${KUBE_SNAP_BINS}" does not exist and it is not set we do not need to keep the created binaries
-      if [ ! -e "${KUBE_SNAP_BINS}" ]; then
-        if [ -z "${KUBE_SNAP_BINS}" ]; then
-          # "${KUBE_SNAP_BINS}" not set, we will remove the binaries after we build them.
-          REMOVE_KUBE_SNAP_BINS=true
-          . build-scripts/set-env-binaries-location.sh
-        fi
-        echo "Downloading binaries"
-        . build-scripts/fetch-other-binaries.sh
-        echo "Building k8s binaries"
-        . build-scripts/build-k8s-binaries.sh
-      else
-        echo "Binaries provided in $KUBE_SNAP_BINS"
-      fi
+      . build-scripts/set-env-variables.sh
 
       echo "Setting default daemon configs"
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/default-args .
@@ -807,43 +896,8 @@ parts:
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs .
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs-beta .
 
-      echo "Preparing cni"
-      mkdir -p opt/cni/bin/
-      cp $KUBE_SNAP_BINS/cni/* opt/cni/bin/
-
-      echo "Preparing flanneld"
-      mkdir -p opt/cni/bin/
-      cp $KUBE_SNAP_BINS/flanneld/flanneld opt/cni/bin/
-
       echo "Preparing containerd"
       cp $KUBE_SNAP_ROOT/microk8s-resources/containerd-profile .
-
-      echo "Preparing etcd"
-      cp $KUBE_SNAP_BINS/etcd/etcd .
-      cp $KUBE_SNAP_BINS/etcd/etcdctl .
-
-      echo "Preparing kube-apiserver"
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-apiserver .
-      # Old versions will be pointing to these .csv files from inside their kube-apiserver config
-      # Keep them around for a couple of releases.
-      touch known_token.csv
-      cp $KUBE_SNAP_ROOT/microk8s-resources/basic_auth.csv .
-
-      echo "Preparing kube-controller-manager"
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-controller-manager .
-
-      echo "Preparing kube-scheduler"
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-scheduler .
-
-      echo "Preparing kubelet"
-      mkdir -p configs
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kubelet .
-
-      echo "Preparing kube-proxy"
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kube-proxy .
-
-      echo "Preparing kubelet"
-      cp $KUBE_SNAP_BINS/$KUBE_ARCH/kubectl .
 
       echo "Preparing user config"
       cp $KUBE_SNAP_ROOT/microk8s-resources/client.config.template .
@@ -890,22 +944,11 @@ parts:
         rm "actions/enable.multus.sh"
         rm "actions/disable.multus.sh"
         rm "actions/multus.yaml"
-      else
-        # Knative support
-        echo "Preparing knative"
-        cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
       fi
 
       echo "Creating inspect hook"
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
-      # Add bash completion for microk8s kubectl.
-      ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
-      ./kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
-
-      if $REMOVE_KUBE_SNAP_BINS; then
-        rm -rf "$KUBE_SNAP_BINS"
-      fi
       snapcraftctl build
 
   nvidia-runtime:

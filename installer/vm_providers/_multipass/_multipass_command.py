@@ -332,6 +332,8 @@ class MultipassCommand:
         stdout, stderr = process.communicate()
         if process.returncode != 0:
             raise errors.ProviderInfoError(
-                provider_name=self.provider_name, exit_code=process.returncode, stderr=stderr,
+                provider_name=self.provider_name,
+                exit_code=process.returncode,
+                stderr=stderr,
             )
         return stdout

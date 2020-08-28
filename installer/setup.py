@@ -22,5 +22,9 @@ setup(
         'wheel',
     ],
     platforms='any',
-    entry_points={'console_scripts': ['microk8s=cli.microk8s:cli',]},
+    entry_points={
+        'console_scripts': [
+            'microk8s=cli.microk8s:cli',
+        ]
+    },
 )
