@@ -9,6 +9,7 @@ import ssl
 import sys
 import time
 import hashlib
+import http
 
 import netifaces
 import requests
@@ -45,24 +46,33 @@ cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
 cluster_key_file = "{}/cluster.key".format(cluster_dir)
 
 
-def get_fingerprint(addr, port):
-    """
-    Get the certificate fingerprint of the server at addr:port
+def join_request(conn, api_version, req_data):
+    json_params = json.dumps(req_data)
+    headers = {'Content-type': 'application/json', "Accept": "application/json"}
 
-    :param addr: the address of the server
-    :param port: the port of the server
-    :return: the digest of the server cert
-    """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(1)
-    wrapped_socket = ssl.wrap_socket(sock)
-    wrapped_socket.connect((addr, port))
-    der_cert_bin = wrapped_socket.getpeercert(True)
-    wrapped_socket.close()
-    return hashlib.sha3_256(der_cert_bin).hexdigest()
+    try:
+        conn.request("POST", "/{}/join".format(api_version), json_params, headers)
+        response = conn.getresponse()
+        if not response.status == 200:
+            print("Connection failed (). {}.".format(response.status, response.reason))
+            exit(6)
+
+        body = response.read()
+        return json.loads(body)
+    except http.client.HTTPException as e:
+        print("Please ensure the master node is reachable. {}".format(e))
+        exit(1)
 
 
-def get_connection_info(master_ip, master_port, token, callback_token=None, cluster_type="etcd"):
+def get_connection_info(
+    master_ip,
+    master_port,
+    token,
+    callback_token=None,
+    cluster_type="etcd",
+    verify_peer=False,
+    fingerprint=None,
+):
     """
     Contact the master and get all connection information
 
@@ -70,10 +80,33 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
     :param master_port: the master port
     :param token: the token to contact the master with
     :param cluster_type: the type of cluster we want to join, etcd or dqlite
+    :param verify_peer: flag indicating if we should verify peers certificate
+    :param fingerprint: the certificate fingerprint we expect from the peer
 
     :return: the json response of the master
     """
     cluster_agent_port = get_cluster_agent_port()
+    conn = None
+    try:
+        context = ssl._create_unverified_context()
+        conn = http.client.HTTPSConnection("{}:{}".format(master_ip, master_port), context=context)
+        if verify_peer and fingerprint:
+            # Do the peer certificate verification
+            conn.request("GET", "/")
+            der_cert_bin = conn.sock.getpeercert(True)
+            peer_cert_hash = hashlib.sha256(der_cert_bin).hexdigest()
+            if peer_cert_hash != fingerprint:
+                print(
+                    "Joining cluster failed. Could not verify the identity of {}."
+                    " Use '--skip-verify' to skip server certificate check.".format(master_ip)
+                )
+                exit(4)
+    except http.client.HTTPException as e:
+        print("Connecting to cluster failed with {}.".format(e))
+        exit(5)
+    except ssl.SSLError as e:
+        print("Peer node verification failed with {}.".format(e))
+        exit(4)
 
     if cluster_type == "dqlite":
         req_data = {
@@ -82,17 +115,7 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
             "port": cluster_agent_port,
         }
 
-        # TODO: enable ssl verification
-        try:
-            connection_info = requests.post(
-                "https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API_V2),
-                json=req_data,
-                verify=False,
-            )  # type: requests.models.Response
-        except requests.exceptions.ConnectionError:
-            print("Please ensure the master node is reachable.")
-            usage()
-            exit(1)
+        return join_request(conn, CLUSTER_API_V2, req_data)
     else:
         req_data = {
             "token": token,
@@ -100,28 +123,7 @@ def get_connection_info(master_ip, master_port, token, callback_token=None, clus
             "port": cluster_agent_port,
             "callback": callback_token,
         }
-
-        # TODO: enable ssl verification
-        try:
-            connection_info = requests.post(
-                "https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API),
-                json=req_data,
-                verify=False,
-            )
-        except requests.exceptions.ConnectionError:
-            print("Please ensure the master node is reachable.")
-            usage()
-            exit(1)
-
-    if connection_info.status_code != 200:
-        message = "Error code {}.".format(connection_info.status_code)  # type: str
-        if connection_info.headers.get("content-type") == "application/json":
-            res_data = connection_info.json()  # type: Dict[str, str]
-            if "error" in res_data:
-                message = "{} {}".format(message, res_data["error"])
-        print("Failed to join cluster. {}".format(message))
-        exit(1)
-    return connection_info.json()
+        return join_request(conn, CLUSTER_API, req_data)
 
 
 def usage():
@@ -441,11 +443,11 @@ def reset_current_dqlite_installation():
         )
 
     # We reset to the default port and address
-    init_data = {"Address": "127.0.0.1:19001"}  # type: Dict[str, str]
-    with open("{}/init.yaml".format(cluster_dir), "w") as f:
+    init_data = {'Address': '127.0.0.1:19001'}  # type: Dict[str, str]
+    with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
-    service("start", "apiserver")
+    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
 
     waits = 10  # type: int
     print("Waiting for node to start.", end=" ", flush=True)
@@ -556,10 +558,11 @@ def is_leader_without_successor():
         if netifaces.AF_INET not in netifaces.ifaddresses(interface):
             continue
         for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
-            local_ips.append(link["addr"])
+            local_ips.append(link['addr'])
 
     is_voter = False
     for ep in ep_addresses:
+        found = False
         for ip in local_ips:
             if "{}:".format(ip) in ep[0]:
                 # ep[1] == ep[Role] == 0 means we are voters
@@ -669,9 +672,9 @@ def remove_dqlite_node(node, force=False):
         )
         info = json.loads(node_info.decode())
         node_address = None
-        for a in info["status"]["addresses"]:
-            if a["type"] == "InternalIP":
-                node_address = a["address"]
+        for a in info['status']['addresses']:
+            if a['type'] == 'InternalIP':
+                node_address = a['address']
                 break
 
         if not node_address:
@@ -829,7 +832,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     :param voters: the dqlite voters
     :param host: the hostname others see of this node
     """
-    service("stop", "apiserver")
+    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
     shutil.move(cluster_dir, cluster_backup_dir)
@@ -840,14 +843,14 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     port = 19001
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
-    if "Address" in data:
-        port = data["Address"].split(":")[1]
+    if 'Address' in data:
+        port = data['Address'].split(':')[1]
 
-    init_data = {"Cluster": voters, "Address": "{}:{}".format(host, port)}
-    with open("{}/init.yaml".format(cluster_dir), "w") as f:
+    init_data = {'Cluster': voters, 'Address': "{}:{}".format(host, port)}
+    with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
-    service("start", "apiserver")
+    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
 
     waits = 10
     print("Waiting for this node to finish joining the cluster.", end=" ", flush=True)
@@ -889,12 +892,18 @@ def join_dqlite(connection_parts, verify=True):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
+    fingerpring = connection_parts[2] if len(connection_parts) else None
 
     print("Contacting cluster at {}".format(master_ip))
-    if len(connection_parts) > 2 and verify:
-        verify_server(connection_parts[2], master_ip, master_port)
 
-    info = get_connection_info(master_ip, master_port, token, cluster_type="dqlite")
+    info = get_connection_info(
+        master_ip,
+        master_port,
+        token,
+        cluster_type="dqlite",
+        verify_peer=verify,
+        fingerprint=fingerpring,
+    )
 
     hostname_override = info["hostname_override"]
 
@@ -929,23 +938,6 @@ def join_dqlite(connection_parts, verify=True):
     try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
 
 
-def verify_server(fingerprint, master_ip, master_port):
-    try:
-        sum = get_fingerprint(master_ip, int(master_port))
-        if sum != fingerprint:
-            print(
-                "Joining cluster failed. Could not verify the identity of {}."
-                " Use '--skip-verify' to skip server certificate check.".format(master_ip)
-            )
-            exit(4)
-    except Exception as err:
-        print(
-            "Joining cluster failed. Could not get the identity of {}."
-            " Use '--skip-verify' to skip server certificate check.".format(master_ip)
-        )
-        exit(5)
-
-
 def join_etcd(connection_parts, verify=True):
     """
     Configure node to join an etcd cluster.
@@ -956,9 +948,6 @@ def join_etcd(connection_parts, verify=True):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
-
-    if len(connection_parts) > 2 and verify:
-        verify_server(connection_parts[2], master_ip, master_port)
 
     callback_token = generate_callback_token()
     info = get_connection_info(master_ip, master_port, token, callback_token=callback_token)
