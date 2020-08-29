@@ -891,12 +891,6 @@ def join_dqlite(connection_parts, verify=True):
     fingerpring = connection_parts[2] if len(connection_parts) else None
 
     print("Contacting cluster at {}".format(master_ip))
-    verify_peer = verify
-    if len(connection_parts) <= 2 or not verify:
-        verify_peer = False
-    else:
-        verify
-        verify_server(connection_parts[2], master_ip, master_port)
 
     info = get_connection_info(
         master_ip,
@@ -940,23 +934,6 @@ def join_dqlite(connection_parts, verify=True):
     try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
 
 
-def verify_server(fingerprint, master_ip, master_port):
-    try:
-        sum = get_fingerprint(master_ip, int(master_port))
-        if sum != fingerprint:
-            print(
-                "Joining cluster failed. Could not verify the identity of {}."
-                " Use '--skip-verify' to skip server certificate check.".format(master_ip)
-            )
-            exit(4)
-    except Exception as err:
-        print(
-            "Joining cluster failed. Could not get the identity of {}."
-            " Use '--skip-verify' to skip server certificate check.".format(master_ip)
-        )
-        exit(5)
-
-
 def join_etcd(connection_parts, verify=True):
     """
     Configure node to join an etcd cluster.
@@ -967,9 +944,6 @@ def join_etcd(connection_parts, verify=True):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
-
-    if len(connection_parts) > 2 and verify:
-        verify_server(connection_parts[2], master_ip, master_port)
 
     callback_token = generate_callback_token()
     info = get_connection_info(master_ip, master_port, token, callback_token=callback_token)
