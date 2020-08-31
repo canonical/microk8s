@@ -173,6 +173,13 @@ class Multipass(Provider):
             instance_name=self.instance_name, json_info=instance_info_raw.decode()
         )
 
+    def start(self) -> None:
+        instance_info = self._instance_info = self._get_instance_info()
+        if not instance_info.is_stopped():
+            return
+
+        self._multipass_cmd.start(instance_name=self.instance_name)
+
     def stop(self) -> None:
         instance_info = self._instance_info = self._get_instance_info()
         if instance_info.is_stopped():
