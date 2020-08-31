@@ -97,7 +97,7 @@ function store_kubernetes_info {
   sudo -E /snap/bin/microk8s kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
   sudo -E /snap/bin/microk8s kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
   sudo -E /snap/bin/microk8s kubectl cluster-info dump 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
-  sudo -E /snap/bin/microk8s kubectl get all --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
+  sudo -E /snap/bin/microk8s kubectl get all --all-namespaces -o wide 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
   sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
   sudo -E /snap/bin/microk8s kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
@@ -162,6 +162,12 @@ function suggest_fixes {
         printf -- 'and then restart docker with: sudo systemctl restart docker\n'
       fi
     fi
+  fi
+
+  if ! mount | grep -q 'cgroup/memory'; then
+    printf -- '\033[0;33mWARNING: \033[0m The memory cgroup is not enabled. \n'
+    printf -- 'The cluster may not be functioning properly. Please ensure cgroups are enabled \n'
+    printf -- 'See for example: https://microk8s.io/docs/install-alternatives#heading--arm \n'
   fi
 
   # Fedora Specific Checks
