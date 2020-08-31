@@ -11,17 +11,6 @@ then
   exit 0
 fi
 
-# Double-checking memory cgroup is enabled if we are on ARM
-# https://github.com/ubuntu/microk8s/issues/1347
-
-list="arm aarch64_be aarch64 armv8b armv8l"
-for item in $list; do
-  if [ "$(uname -m)" == "$item" ] && ! mount | egrep -q 'cgroup/memory'; then
-    echo "WARNING: ARM ($(uname -m)) is detected and the memory cgroup is not enabled, therefore cluster could have an operational problems. More info: https://microk8s.io/docs/install-alternatives#heading--arm";
-    break
-  fi
-done
-
 PARSED=$(getopt --options=lho: --longoptions=help,output: --name "$@" -- "$@")
 eval set -- "$PARSED"
 while true; do
