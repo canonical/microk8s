@@ -425,11 +425,23 @@ def validate_cilium():
 
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "nginx-pod.yaml")
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=nginx")
-    output = cilium('endpoint list -o json')
-    assert "nginx" in output
-    kubectl("delete -f {}".format(manifest))
+
+    # Try up to three times to get nginx under cilium
+    for attempt in range(0, 10):
+        kubectl("apply -f {}".format(manifest))
+        wait_for_pod_state("", "default", "running", label="app=nginx")
+        output = cilium('endpoint list -o json', timeout_insec=20)
+        if "nginx" in output:
+            kubectl("delete -f {}".format(manifest))
+            break
+        else:
+            print("Cilium not ready will retry testing.")
+            kubectl("delete -f {}".format(manifest))
+            time.sleep(20)
+    else:
+        print("Cilium testing failed.")
+        assert False
+
 
 
 def validate_multus():
