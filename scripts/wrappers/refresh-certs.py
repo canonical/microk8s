@@ -209,9 +209,7 @@ def install_ca(ca_dir):
     help='Check the expiration time of the installed CA',
 )
 @click.option(
-    '--help',
-    is_flag=True,
-    default=False,
+    '--help', is_flag=True, default=False,
 )
 def refresh_certs(ca_dir, undo, check, help):
     if help:

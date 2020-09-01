@@ -564,7 +564,6 @@ def join_node_dqlite():
         token = request.form['token']
         port = request.form['port']
 
-
     if not is_valid(token):
         error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype='application/json', status=500)
