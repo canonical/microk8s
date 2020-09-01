@@ -443,7 +443,6 @@ def validate_cilium():
         assert False
 
 
-
 def validate_multus():
     """
     Validate multus by deploying alpine pod with 3 interfaces.
