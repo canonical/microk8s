@@ -42,6 +42,10 @@ def cli(ctx, help):
         elif ctx.args[0] == "uninstall":
             uninstall()
             exit(0)
+        elif ctx.args[0] == "start":
+            start()
+            run(ctx.args)
+            exit(0)
         elif ctx.args[0] == "stop":
             run(ctx.args)
             stop()
@@ -261,6 +265,16 @@ def dashboard_proxy() -> None:
         return 1
 
 
+def start() -> None:
+    vm_provider_name = "multipass"
+    vm_provider_class = get_provider_for(vm_provider_name)
+    vm_provider_class.ensure_provider()
+    instance = vm_provider_class(echoer=Echo())
+    instance_info = instance.get_instance_info()
+    if not instance_info.is_running():
+        instance.start()
+
+
 def stop() -> None:
     vm_provider_name = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
@@ -278,7 +292,10 @@ def run(cmd) -> None:
     try:
         vm_provider_class.ensure_provider()
         instance = vm_provider_class(echoer=echo)
-        instance.get_instance_info()
+        instance_info = instance.get_instance_info()
+        if not instance_info.is_running():
+            instance.start()
+            instance.run(["microk8s.start"])
         command = cmd[0]
         cmd[0] = "microk8s.{}".format(command)
         instance.run(cmd)
