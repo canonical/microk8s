@@ -31,5 +31,3 @@ script:
   - export UNDER_TIME_PRESSURE="True"
   - (cd tests; pytest -s verify-branches.py)
   - (cd tests; sudo -E pytest -s -ra test-addons.py)
-  - sudo microk8s reset
-  - sudo snap remove microk8s
