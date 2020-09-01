@@ -7,7 +7,7 @@ setup(
     license='Apache-2.0',
     author='Joe Borg',
     author_email='joseph.borg@canonical.com',
-    description='MicroK8s is a small, fast, single-package Kubernetes for developers, IoT and edge.',
+    description='MicroK8s is a small, fast, single-package Kubernetes for developers, IoT and edge',
     packages=['cli', 'common', 'vm_providers', 'vm_providers._multipass', 'vm_providers.repo'],
     install_requires=[
         'setuptools',

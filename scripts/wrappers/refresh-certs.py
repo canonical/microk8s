@@ -49,18 +49,18 @@ def undo_refresh():
     try:
         subprocess.check_call('cp -r {}/certs {}/'.format(backup_dir, snapdata_path).split())
         subprocess.check_call('cp -r {}/credentials {}'.format(backup_dir, snapdata_path).split())
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         click.echo('Failed to recover certificates')
         exit(4)
 
     try:
         subprocess.check_call('{}/microk8s-stop.wrapper'.format(snap_path).split())
-    except:
+    except subprocess.CalledProcessError:
         pass
 
     try:
         subprocess.check_call('{}/microk8s-start.wrapper'.format(snap_path).split())
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         click.echo('Failed to start MicroK8s after reverting the certificates')
         exit(4)
 
@@ -111,7 +111,7 @@ def refresh_ca():
     click.echo("Creating new certificates")
     try:
         produce_certs()
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         click.echo("Failed to produce new certificates. Reverting.")
         undo_refresh()
         exit(20)
@@ -119,7 +119,8 @@ def refresh_ca():
     update_configs()
     msg = """
 The CA certificates have been replaced. Kubernetes will restart the pods of your workloads.
-Any worker nodes you may have in your cluster need to be removed and re-joined to become aware of the new CA.
+Any worker nodes you may have in your cluster need to be removed and \
+re-joined to become aware of the new CA.
 """
     click.echo(msg)
 
@@ -179,7 +180,7 @@ def install_ca(ca_dir):
     click.echo("Installing provided certificates")
     try:
         install_certs(ca_dir)
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError:
         click.echo("Failed to produce new certificates. Reverting.")
         undo_refresh()
         exit(20)
@@ -187,7 +188,8 @@ def install_ca(ca_dir):
     update_configs()
     msg = """
     The CA certificates have been replaced. Kubernetes will restart the pods of your workloads.
-    Any worker nodes you may have in your cluster need to be removed and re-joined to become aware of the new CA.
+    Any worker nodes you may have in your cluster need to be removed and \
+    re-joined to become aware of the new CA.
     """
     click.echo(msg)
 
@@ -216,7 +218,7 @@ def refresh_certs(ca_dir, undo, check, help):
         show_help()
         exit(0)
 
-    if not ca_dir is None and (undo or check):
+    if ca_dir is not None and (undo or check):
         click.echo("Please do not set any options in combination with the CA_DIR.")
         exit(1)
 
@@ -224,7 +226,8 @@ def refresh_certs(ca_dir, undo, check, help):
         click.echo("Please select either one of the options -c or -u, not both.")
         exit(2)
 
-    # Operations here will need root privileges as some of the credentials and certificates are used by system services.
+    # Operations here will need root privileges as some of the credentials
+    # and certificates are used by system services.
     exit_if_no_root()
     if check:
         check_certificate()

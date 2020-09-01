@@ -211,7 +211,7 @@ def main():
             args[arg] = strtobool(args[arg])
 
     with open("/proc/meminfo") as f:
-        memtotal_lines = [l for l in f.readlines() if "MemTotal" in l]
+        memtotal_lines = [line for line in f.readlines() if "MemTotal" in line]
 
     try:
         total_mem = int(memtotal_lines[0].split(" ")[-2])

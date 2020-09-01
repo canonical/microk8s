@@ -1,21 +1,16 @@
-import pytest
 import os
 import platform
 import time
-import requests
 from validators import (
     validate_dns_dashboard,
     validate_storage,
     validate_ingress,
-    validate_ambassador,
     validate_gpu,
     validate_registry,
     validate_forward,
     validate_metrics_server,
-    validate_prometheus,
     validate_fluentd,
     validate_jaeger,
-    validate_kubeflow,
     validate_cilium,
     validate_metallb_config,
     validate_multus,
@@ -68,7 +63,7 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_dns_dashboard()
             test_matrix['dns_dashboard'] = validate_dns_dashboard
-        except:
+        except CalledProcessError:
             print('Will not test dns-dashboard')
 
         try:
@@ -76,7 +71,7 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_storage()
             test_matrix['storage'] = validate_storage
-        except:
+        except CalledProcessError:
             print('Will not test storage')
 
         try:
@@ -84,7 +79,7 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_ingress()
             test_matrix['ingress'] = validate_ingress
-        except:
+        except CalledProcessError:
             print('Will not test ingress')
 
         try:
@@ -92,7 +87,7 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_gpu()
             test_matrix['gpu'] = validate_gpu
-        except:
+        except CalledProcessError:
             print('Will not test gpu')
 
         try:
@@ -100,13 +95,13 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_registry()
             test_matrix['registry'] = validate_registry
-        except:
+        except CalledProcessError:
             print('Will not test registry')
 
         try:
             validate_forward()
             test_matrix['forward'] = validate_forward
-        except:
+        except CalledProcessError:
             print('Will not test port forward')
 
         try:
@@ -114,7 +109,7 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_metrics_server()
             test_matrix['metrics_server'] = validate_metrics_server
-        except:
+        except CalledProcessError:
             print('Will not test the metrics server')
 
         # AMD64 only tests
@@ -146,7 +141,7 @@ class TestUpgrade(object):
                 assert "Nothing to do for" not in enable
                 validate_fluentd()
                 test_matrix['fluentd'] = validate_fluentd
-            except:
+            except CalledProcessError:
                 print('Will not test the fluentd')
 
             try:
@@ -154,7 +149,7 @@ class TestUpgrade(object):
                 assert "Nothing to do for" not in enable
                 validate_jaeger()
                 test_matrix['jaeger'] = validate_jaeger
-            except:
+            except CalledProcessError:
                 print('Will not test the jaeger addon')
 
             try:
@@ -162,7 +157,7 @@ class TestUpgrade(object):
                 assert "Nothing to do for" not in enable
                 validate_cilium()
                 test_matrix['cilium'] = validate_cilium
-            except:
+            except CalledProcessError:
                 print('Will not test the cilium addon')
             try:
                 ip_ranges = (
@@ -172,7 +167,7 @@ class TestUpgrade(object):
                 assert "MetalLB is enabled" in enable and "Nothing to do for" not in enable
                 validate_metallb_config(ip_ranges)
                 test_matrix['metallb'] = validate_metallb_config
-            except:
+            except CalledProcessError:
                 print("Will not test the metallb addon")
 
             try:
@@ -180,7 +175,7 @@ class TestUpgrade(object):
                 assert "Nothing to do for" not in enable
                 validate_multus()
                 test_matrix['multus'] = validate_multus
-            except:
+            except CalledProcessError:
                 print('Will not test the multus addon')
 
         # Refresh the snap to the target

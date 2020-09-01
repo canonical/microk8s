@@ -3,7 +3,6 @@ import os
 import platform
 import time
 import requests
-from subprocess import check_call, CalledProcessError, check_output
 from utils import (
     wait_for_installation,
     run_until_success,

@@ -103,7 +103,7 @@ def _show_install_help():
       --help     Show this message and exit.
       --cpu      Cores used by MicroK8s (default={})
       --mem      RAM in GB used by MicroK8s (default={})
-      --disk     Maximum volume in GB of the dynamically expandable hard disk to be used (default={})
+      --disk     Max volume in GB of the dynamically expandable hard disk to be used (default={})
       --channel  Kubernetes version to install (default={})
        -y, --assume-yes  Automatic yes to prompts"""
     Echo.info(
@@ -260,7 +260,7 @@ def dashboard_proxy() -> None:
             instance.run(command)
         except KeyboardInterrupt:
             return
-    except ProviderInstanceNotFoundError as provider_error:
+    except ProviderInstanceNotFoundError:
         _not_installed(echo)
         return 1
 
@@ -299,7 +299,7 @@ def run(cmd) -> None:
         command = cmd[0]
         cmd[0] = "microk8s.{}".format(command)
         instance.run(cmd)
-    except ProviderInstanceNotFoundError as provider_error:
+    except ProviderInstanceNotFoundError:
         _not_installed(echo)
         return 1
 
@@ -331,7 +331,7 @@ def _get_microk8s_commands() -> List:
             return complete
         else:
             return ["start", "stop"]
-    except ProviderNotFound as provider_error:
+    except ProviderNotFound:
         return ["start", "stop"]
 
 

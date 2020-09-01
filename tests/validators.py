@@ -4,6 +4,7 @@ import re
 import requests
 import platform
 import yaml
+import subprocess
 
 from utils import (
     kubectl,
@@ -27,11 +28,13 @@ def validate_dns_dashboard():
     while attempt > 0:
         try:
             output = kubectl(
-                "get --raw /api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
+                "get "
+                "--raw "
+                "/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
             )
             if "Kubernetes Dashboard" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(10)
         attempt -= 1
@@ -99,7 +102,7 @@ def common_ingress():
             if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                 service_ok = True
                 break
-        except:
+        except requests.RequestException:
             time.sleep(5)
             attempt -= 1
     if resp.status_code != 200 or "microbot.png" not in resp.content.decode("utf-8"):
@@ -110,7 +113,7 @@ def common_ingress():
                 if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                     service_ok = True
                     break
-            except:
+            except requests.RequestException:
                 time.sleep(5)
                 attempt -= 1
 
@@ -278,7 +281,7 @@ def validate_forward():
             resp = requests.get("http://localhost:5123")
             if resp.status_code == 200:
                 break
-        except:
+        except requests.RequestException:
             pass
         attempt -= 1
         time.sleep(2)
@@ -297,7 +300,7 @@ def validate_metrics_server():
             output = kubectl("get --raw /apis/metrics.k8s.io/v1beta1/pods")
             if "PodMetricsList" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(10)
         attempt -= 1
@@ -345,7 +348,7 @@ def validate_jaeger():
             output = kubectl("get ingress")
             if "simplest-query" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(2)
         attempt -= 1
@@ -378,7 +381,6 @@ def validate_linkerd():
         timeout_insec=300,
     )
     print("Linkerd proxy injector up and running.")
-    ### Disabling this test because the deletion of the namespace get stuck.
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "emojivoto.yaml")
     kubectl("apply -f {}".format(manifest))

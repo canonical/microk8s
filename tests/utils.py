@@ -152,9 +152,9 @@ def wait_for_namespace_termination(namespace, timeout_insec=360):
     while True:
         try:
             cmd = '/snap/bin/microk8s.kubectl get ns {}'.format(namespace)
-            output = check_output(cmd.split()).strip().decode('utf8')
+            check_output(cmd.split()).strip().decode('utf8')
             print('Waiting...')
-        except CalledProcessError as err:
+        except CalledProcessError:
             if datetime.datetime.now() > deadline:
                 raise
             else:

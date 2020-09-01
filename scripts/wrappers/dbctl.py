@@ -57,7 +57,6 @@ def backup(fname=None, debug=False):
     :param debug: show debug output
     """
     snap_path = os.environ.get('SNAP')
-    snapdata_path = os.environ.get('SNAP_DATA')
     # snap_path = '/snap/microk8s/current'
     # snapdata_path = '/var/snap/microk8s/current'
 
@@ -84,7 +83,6 @@ def backup(fname=None, debug=False):
                     arcname=os.path.basename("{}/{}".format(tmpdirname, fname)),
                 )
 
-            target_file = '{}/var/tmp/{}'.format(snapdata_path, fname_tar)
             print("The backup is: {}".format(fname_tar))
         except subprocess.CalledProcessError as e:
             print("Backup process failed. {}".format(e))

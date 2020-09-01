@@ -4,15 +4,15 @@ from subprocess import check_output
 
 class TestMicrok8sBranches(object):
     def test_branches(self):
-        """
-        We need to make sure the LP builders pointing to the master github branch are only pushing to the
-        latest and current k8s stable snap tracks. An indication that this is not enforced is that
-        we do not have a branch for the k8s release for the previous stable release. Let me clarify
-        with an example.
+        """Ensures LP builders push to correct snap tracks.
 
-        Assuming upstream stable k8s release is v1.12.x, there has to be a 1.11 github branch used by
-        the respective LP builders for building the v1.11.y.
+        We need to make sure the LP builders pointing to the master github branch are only pushing
+        to the latest and current k8s stable snap tracks. An indication that this is not enforced is
+        that we do not have a branch for the k8s release for the previous stable release. Let me
+        clarify with an example.
 
+        Assuming upstream stable k8s release is v1.12.x, there has to be a 1.11 github branch used
+        by the respective LP builders for building the v1.11.y.
         """
         upstream_version = self._upstream_release()
         assert upstream_version
@@ -48,7 +48,8 @@ class TestMicrok8sBranches(object):
 
     def _get_max_minor(self, major):
         """Get the latest minor release of the provided major.
-        For example if you use 1 as major you will get back X where X gives you latest 1.X release."""
+        For example if you use 1 as major you will get back X where X gives you latest 1.X release.
+        """
         minor = 0
         while self._upstream_release_exists(major, minor):
             minor += 1

@@ -20,7 +20,7 @@ def try_set_file_permissions(file):
     os.chmod(file, 0o660)
     try:
         shutil.chown(file, group='microk8s')
-    except:
+    except LookupError:
         # not setting the group means only the current user can access the file
         pass
 
@@ -169,7 +169,7 @@ def is_same_server(hostname, ip):
         hname, _, _ = socket.gethostbyaddr(ip)
         if hname == hostname:
             return True
-    except:
+    except socket.error:
         # Ignore any unresolvable IP by host, surely this is not from the same node.
         pass
 
