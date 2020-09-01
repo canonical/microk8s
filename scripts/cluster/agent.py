@@ -559,8 +559,10 @@ def join_node_dqlite():
     """
     if request.headers['Content-Type'] == 'application/json':
         token = request.json['token']
+        port = request.json['port']
     else:
         token = request.form['token']
+        port = request.form['port']
 
     if not is_valid(token):
         error_msg = {"error": "Invalid token"}
