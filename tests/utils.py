@@ -27,6 +27,7 @@ def run_until_success(cmd, timeout_insec=60, err_out=None):
             return output.replace('\\n', '\n')
         except CalledProcessError as err:
             output = err.output.strip().decode('utf8').replace('\\n', '\n')
+            print(output)
             if output == err_out:
                 return output
             if datetime.datetime.now() > deadline:
