@@ -105,6 +105,7 @@ Function .onInit
         SectionSetFlags ${multipass_id} $0
         Return
     untickMultipass:
+        StrCpy $MultipassExitCode "0"  ; Multipass is installed.
         SectionSetFlags ${multipass_id} ${SF_RO}
         Return
 FunctionEnd
