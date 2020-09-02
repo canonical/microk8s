@@ -35,21 +35,24 @@ then
   init_cluster
 fi
 
-snapctl start microk8s.daemon-etcd
 snapctl start microk8s.daemon-apiserver
 
-# TODO do some proper wait here
-sleep 15
+run_etcd="$(is_service_expected_to_start etcd)"
+if [ "${run_etcd}" == "1" ]
+then
+  snapctl start microk8s.daemon-etcd
+  # TODO do some proper wait here
+  sleep 15
 
-rm -rf "$DB_DIR"
-$SNAP/bin/migrator --mode backup --endpoint "http://127.0.0.1:12379" --db-dir "$DB_DIR" --debug
-chmod 600 "$DB_DIR"
-$SNAP/bin/migrator --mode restore --endpoint "unix:///var/snap/microk8s/current/var/kubernetes/backend/kine.sock" --db-dir "$DB_DIR" --debug
+  rm -rf "$DB_DIR"
+  $SNAP/bin/migrator --mode backup --endpoint "http://127.0.0.1:12379" --db-dir "$DB_DIR" --debug
+  chmod 600 "$DB_DIR"
+  $SNAP/bin/migrator --mode restore --endpoint "unix:///var/snap/microk8s/current/var/kubernetes/backend/kine.sock" --db-dir "$DB_DIR" --debug
 
-sleep 10
-
-set_service_not_expected_to_start etcd
-snapctl stop microk8s.daemon-etcd
+  sleep 10
+  set_service_not_expected_to_start etcd
+  snapctl stop microk8s.daemon-etcd
+fi
 
 ${SNAP}/microk8s-start.wrapper
 ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30
