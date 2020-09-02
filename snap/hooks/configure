@@ -435,7 +435,8 @@ then
   snapctl restart ${SNAP_NAME}.daemon-proxy
 fi
 
-if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ]
+if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
+   [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then
   echo "Setting up the CNI"
   start_timer="$(date +%s)"
