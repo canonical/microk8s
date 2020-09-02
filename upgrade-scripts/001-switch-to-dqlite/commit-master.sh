@@ -37,7 +37,8 @@ fi
 
 snapctl start microk8s.daemon-apiserver
 
-if is_service_expected_to_start etcd
+run_etcd="$(is_service_expected_to_start etcd)"
+if [ "${run_etcd}" == "1" ]
 then
   snapctl start microk8s.daemon-etcd
   # TODO do some proper wait here
