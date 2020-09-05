@@ -1,0 +1,142 @@
+From c0df2f2c2904fb75bc0461d13e58d2e7ab7e42bc Mon Sep 17 00:00:00 2001
+From: Darren Shepherd <darren@rancher.com>
+Date: Thu, 5 Sep 2019 07:46:53 -0700
+Subject: [PATCH] Drop storage plugins
+
+---
+ cmd/kube-controller-manager/app/plugins.go | 27 ----------------------
+ cmd/kubelet/app/plugins.go                 | 20 ----------------
+ 2 files changed, 47 deletions(-)
+
+diff --git a/cmd/kube-controller-manager/app/plugins.go b/cmd/kube-controller-manager/app/plugins.go
+index f9556d696ce..c7903012a07 100644
+--- a/cmd/kube-controller-manager/app/plugins.go
++++ b/cmd/kube-controller-manager/app/plugins.go
+@@ -32,19 +32,11 @@ import (
+ 	// Volume plugins
+ 	"k8s.io/kubernetes/pkg/volume"
+ 	"k8s.io/kubernetes/pkg/volume/csi"
+-	"k8s.io/kubernetes/pkg/volume/fc"
+ 	"k8s.io/kubernetes/pkg/volume/flexvolume"
+-	"k8s.io/kubernetes/pkg/volume/flocker"
+-	"k8s.io/kubernetes/pkg/volume/glusterfs"
+ 	"k8s.io/kubernetes/pkg/volume/hostpath"
+ 	"k8s.io/kubernetes/pkg/volume/iscsi"
+ 	"k8s.io/kubernetes/pkg/volume/local"
+ 	"k8s.io/kubernetes/pkg/volume/nfs"
+-	"k8s.io/kubernetes/pkg/volume/portworx"
+-	"k8s.io/kubernetes/pkg/volume/quobyte"
+-	"k8s.io/kubernetes/pkg/volume/rbd"
+-	"k8s.io/kubernetes/pkg/volume/scaleio"
+-	"k8s.io/kubernetes/pkg/volume/storageos"
+ 	volumeutil "k8s.io/kubernetes/pkg/volume/util"
+ 
+ 	utilfeature "k8s.io/apiserver/pkg/util/feature"
+@@ -64,12 +56,7 @@ func ProbeAttachableVolumePlugins() ([]volume.VolumePlugin, error) {
+ 	if err != nil {
+ 		return allPlugins, err
+ 	}
+-	allPlugins = append(allPlugins, portworx.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, scaleio.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, storageos.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, fc.ProbeVolumePlugins()...)
+ 	allPlugins = append(allPlugins, iscsi.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, rbd.ProbeVolumePlugins()...)
+ 	allPlugins = append(allPlugins, csi.ProbeVolumePlugins()...)
+ 	return allPlugins, nil
+ }
+@@ -89,12 +76,6 @@ func ProbeExpandableVolumePlugins(config persistentvolumeconfig.VolumeConfigurat
+ 	if err != nil {
+ 		return allPlugins, err
+ 	}
+-	allPlugins = append(allPlugins, portworx.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, glusterfs.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, rbd.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, scaleio.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, storageos.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, fc.ProbeVolumePlugins()...)
+ 	return allPlugins, nil
+ }
+ 
+@@ -133,21 +114,13 @@ func ProbeControllerVolumePlugins(cloud cloudprovider.Interface, config persiste
+ 		klog.Fatalf("Could not create NFS recycler pod from file %s: %+v", config.PersistentVolumeRecyclerConfiguration.PodTemplateFilePathNFS, err)
+ 	}
+ 	allPlugins = append(allPlugins, nfs.ProbeVolumePlugins(nfsConfig)...)
+-	allPlugins = append(allPlugins, glusterfs.ProbeVolumePlugins()...)
+-	// add rbd provisioner
+-	allPlugins = append(allPlugins, rbd.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, quobyte.ProbeVolumePlugins()...)
+ 	var err error
+ 	allPlugins, err = appendExpandableLegacyProviderVolumes(allPlugins, utilfeature.DefaultFeatureGate)
+ 	if err != nil {
+ 		return allPlugins, err
+ 	}
+ 
+-	allPlugins = append(allPlugins, flocker.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, portworx.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, scaleio.ProbeVolumePlugins()...)
+ 	allPlugins = append(allPlugins, local.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, storageos.ProbeVolumePlugins()...)
+ 
+ 	if utilfeature.DefaultFeatureGate.Enabled(features.CSIInlineVolume) {
+ 		allPlugins = append(allPlugins, csi.ProbeVolumePlugins()...)
+diff --git a/cmd/kubelet/app/plugins.go b/cmd/kubelet/app/plugins.go
+index af9f708dc52..372c0b2d614 100644
+--- a/cmd/kubelet/app/plugins.go
++++ b/cmd/kubelet/app/plugins.go
+@@ -28,27 +28,17 @@ import (
+ 
+ 	// Volume plugins
+ 	"k8s.io/kubernetes/pkg/volume"
+-	"k8s.io/kubernetes/pkg/volume/cephfs"
+ 	"k8s.io/kubernetes/pkg/volume/configmap"
+ 	"k8s.io/kubernetes/pkg/volume/csi"
+ 	"k8s.io/kubernetes/pkg/volume/downwardapi"
+ 	"k8s.io/kubernetes/pkg/volume/emptydir"
+-	"k8s.io/kubernetes/pkg/volume/fc"
+ 	"k8s.io/kubernetes/pkg/volume/flexvolume"
+-	"k8s.io/kubernetes/pkg/volume/flocker"
+-	"k8s.io/kubernetes/pkg/volume/git_repo"
+-	"k8s.io/kubernetes/pkg/volume/glusterfs"
+ 	"k8s.io/kubernetes/pkg/volume/hostpath"
+ 	"k8s.io/kubernetes/pkg/volume/iscsi"
+ 	"k8s.io/kubernetes/pkg/volume/local"
+ 	"k8s.io/kubernetes/pkg/volume/nfs"
+-	"k8s.io/kubernetes/pkg/volume/portworx"
+ 	"k8s.io/kubernetes/pkg/volume/projected"
+-	"k8s.io/kubernetes/pkg/volume/quobyte"
+-	"k8s.io/kubernetes/pkg/volume/rbd"
+-	"k8s.io/kubernetes/pkg/volume/scaleio"
+ 	"k8s.io/kubernetes/pkg/volume/secret"
+-	"k8s.io/kubernetes/pkg/volume/storageos"
+ 
+ 	// Cloud providers
+ 	_ "k8s.io/kubernetes/pkg/cloudprovider/providers"
+@@ -70,24 +60,14 @@ func ProbeVolumePlugins(featureGate featuregate.FeatureGate) ([]volume.VolumePlu
+ 		return allPlugins, err
+ 	}
+ 	allPlugins = append(allPlugins, emptydir.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, git_repo.ProbeVolumePlugins()...)
+ 	allPlugins = append(allPlugins, hostpath.ProbeVolumePlugins(volume.VolumeConfig{})...)
+ 	allPlugins = append(allPlugins, nfs.ProbeVolumePlugins(volume.VolumeConfig{})...)
+ 	allPlugins = append(allPlugins, secret.ProbeVolumePlugins()...)
+ 	allPlugins = append(allPlugins, iscsi.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, glusterfs.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, rbd.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, quobyte.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, cephfs.ProbeVolumePlugins()...)
+ 	allPlugins = append(allPlugins, downwardapi.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, fc.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, flocker.ProbeVolumePlugins()...)
+ 	allPlugins = append(allPlugins, configmap.ProbeVolumePlugins()...)
+ 	allPlugins = append(allPlugins, projected.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, portworx.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, scaleio.ProbeVolumePlugins()...)
+ 	allPlugins = append(allPlugins, local.ProbeVolumePlugins()...)
+-	allPlugins = append(allPlugins, storageos.ProbeVolumePlugins()...)
+ 	allPlugins = append(allPlugins, csi.ProbeVolumePlugins()...)
+ 	return allPlugins, nil
+ }
+-- 
+2.25.1
+
