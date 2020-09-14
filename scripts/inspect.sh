@@ -202,6 +202,16 @@ function suggest_fixes {
       printf -- '\t  https://microk8s.io/docs/lxd \n'
     fi
   fi
+
+  # node name
+  nodename="$(hostname)"
+  if [[ "$nodename" =~ [A-Z|_] ]] && ! grep -e "hostname-override" /var/snap/microk8s/current/args/kubelet &> /dev/null
+  then
+    printf -- "\033[0;33mWARNING: \033[0m the machine's hostname contains capital letters or underscores. \n"
+    printf -- "\t  This is not a valid name for kubernetes nodes. Please change the machine's hostname. \n"
+    printf -- '\t  https://microk8s.io/docs/troubleshooting#heading--common-issues \n'
+  fi
+
 }
 
 function fedora_release {
