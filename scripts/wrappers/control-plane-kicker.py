@@ -79,7 +79,7 @@ if __name__ == '__main__':
         sleep(10)
         try:
 
-            if microk8s_group_exists():
+            if microk8s_group_exists() and is_ha_enabled():
                 set_dqlite_file_permissions()
 
             # We will not attempt to stop services if:
