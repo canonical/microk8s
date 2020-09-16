@@ -13,7 +13,6 @@ from validators import (
     validate_jaeger,
     validate_cilium,
     validate_metallb_config,
-    validate_multus,
 )
 from subprocess import check_call, CalledProcessError, check_output
 from utils import (
