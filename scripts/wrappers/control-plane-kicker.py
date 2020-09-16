@@ -52,7 +52,7 @@ def microk8s_group_exists():
     """
     try:
         cmd = "getent group microk8s"
-        subprocess.check_call(cmd.split())
+        subprocess.check_output(cmd.split())
         return True
     except subprocess.CalledProcessError:
         return False
