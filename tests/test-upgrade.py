@@ -170,6 +170,10 @@ class TestUpgrade(object):
             except CalledProcessError:
                 print("Will not test the metallb addon")
 
+            # We will not be testing multus because it takes too long for cilium and multus
+            # to settle after the update and the multus test needs to be refactored so we do
+            # delete and recreate the networks configured.
+            """
             try:
                 enable = microk8s_enable("multus", timeout_insec=150)
                 assert "Nothing to do for" not in enable
@@ -177,6 +181,7 @@ class TestUpgrade(object):
                 test_matrix['multus'] = validate_multus
             except CalledProcessError:
                 print('Will not test the multus addon')
+            """
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):

@@ -1,5 +1,6 @@
 import time
 import os
+import shutil
 import re
 import requests
 import platform
@@ -451,6 +452,7 @@ def validate_multus():
     wait_for_installation()
 
     here = os.path.dirname(os.path.abspath(__file__))
+    shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
     networks = os.path.join(here, "templates", "multus-networks.yaml")
     kubectl("create -f {}".format(networks))
     manifest = os.path.join(here, "templates", "multus-alpine.yaml")
@@ -462,6 +464,7 @@ def validate_multus():
     assert "10.222.222.222" in output
     kubectl("delete -f {}".format(manifest))
     kubectl("delete -f {}".format(networks))
+    shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
 
 
 def validate_kubeflow():
