@@ -12,8 +12,9 @@ import textwrap
 import time
 from distutils.util import strtobool
 from itertools import count
+from pathlib import Path
 from urllib.error import URLError
-from urllib.parse import urlparse, ParseResult
+from urllib.parse import ParseResult, urlparse
 from urllib.request import urlopen
 
 MIN_MEM_GB = 14
@@ -209,6 +210,25 @@ def main():
     for arg in ['debug', 'ignore_min_mem']:
         if not isinstance(args[arg], bool):
             args[arg] = strtobool(args[arg])
+
+    if os.geteuid() == 0:
+        print("This command can't be run as root.")
+        print("Try `microk8s enable kubeflow` instead.")
+        sys.exit(1)
+
+    juju_path = Path(os.environ['SNAP_DATA']) / 'juju'
+    if juju_path.stat().st_gid == 0:
+        print("Found bad permissions on %s, fixing..." % juju_path)
+        try:
+            run('sudo', 'chgrp', '-R', 'microk8s', str(juju_path), die=False)
+            run('sudo', 'chmod', '-R', '775', str(juju_path), die=False)
+        except subprocess.CalledProcessError as err:
+            print("Encountered error while attempting to fix permissions:")
+            print(err)
+            print("You can attempt to fix this yourself with:\n")
+            print("sudo chgrp -R microk8s %s" % juju_path)
+            print("sudo chmod -R 775 %s\n" % juju_path)
+            sys.exit(1)
 
     with open("/proc/meminfo") as f:
         memtotal_lines = [line for line in f.readlines() if "MemTotal" in line]
