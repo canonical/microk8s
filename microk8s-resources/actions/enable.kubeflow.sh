@@ -189,7 +189,7 @@ def get_hostname():
 
 def main():
     args = {
-        'bundle': os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-206",
+        'bundle': os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-213",
         'channel': os.environ.get("KUBEFLOW_CHANNEL") or "stable",
         'debug': os.environ.get("KUBEFLOW_DEBUG") or "false",
         'hostname': os.environ.get("KUBEFLOW_HOSTNAME") or None,
@@ -241,7 +241,6 @@ def main():
                     "options": {"static-username": "admin", "static-password": args['password']}
                 },
                 "katib-db": {"options": {"root_password": get_random_pass()}},
-                "modeldb-db": {"options": {"root_password": get_random_pass()}},
                 "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
                 "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
                 "pipelines-db": {"options": {"root_password": get_random_pass()}},
