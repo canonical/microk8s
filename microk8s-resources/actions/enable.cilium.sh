@@ -3,6 +3,7 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
+
 CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 
 ARCH=$(arch)
@@ -36,7 +37,7 @@ echo "Enabling Cilium"
 
 read -ra CILIUM_VERSION <<< "$1"
 if [ -z "$CILIUM_VERSION" ]; then
-  CILIUM_VERSION="v1.6"
+  CILIUM_VERSION="v1.8.3"
 fi
 CILIUM_ERSION=$(echo $CILIUM_VERSION | sed 's/v//g')
 
@@ -73,6 +74,7 @@ else
       --set global.cni.customConf=true \
       --set global.containerRuntime.integration="containerd" \
       --set global.containerRuntime.socketPath="$SNAP_COMMON/run/containerd.sock" \
+      --set operator.numReplicas=1 \
       | run_with_sudo tee cilium.yaml >/dev/null)
 
   run_with_sudo mkdir -p "$SNAP_DATA/actions/cilium/"
