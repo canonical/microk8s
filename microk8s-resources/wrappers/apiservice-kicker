@@ -52,7 +52,7 @@ do
     if [ $installed_registry_help -eq 0 ] &&
        snapctl services microk8s.daemon-apiserver | grep active &> /dev/null
     then
-      if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kubepublic &> /dev/null
+      if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kube-public &> /dev/null
       then
         use_manifest registry-help apply
       fi
