@@ -82,24 +82,6 @@ class TestAddons(object):
         '''
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="Multus tests are only relevant in x86 architectures"
-    )
-    @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping multus tests as we are under time pressure",
-    )
-    def test_multus(self):
-        """
-        Sets up and validates Multus.
-        """
-        print("Enabling Multus")
-        microk8s_enable("multus")
-        print("Validating Multus")
-        validate_multus()
-        print("Disabling Multus")
-        microk8s_disable("multus")
-
-    @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
         reason="Skipping GPU tests as we are under time pressure",
     )
@@ -148,6 +130,58 @@ class TestAddons(object):
         microk8s_disable("istio")
 
     @pytest.mark.skipif(
+        platform.machine() != 'x86_64',
+        reason="Fluentd, prometheus, jaeger tests are only relevant in x86 architectures",
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping jaeger, prometheus and fluentd tests as we are under time pressure",
+    )
+    def test_monitoring_addons(self):
+        """
+        Test jaeger, prometheus and fluentd.
+
+        """
+
+        # Prometheus operator on our lxc is chashlooping disabling the test for now.
+        # print("Enabling prometheus")
+        # microk8s_enable("prometheus")
+        # print("Validating Prometheus")
+        # validate_prometheus()
+        # print("Disabling prometheus")
+        # microk8s_disable("prometheus")
+        print("Enabling fluentd")
+        microk8s_enable("fluentd")
+        print("Enabling jaeger")
+        microk8s_enable("jaeger")
+        print("Validating the Jaeger operator")
+        validate_jaeger()
+        print("Validating the Fluentd")
+        validate_fluentd()
+        print("Disabling jaeger")
+        microk8s_disable("jaeger")
+        print("Disabling fluentd")
+        microk8s_disable("fluentd")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64', reason="Multus tests are only relevant in x86 architectures"
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping multus tests as we are under time pressure",
+    )
+    def test_multus(self):
+        """
+        Sets up and validates Multus.
+        """
+        print("Enabling Multus")
+        microk8s_enable("multus")
+        print("Validating Multus")
+        validate_multus()
+        print("Disabling Multus")
+        microk8s_disable("multus")
+
+    @pytest.mark.skipif(
         platform.machine() != 'x86_64', reason="Cilium tests are only relevant in x86 architectures"
     )
     @pytest.mark.skipif(
@@ -182,40 +216,6 @@ class TestAddons(object):
         validate_metrics_server()
         print("Disabling metrics-server")
         microk8s_disable("metrics-server")
-
-    @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
-        reason="Fluentd, prometheus, jaeger tests are only relevant in x86 architectures",
-    )
-    @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping jaeger, prometheus and fluentd tests as we are under time pressure",
-    )
-    def test_monitoring_addons(self):
-        """
-        Test jaeger, prometheus and fluentd.
-
-        """
-
-        # Prometheus operator on our lxc is chashlooping disabling the test for now.
-        # print("Enabling prometheus")
-        # microk8s_enable("prometheus")
-        # print("Validating Prometheus")
-        # validate_prometheus()
-        # print("Disabling prometheus")
-        # microk8s_disable("prometheus")
-        print("Enabling fluentd")
-        microk8s_enable("fluentd")
-        print("Enabling jaeger")
-        microk8s_enable("jaeger")
-        print("Validating the Jaeger operator")
-        validate_jaeger()
-        print("Validating the Fluentd")
-        validate_fluentd()
-        print("Disabling jaeger")
-        microk8s_disable("jaeger")
-        print("Disabling fluentd")
-        microk8s_disable("fluentd")
 
     @pytest.mark.skip(
         "disabling the linkerd test due to https://github.com/linkerd/linkerd2/issues/4918"
