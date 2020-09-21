@@ -153,30 +153,6 @@ class TestAddons(object):
         print("Disabling Cilium")
         microk8s_disable("cilium")
 
-    @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="Multus tests are only relevant in x86 architectures"
-    )
-    @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping multus tests as we are under time pressure",
-    )
-    def test_multus(self):
-        """
-        Sets up and validates Multus.
-        """
-        print("Enabling Multus")
-        run(
-            "/snap/bin/microk8s.enable multus".split(),
-            stdout=PIPE,
-            stdin=PIPE,
-            stderr=STDOUT,
-            check=True,
-        )
-        print("Validating Multus")
-        validate_multus()
-        print("Disabling Multus")
-        microk8s_disable("multus")
-
     def test_metrics_server(self):
         """
         Test the metrics server.
@@ -222,6 +198,24 @@ class TestAddons(object):
         microk8s_disable("jaeger")
         print("Disabling fluentd")
         microk8s_disable("fluentd")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64', reason="Multus tests are only relevant in x86 architectures"
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping multus tests as we are under time pressure",
+    )
+    def test_multus(self):
+        """
+        Sets up and validates Multus.
+        """
+        print("Enabling Multus")
+        microk8s_enable("multus")
+        print("Validating Multus")
+        validate_multus()
+        print("Disabling Multus")
+        microk8s_disable("multus")
 
     @pytest.mark.skip(
         "disabling the linkerd test due to https://github.com/linkerd/linkerd2/issues/4918"
