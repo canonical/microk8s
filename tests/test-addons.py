@@ -164,24 +164,6 @@ class TestAddons(object):
         microk8s_disable("fluentd")
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="Multus tests are only relevant in x86 architectures"
-    )
-    @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping multus tests as we are under time pressure",
-    )
-    def test_multus(self):
-        """
-        Sets up and validates Multus.
-        """
-        print("Enabling Multus")
-        microk8s_enable("multus")
-        print("Validating Multus")
-        validate_multus()
-        print("Disabling Multus")
-        microk8s_disable("multus")
-
-    @pytest.mark.skipif(
         platform.machine() != 'x86_64', reason="Cilium tests are only relevant in x86 architectures"
     )
     @pytest.mark.skipif(
@@ -306,6 +288,24 @@ class TestAddons(object):
         validate_ambassador()
         print("Disabling Ambassador")
         microk8s_disable("ambassador")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64', reason="Multus tests are only relevant in x86 architectures"
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping multus tests as we are under time pressure",
+    )
+    def test_multus(self):
+        """
+        Sets up and validates Multus.
+        """
+        print("Enabling Multus")
+        microk8s_enable("multus")
+        print("Validating Multus")
+        validate_multus()
+        print("Disabling Multus")
+        microk8s_disable("multus")
 
     def test_backup_restore(self):
         """
