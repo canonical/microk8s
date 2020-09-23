@@ -75,6 +75,7 @@ class TestUpgradePath(object):
             cmd = "sudo snap refresh microk8s --classic --channel={}".format(channel)
             run_until_success(cmd)
             wait_for_installation()
+            time.sleep(30)
             channel_minor += 1
 
         print("Installing {}".format(upgrade_to))
