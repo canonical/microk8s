@@ -52,7 +52,7 @@ def microk8s_group_exists():
     """
     try:
         cmd = "getent group microk8s"
-        subprocess.check_call(cmd.split())
+        subprocess.check_output(cmd.split())
         return True
     except subprocess.CalledProcessError:
         return False
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         sleep(10)
         try:
 
-            if microk8s_group_exists():
+            if microk8s_group_exists() and is_ha_enabled():
                 set_dqlite_file_permissions()
 
             # We will not attempt to stop services if:
