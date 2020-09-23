@@ -82,7 +82,7 @@ class TestUpgradePath(object):
             cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to)
         else:
             cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to)
-        run_until_success(cmd)
+        run_until_success(cmd, timeout_insec=300)
         # Allow for the refresh to be processed
-        time.sleep(10)
-        wait_for_installation()
+        time.sleep(20)
+        wait_for_installation(timeout_insec=600)

@@ -118,13 +118,13 @@ def wait_for_pod_state(
         time.sleep(3)
 
 
-def wait_for_installation(cluster_nodes=1):
+def wait_for_installation(cluster_nodes=1, timeout_insec=360):
     """
     Wait for kubernetes service to appear.
     """
     while True:
         cmd = 'svc kubernetes'
-        data = kubectl_get(cmd, 300)
+        data = kubectl_get(cmd, timeout_insec)
         service = data['metadata']['name']
         if 'kubernetes' in service:
             break
@@ -133,7 +133,7 @@ def wait_for_installation(cluster_nodes=1):
 
     while True:
         cmd = 'get no'
-        nodes = kubectl(cmd, 300)
+        nodes = kubectl(cmd, timeout_insec)
         if nodes.count(' Ready') == cluster_nodes:
             break
         else:
