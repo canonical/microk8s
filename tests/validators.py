@@ -458,9 +458,9 @@ def validate_multus():
     manifest = os.path.join(here, "templates", "multus-alpine.yaml")
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "default", "running", label="app=multus-alpine")
-    output = kubectl("exec multus-alpine -- ifconfig eth1", err_out='no')
+    output = kubectl("exec multus-alpine -- ifconfig eth1", timeout_insec=900, err_out='no')
     assert "10.111.111.111" in output
-    output = kubectl("exec multus-alpine -- ifconfig eth2", err_out='no')
+    output = kubectl("exec multus-alpine -- ifconfig eth2", timeout_insec=900, err_out='no')
     assert "10.222.222.222" in output
     kubectl("delete -f {}".format(manifest))
     kubectl("delete -f {}".format(networks))

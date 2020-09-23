@@ -130,66 +130,6 @@ class TestAddons(object):
         microk8s_disable("istio")
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="Cilium tests are only relevant in x86 architectures"
-    )
-    @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping cilium tests as we are under time pressure",
-    )
-    def test_cilium(self):
-        """
-        Sets up and validates Cilium.
-        """
-        print("Enabling Cilium")
-        run(
-            "/snap/bin/microk8s.enable cilium".split(),
-            stdout=PIPE,
-            input=b'N\n',
-            stderr=STDOUT,
-            check=True,
-        )
-        print("Validating Cilium")
-        validate_cilium()
-        print("Disabling Cilium")
-        microk8s_disable("cilium")
-
-    @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="Multus tests are only relevant in x86 architectures"
-    )
-    @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping multus tests as we are under time pressure",
-    )
-    def test_multus(self):
-        """
-        Sets up and validates Multus.
-        """
-        print("Enabling Multus")
-        run(
-            "/snap/bin/microk8s.enable multus".split(),
-            stdout=PIPE,
-            stdin=PIPE,
-            stderr=STDOUT,
-            check=True,
-        )
-        print("Validating Multus")
-        validate_multus()
-        print("Disabling Multus")
-        microk8s_disable("multus")
-
-    def test_metrics_server(self):
-        """
-        Test the metrics server.
-
-        """
-        print("Enabling metrics-server")
-        microk8s_enable("metrics-server")
-        print("Validating the Metrics Server")
-        validate_metrics_server()
-        print("Disabling metrics-server")
-        microk8s_disable("metrics-server")
-
-    @pytest.mark.skipif(
         platform.machine() != 'x86_64',
         reason="Fluentd, prometheus, jaeger tests are only relevant in x86 architectures",
     )
@@ -222,6 +162,42 @@ class TestAddons(object):
         microk8s_disable("jaeger")
         print("Disabling fluentd")
         microk8s_disable("fluentd")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64', reason="Cilium tests are only relevant in x86 architectures"
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping cilium tests as we are under time pressure",
+    )
+    def test_cilium(self):
+        """
+        Sets up and validates Cilium.
+        """
+        print("Enabling Cilium")
+        run(
+            "/snap/bin/microk8s.enable cilium".split(),
+            stdout=PIPE,
+            input=b'N\n',
+            stderr=STDOUT,
+            check=True,
+        )
+        print("Validating Cilium")
+        validate_cilium()
+        print("Disabling Cilium")
+        microk8s_disable("cilium")
+
+    def test_metrics_server(self):
+        """
+        Test the metrics server.
+
+        """
+        print("Enabling metrics-server")
+        microk8s_enable("metrics-server")
+        print("Validating the Metrics Server")
+        validate_metrics_server()
+        print("Disabling metrics-server")
+        microk8s_disable("metrics-server")
 
     @pytest.mark.skip(
         "disabling the linkerd test due to https://github.com/linkerd/linkerd2/issues/4918"
@@ -312,6 +288,24 @@ class TestAddons(object):
         validate_ambassador()
         print("Disabling Ambassador")
         microk8s_disable("ambassador")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64', reason="Multus tests are only relevant in x86 architectures"
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping multus tests as we are under time pressure",
+    )
+    def test_multus(self):
+        """
+        Sets up and validates Multus.
+        """
+        print("Enabling Multus")
+        microk8s_enable("multus")
+        print("Validating Multus")
+        validate_multus()
+        print("Disabling Multus")
+        microk8s_disable("multus")
 
     def test_backup_restore(self):
         """
