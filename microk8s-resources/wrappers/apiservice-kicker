@@ -36,11 +36,11 @@ do
         then
             echo "CSR change detected. Reconfiguring the kube-apiserver"
             rm -rf .srl
-            snapctl restart microk8s.daemon-etcd.service
-            snapctl restart microk8s.daemon-containerd.service
-            snapctl restart microk8s.daemon-apiserver.service
-            snapctl restart microk8s.daemon-proxy.service
-            snapctl restart microk8s.daemon-kubelet.service
+            snapctl restart microk8s.daemon-etcd
+            snapctl restart microk8s.daemon-containerd
+            snapctl restart microk8s.daemon-apiserver
+            snapctl restart microk8s.daemon-proxy
+            snapctl restart microk8s.daemon-kubelet
             restart_attempt=$[$restart_attempt+1]
         else
             restart_attempt=0
@@ -52,7 +52,7 @@ do
     if [ $installed_registry_help -eq 0 ] &&
        snapctl services microk8s.daemon-apiserver | grep active &> /dev/null
     then
-      if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kubepublic
+      if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kubepublic &> /dev/null
       then
         use_manifest registry-help apply
       fi

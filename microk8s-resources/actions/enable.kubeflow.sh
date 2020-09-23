@@ -12,8 +12,9 @@ import textwrap
 import time
 from distutils.util import strtobool
 from itertools import count
+from pathlib import Path
 from urllib.error import URLError
-from urllib.parse import urlparse, ParseResult
+from urllib.parse import ParseResult, urlparse
 from urllib.request import urlopen
 
 MIN_MEM_GB = 14
@@ -189,7 +190,7 @@ def get_hostname():
 
 def main():
     args = {
-        'bundle': os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-206",
+        'bundle': os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-213",
         'channel': os.environ.get("KUBEFLOW_CHANNEL") or "stable",
         'debug': os.environ.get("KUBEFLOW_DEBUG") or "false",
         'hostname': os.environ.get("KUBEFLOW_HOSTNAME") or None,
@@ -210,8 +211,27 @@ def main():
         if not isinstance(args[arg], bool):
             args[arg] = strtobool(args[arg])
 
+    if os.geteuid() == 0:
+        print("This command can't be run as root.")
+        print("Try `microk8s enable kubeflow` instead.")
+        sys.exit(1)
+
+    juju_path = Path(os.environ['SNAP_DATA']) / 'juju'
+    if juju_path.stat().st_gid == 0:
+        print("Found bad permissions on %s, fixing..." % juju_path)
+        try:
+            run('sudo', 'chgrp', '-R', 'microk8s', str(juju_path), die=False)
+            run('sudo', 'chmod', '-R', '775', str(juju_path), die=False)
+        except subprocess.CalledProcessError as err:
+            print("Encountered error while attempting to fix permissions:")
+            print(err)
+            print("You can attempt to fix this yourself with:\n")
+            print("sudo chgrp -R microk8s %s" % juju_path)
+            print("sudo chmod -R 775 %s\n" % juju_path)
+            sys.exit(1)
+
     with open("/proc/meminfo") as f:
-        memtotal_lines = [l for l in f.readlines() if "MemTotal" in l]
+        memtotal_lines = [line for line in f.readlines() if "MemTotal" in line]
 
     try:
         total_mem = int(memtotal_lines[0].split(" ")[-2])
@@ -241,7 +261,6 @@ def main():
                     "options": {"static-username": "admin", "static-password": args['password']}
                 },
                 "katib-db": {"options": {"root_password": get_random_pass()}},
-                "modeldb-db": {"options": {"root_password": get_random_pass()}},
                 "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
                 "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
                 "pipelines-db": {"options": {"root_password": get_random_pass()}},

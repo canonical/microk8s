@@ -105,7 +105,8 @@ def is_cluster_locked():
     clusterLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
     if os.path.isfile(clusterLockFile):
         print(
-            "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s status on the master."
+            "This MicroK8s deployment is acting as a node in a cluster. "
+            "Please use the microk8s status on the master."
         )
         exit(0)
 
@@ -129,7 +130,7 @@ def exit_if_no_permission():
     user = getpass.getuser()
     # test if we can access the default kubeconfig
     clientConfigFile = os.path.expandvars("${SNAP_DATA}/credentials/client.config")
-    if os.access(clientConfigFile, os.R_OK) == False:
+    if not os.access(clientConfigFile, os.R_OK):
         print("Insufficient permissions to access MicroK8s.")
         print(
             "You can either try again with sudo or add the user {} to the 'microk8s' group:".format(

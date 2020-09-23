@@ -42,6 +42,10 @@ def cli(ctx, help):
         elif ctx.args[0] == "uninstall":
             uninstall()
             exit(0)
+        elif ctx.args[0] == "start":
+            start()
+            run(ctx.args)
+            exit(0)
         elif ctx.args[0] == "stop":
             run(ctx.args)
             stop()
@@ -99,7 +103,7 @@ def _show_install_help():
       --help     Show this message and exit.
       --cpu      Cores used by MicroK8s (default={})
       --mem      RAM in GB used by MicroK8s (default={})
-      --disk     Maximum volume in GB of the dynamically expandable hard disk to be used (default={})
+      --disk     Max volume in GB of the dynamically expandable hard disk to be used (default={})
       --channel  Kubernetes version to install (default={})
        -y, --assume-yes  Automatic yes to prompts"""
     Echo.info(
@@ -256,9 +260,19 @@ def dashboard_proxy() -> None:
             instance.run(command)
         except KeyboardInterrupt:
             return
-    except ProviderInstanceNotFoundError as provider_error:
+    except ProviderInstanceNotFoundError:
         _not_installed(echo)
         return 1
+
+
+def start() -> None:
+    vm_provider_name = "multipass"
+    vm_provider_class = get_provider_for(vm_provider_name)
+    vm_provider_class.ensure_provider()
+    instance = vm_provider_class(echoer=Echo())
+    instance_info = instance.get_instance_info()
+    if not instance_info.is_running():
+        instance.start()
 
 
 def stop() -> None:
@@ -278,11 +292,14 @@ def run(cmd) -> None:
     try:
         vm_provider_class.ensure_provider()
         instance = vm_provider_class(echoer=echo)
-        instance.get_instance_info()
+        instance_info = instance.get_instance_info()
+        if not instance_info.is_running():
+            instance.start()
+            instance.run(["microk8s.start"])
         command = cmd[0]
         cmd[0] = "microk8s.{}".format(command)
         instance.run(cmd)
-    except ProviderInstanceNotFoundError as provider_error:
+    except ProviderInstanceNotFoundError:
         _not_installed(echo)
         return 1
 
@@ -314,7 +331,7 @@ def _get_microk8s_commands() -> List:
             return complete
         else:
             return ["start", "stop"]
-    except ProviderNotFound as provider_error:
+    except ProviderNotFound:
         return ["start", "stop"]
 
 

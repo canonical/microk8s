@@ -27,6 +27,7 @@ def run_until_success(cmd, timeout_insec=60, err_out=None):
             return output.replace('\\n', '\n')
         except CalledProcessError as err:
             output = err.output.strip().decode('utf8').replace('\\n', '\n')
+            print(output)
             if output == err_out:
                 return output
             if datetime.datetime.now() > deadline:
@@ -117,13 +118,13 @@ def wait_for_pod_state(
         time.sleep(3)
 
 
-def wait_for_installation(cluster_nodes=1):
+def wait_for_installation(cluster_nodes=1, timeout_insec=360):
     """
     Wait for kubernetes service to appear.
     """
     while True:
         cmd = 'svc kubernetes'
-        data = kubectl_get(cmd, 300)
+        data = kubectl_get(cmd, timeout_insec)
         service = data['metadata']['name']
         if 'kubernetes' in service:
             break
@@ -132,7 +133,7 @@ def wait_for_installation(cluster_nodes=1):
 
     while True:
         cmd = 'get no'
-        nodes = kubectl(cmd, 300)
+        nodes = kubectl(cmd, timeout_insec)
         if nodes.count(' Ready') == cluster_nodes:
             break
         else:
@@ -152,9 +153,9 @@ def wait_for_namespace_termination(namespace, timeout_insec=360):
     while True:
         try:
             cmd = '/snap/bin/microk8s.kubectl get ns {}'.format(namespace)
-            output = check_output(cmd.split()).strip().decode('utf8')
+            check_output(cmd.split()).strip().decode('utf8')
             print('Waiting...')
-        except CalledProcessError as err:
+        except CalledProcessError:
             if datetime.datetime.now() > deadline:
                 raise
             else:

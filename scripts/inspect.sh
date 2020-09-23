@@ -94,12 +94,12 @@ function store_kubernetes_info {
   # Collect some in-k8s details
   printf -- '  Inspect kubernetes cluster\n'
   mkdir -p $INSPECT_DUMP/k8s
-  ${SNAP}/microk8s-kubectl.wrapper version 2>&1 | tee $INSPECT_DUMP/k8s/version > /dev/null
-  ${SNAP}/microk8s-kubectl.wrapper cluster-info 2>&1 | tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
-  ${SNAP}/microk8s-kubectl.wrapper cluster-info dump 2>&1 | tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
-  ${SNAP}/microk8s-kubectl.wrapper get all --all-namespaces 2>&1 | tee $INSPECT_DUMP/k8s/get-all > /dev/null
-  ${SNAP}/microk8s-kubectl.wrapper get pv 2>&1 | tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
-  ${SNAP}/microk8s-kubectl.wrapper get pvc 2>&1 | tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+  sudo -E /snap/bin/microk8s kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
+  sudo -E /snap/bin/microk8s kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
+  sudo -E /snap/bin/microk8s kubectl cluster-info dump 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+  sudo -E /snap/bin/microk8s kubectl get all --all-namespaces -o wide 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
+  sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+  sudo -E /snap/bin/microk8s kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
 
 
@@ -164,6 +164,12 @@ function suggest_fixes {
     fi
   fi
 
+  if ! mount | grep -q 'cgroup/memory'; then
+    printf -- '\033[0;33mWARNING: \033[0m The memory cgroup is not enabled. \n'
+    printf -- 'The cluster may not be functioning properly. Please ensure cgroups are enabled \n'
+    printf -- 'See for example: https://microk8s.io/docs/install-alternatives#heading--arm \n'
+  fi
+
   # Fedora Specific Checks
   if fedora_release
   then
@@ -196,6 +202,17 @@ function suggest_fixes {
       printf -- '\t  https://microk8s.io/docs/lxd \n'
     fi
   fi
+
+  # node name
+  nodename="$(hostname)"
+  if [[ "$nodename" =~ [A-Z|_] ]] && ! grep -e "hostname-override" /var/snap/microk8s/current/args/kubelet &> /dev/null
+  then
+    printf -- "\033[0;33mWARNING: \033[0m This machine's hostname contains capital letters and/or underscores. \n"
+    printf -- "\t  This is not a valid name for a Kubernetes node, causing node registration to fail.\n"
+    printf -- "\t  Please change the machine's hostname or refer to the documentation for more details: \n"
+    printf -- "\t  https://microk8s.io/docs/troubleshooting#heading--common-issues \n"
+  fi
+
 }
 
 function fedora_release {
@@ -246,6 +263,7 @@ check_service "snap.microk8s.daemon-cluster-agent"
 check_service "snap.microk8s.daemon-containerd"
 check_service "snap.microk8s.daemon-apiserver"
 check_service "snap.microk8s.daemon-apiserver-kicker"
+check_service "snap.microk8s.daemon-control-plane-kicker"
 check_service "snap.microk8s.daemon-proxy"
 check_service "snap.microk8s.daemon-kubelet"
 check_service "snap.microk8s.daemon-scheduler"

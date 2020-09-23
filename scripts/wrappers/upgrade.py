@@ -142,16 +142,16 @@ def get_nodes_info(safe=True):
                         if host not in nodes.decode():
                             print("Node {} not present".format(host))
                             continue
-                        node_info = [(parts[0], parts[1])]
+                        node_info.append((parts[0], parts[1]))
         except subprocess.CalledProcessError:
-            print("Error in gathering cluster node information. Upgrade aborted.".format(host))
+            print("Error in gathering cluster node information. Upgrade aborted.")
             exit(1)
     else:
         if os.path.isfile(callback_tokens_file):
             with open(callback_tokens_file, "r+") as fp:
                 for _, line in enumerate(fp):
                     parts = line.split()
-                    node_info = [(parts[0], parts[1])]
+                    node_info.append((parts[0], parts[1]))
 
     return node_info
 

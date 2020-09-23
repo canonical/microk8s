@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import os
 import sys
 from typing import Dict, Optional, Sequence
 
@@ -48,8 +47,6 @@ class Multipass(Provider):
         return "multipass"
 
     def run(self, command: Sequence[str], hide_output: bool = False) -> Optional[bytes]:
-        env_command = self._get_env_command()
-
         cmd = ["sudo"]
         cmd.extend(command)
         self._log_run(cmd)
@@ -172,6 +169,13 @@ class Multipass(Provider):
         return InstanceInfo.from_json(
             instance_name=self.instance_name, json_info=instance_info_raw.decode()
         )
+
+    def start(self) -> None:
+        instance_info = self._instance_info = self._get_instance_info()
+        if not instance_info.is_stopped():
+            return
+
+        self._multipass_cmd.start(instance_name=self.instance_name)
 
     def stop(self) -> None:
         instance_info = self._instance_info = self._get_instance_info()

@@ -35,6 +35,7 @@ Page custom ConfigureVm LaunchVm
 
 !insertmacro MUI_LANGUAGE "English"
 
+Var MultipassExitCode
 Var VmConfigureDialog
 Var VmConfigureDialogCpu
 Var VmConfigureDialogCpuLabel
@@ -47,6 +48,9 @@ Var VmConfigureDialogTrackLabel
 Var VmConfigureDialogFootnote
 
 Section "Multipass (Required)" multipass_id
+;Exit 0 : Multipass is installed and backing hypervisor is ready to roll (e.g. HyperV is already enabled).
+;Exit 3010: Multipass is installed but backing hypervisor requires a reboot (e.g. HyperV just enabled).
+;Exit 3011: Multipass is installed but no backing hypervisor has been (e.g. virtualbox needs installing).
     SectionIn RO
     IfFileExists $PROGRAMFILES64\Multipass\bin\multipass.exe endMultipass beginMultipass
     Goto endMultipass
@@ -54,10 +58,11 @@ Section "Multipass (Required)" multipass_id
         SetOutPath $INSTDIR
         File "multipass.exe"
         ${If} ${Silent}
-            ExecWait "multipass.exe /NoRestart /S"
+            ExecWait "multipass.exe /NoRestart /S" $0
         ${Else}
-            ExecWait "multipass.exe /NoRestart"
+            ExecWait "multipass.exe /NoRestart"  $0
         ${EndIf}
+        StrCpy $MultipassExitCode $0
         IfErrors failedMultipass
         Delete "$INSTDIR\multipass.exe"
         Goto endMultipass
@@ -100,19 +105,18 @@ Function .onInit
         SectionSetFlags ${multipass_id} $0
         Return
     untickMultipass:
+        StrCpy $MultipassExitCode "0"  ; Multipass is installed.
         SectionSetFlags ${multipass_id} ${SF_RO}
         Return
 FunctionEnd
 
 Function "ConfigureVm"
-    ClearErrors
-    ReadRegStr $0 HKLM "Software\canonical\multipass" "InstallerRebootRequired"
-    ${IfNot} ${Errors}  ; Error means hypervisor is available, so we can proceed.
-        ${If} $0 == "true"
+    ${IfNot} $MultipassExitCode == "0"
+        ${If} $MultipassExitCode == "3010"
             MessageBox MB_ICONEXCLAMATION "Cannot configure the ${PRODUCT_NAME} VM as a reboot is required.  Please re-run this wizard after reboot to configure the VM."
             SetRebootFlag true
             Abort
-        ${ElseIf} $0 == "false"
+        ${ElseIf} $MultipassExitCode == "3011"
             MessageBox MB_ICONEXCLAMATION "Cannot configure the ${PRODUCT_NAME} VM as VirtualBox needs to be installed.  Please re-run this wizard after installing VirtualBox to configure the VM."
             Abort
         ${EndIf}

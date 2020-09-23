@@ -14,7 +14,12 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install dependencies
-      run: sudo pip3 install black
+      run: |
+        sudo apt-get install python3-setuptools
+        sudo pip3 install black flake8
 
     - name: Check formatting
-      run: black --check . microk8s-resources/actions/enable.kubeflow.sh
+      run: |
+        set -eux
+        black --check . microk8s-resources/actions/enable.kubeflow.sh
+        flake8 . microk8s-resources/actions/enable.kubeflow.sh

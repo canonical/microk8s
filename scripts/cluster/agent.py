@@ -9,6 +9,7 @@ import string
 import subprocess
 import sys
 import time
+from typing import List
 
 import yaml
 
@@ -24,7 +25,7 @@ from .common.utils import (
     try_initialise_cni_autodetect_for_clustering,
 )
 
-from flask import Flask, jsonify, request, abort, Response
+from flask import Flask, jsonify, request, Response
 
 app = Flask(__name__)
 CLUSTER_API = "cluster/api/v1.0"
@@ -292,8 +293,8 @@ def join_node_etcd():
 
     if is_node_running_dqlite():
         msg = (
-            "Failed to join the cluster. This is an HA dqlite cluster. \n"
-            "Please, retry after enabling HA on this joining node with 'microk8s enable ha-cluster'."
+            "Failed to join the cluster. This is an HA dqlite cluster.\n"
+            "Please retry after enabling HA on this joining node with 'microk8s enable ha-cluster'."
         )
         error_msg = {"error": msg}
         return Response(json.dumps(error_msg), mimetype='application/json', status=501)
@@ -558,11 +559,9 @@ def join_node_dqlite():
     """
     if request.headers['Content-Type'] == 'application/json':
         token = request.json['token']
-        hostname = request.json['hostname']
         port = request.json['port']
     else:
         token = request.form['token']
-        hostname = request.form['hostname']
         port = request.form['port']
 
     if not is_valid(token):

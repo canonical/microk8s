@@ -1,9 +1,11 @@
 import time
 import os
+import shutil
 import re
 import requests
 import platform
 import yaml
+import subprocess
 
 from utils import (
     kubectl,
@@ -27,11 +29,13 @@ def validate_dns_dashboard():
     while attempt > 0:
         try:
             output = kubectl(
-                "get --raw /api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
+                "get "
+                "--raw "
+                "/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
             )
             if "Kubernetes Dashboard" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(10)
         attempt -= 1
@@ -99,7 +103,7 @@ def common_ingress():
             if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                 service_ok = True
                 break
-        except:
+        except requests.RequestException:
             time.sleep(5)
             attempt -= 1
     if resp.status_code != 200 or "microbot.png" not in resp.content.decode("utf-8"):
@@ -110,7 +114,7 @@ def common_ingress():
                 if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                     service_ok = True
                     break
-            except:
+            except requests.RequestException:
                 time.sleep(5)
                 attempt -= 1
 
@@ -278,7 +282,7 @@ def validate_forward():
             resp = requests.get("http://localhost:5123")
             if resp.status_code == 200:
                 break
-        except:
+        except requests.RequestException:
             pass
         attempt -= 1
         time.sleep(2)
@@ -297,7 +301,7 @@ def validate_metrics_server():
             output = kubectl("get --raw /apis/metrics.k8s.io/v1beta1/pods")
             if "PodMetricsList" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(10)
         attempt -= 1
@@ -345,7 +349,7 @@ def validate_jaeger():
             output = kubectl("get ingress")
             if "simplest-query" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(2)
         attempt -= 1
@@ -378,7 +382,6 @@ def validate_linkerd():
         timeout_insec=300,
     )
     print("Linkerd proxy injector up and running.")
-    ### Disabling this test because the deletion of the namespace get stuck.
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "emojivoto.yaml")
     kubectl("apply -f {}".format(manifest))
@@ -423,11 +426,22 @@ def validate_cilium():
 
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "nginx-pod.yaml")
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=nginx")
-    output = cilium('endpoint list -o json')
-    assert "nginx" in output
-    kubectl("delete -f {}".format(manifest))
+
+    # Try up to three times to get nginx under cilium
+    for attempt in range(0, 10):
+        kubectl("apply -f {}".format(manifest))
+        wait_for_pod_state("", "default", "running", label="app=nginx")
+        output = cilium('endpoint list -o json', timeout_insec=20)
+        if "nginx" in output:
+            kubectl("delete -f {}".format(manifest))
+            break
+        else:
+            print("Cilium not ready will retry testing.")
+            kubectl("delete -f {}".format(manifest))
+            time.sleep(20)
+    else:
+        print("Cilium testing failed.")
+        assert False
 
 
 def validate_multus():
@@ -438,17 +452,19 @@ def validate_multus():
     wait_for_installation()
 
     here = os.path.dirname(os.path.abspath(__file__))
+    shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
     networks = os.path.join(here, "templates", "multus-networks.yaml")
     kubectl("create -f {}".format(networks))
     manifest = os.path.join(here, "templates", "multus-alpine.yaml")
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("", "default", "running", label="app=multus-alpine")
-    output = kubectl("exec multus-alpine -- ifconfig eth1", err_out='no')
+    output = kubectl("exec multus-alpine -- ifconfig eth1", timeout_insec=900, err_out='no')
     assert "10.111.111.111" in output
-    output = kubectl("exec multus-alpine -- ifconfig eth2", err_out='no')
+    output = kubectl("exec multus-alpine -- ifconfig eth2", timeout_insec=900, err_out='no')
     assert "10.222.222.222" in output
     kubectl("delete -f {}".format(manifest))
     kubectl("delete -f {}".format(networks))
+    shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
 
 
 def validate_kubeflow():
