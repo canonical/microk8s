@@ -254,7 +254,7 @@ parts:
       else
         echo "Binaries provided in $KUBE_SNAP_BINS"
       fi
-      mkdir bins/
+      mkdir -p bins/
       cp build/kube_bins/$KUBERNETES_TAG/$KUBE_ARCH/* bins/
 
       # Add bash completion for microk8s kubectl.
@@ -272,6 +272,7 @@ parts:
     organize:
       bins/*: .
     stage:
+      - kubelite
       - kube-apiserver
       - kube-controller-manager
       - kube-proxy
