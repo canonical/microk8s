@@ -12,5 +12,5 @@
 --container-runtime=remote
 --container-runtime-endpoint=${SNAP_COMMON}/run/containerd.sock
 --containerd=${SNAP_COMMON}/run/containerd.sock
---node-labels="microk8s.io/cluster=true"
+--node-labels microk8s.io/cluster=true
 --authentication-token-webhook=true
