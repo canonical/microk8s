@@ -144,12 +144,12 @@ class TestAddons(object):
         """
 
         # Prometheus operator on our lxc is chashlooping disabling the test for now.
-        # print("Enabling prometheus")
-        # microk8s_enable("prometheus")
-        # print("Validating Prometheus")
-        # validate_prometheus()
-        # print("Disabling prometheus")
-        # microk8s_disable("prometheus")
+        print("Enabling prometheus")
+        microk8s_enable("prometheus")
+        print("Validating Prometheus")
+        validate_prometheus()
+        print("Disabling prometheus")
+        microk8s_disable("prometheus")
         print("Enabling fluentd")
         microk8s_enable("fluentd")
         print("Enabling jaeger")
