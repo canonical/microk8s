@@ -21,6 +21,7 @@ from validators import (
     validate_multus,
     validate_kubeflow,
     validate_metallb_config,
+    validate_prometheus,
 )
 from utils import (
     microk8s_enable,
@@ -143,13 +144,6 @@ class TestAddons(object):
 
         """
 
-        # Prometheus operator on our lxc is chashlooping disabling the test for now.
-        print("Enabling prometheus")
-        microk8s_enable("prometheus")
-        print("Validating Prometheus")
-        validate_prometheus()
-        print("Disabling prometheus")
-        microk8s_disable("prometheus")
         print("Enabling fluentd")
         microk8s_enable("fluentd")
         print("Enabling jaeger")
@@ -162,6 +156,26 @@ class TestAddons(object):
         microk8s_disable("jaeger")
         print("Disabling fluentd")
         microk8s_disable("fluentd")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64',
+        reason="Prometheus is only relevant in x86 architectures",
+    )
+    @pytest.mark.skipif(
+        os.environ.get('SKIP_PROMETHEUS') == 'True',
+        reason="Skipping prometheus if it crash loops on lxd",
+    )
+    def test_prometheus(self):
+        """
+        Test prometheus.
+        """
+
+        print("Enabling prometheus")
+        microk8s_enable("prometheus")
+        print("Validating Prometheus")
+        validate_prometheus()
+        print("Disabling prometheus")
+        microk8s_disable("prometheus")
 
     @pytest.mark.skipif(
         platform.machine() != 'x86_64', reason="Cilium tests are only relevant in x86 architectures"

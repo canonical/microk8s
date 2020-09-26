@@ -48,6 +48,7 @@ jobs:
         sudo snap install *.snap --classic --dangerous
         ./tests/smoke-test.sh
         export UNDER_TIME_PRESSURE="True"
+        export SKIP_PROMETHEUS="False"
         (cd tests; pytest -s verify-branches.py)
         (cd tests; sudo -E pytest -s -ra test-addons.py)
         sudo microk8s reset
