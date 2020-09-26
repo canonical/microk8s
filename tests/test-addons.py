@@ -291,6 +291,10 @@ class TestAddons(object):
         platform.machine() != 'x86_64',
         reason="Ambassador tests are only relevant in x86 architectures",
     )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping ambassador tests as we are under time pressure",
+    )
     def test_ambassador(self):
         """
         Test Ambassador.
