@@ -127,23 +127,21 @@ parts:
       - usr/include/
 
   sqlite:
-    source: https://github.com/canonical/sqlite
+    source: https://github.com/sqlite/sqlite
     source-type: git
+    source-depth: 1
+    source-tag: version-3.33.0
     build-attributes: [no-patchelf]
     plugin: autotools
-    configflags:
-      - --enable-replication
     build-packages:
-      - tclsh
+      - tcl
     override-build: |-
       set -ex
-
       git log -1 --format=format:%ci%n | sed -e 's/ [-+].*$//;s/ /T/;s/^/D /' > manifest
       git log -1 --format=format:%H > manifest.uuid
       cp /usr/share/misc/config.guess .
       cp /usr/share/misc/config.sub .
       autoreconf -f -i
-
       set +ex
       snapcraftctl build
     organize:
