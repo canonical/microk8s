@@ -297,7 +297,6 @@ def main():
                     "options": {"static-username": "admin", "static-password": args['password']}
                 },
                 "katib-db": {"options": {"root_password": get_random_pass()}},
-                "modeldb-db": {"options": {"root_password": get_random_pass()}},
                 "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
                 "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
                 "pipelines-db": {"options": {"root_password": get_random_pass()}},
