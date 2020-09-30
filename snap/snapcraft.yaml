@@ -92,6 +92,7 @@ apps:
     command: microk8s-helm.wrapper
   helm3:
     command: microk8s-helm3.wrapper
+    completer: actions/helm3.bash
   cilium:
     command: microk8s-cilium.wrapper
   juju:
