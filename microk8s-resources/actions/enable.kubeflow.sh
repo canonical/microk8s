@@ -51,7 +51,11 @@ def run(*args, die=True, debug=False, stdout=True):
         print("\033[;1;32m+ %s\033[;0;0m" % " ".join(args))
 
     result = subprocess.run(
-        args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
+        args,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
     )
 
     try:
