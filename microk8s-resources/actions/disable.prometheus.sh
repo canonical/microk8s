@@ -8,18 +8,23 @@ KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
 disable_old_prometheus() {
   echo "Disabling old Prometheus"
-  $KUBECTL delete -f "${SNAP}/actions/prometheus" > /dev/null 2>&1 || true
-  $KUBECTL delete -f "${SNAP}/actions/prometheus/setup" > /dev/null 2>&1 || true
+  $KUBECTL delete -f "${SNAP}/actions/prometheus/deprecated" || true
+  $KUBECTL delete -f "${SNAP}/actions/prometheus/deprecated/setup" || true
 }
 
 disable_kube_prometheus() {
-  echo "Disabling Prometheus"
-  $KUBECTL delete -f "${SNAP_DATA}/kube-prometheus/manifests/"
-  $KUBECTL delete -f "${SNAP_DATA}/kube-prometheus/manifests/setup"
-  run_with_sudo rm -rf "${SNAP_DATA}/kube-prometheus"
+
+  if [ -d "${SNAP_DATA}/kube-prometheus/manifests/" ]
+  then
+    echo "Disabling Prometheus"
+    $KUBECTL delete -f "${SNAP_DATA}/kube-prometheus/manifests/" || true
+    $KUBECTL delete -f "${SNAP_DATA}/kube-prometheus/manifests/setup" || true
+    run_with_sudo rm -rf "${SNAP_DATA}/kube-prometheus"
+  else
+    disable_old_prometheus
+  fi
 }
 
-disable_old_prometheus
 disable_kube_prometheus
 
 echo "The Prometheus operator is disabled"
