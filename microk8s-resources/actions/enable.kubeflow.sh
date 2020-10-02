@@ -23,6 +23,24 @@ CONNECTIVITY_CHECKS = [
 ]
 
 
+def retry_run(*args, die=True, debug=False, stdout=True, times=3):
+    attempt = 1
+    should_die = False
+    while attempt <= times:
+        try:
+            if times == attempt:
+                should_die = die
+            result = run(*args, die=should_die, debug=debug, stdout=stdout)
+            return result
+        except subprocess.CalledProcessError as err:
+            if times == attempt:
+                raise
+            else:
+                if debug and stdout:
+                    print("Retrying.")
+                attempt += 1
+
+
 def run(*args, die=True, debug=False, stdout=True):
     # Add wrappers to $PATH
     env = os.environ.copy()
@@ -396,15 +414,16 @@ def main():
             f.flush()
             run('microk8s-kubectl.wrapper', 'apply', '-f', f.name)
 
-    run(
+    retry_run(
         "microk8s-kubectl.wrapper",
         "wait",
         "--namespace=kubeflow",
         "--for=condition=Ready",
         "pod",
-        "--timeout=-1s",
+        "--timeout=30s",
         "--all",
         debug=args['debug'],
+        times=100,
     )
 
     if bundle_type == 'full':
