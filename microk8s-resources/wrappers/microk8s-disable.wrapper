@@ -40,7 +40,9 @@ for addon in "$@"; do
   action="$(addon_name $addon)"
   arguments="$(addon_arguments $addon)"
   # Check if the addon is already disabled, then skip.
-  if ${SNAP}/microk8s-status.wrapper --addon $action | grep "disabled" >/dev/null; then
+  if ${SNAP}/microk8s-status.wrapper --addon $action | grep "disabled" >/dev/null &&
+     ! [ "$action" = "kubeflow" ]
+  then
     echo "Addon $action is already disabled."
     result=0
     continue
