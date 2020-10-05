@@ -24,13 +24,9 @@ CONNECTIVITY_CHECKS = [
 
 
 def retry_run(*args, die=True, debug=False, stdout=True, times=3):
-    attempt = 1
-    should_die = False
-    while attempt <= times:
+    for attempt in range(1, times + 1):
         try:
-            if times == attempt:
-                should_die = die
-            result = run(*args, die=should_die, debug=debug, stdout=stdout)
+            result = run(*args, die=(times==attempt and die), debug=debug, stdout=stdout)
             return result
         except subprocess.CalledProcessError as err:
             if times == attempt:
