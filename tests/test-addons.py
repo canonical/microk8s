@@ -248,7 +248,6 @@ class TestAddons(object):
         print("Disabling RBAC")
         microk8s_disable("rbac")
 
-    @pytest.mark.skip("disabling the kubelfow addon until the new bundle becomes available")
     @pytest.mark.skipif(
         platform.machine() != 'x86_64',
         reason="Kubeflow tests are only relevant in x86 architectures",
