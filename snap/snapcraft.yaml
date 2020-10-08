@@ -200,9 +200,22 @@ parts:
     plugin: dump
     source: build-scripts/
     override-build: |
-      . ./set-env-variables.sh
-      curl -LO https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
-      tar -xzvf etcd-*.tar.gz --strip-components=1
+      set -eu
+      ARCH=$(dpkg --print-architecture)
+      # No upstream etcd s390x builds yet
+      if [ "${ARCH}" = "s390x" ]
+      then
+        curl -LO https://launchpad.net/ubuntu/+source/etcd/3.2.26+dfsg-8/+build/19387496/+files/etcd-client_3.2.26+dfsg-8_s390x.deb
+        curl -LO https://launchpad.net/ubuntu/+source/etcd/3.2.26+dfsg-8/+build/19387496/+files/etcd-server_3.2.26+dfsg-8_s390x.deb
+        dpkg-deb -x etcd-client_3.2.26+dfsg-8_s390x.deb etcd-client
+        dpkg-deb -x etcd-server_3.2.26+dfsg-8_s390x.deb etcd-server
+        mv etcd-client/usr/bin/etcdctl .
+        mv etcd-server/usr/bin/etcd .
+      else
+        . ./set-env-variables.sh
+        curl -LO https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
+        tar -xzvf etcd-*.tar.gz --strip-components=1
+      fi
       snapcraftctl build
     stage:
       - etcd
