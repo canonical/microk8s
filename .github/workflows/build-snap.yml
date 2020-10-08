@@ -36,6 +36,7 @@ jobs:
         path: microk8s.snap
 
   upgrade-path:
+    needs: build
     name: Upgrade all the way to this snap
     runs-on: ubuntu-latest
 
