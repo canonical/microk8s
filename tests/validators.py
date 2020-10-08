@@ -475,7 +475,7 @@ def validate_kubeflow():
         print("Kubeflow tests are only relevant in x86 architectures")
         return
 
-    wait_for_pod_state("ambassador-operator-0", "kubeflow", "running")
+    wait_for_pod_state("pipelines-db-0", "kubeflow", "running")
 
 
 def validate_metallb_config(ip_ranges="192.168.0.105"):

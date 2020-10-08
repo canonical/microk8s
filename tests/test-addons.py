@@ -263,7 +263,7 @@ class TestAddons(object):
         """
 
         print("Enabling Kubeflow")
-        microk8s_enable("kubeflow")
+        microk8s_enable("kubeflow:bundle=edge")
         print("Validating Kubeflow")
         validate_kubeflow()
         print("Disabling kubeflow")
