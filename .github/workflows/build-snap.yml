@@ -47,7 +47,6 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: microk8s.snap
-        path: microk8s.snap
     - name: Running upgrade path test
       run: |
         set -x
@@ -69,7 +68,6 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: microk8s.snap
-        path: microk8s.snap
     - name: Running addons tests
       run: |
         set -x
@@ -94,7 +92,6 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: microk8s.snap
-        path: microk8s.snap
     - name: Running upgrade tests
       run: |
         set -x
@@ -115,7 +112,6 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: microk8s.snap
-        path: microk8s.snap
     - name: Running kubeflow test
       run: |
         set -x
