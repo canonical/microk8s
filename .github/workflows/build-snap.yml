@@ -57,6 +57,7 @@ jobs:
         sudo snap remove microk8s --purge
 
   test-addons:
+    needs: build
     name: Test addons
     runs-on: ubuntu-latest
 
@@ -81,6 +82,7 @@ jobs:
         sudo snap remove microk8s --purge
 
   test-upgrade:
+    needs: build
     name: Upgrade from previous revision
     runs-on: ubuntu-latest
 
@@ -101,6 +103,7 @@ jobs:
 
 
   test-kubeflow:
+    needs: build
     name: Test kubeflow
     runs-on: ubuntu-latest
 
