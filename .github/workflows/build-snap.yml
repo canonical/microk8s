@@ -16,19 +16,20 @@ jobs:
     steps:
     - name: Checking out repo
       uses: actions/checkout@v2
-    - name: Install lxd
-      run: |
-        sudo snap install lxd
-        sudo /snap/bin/lxd.migrate -yes
-        sudo /snap/bin/lxd waitready
-        sudo /snap/bin/lxd init --auto
-        sudo usermod --append --groups lxd $USER
-    - name: Install snapcraft
-      run: sudo snap install snapcraft --classic
+#    - name: Install lxd
+#      run: |
+#        sudo snap install lxd
+#        sudo /snap/bin/lxd.migrate -yes
+#        sudo /snap/bin/lxd waitready
+#        sudo /snap/bin/lxd init --auto
+#        sudo usermod --append --groups lxd $USER
+#    - name: Install snapcraft
+#      run: sudo snap install snapcraft --classic
     - name: Build snap
       run: |
-        sg lxd -c 'snapcraft --use-lxd'
-        sudo mv microk8s*.snap microk8s.snap
+        touch microk8s.snap
+#        sg lxd -c 'snapcraft --use-lxd'
+#        sudo mv microk8s*.snap microk8s.snap
     - name: Uploading snap
       uses: actions/upload-artifact@v1
       with:
@@ -51,7 +52,9 @@ jobs:
       run: |
         set -x
         mv microk8s.snap snap
-        cp snap/microk8s.snap .
+        ls -l snap/
+        ls -l snap/microk8s.snap
+        cp snap/microk8s.snap/*.snap .
         sudo apt-get install python3-setuptools
         sudo pip3 install --upgrade pip
         sudo pip3 install -U pytest
