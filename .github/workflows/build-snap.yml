@@ -65,3 +65,14 @@ jobs:
         export UNDER_TIME_PRESSURE="False"
         (cd tests; sudo -E pytest -s -ra ./test-addons.py::TestAddons::test_kubeflow_addon)
         sudo snap remove microk8s --purge
+
+    - name: Generate inspect tarball
+      run: sudo microk8s inspect
+      if: failure()
+
+    - name: Upload inspect tarball
+      uses: actions/upload-artifact@v2
+      with:
+        name: inspect-report.tar.gz
+        path: /var/snap/microk8s/*/inspection-report-*.tar.gz
+      if: failure()
