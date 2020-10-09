@@ -27,7 +27,7 @@ jobs:
 #      run: sudo snap install snapcraft --classic
     - name: Build snap
       run: |
-        touch microk8s.snap
+        echo "hello" > microk8s.snap
 #        sg lxd -c 'snapcraft --use-lxd'
 #        sudo mv microk8s*.snap microk8s.snap
     - name: Uploading snap
