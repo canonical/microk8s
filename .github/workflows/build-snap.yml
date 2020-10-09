@@ -33,6 +33,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: microk8s.snap
+        path: microk8s.snap
     - name: Running upgrade path test
       run: |
         set -x
