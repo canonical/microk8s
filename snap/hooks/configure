@@ -444,7 +444,8 @@ then
   # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
   timeout="120"
   KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-  while ! ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null
+  # Use curl to check apiserver is ready to serve request.
+  while ! (${SNAP}/usr/bin/curl -L --cert ${SNAP_DATA}/certs/server.crt --key ${SNAP_DATA}/certs/server.key --cacert ${SNAP_DATA}/certs/ca.crt https://127.0.0.1:16443/readyz | grep -z "ok") &> /dev/null
   do
     sleep 5
     now="$(date +%s)"
