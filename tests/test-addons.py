@@ -48,9 +48,6 @@ class TestAddons(object):
         Sets up and tests dashboard, dns, storage, registry, ingress.
 
         """
-        print("Enabling DNS")
-        microk8s_enable("dns")
-        wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
         print("Enabling ingress")
         microk8s_enable("ingress")
         print("Validating ingress")
