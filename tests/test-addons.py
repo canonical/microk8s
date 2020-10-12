@@ -48,6 +48,10 @@ class TestAddons(object):
         Sets up and tests dashboard, dns, storage, registry, ingress.
 
         """
+        ip_ranges = "8.8.8.8,8.8.8.4"
+        print("Enabling dns")
+        microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
+        wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
         print("Enabling ingress")
         microk8s_enable("ingress")
         print("Validating ingress")
@@ -345,3 +349,4 @@ class TestAddons(object):
             os.remove('backupfile.tar.gz')
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
+
