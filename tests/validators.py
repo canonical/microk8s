@@ -489,7 +489,7 @@ def validate_metallb_config(ip_ranges="192.168.0.105"):
     for ip_range in ip_ranges.split(","):
         assert ip_range in out
 
-def validate_coredns_config(ip_ranges="192.168.0.105"):
+def validate_coredns_config(ip_ranges="8.8.8.8,8.8.8.4"):
     """
     Validate dns
     """
