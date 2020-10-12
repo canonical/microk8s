@@ -247,7 +247,7 @@ function check_certificates {
 }
 
 
-if [ ${#@} -ne 0 ] && [ "${@#"--help"}" = "" ]; then
+if [ ${#@} -ne 0 ] && [ "$*" == "--help" ]; then
   print_help
   exit 0;
 fi;
