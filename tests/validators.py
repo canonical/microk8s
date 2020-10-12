@@ -493,7 +493,7 @@ def validate_coredns_config(ip_ranges="192.168.0.105"):
     """
     Validate dns
     """
-    out = kubectl("get configmap config -n kube-system -o jsonpath='{.data.Corefile.forward}'")
+    out = kubectl("get configmap coredns -n kube-system -o jsonpath='{.data.Corefile.forward}'")
     for ip_range in ip_ranges.split(","):
         assert ip_range in out
 
