@@ -1,1 +1,1 @@
-GODEBUG=madvdontneed=1
+export GODEBUG=madvdontneed=1
