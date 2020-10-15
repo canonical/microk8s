@@ -335,6 +335,7 @@ class TestAddons(object):
         print("Validating Portainer")
         validate_portainer()
         print("Disabling Portainer")
+        microk8s_disable("portainer")
 
     def test_backup_restore(self):
         """
