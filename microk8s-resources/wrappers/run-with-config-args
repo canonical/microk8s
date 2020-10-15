@@ -137,6 +137,13 @@ fi
 
 # This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/$app))"
+if [ -e "${SNAP_DATA}/args/${app}-env" ]
+then
+  set -a
+  . "${SNAP_DATA}/args/${app}-env"
+  set +a
+fi
+
 if [ -f $SNAP/$app ]
 then
   exec "$SNAP/$app" "${args[@]}"
