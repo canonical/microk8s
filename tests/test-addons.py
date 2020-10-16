@@ -325,7 +325,7 @@ class TestAddons(object):
         validate_multus()
         print("Disabling Multus")
         microk8s_disable("multus")
-    
+
     def test_portainer(self):
         """
         Sets up and validates Portainer.

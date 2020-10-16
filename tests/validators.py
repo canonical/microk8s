@@ -489,9 +489,9 @@ def validate_metallb_config(ip_ranges="192.168.0.105"):
     for ip_range in ip_ranges.split(","):
         assert ip_range in out
 
+
 def validate_portainer():
     """
     Validate portainer
     """
     wait_for_pod_state("portainer", "portainer", "running")
-
