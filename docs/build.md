@@ -72,7 +72,7 @@ snap install microk8s_latest_amd64.snap --classic --dangerous
 
 The calico CNI manifest can be found under `upgrade-scripts/000-switch-to-calico/resources/calico.yaml`.
 Building the manifest is subject to the upstream calico project k8s installation process.
-At the time of the v3.13.2 release. The `calico.yaml` manifest is a slightly modifies version of:
+At the time of the v3.13.2 release. The `calico.yaml` manifest is a slightly modified version of:
 `https://docs.projectcalico.org/manifests/calico.yaml`:
 - CALICO_IPV4POOL_CIDR was set to "10.1.0.0/16"
 - CNI_NET_DIR was set to "/var/snap/microk8s/current/args/cni-network"
