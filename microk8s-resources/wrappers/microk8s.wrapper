@@ -22,7 +22,7 @@ if [ -f "${SNAP}/microk8s-${APP}.wrapper" ]; then
     "${SNAP}/microk8s-${APP}.wrapper" "$@"
     readonly EXIT="$?"
 elif [ "${APP}" == "inspect" ]; then
-    sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh "$@"
     readonly EXIT="$?"
 elif [ "${APP}" == "help" ] || [ "${APP}" == "--help" ] || [ "$APP" == "-h" ]; then
     help
