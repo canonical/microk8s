@@ -49,8 +49,12 @@ do
 
     # If no local-registry-hosting documentation has been installed,
     # install a help guide that points to the microk8s registry docs.
+    #
+    # Wait until the apiserver is up and is successfully responding to
+    # namespace checks before we check for the registry configmap.
     if [ $installed_registry_help -eq 0 ] &&
-       snapctl services microk8s.daemon-apiserver | grep active &> /dev/null
+       snapctl services microk8s.daemon-apiserver | grep active &> /dev/null &&
+       "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get namespace kube-public &> /dev/null
     then
       if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kube-public &> /dev/null
       then
