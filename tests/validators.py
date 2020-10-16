@@ -494,4 +494,4 @@ def validate_portainer():
     """
     Validate portainer
     """
-    wait_for_pod_state("portainer", "portainer", "running", label="app.kubernetes.io/name=portainer")
+    wait_for_pod_state("", "portainer", "running", label="app.kubernetes.io/name=portainer")
