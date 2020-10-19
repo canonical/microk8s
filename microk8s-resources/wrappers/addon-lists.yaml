@@ -1,0 +1,174 @@
+microk8s-addons:
+  description: "List of all addons included in Microk8s."
+  addons:
+    - name: "dns"
+      description: "CoreDNS"
+      version: "1.6.6"
+      check_status: "pod/coredns"
+      supported_architectures:
+      - amd64
+      - arm64
+
+    - name: "rbac"
+      description: "Role-Based Access Control for authorisation"
+      version: ""
+      check_status: "clusterrole.rbac.authorization.k8s.io/cluster-admin"
+      supported_architectures:
+      - arm64
+      - amd64
+
+    - name: "dashboard"
+      description: "The Kubernetes dashboard"
+      version: "2.0.0"
+      check_status: "pod/kubernetes-dashboard"
+      supported_architectures:
+      - arm64
+      - amd64
+
+    - name: "ingress"
+      description: "Ingress controller for external access"
+      version: "0.25.1"
+      check_status: "pod/nginx-ingress-microk8s-controller"
+      supported_architectures:
+      - arm64
+      - amd64
+
+    - name: "storage"
+      description: "Storage class; allocates storage from host directory"
+      version: "1.0.0"
+      check_status: "pod/hostpath-provisioner"
+      supported_architectures:
+      - arm64
+      - amd64
+
+    - name: "registry"
+      description: "Private image registry exposed on localhost:32000"
+      version: "2.6"
+      check_status: "pod/registry"
+      supported_architectures:
+      - arm64
+      - amd64
+
+    - name: "metrics-server"
+      description: "K8s Metrics Server for API access to service metrics"
+      version: "0.3.6"
+      check_status: "pod/metrics-server"
+      supported_architectures:
+      - arm64
+      - amd64
+
+    - name: "istio"
+      description: "Core Istio service mesh services"
+      version: "1.5.1"
+      check_status: "pod/istio"
+      supported_architectures:
+      - amd64
+
+    - name: "knative"
+      description: "The Knative framework on Kubernetes."
+      version: "0.13.0"
+      check_status: "clusterrole.rbac.authorization.k8s.io/knative"
+      supported_architectures:
+      - amd64
+
+    - name: "gpu"
+      description: "Automatic enablement of Nvidia CUDA"
+      version: "1.11"
+      check_status: "daemonset.apps/nvidia-device-plugin-daemonset"
+      supported_architectures:
+      - amd64
+
+    - name: "prometheus"
+      description: "Prometheus operator for monitoring and logging"
+      version: "v0.6.0"
+      check_status: "pod/prometheus-k8s-0"
+      supported_architectures:
+      - amd64
+
+    - name: "fluentd"
+      description: "Elasticsearch-Fluentd-Kibana logging and monitoring"
+      version: "3.0.2"
+      check_status: "daemonset.apps/fluentd-es-v3.0.2"
+      supported_architectures:
+      - amd64
+
+    - name: "jaeger"
+      description: "Kubernetes Jaeger operator with its simple config"
+      version: "1.14.0"
+      check_status: "pod/jaeger-operator"
+      supported_architectures:
+      - amd64
+
+    - name: "linkerd"
+      description: "Linkerd is a service mesh for Kubernetes and other frameworks"
+      version: "2.7.0"
+      check_status: "pod/linkerd-controller"
+      supported_architectures:
+      - amd64
+
+    - name: "cilium"
+      description: "SDN, fast with full network policy"
+      version: "1.6"
+      check_status: "pod/cilium"
+      supported_architectures:
+      - amd64
+
+    - name: "multus"
+      description: "Multus CNI enables attaching multiple network interfaces to pods"
+      version: "3.4.2"
+      check_status: "${SNAP_DATA}/args/cni-network/00-multus.conf"
+      supported_architectures:
+      - amd64
+
+    - name: "helm"
+      description: "Helm 2 - the package manager for Kubernetes"
+      version: "2.16.0"
+      check_status: "${SNAP_DATA}/bin/helm"
+      supported_architectures:
+      - amd64
+      - arm64
+
+    - name: "helm3"
+      description: "Helm 3 - Kubernetes package manager"
+      version: "3.0.2"
+      check_status: "${SNAP_DATA}/bin/helm3"
+      supported_architectures:
+      - amd64
+      - arm64
+
+    - name: "kubeflow"
+      description: "Kubeflow for easy ML deployments"
+      version: ""
+      check_status: "pod/ambassador-operator-0"
+      supported_architectures:
+      - amd64
+
+    - name: "metallb"
+      description: "Loadbalancer for your Kubernetes cluster"
+      version: "0.9.3"
+      check_status: "pod/speaker"
+      supported_architectures:
+      - amd64
+      - arm64
+
+    - name: "host-access"
+      description: "Allow Pods connecting to Host services smoothly"
+      version: "1.0.0"
+      check_status: "${SNAP_DATA}/var/lock/host-access-enabled"
+      supported_architectures:
+      - amd64
+      - arm64
+
+    - name: "ambassador"
+      description: "Ambassador API Gateway and Ingress"
+      version: ""
+      check_status: "deployment.apps/ambassador-operator"
+      supported_architectures:
+      - amd64
+    - name: "ha-cluster"
+      description: "Configure high availability on the current node"
+      version: "0.1.0"
+      check_status: "${SNAP_DATA}/var/lock/ha-cluster"
+      supported_architectures:
+      - arm64
+      - amd64

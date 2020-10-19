@@ -3,21 +3,65 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
+CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 
-echo "Enabling Prometheus"
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-$KUBECTL apply -f "${SNAP}/actions/prometheus/setup"
 
-n=0
-until [ $n -ge 10 ]
-do
-  sleep 3
-  ($KUBECTL apply -f "${SNAP}/actions/prometheus/") && break
-  n=$[$n+1]
-  if [ $n -ge 10 ]; then
-    echo "The Prometheus operator failed to install"
-    exit 1
+do_prerequisites() {
+  refresh_opt_in_config "authentication-token-webhook" "true" kubelet
+  restart_service kubelet
+  # enable dns service
+  "$SNAP/microk8s-enable.wrapper" dns
+  # Allow some time for the apiserver to start
+  sleep 5
+  ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 >/dev/null
+}
+
+
+get_kube_prometheus () {
+  if [  ! -d "${SNAP_DATA}/kube-prometheus" ]
+  then
+    KUBE_PROMETHEUS_VERSION="v0.6.0"
+    KUBE_PROMETHEUS_ERSION=$(echo $KUBE_PROMETHEUS_VERSION | sed 's/v//g')
+    echo "Fetching kube-prometheus version $KUBE_PROMETHEUS_VERSION."
+    run_with_sudo mkdir -p "${SNAP_DATA}/kube-prometheus"
+    run_with_sudo mkdir -p "${SNAP_DATA}/tmp/kube-prometheus"
+
+    run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/prometheus-operator/kube-prometheus/archive/${KUBE_PROMETHEUS_VERSION}.tar.gz -o "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz"
+    run_with_sudo tar -xzvf "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz" -C "$SNAP_DATA/tmp/kube-prometheus/"
+    run_with_sudo cp -R "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus-${KUBE_PROMETHEUS_ERSION}/manifests/" "${SNAP_DATA}/kube-prometheus"
+
+    run_with_sudo rm -rf "$SNAP_DATA/tmp/kube-prometheus"
   fi
-done
+}
+
+set_replicas_to_one() {
+  # alert manager must be set to 1 replica
+  run_with_sudo $SNAP/bin/sed -i 's@replicas: .@replicas: 1@g' ${SNAP_DATA}/kube-prometheus/manifests/alertmanager-alertmanager.yaml
+  # prometheus must be set to 1 replica
+  run_with_sudo $SNAP/bin/sed -i 's@replicas: .@replicas: 1@g' ${SNAP_DATA}/kube-prometheus/manifests/prometheus-prometheus.yaml
+
+}
+
+enable_prometheus() {
+  echo "Enabling Prometheus"
+  $KUBECTL apply -f "${SNAP_DATA}/kube-prometheus/manifests/setup"
+  n=0
+  until [ $n -ge 10 ]
+  do
+    sleep 3
+    ($KUBECTL apply -f "${SNAP_DATA}/kube-prometheus/manifests/") && break
+    n=$[$n+1]
+    if [ $n -ge 10 ]; then
+      echo "The Prometheus operator failed to install"
+      exit 1
+    fi
+done 
+}
+
+do_prerequisites
+get_kube_prometheus
+set_replicas_to_one
+enable_prometheus
 
 echo "The Prometheus operator is enabled (user/pass: admin/admin)"

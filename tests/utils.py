@@ -6,10 +6,7 @@ import platform
 from subprocess import check_output, CalledProcessError
 
 
-arch_translate = {
-    'aarch64': 'arm64',
-    'x86_64': 'amd64'
-}
+arch_translate = {'aarch64': 'arm64', 'x86_64': 'amd64'}
 
 
 def run_until_success(cmd, timeout_insec=60, err_out=None):
@@ -30,6 +27,7 @@ def run_until_success(cmd, timeout_insec=60, err_out=None):
             return output.replace('\\n', '\n')
         except CalledProcessError as err:
             output = err.output.strip().decode('utf8').replace('\\n', '\n')
+            print(output)
             if output == err_out:
                 return output
             if datetime.datetime.now() > deadline:
@@ -62,9 +60,9 @@ def docker(cmd):
     Returns: the docker response in a string
 
     """
-    docker_bin='/usr/bin/docker'
+    docker_bin = '/usr/bin/docker'
     if os.path.isfile('/snap/bin/microk8s.docker'):
-        docker_bin='/snap/bin/microk8s.docker'
+        docker_bin = '/snap/bin/microk8s.docker'
     cmd = docker_bin + ' ' + cmd
     return run_until_success(cmd)
 
@@ -84,7 +82,9 @@ def kubectl_get(target, timeout_insec=300):
     return yaml.load(output)
 
 
-def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label=None, timeout_insec=600):
+def wait_for_pod_state(
+    pod, namespace, desired_state, desired_reason=None, label=None, timeout_insec=600
+):
     """
     Wait for a a pod state. If you do not specify a pod name and you set instead a label
     only the first pod will be checked.
@@ -92,9 +92,9 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         if datetime.datetime.now() > deadline:
-            raise TimeoutError("Pod {} not in {} after {} seconds.".format(pod,
-                                                                           desired_state,
-                                                                           timeout_insec))
+            raise TimeoutError(
+                "Pod {} not in {} after {} seconds.".format(pod, desired_state, timeout_insec)
+            )
         cmd = 'po {} -n {}'.format(pod, namespace)
         if label:
             cmd += ' -l {}'.format(label)
@@ -118,13 +118,13 @@ def wait_for_pod_state(pod, namespace, desired_state, desired_reason=None, label
         time.sleep(3)
 
 
-def wait_for_installation(cluster_nodes=1):
+def wait_for_installation(cluster_nodes=1, timeout_insec=360):
     """
     Wait for kubernetes service to appear.
     """
     while True:
         cmd = 'svc kubernetes'
-        data = kubectl_get(cmd, 300)
+        data = kubectl_get(cmd, timeout_insec)
         service = data['metadata']['name']
         if 'kubernetes' in service:
             break
@@ -133,7 +133,7 @@ def wait_for_installation(cluster_nodes=1):
 
     while True:
         cmd = 'get no'
-        nodes = kubectl(cmd, 300)
+        nodes = kubectl(cmd, timeout_insec)
         if nodes.count(' Ready') == cluster_nodes:
             break
         else:
@@ -152,10 +152,10 @@ def wait_for_namespace_termination(namespace, timeout_insec=360):
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         try:
-            cmd='/snap/bin/microk8s.kubectl get ns {}'.format(namespace)
-            output = check_output(cmd.split()).strip().decode('utf8')
+            cmd = '/snap/bin/microk8s.kubectl get ns {}'.format(namespace)
+            check_output(cmd.split()).strip().decode('utf8')
             print('Waiting...')
-        except CalledProcessError as err:
+        except CalledProcessError:
             if datetime.datetime.now() > deadline:
                 raise
             else:
@@ -202,7 +202,6 @@ def microk8s_clustering_capable():
     return os.path.isfile('/snap/bin/microk8s.join')
 
 
-
 def microk8s_reset(cluster_nodes=1):
     """
     Call microk8s reset
@@ -224,4 +223,3 @@ def update_yaml_with_arch(manifest_file):
     with open(manifest_file, 'w') as f:
         s = s.replace('$ARCH', arch)
         f.write(s)
-

@@ -7,6 +7,8 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 source $SNAP/actions/common/utils.sh
 
+exit_if_service_not_expected_to_start etcd
+
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
   echo "etcd will not run on a cluster node"

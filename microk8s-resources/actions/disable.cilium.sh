@@ -35,18 +35,15 @@ then
   run_with_sudo $SNAP/sbin/ip link delete "cilium_vxlan"
 fi
 
-set_service_expected_to_start flanneld
+if [ -e "$SNAP_DATA/var/lock/ha-cluster" ] && [ -e "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ]
+then
+  echo "Restarting default cni"
+  run_with_sudo mv "$SNAP_DATA/args/cni-network/cni.yaml.disabled" "$SNAP_DATA/args/cni-network/cni.yaml"
+  "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" apply -f "$SNAP_DATA/args/cni-network/cni.yaml"
+else
+  echo "Restarting flanneld"
+  set_service_expected_to_start flanneld
 
-echo "Restarting kubelet"
-refresh_opt_in_config "cni-bin-dir" "\${SNAP}/opt/cni/bin/" kubelet
-run_with_sudo systemctl restart snap.${SNAP_NAME}.daemon-kubelet
-echo "Restarting containerd"
-if ! grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
-  run_with_sudo "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP_DATA}/opt;bin_dir = "${SNAP}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
+  run_with_sudo preserve_env snapctl start "${SNAP_NAME}.daemon-flanneld"
 fi
-run_with_sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
-
-echo "Restarting flanneld"
-run_with_sudo systemctl stop snap.${SNAP_NAME}.daemon-flanneld
-
 echo "Cilium is terminating"

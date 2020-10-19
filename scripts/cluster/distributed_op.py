@@ -6,57 +6,110 @@ import requests
 import urllib3
 import os
 import sys
+import json
+import socket
+
+from common.utils import (
+    is_node_running_dqlite,
+    get_internal_ip_from_get_node,
+    is_same_server,
+)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
+callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 
 
 def do_op(remote_op):
     """
     Perform an operation on a remote node
-    
+
     :param remote_op: the operation json string
     """
-    with open(callback_tokens_file, "r+") as fp:
-        for _, line in enumerate(fp):
-            parts = line.split()
-            node_ep = parts[0]
-            host = node_ep.split(":")[0]
-            print("Applying to node {}.".format(host))
-            try:
-                # Make sure this node exists
-                subprocess.check_call("{}/microk8s-kubectl.wrapper get no {}".format(snap_path, host).split(),
-                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                token = parts[1]
-                remote_op["callback"] = token
+    if is_node_running_dqlite():
+        try:
+            hostname = socket.gethostname()
+            with open(callback_token_file, "r+") as fp:
+                token = fp.read()
+
+            subprocess.check_output(
+                "{}/microk8s-status.wrapper --wait-ready --timeout=60".format(snap_path).split()
+            )
+            nodes_info = subprocess.check_output(
+                "{}/microk8s-kubectl.wrapper get no -o json".format(snap_path).split()
+            )
+            info = json.loads(nodes_info.decode())
+            for node_info in info["items"]:
+                node_ip = get_internal_ip_from_get_node(node_info)
+                if is_same_server(hostname, node_ip):
+                    continue
+                print("Configuring node {}".format(node_ip))
+                # TODO: make port configurable
+                node_ep = "{}:{}".format(node_ip, '25000')
+                remote_op["callback"] = token.rstrip()
                 # TODO: handle ssl verification
-                res = requests.post("https://{}/{}/configure".format(node_ep, CLUSTER_API),
-                                    json=remote_op,
-                                    verify=False)
+                res = requests.post(
+                    "https://{}/{}/configure".format(node_ep, CLUSTER_API),
+                    json=remote_op,
+                    verify=False,
+                )
                 if res.status_code != 200:
-                    print("Failed to perform a {} on node {}".format(remote_op["action_str"], node_ep))
-            except subprocess.CalledProcessError:
-                print("Node {} not present".format(host))
+                    print(
+                        "Failed to perform a {} on node {} {}".format(
+                            remote_op["action_str"], node_ep, res.status_code
+                        )
+                    )
+        except subprocess.CalledProcessError as e:
+            print("Could not query for nodes")
+            raise SystemExit(e)
+        except requests.exceptions.RequestException as e:
+            print("Failed to reach node.")
+            raise SystemExit(e)
+    else:
+        with open(callback_tokens_file, "r+") as fp:
+            for _, line in enumerate(fp):
+                parts = line.split()
+                node_ep = parts[0]
+                host = node_ep.split(":")[0]
+                print("Applying to node {}.".format(host))
+                try:
+                    # Make sure this node exists
+                    subprocess.check_call(
+                        "{}/microk8s-kubectl.wrapper get no {}".format(snap_path, host).split(),
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    token = parts[1]
+                    remote_op["callback"] = token
+                    # TODO: handle ssl verification
+                    res = requests.post(
+                        "https://{}/{}/configure".format(node_ep, CLUSTER_API),
+                        json=remote_op,
+                        verify=False,
+                    )
+                    if res.status_code != 200:
+                        print(
+                            "Failed to perform a {} on node {}".format(
+                                remote_op["action_str"], node_ep
+                            )
+                        )
+                except subprocess.CalledProcessError:
+                    print("Node {} not present".format(host))
 
 
 def restart(service):
     """
     Restart service on all nodes
-    
+
     :param service: the service name
     """
     print("Restarting nodes.")
     remote_op = {
         "action_str": "restart {}".format(service),
-        "service": [
-            {
-                "name": service,
-                "restart": "yes"
-            }
-        ]
+        "service": [{"name": service, "restart": "yes"}],
     }
     do_op(remote_op)
 
@@ -72,14 +125,7 @@ def update_argument(service, key, value):
     print("Adding argument {} to nodes.".format(key))
     remote_op = {
         "action_str": "change of argument {} to {}".format(key, value),
-        "service": [
-            {
-                "name": service,
-                "arguments_update": [
-                    {key: value}
-                ]
-            }
-        ]
+        "service": [{"name": service, "arguments_update": [{key: value}]}],
     }
     do_op(remote_op)
 
@@ -94,12 +140,7 @@ def remove_argument(service, key):
     print("Removing argument {} from nodes.".format(key))
     remote_op = {
         "action_str": "removal of argument {}".format(key),
-        "service": [
-            {
-                "name": service,
-                "arguments_remove": [key]
-            }
-        ]
+        "service": [{"name": service, "arguments_remove": [key]}],
     }
     do_op(remote_op)
 
@@ -111,18 +152,15 @@ def set_addon(addon, state):
     :param addon: the add-on name
     :param state: 'enable' or 'disable'
     """
-    if state not in ("enable","disable"):
-        raise ValueError("Wrong value '{}' for state. Must be one of 'enable' or 'disable'".format(state))
+    if state not in ("enable", "disable"):
+        raise ValueError(
+            "Wrong value '{}' for state. Must be one of 'enable' or 'disable'".format(state)
+        )
     else:
         print("Setting add-on {} to {} on nodes.".format(addon, state))
         remote_op = {
             "action_str": "set of {} to {}".format(addon, state),
-            "addon": [
-                {
-                    "name": addon,
-                    state: "true"
-                }
-            ]
+            "addon": [{"name": addon, state: "true"}],
         }
         do_op(remote_op)
 
@@ -133,7 +171,11 @@ def usage():
 
 
 if __name__ == "__main__":
-    if not os.path.isfile(callback_tokens_file):
+    if is_node_running_dqlite() and not os.path.isfile(callback_token_file):
+        # print("Single node cluster.")
+        exit(0)
+
+    if not is_node_running_dqlite() and not os.path.isfile(callback_tokens_file):
         print("No callback tokens file.")
         exit(1)
 

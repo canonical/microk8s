@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-export $(grep -v '^#' /etc/environment | xargs)
-
-apt-get update
-apt-get install python3-pip docker.io -y
-pip3 install -U pytest requests pyyaml

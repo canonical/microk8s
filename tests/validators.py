@@ -1,8 +1,11 @@
 import time
 import os
+import shutil
 import re
 import requests
 import platform
+import yaml
+import subprocess
 
 from utils import (
     kubectl,
@@ -17,34 +20,27 @@ from utils import (
 
 def validate_dns_dashboard():
     """
-    Validate the dashboard addon by looking at the grafana URL.
-    Validate DNS by starting a busy box and nslookuping the kubernetes default service.
+    Validate the dashboard addon by trying to access the kubernetes dashboard.
+    The dashboard will return an HTML indicating that it is up and running.
     """
-    wait_for_pod_state("", "kube-system", "running", label="k8s-app=influxGrafana")
-    cluster_info = kubectl("cluster-info")
-    # Cluster info output is colored so we better search for the port in the url pattern
-    # instead of trying to extract the url substring
-    regex = "http(.?)://127.0.0.1:([0-9]+)/api/v1/namespaces/kube-system/services/monitoring-grafana/proxy"
-    grafana_pattern = re.compile(regex)
-    for url in cluster_info.split():
-        port_search = grafana_pattern.search(url)
-        if port_search:
-            break
-
-    grafana_url = "http{}://127.0.0.1:{}" \
-                  "/api/v1/namespaces/kube-system/services/" \
-                  "monitoring-grafana/proxy".format(port_search.group(1), port_search.group(2))
-    assert grafana_url
-
-    attempt = 50
-    while attempt >= 0:
-        resp = requests.get(grafana_url, verify=False)
-        if (resp.status_code == 200 and grafana_url.startswith('http://')) or \
-            (resp.status_code == 401 and grafana_url.startswith('https://')):
-            break
-        time.sleep(2)
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=kubernetes-dashboard")
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=dashboard-metrics-scraper")
+    attempt = 30
+    while attempt > 0:
+        try:
+            output = kubectl(
+                "get "
+                "--raw "
+                "/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
+            )
+            if "Kubernetes Dashboard" in output:
+                break
+        except subprocess.CalledProcessError:
+            pass
+        time.sleep(10)
         attempt -= 1
-    assert resp.status_code in [200, 401]
+
+    assert attempt > 0
 
 
 def validate_storage():
@@ -77,23 +73,11 @@ def validate_storage():
     kubectl("delete -f {}".format(manifest))
 
 
-def validate_ingress():
+def common_ingress():
     """
-    Validate ingress by creating a ingress rule.
+    Perform the Ingress validations that are common for all
+    the Ingress controllers.
     """
-    daemonset = kubectl("get ds")
-    if "nginx-ingress-microk8s-controller" in daemonset:
-        wait_for_pod_state("", "default", "running", label="app=default-http-backend")
-        wait_for_pod_state("", "default", "running", label="name=nginx-ingress-microk8s")
-    else:
-        wait_for_pod_state("", "ingress", "running", label="name=nginx-ingress-microk8s")
-
-    here = os.path.dirname(os.path.abspath(__file__))
-    manifest = os.path.join(here, "templates", "ingress.yaml")
-    update_yaml_with_arch(manifest)
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=microbot")
-
     attempt = 50
     while attempt >= 0:
         output = kubectl("get ing")
@@ -119,7 +103,7 @@ def validate_ingress():
             if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                 service_ok = True
                 break
-        except:
+        except requests.RequestException:
             time.sleep(5)
             attempt -= 1
     if resp.status_code != 200 or "microbot.png" not in resp.content.decode("utf-8"):
@@ -130,11 +114,57 @@ def validate_ingress():
                 if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                     service_ok = True
                     break
-            except:
+            except requests.RequestException:
                 time.sleep(5)
                 attempt -= 1
 
     assert service_ok
+
+
+def validate_ingress():
+    """
+    Validate ingress by creating a ingress rule.
+    """
+    daemonset = kubectl("get ds")
+    if "nginx-ingress-microk8s-controller" in daemonset:
+        wait_for_pod_state("", "default", "running", label="app=default-http-backend")
+        wait_for_pod_state("", "default", "running", label="name=nginx-ingress-microk8s")
+    else:
+        wait_for_pod_state("", "ingress", "running", label="name=nginx-ingress-microk8s")
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "ingress.yaml")
+    update_yaml_with_arch(manifest)
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=microbot")
+
+    common_ingress()
+
+    kubectl("delete -f {}".format(manifest))
+
+
+def validate_ambassador():
+    """
+    Validate the Ambassador API Gateway by creating a ingress rule.
+    """
+
+    if platform.machine() != 'x86_64':
+        print("Ambassador tests are only relevant in x86 architectures")
+        return
+
+    wait_for_pod_state("", "ambassador", "running", label="product=aes")
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "ingress.yaml")
+    update_yaml_with_arch(manifest)
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=microbot")
+
+    # `Ingress`es must be annotatated for being recognized by Ambassador
+    kubectl("annotate ingress microbot-ingress-nip kubernetes.io/ingress.class=ambassador")
+    kubectl("annotate ingress microbot-ingress-xip kubernetes.io/ingress.class=ambassador")
+
+    common_ingress()
 
     kubectl("delete -f {}".format(manifest))
 
@@ -217,7 +247,12 @@ def validate_registry():
     """
     Validate the private registry.
     """
+
     wait_for_pod_state("", "container-registry", "running", label="app=registry")
+    pvc_stdout = kubectl("get pvc registry-claim -n container-registry -o yaml")
+    pvc_yaml = yaml.safe_load(pvc_stdout)
+    storage = pvc_yaml['spec']['resources']['requests']['storage']
+    assert re.match("(^[2-9][0-9]{1,}|^[1-9][0-9]{2,})(Gi$)", storage)
     docker("pull busybox")
     docker("tag busybox localhost:32000/my-busybox")
     docker("push localhost:32000/my-busybox")
@@ -247,7 +282,7 @@ def validate_forward():
             resp = requests.get("http://localhost:5123")
             if resp.status_code == 200:
                 break
-        except:
+        except requests.RequestException:
             pass
         attempt -= 1
         time.sleep(2)
@@ -266,7 +301,7 @@ def validate_metrics_server():
             output = kubectl("get --raw /apis/metrics.k8s.io/v1beta1/pods")
             if "PodMetricsList" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(10)
         attempt -= 1
@@ -314,7 +349,7 @@ def validate_jaeger():
             output = kubectl("get ingress")
             if "simplest-query" in output:
                 break
-        except:
+        except subprocess.CalledProcessError:
             pass
         time.sleep(2)
         attempt -= 1
@@ -331,11 +366,22 @@ def validate_linkerd():
         return
 
     wait_for_installation()
-    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=controller", timeout_insec=300)
+    wait_for_pod_state(
+        "",
+        "linkerd",
+        "running",
+        label="linkerd.io/control-plane-component=controller",
+        timeout_insec=300,
+    )
     print("Linkerd controller up and running.")
-    wait_for_pod_state("", "linkerd", "running", label="linkerd.io/control-plane-component=proxy-injector", timeout_insec=300)
+    wait_for_pod_state(
+        "",
+        "linkerd",
+        "running",
+        label="linkerd.io/control-plane-component=proxy-injector",
+        timeout_insec=300,
+    )
     print("Linkerd proxy injector up and running.")
-    ### Disabling this test because the deletion of the namespace get stuck.
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "emojivoto.yaml")
     kubectl("apply -f {}".format(manifest))
@@ -380,11 +426,45 @@ def validate_cilium():
 
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "nginx-pod.yaml")
+
+    # Try up to three times to get nginx under cilium
+    for attempt in range(0, 10):
+        kubectl("apply -f {}".format(manifest))
+        wait_for_pod_state("", "default", "running", label="app=nginx")
+        output = cilium('endpoint list -o json', timeout_insec=20)
+        if "nginx" in output:
+            kubectl("delete -f {}".format(manifest))
+            break
+        else:
+            print("Cilium not ready will retry testing.")
+            kubectl("delete -f {}".format(manifest))
+            time.sleep(20)
+    else:
+        print("Cilium testing failed.")
+        assert False
+
+
+def validate_multus():
+    """
+    Validate multus by deploying alpine pod with 3 interfaces.
+    """
+
+    wait_for_installation()
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
+    networks = os.path.join(here, "templates", "multus-networks.yaml")
+    kubectl("create -f {}".format(networks))
+    manifest = os.path.join(here, "templates", "multus-alpine.yaml")
     kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=nginx")
-    output = cilium('endpoint list -o json')
-    assert "nginx" in output
+    wait_for_pod_state("", "default", "running", label="app=multus-alpine")
+    output = kubectl("exec multus-alpine -- ifconfig eth1", timeout_insec=900, err_out='no')
+    assert "10.111.111.111" in output
+    output = kubectl("exec multus-alpine -- ifconfig eth2", timeout_insec=900, err_out='no')
+    assert "10.222.222.222" in output
     kubectl("delete -f {}".format(manifest))
+    kubectl("delete -f {}".format(networks))
+    shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
 
 
 def validate_kubeflow():
@@ -396,3 +476,15 @@ def validate_kubeflow():
         return
 
     wait_for_pod_state("ambassador-operator-0", "kubeflow", "running")
+
+
+def validate_metallb_config(ip_ranges="192.168.0.105"):
+    """
+    Validate Metallb
+    """
+    if platform.machine() != 'x86_64':
+        print("Metallb tests are only relevant in x86 architectures")
+        return
+    out = kubectl("get configmap config -n metallb-system -o jsonpath='{.data.config}'")
+    for ip_range in ip_ranges.split(","):
+        assert ip_range in out

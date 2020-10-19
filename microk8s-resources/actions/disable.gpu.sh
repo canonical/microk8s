@@ -12,7 +12,7 @@ fi
 
 run_with_sudo rm -rf ${SNAP_DATA}/var/lock/gpu
 
-run_with_sudo systemctl restart snap.${SNAP_NAME}.daemon-containerd
+run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-containerd"
 containerd_up=$(wait_for_service containerd)
 if [[ $containerd_up == fail ]]
 then

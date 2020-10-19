@@ -4,3 +4,4 @@
 --etcd-certfile=${SNAP_DATA}/certs/server.crt
 --etcd-keyfile=${SNAP_DATA}/certs/server.key
 --subnet-file=${SNAP_COMMON}/run/flannel/subnet.env
+--ip-masq=true

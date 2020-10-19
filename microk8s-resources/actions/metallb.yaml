@@ -5,6 +5,57 @@ metadata:
     app: metallb
   name: metallb-system
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: memberlist
+  namespace: metallb-system
+type: Opaque
+data:
+  secretkey: {{member_list}}
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  labels:
+    app: metallb
+  name: controller
+  namespace: metallb-system
+spec:
+  allowPrivilegeEscalation: {{allow_escalation}}
+  allowedCapabilities: []
+  allowedHostPaths: []
+  defaultAddCapabilities: []
+  defaultAllowPrivilegeEscalation: {{allow_escalation}}
+  fsGroup:
+    ranges:
+    - max: 65535
+      min: 1
+    rule: MustRunAs
+  hostIPC: false
+  hostNetwork: false
+  hostPID: false
+  privileged: false
+  readOnlyRootFilesystem: true
+  requiredDropCapabilities:
+  - ALL
+  runAsUser:
+    ranges:
+    - max: 65535
+      min: 1
+    rule: MustRunAs
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    ranges:
+    - max: 65535
+      min: 1
+    rule: MustRunAs
+  volumes:
+  - configMap
+  - secret
+  - emptyDir
+---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
@@ -13,18 +64,26 @@ metadata:
   name: speaker
   namespace: metallb-system
 spec:
-  allowPrivilegeEscalation: false
+  allowPrivilegeEscalation: {{allow_escalation}} 
   allowedCapabilities:
   - NET_ADMIN
   - NET_RAW
   - SYS_ADMIN
+  allowedHostPaths: []
+  defaultAddCapabilities: []
+  defaultAllowPrivilegeEscalation: {{allow_escalation}}
   fsGroup:
     rule: RunAsAny
+  hostIPC: false
   hostNetwork: true
+  hostPID: false
   hostPorts:
   - max: 7472
     min: 7472
   privileged: true
+  readOnlyRootFilesystem: true
+  requiredDropCapabilities:
+  - ALL
   runAsUser:
     rule: RunAsAny
   seLinux:
@@ -32,7 +91,9 @@ spec:
   supplementalGroups:
     rule: RunAsAny
   volumes:
-  - '*'
+  - configMap
+  - secret
+  - emptyDir
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -79,6 +140,14 @@ rules:
   verbs:
   - create
   - patch
+- apiGroups:
+  - policy
+  resourceNames:
+  - controller
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -105,7 +174,7 @@ rules:
   - create
   - patch
 - apiGroups:
-  - extensions
+  - policy
   resourceNames:
   - speaker
   resources:
@@ -129,6 +198,21 @@ rules:
   - get
   - list
   - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: metallb
+  name: pod-lister
+  namespace: metallb-system
+rules:
+- apiGroups:
+  - ''
+  resources:
+  - pods
+  verbs:
+  - list
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -177,6 +261,21 @@ subjects:
 - kind: ServiceAccount
   name: speaker
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: metallb
+  name: pod-lister
+  namespace: metallb-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: pod-lister
+subjects:
+- kind: ServiceAccount
+  name: speaker
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -212,7 +311,22 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
-        image: metallb/speaker:v0.8.2
+        - name: METALLB_ML_BIND_ADDR
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: METALLB_ML_LABELS
+          value: "app=metallb,component=speaker"
+        - name: METALLB_ML_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: METALLB_ML_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: memberlist
+              key: secretkey
+        image: metallb/speaker:v0.9.3
         imagePullPolicy: IfNotPresent
         name: speaker
         ports:
@@ -223,7 +337,7 @@ spec:
             cpu: 100m
             memory: 100Mi
         securityContext:
-          allowPrivilegeEscalation: false
+          allowPrivilegeEscalation: {{allow_escalation}}
           capabilities:
             add:
             - NET_ADMIN
@@ -236,7 +350,7 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       serviceAccountName: speaker
-      terminationGracePeriodSeconds: 0
+      terminationGracePeriodSeconds: 2
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -268,7 +382,7 @@ spec:
       - args:
         - --port=7472
         - --config=config
-        image: metallb/controller:v0.8.2
+        image: metallb/controller:v0.9.3
         imagePullPolicy: IfNotPresent
         name: controller
         ports:
@@ -279,7 +393,7 @@ spec:
             cpu: 100m
             memory: 100Mi
         securityContext:
-          allowPrivilegeEscalation: false
+          allowPrivilegeEscalation: {{allow_escalation}}
           capabilities:
             drop:
             - all
@@ -302,5 +416,4 @@ data:
     address-pools:
     - name: default
       protocol: layer2
-      addresses:
-      - {{ip_range}}
+      {{addresses}}

@@ -5,10 +5,15 @@
 #
 # HTTPS_PROXY=https://squid.internal:3128
 #
+# You may also want to set NO_PROXY to include the cluster-cidr and the services-cidr
+# as specified in /var/snap/microk8s/current/args/kube-proxy and
+# /var/snap/microk8s/current/args/kube-apiserver
 #
-# Remember to restart the containerd daemon after editing this file:
+# NO_PROXY=10.1.0.0/16,10.152.183.0/24
 #
-# sudo systemctl restart snap.microk8s.daemon-containerd.service
+# Remember to restart MicroK8s after editing this file:
+#
+# sudo microk8s stop; sudo microk8s start
 #
 #
 
@@ -16,3 +21,8 @@
 # this get inherited to the running containers
 #
 ulimit -n 65536 || true
+
+# Attempt to change the maximum locked memory limit
+# this get inherited to the running containers
+#
+ulimit -l 16384 || true

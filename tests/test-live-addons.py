@@ -2,15 +2,15 @@ from validators import (
     validate_dns_dashboard,
     validate_storage,
     validate_ingress,
+    validate_ambassador,
     validate_istio,
     validate_knative,
     validate_registry,
     validate_forward,
     validate_metrics_server,
-    validate_prometheus,
-    validate_fluentd,
     validate_jaeger,
     validate_cilium,
+    validate_multus,
     validate_linkerd,
     validate_gpu,
     validate_kubeflow,
@@ -44,6 +44,13 @@ class TestLiveAddons(object):
 
         """
         validate_ingress()
+
+    def test_ambassador(self):
+        """
+        Validates Ambassador works.
+
+        """
+        validate_ambassador()
 
     def test_istio(self):
         """
@@ -99,6 +106,12 @@ class TestLiveAddons(object):
         Validates Cilium works.
         """
         validate_cilium()
+
+    def test_multus(self):
+        """
+        Validates Multus works.
+        """
+        validate_multus()
 
     def test_linkerd(self):
         """

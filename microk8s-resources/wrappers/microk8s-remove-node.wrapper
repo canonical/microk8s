@@ -6,13 +6,22 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export SNAP_NAME
+export PYTHONNOUSERSITE=false
 
 source $SNAP/actions/common/utils.sh
 
 if echo "$*" | grep -q -- 'help'; then
-  echo "Usage: microk8s.remove <node>"
-  echo ""
-  echo "microk8s.remove will remove the node provided from the cluster."
+  if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
+  then
+    echo "Usage: microk8s remove <node> [--force]"
+    echo ""
+    echo "microk8s remove will remove the node provided from the cluster."
+    echo "--force   Remove node not available anymore (eg crashed)."
+  else
+    echo "Usage: microk8s remove <node>"
+    echo ""
+    echo "microk8s remove will remove the node provided from the cluster."
+  fi
   exit 0
 fi
 
@@ -20,12 +29,17 @@ exit_if_no_permissions
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use microk8s.leave."
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use microk8s leave."
   exit 1
 fi
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -eq 0 ]; then
     echo "Please provide the node you want to remove."
+  exit 1
+fi
+
+if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] && [ "$#" -eq 2 ] && ! [ "$2" == "--force" ] ; then
+    echo "Please provide the node and the optional --force flag."
   exit 1
 fi
 

@@ -6,20 +6,22 @@ export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export SNAP_NAME
+export PYTHONNOUSERSITE=false
 
 source $SNAP/actions/common/utils.sh
 
 if echo "$*" | grep -q -- 'help'; then
-  echo "Usage: microk8s.leave"
+  echo "Usage: microk8s leave"
   echo ""
-  echo "With microk8s.leave the node will depart from the cluster it is in."
+  echo "With microk8s leave the node will depart from the cluster it is in."
   exit 0
 fi
 
 exit_if_stopped
 exit_if_no_permissions
 
-if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ] &&
+   ! grep "^\-\-storage\-backend.dqlite" "$SNAP_DATA/args/kube-apiserver" &> /dev/null
 then
   echo "This MicroK8s deployment is not acting as a node in a cluster."
   exit 1
@@ -31,4 +33,4 @@ then
   exit 1
 fi
 
-${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset
+run_with_sudo preserve_env ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset

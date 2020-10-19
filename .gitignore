@@ -2,10 +2,16 @@
 /parts/
 /prime/
 /stage/
-/snap/*
 !/snap/hooks/
 *.snap
+microk8s.egg-info/
 microk8s_source.tar.bz2
 tests/__pycache__
 .idea/
 **/tests/*.pyc
+.venv/
+.vscode/
+/installer/.venv/
+/installer/**/__pycache__
+/installer/dist/
+/installer/build/

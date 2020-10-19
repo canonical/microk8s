@@ -1,0 +1,1 @@
+Removes the flannel cni and installs calico.

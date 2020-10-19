@@ -5,3 +5,4 @@
 --trusted-ca-file=${SNAP_DATA}/certs/ca.crt
 --cert-file=${SNAP_DATA}/certs/server.crt
 --key-file=${SNAP_DATA}/certs/server.key
+--enable-v2=true

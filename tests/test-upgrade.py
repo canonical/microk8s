@@ -9,24 +9,23 @@ from validators import (
     validate_registry,
     validate_forward,
     validate_metrics_server,
-    validate_prometheus,
     validate_fluentd,
     validate_jaeger,
-    validate_kubeflow,
     validate_cilium,
+    validate_metallb_config,
 )
 from subprocess import check_call, CalledProcessError, check_output
 from utils import (
     microk8s_enable,
     wait_for_pod_state,
     wait_for_installation,
-    run_until_success
+    run_until_success,
 )
 
 upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
 # Have UPGRADE_MICROK8S_TO point to a file to upgrade to that file
 upgrade_to = os.environ.get('UPGRADE_MICROK8S_TO', 'edge')
-under_time_pressure = os.environ.get('UNDER_TIME_PRESURE', 'False')
+under_time_pressure = os.environ.get('UNDER_TIME_PRESSURE', 'False')
 
 
 class TestUpgrade(object):
@@ -63,7 +62,7 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_dns_dashboard()
             test_matrix['dns_dashboard'] = validate_dns_dashboard
-        except:
+        except CalledProcessError:
             print('Will not test dns-dashboard')
 
         try:
@@ -71,7 +70,7 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_storage()
             test_matrix['storage'] = validate_storage
-        except:
+        except CalledProcessError:
             print('Will not test storage')
 
         try:
@@ -79,7 +78,7 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_ingress()
             test_matrix['ingress'] = validate_ingress
-        except:
+        except CalledProcessError:
             print('Will not test ingress')
 
         try:
@@ -87,7 +86,7 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_gpu()
             test_matrix['gpu'] = validate_gpu
-        except:
+        except CalledProcessError:
             print('Will not test gpu')
 
         try:
@@ -95,13 +94,13 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_registry()
             test_matrix['registry'] = validate_registry
-        except:
+        except CalledProcessError:
             print('Will not test registry')
 
         try:
             validate_forward()
             test_matrix['forward'] = validate_forward
-        except:
+        except CalledProcessError:
             print('Will not test port forward')
 
         try:
@@ -109,12 +108,12 @@ class TestUpgrade(object):
             assert "Nothing to do for" not in enable
             validate_metrics_server()
             test_matrix['metrics_server'] = validate_metrics_server
-        except:
+        except CalledProcessError:
             print('Will not test the metrics server')
 
         # AMD64 only tests
         if platform.machine() == 'x86_64' and under_time_pressure == 'False':
-            '''
+            """
             # Prometheus operator on our lxc is chashlooping disabling the test for now.
             try:
                 enable = microk8s_enable("prometheus", timeout_insec=30)
@@ -126,7 +125,7 @@ class TestUpgrade(object):
 
             # The kubeflow deployment is huge. It will not fit comfortably
             # with the rest of the addons on the same machine during an upgrade
-            # we will need to find another way to test it. 
+            # we will need to find another way to test it.
             try:
                 enable = microk8s_enable("kubeflow", timeout_insec=30)
                 assert "Nothing to do for" not in enable
@@ -134,14 +133,14 @@ class TestUpgrade(object):
                 test_matrix['kubeflow'] = validate_kubeflow
             except:
                 print('Will not test kubeflow')
-            '''
+            """
 
             try:
                 enable = microk8s_enable("fluentd", timeout_insec=30)
                 assert "Nothing to do for" not in enable
                 validate_fluentd()
                 test_matrix['fluentd'] = validate_fluentd
-            except:
+            except CalledProcessError:
                 print('Will not test the fluentd')
 
             try:
@@ -149,7 +148,7 @@ class TestUpgrade(object):
                 assert "Nothing to do for" not in enable
                 validate_jaeger()
                 test_matrix['jaeger'] = validate_jaeger
-            except:
+            except CalledProcessError:
                 print('Will not test the jaeger addon')
 
             try:
@@ -157,8 +156,31 @@ class TestUpgrade(object):
                 assert "Nothing to do for" not in enable
                 validate_cilium()
                 test_matrix['cilium'] = validate_cilium
-            except:
+            except CalledProcessError:
                 print('Will not test the cilium addon')
+            try:
+                ip_ranges = (
+                    "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111,192.168.1.240/28"
+                )
+                enable = microk8s_enable("{}:{}".format("metallb", ip_ranges), timeout_insec=500)
+                assert "MetalLB is enabled" in enable and "Nothing to do for" not in enable
+                validate_metallb_config(ip_ranges)
+                test_matrix['metallb'] = validate_metallb_config
+            except CalledProcessError:
+                print("Will not test the metallb addon")
+
+            # We will not be testing multus because it takes too long for cilium and multus
+            # to settle after the update and the multus test needs to be refactored so we do
+            # delete and recreate the networks configured.
+            """
+            try:
+                enable = microk8s_enable("multus", timeout_insec=150)
+                assert "Nothing to do for" not in enable
+                validate_multus()
+                test_matrix['multus'] = validate_multus
+            except CalledProcessError:
+                print('Will not test the multus addon')
+            """
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):
@@ -181,10 +203,10 @@ class TestUpgrade(object):
 
 
 def is_container():
-    '''
+    """
     Returns: True if the deployment is in a VM/container.
 
-    '''
+    """
     try:
         if os.path.isdir('/run/systemd/system'):
             container = check_output('sudo systemd-detect-virt --container'.split())

@@ -1,40 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/env bash
 
-import os
-import subprocess
-import sys
+set -eu
 
+source $SNAP/actions/common/utils.sh
 
-def main():
-    env = os.environ.copy()
-    env["PATH"] += ":%s" % os.environ["SNAP"]
+function disable_kubeflow() {
+  echo "Disabling Kubeflow..."
+  "$SNAP/microk8s-juju.wrapper" unregister -y uk8s || true
+  "$SNAP/microk8s-kubectl.wrapper" delete ns controller-uk8s kubeflow || true
+}
 
-    try:
-        subprocess.run(
-            ["microk8s-juju.wrapper", "show-controller", "uk8s"],
-            env=env,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-    except subprocess.CalledProcessError:
-        print("Kubeflow is already disabled.")
-        sys.exit(0)
+disable_kubeflow
 
-    print("Disabling Kubeflow...")
-
-    subprocess.run(
-        [
-            "microk8s-juju.wrapper",
-            "destroy-controller",
-            "-y",
-            "uk8s",
-            "--destroy-all-models",
-            "--destroy-storage",
-        ],
-        env=env,
-    )
-
-
-if __name__ == "__main__":
-    main()
