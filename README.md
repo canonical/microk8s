@@ -75,6 +75,18 @@ are granted access to `microk8s` commands. To add a user to that group:
 sudo usermod -a -G microk8s <username>
 ```
 
+#### Production Installation
+
+Since the Snapcraft package manager auto-updates without user interaction, it is necessary to download and install a snap in "dangerous" mode to pin a version. This gives the user the ability to control the upgrade schedule. Do this with the following combination
+
+```
+snap download microk8s --channel=version/label 
+# where version is a valid version number and label is stable or edge
+sudo snap install microk8s_xxxx.snap --dangerous --classic 
+# where xxxx is the release number.
+```
+
+As of version 1.19 another option for production installation is the HA version, which requires three or more physical nodes.
 
 #### Kubernetes add-ons
 
