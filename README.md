@@ -77,7 +77,11 @@ sudo usermod -a -G microk8s <username>
 
 #### Production Installation
 
-Since the Snapcraft package manager auto-updates without user interaction, it is necessary to download and install a snap in "dangerous" mode to pin a version. This gives the user the ability to control the upgrade schedule. Do this with the following combination
+The Snapcraft package manager is the only way to install microk8s. This platform auto-updates packages without user interaction to track authors security patches and new point releases for a channel. It is recommended to pick a channel during installation with `--channel=x.xx/stable`, as upstream Kubernetes releases have been known to break during upgrades. If you do not specify a channel, auto-updates will track the latest stable release, which is likely not what you want for production deployments.
+
+If your production deployment can handle unattended upgrades without a schedule, you should not have to modify snapd. If you have regular maintenance windows, you can [schedule unattended updates for a snap](https://snapcraft.io/docs/keeping-snaps-up-to-date). 
+
+If microk8s operates in a mission critical role, any unattended updates should be disabled. To do this, download and install a snap in "dangerous" mode to pin a version. This gives the user the ability to control the upgrade and security patching schedule. Do this with the following combination
 
 ```
 snap download microk8s --channel=version/label 
