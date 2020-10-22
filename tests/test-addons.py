@@ -48,7 +48,7 @@ class TestAddons(object):
         Sets up and tests dashboard, dns, storage, registry, ingress.
 
         """
-        ip_ranges = "8.8.8.8,8.8.8.4"
+        ip_ranges = "8.8.8.8,1.1.1.1"
         print("Enabling dns")
         microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
         wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
@@ -332,10 +332,11 @@ class TestAddons(object):
         microk8s_disable("portainer")
 
     def test_dns_addon(self):
-        addon = "dns"
-        ip_ranges = "8.8.8.8,8.8.8.4"
+        ip_ranges = "8.8.8.8,1.1.1.1"
         print("Enabling dns")
-        microk8s_enable("{}:{}".format(addon, ip_ranges), timeout_insec=500)
+        microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
+        wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
+        print("Validating dns config")
         validate_coredns_config(ip_ranges)
         print("Disabling dns")
         microk8s_disable("dns")
