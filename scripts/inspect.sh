@@ -113,6 +113,15 @@ function store_juju_info {
 }
 
 
+function store_kubeflow_info {
+  # Collect some kubeflow details
+  printf -- '  Inspect Kubeflow\n'
+  mkdir -p $INSPECT_DUMP/kubeflow
+  sudo -E /snap/bin/microk8s kubectl get pods -nkubeflow -oyaml 2>&1 | sudo tee $INSPECT_DUMP/kubeflow/pods.yaml > /dev/null
+  sudo -E /snap/bin/microk8s kubectl describe pods -nkubeflow 2>&1 | sudo tee $INSPECT_DUMP/kubeflow/pods.describe > /dev/null
+}
+
+
 function suggest_fixes {
   # Propose fixes
   printf '\n'
@@ -298,6 +307,9 @@ store_kubernetes_info
 
 printf -- 'Inspecting juju\n'
 store_juju_info
+
+printf -- 'Inspecting kubeflow\n'
+store_kubeflow_info
 
 suggest_fixes
 
