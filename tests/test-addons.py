@@ -331,6 +331,10 @@ class TestAddons(object):
         print("Disabling Portainer")
         microk8s_disable("portainer")
 
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping dns tests as we are under time pressure",
+        )
     def test_dns_addon(self):
         ip_ranges = "8.8.8.8,1.1.1.1"
         print("Enabling DNS")
