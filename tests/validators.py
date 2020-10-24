@@ -496,5 +496,5 @@ def validate_coredns_config(ip_ranges="8.8.8.8,1.1.1.1"):
     out = kubectl("get configmap coredns -n kube-system -o jsonpath='{.data.Corefile}'")
     expected_forward_val = "forward ."
     for ip_range in ip_ranges.split(","):
-        expected_forward_val = expected_forward_val+" "+ip_range
+        expected_forward_val = expected_forward_val + " " + ip_range
     assert expected_forward_val in out

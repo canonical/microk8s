@@ -3,7 +3,7 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
-
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 # Apply the dns yaml
 # We do not need to see dns pods running at this point just give some slack
 echo "Enabling DNS"
@@ -47,7 +47,7 @@ else
   done
 fi
 
-cat coredns.yaml | sed "s@{{nameservers}}@$nameserver_str@g"
+cat $SNAP/actions/coredns.yaml | $SNAP/bin/sed "s@{{nameservers}}@$nameserver_str@g" | $KUBECTL apply -f -
 
 echo "Restarting kubelet"
 #TODO(kjackal): do not hardcode the info below. Get it from the yaml

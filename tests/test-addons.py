@@ -22,7 +22,7 @@ from validators import (
     validate_kubeflow,
     validate_metallb_config,
     validate_prometheus,
-    validate_coredns_config
+    validate_coredns_config,
 )
 from utils import (
     microk8s_enable,
@@ -49,7 +49,7 @@ class TestAddons(object):
 
         """
         ip_ranges = "8.8.8.8,1.1.1.1"
-        print("Enabling dns")
+        print("Enabling DNS")
         microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
         wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
         print("Enabling ingress")
@@ -333,12 +333,12 @@ class TestAddons(object):
 
     def test_dns_addon(self):
         ip_ranges = "8.8.8.8,1.1.1.1"
-        print("Enabling dns")
+        print("Enabling DNS")
         microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
         wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
-        print("Validating dns config")
+        print("Validating DNS config")
         validate_coredns_config(ip_ranges)
-        print("Disabling dns")
+        print("Disabling DNS")
         microk8s_disable("dns")
 
     def test_backup_restore(self):
