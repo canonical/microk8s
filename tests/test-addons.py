@@ -343,8 +343,8 @@ class TestAddons(object):
         if os.path.exists('backupfile.tar.gz'):
             os.remove('backupfile.tar.gz')
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
-        check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
-    
+        check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())  
+
     def test_traefik(self):
         """
         Sets up and validates traefik.

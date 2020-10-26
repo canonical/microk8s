@@ -494,7 +494,7 @@ def validate_traefik():
     """
     Validate traefik
     """
-    wait_for_pod_state("", "traefik", "running", label="name=traefik")
+    wait_for_pod_state("", "traefik", "running", label="name=traefik-ingress-lb")
 
 
 def validate_portainer():
