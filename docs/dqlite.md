@@ -1,11 +1,11 @@
 # Patch for dqlite
 
-The patch to add the (dqlite)[https://github.com/canonical/dqlite]
+The patch to add the [dqlite](https://github.com/canonical/dqlite)
 is applied on top of the Kubernetes source code during the MicroK8s build process.
 
 The dqlite patch is the file `build-scripts/patches/dqlite.patch`.
 
-The dqlite patch is maintained in the (kubernetes-dqlite repository)[https://github.com/canonical/kubernetes-dqlite].
+The dqlite patch is maintained in the [kubernetes-dqlite repository](https://github.com/canonical/kubernetes-dqlite).
 To produce it checkout the kubernetes-dqlite repository and head to the Kubernetes
 branch you would like to build. For example:
 ```
