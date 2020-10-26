@@ -182,3 +182,11 @@ microk8s-addons:
       supported_architectures:
       - arm64
       - amd64
+
+    - name: "traefik"
+      description: "traefik Ingress controller for external access"
+      version: "2.3.0"
+      check_status: "pod/traefik-ingress-controller"
+      supported_architectures:
+      - arm64
+      - amd64

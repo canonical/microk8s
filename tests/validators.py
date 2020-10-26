@@ -490,6 +490,13 @@ def validate_metallb_config(ip_ranges="192.168.0.105"):
         assert ip_range in out
 
 
+def validate_traefik():
+    """
+    Validate traefik
+    """
+    wait_for_pod_state("", "traefik", "running", label="name=traefik")
+
+
 def validate_portainer():
     """
     Validate portainer

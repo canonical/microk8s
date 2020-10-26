@@ -23,6 +23,7 @@ from validators import (
     validate_metallb_config,
     validate_prometheus,
     validate_portainer,
+    validate_traefik,
 )
 from utils import (
     microk8s_enable,
@@ -343,3 +344,15 @@ class TestAddons(object):
             os.remove('backupfile.tar.gz')
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
+    
+    def test_traefik(self):
+        """
+        Sets up and validates traefik.
+        """
+        print("Enabling traefik")
+        microk8s_enable("traefik")
+        print("Validating traefik")
+        validate_traefik()
+        print("Disabling traefik")
+        microk8s_disable("trafik")
+
