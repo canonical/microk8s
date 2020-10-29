@@ -4,6 +4,7 @@ import argparse
 
 from common.utils import (
     exit_if_no_permission,
+    exit_if_stopped,
     is_cluster_locked,
     is_ha_enabled,
     get_dqlite_info,
@@ -182,6 +183,7 @@ def ha_cluster_formed(info):
 
 if __name__ == '__main__':
     exit_if_no_permission()
+    exit_if_stopped()
     is_cluster_locked()
 
     # initiate the parser with a description
