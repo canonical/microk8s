@@ -452,6 +452,14 @@ then
       break
     fi
   done
-  $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+
+  # if the API server came up try to load the CNI manifest
+  now="$(date +%s)"
+  if [[ "$now" < "$(($start_timer + $timeout))" ]] ; then
+    if $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+    then
+      touch "${SNAP_DATA}/var/lock/cni-loaded"
+    fi
+  fi
 fi
 
