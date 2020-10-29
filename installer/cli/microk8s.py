@@ -273,6 +273,7 @@ def start() -> None:
     instance_info = instance.get_instance_info()
     if not instance_info.is_running():
         instance.start()
+        instance.run(["microk8s.start"])
 
 
 def stop() -> None:
@@ -294,8 +295,8 @@ def run(cmd) -> None:
         instance = vm_provider_class(echoer=echo)
         instance_info = instance.get_instance_info()
         if not instance_info.is_running():
-            instance.start()
-            instance.run(["microk8s.start"])
+            echo.warning("MicroK8s is not running. Please run `microk8s start`.")
+            return 1
         command = cmd[0]
         cmd[0] = "microk8s.{}".format(command)
         instance.run(cmd)
