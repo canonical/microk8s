@@ -47,6 +47,18 @@ do
         fi
     fi
 
+    if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
+       [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
+       ! [ -e "${SNAP_DATA}/var/lock/cni-loaded" ]
+    then
+      echo "Setting up the CNI"
+      if (${SNAP}/usr/bin/curl -L --cert ${SNAP_DATA}/certs/server.crt --key ${SNAP_DATA}/certs/server.key --cacert ${SNAP_DATA}/certs/ca.crt https://127.0.0.1:16443/readyz | grep -z "ok") &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+      then
+        touch "${SNAP_DATA}/var/lock/cni-loaded"
+      fi
+    fi
+
     # If no local-registry-hosting documentation has been installed,
     # install a help guide that points to the microk8s registry docs.
     #
