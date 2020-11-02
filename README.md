@@ -81,7 +81,9 @@ The Snapcraft package manager is the only way to install microk8s. This platform
 
 If your production deployment can handle unattended upgrades without a schedule, you should not have to modify snapd. If you have regular maintenance windows, you can [schedule unattended updates for a snap](https://snapcraft.io/docs/keeping-snaps-up-to-date). 
 
-If microk8s operates in a mission critical role, any unattended updates should be disabled. To do this, download and install a snap in "dangerous" mode to pin a version. This gives the user the ability to control the upgrade and security patching schedule. Do this with the following combination
+As of version 1.19 a mission critical installation should use the High Availability option, which requires three or more physical nodes. Ensure these nodes auto-upgrade schedules are staggered because if two nodes go down at the same time the cluster will be unavailable.
+
+An alternative to upgrading or installing an HA cluster for mission critical installations is to disable all unattended updates. To do this, download and install a snap in "dangerous" mode to pin a version. This gives the user the ability to control the upgrade and security patching schedule. Do this with the following combination
 
 ```
 snap download microk8s --channel=version/label 
@@ -89,8 +91,6 @@ snap download microk8s --channel=version/label
 sudo snap install microk8s_xxxx.snap --dangerous --classic 
 # where xxxx is the release number.
 ```
-
-As of version 1.19 another option for production installation is the HA version, which requires three or more physical nodes.
 
 #### Kubernetes add-ons
 
