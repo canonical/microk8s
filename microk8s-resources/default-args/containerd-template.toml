@@ -3,23 +3,30 @@ version = 2
 oom_score = 0
 
 [grpc]
+
   uid = 0
   gid = 0
   max_recv_message_size = 16777216
   max_send_message_size = 16777216
 
 [debug]
+
   address = ""
   uid = 0
   gid = 0
 
 [metrics]
+
   address = "127.0.0.1:1338"
   grpc_histogram = false
 
 [cgroup]
+
   path = ""
 
+[plugins."io.containerd.runtime.v1.linux"]
+
+  runtime = "${RUNTIME}"
 
 # The 'plugins."io.containerd.grpc.v1.cri"' table contains all of the server options.
 [plugins."io.containerd.grpc.v1.cri"]
@@ -49,18 +56,26 @@ oom_score = 0
     # of runtime configurations, to the matching configurations.
     # In this example, 'runc' is the RuntimeHandler string to match.
     [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-      # runtime_type is the runtime type to use in containerd e.g. io.containerd.runtime.v1.linux
+    # runtime_type is the runtime type to use in containerd e.g. io.containerd.runtime.v1.linux
+
       runtime_type = "io.containerd.runc.v1"
+      runtime_engine = ""
 
     [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia-container-runtime]
-      # runtime_type is the runtime type to use in containerd e.g. io.containerd.runtime.v1.linux
-      runtime_type = "io.containerd.runc.v1"
+    # runtime_type is the runtime type to use in containerd e.g. io.containerd.runtime.v1.linux
+
+      runtime_type = "io.containerd.runtime.v1.linux"
+      runtime_engine = ""
+      runtime_root = ""
+      privileged_without_host_devices = false
 
       [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia-container-runtime.options]
+
         BinaryName = "nvidia-container-runtime"
 
   # 'plugins."io.containerd.grpc.v1.cri".cni' contains config related to cni
   [plugins."io.containerd.grpc.v1.cri".cni]
+
     # bin_dir is the directory in which the binaries for the plugin is kept.
     bin_dir = "${SNAP_DATA}/opt/cni/bin"
 
@@ -72,7 +87,11 @@ oom_score = 0
 
     # 'plugins."io.containerd.grpc.v1.cri".registry.mirrors' are namespace to mirror mapping for all namespaces.
     [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+
       [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+
         endpoint = ["https://registry-1.docker.io", ]
+
       [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:32000"]
+
         endpoint = ["http://localhost:32000"]
