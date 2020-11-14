@@ -8,14 +8,16 @@ CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 read -ra ARGUMENTS <<< "$1"
 argz=("${ARGUMENTS[@]/#/--}")
 
+ARCH=$(arch)
+
 # check if linkerd cli is already in the system.  Download if it doesn't exist.
 if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
-  LINKERD_VERSION="${LINKERD_VERSION:-v2.8.0}"
+  LINKERD_VERSION="${LINKERD_VERSION:-v2.9.0}"
   echo "Fetching Linkerd2 version $LINKERD_VERSION."
   run_with_sudo mkdir -p "$SNAP_DATA/bin"
   LINKERD_VERSION=$(echo $LINKERD_VERSION | sed 's/v//g')
   echo "$LINKERD_VERSION"
-  run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/linkerd/linkerd2/releases/download/stable-${LINKERD_VERSION}/linkerd2-cli-stable-${LINKERD_VERSION}-linux -o "$SNAP_DATA/bin/linkerd"
+  run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/linkerd/linkerd2/releases/download/stable-${LINKERD_VERSION}/linkerd2-cli-stable-${LINKERD_VERSION}-linux-${ARCH} -o "$SNAP_DATA/bin/linkerd"
   run_with_sudo chmod uo+x "$SNAP_DATA/bin/linkerd"
 fi
 

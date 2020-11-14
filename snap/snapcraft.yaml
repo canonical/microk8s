@@ -484,9 +484,6 @@ parts:
         rm "actions/enable.jaeger.sh"
         rm "actions/disable.jaeger.sh"
         rm -rf "actions/jaeger"
-        # Linkerd support
-        rm "actions/enable.linkerd.sh"
-        rm "actions/disable.linkerd.sh"
         # Juju support
         rm "actions/enable.juju.sh"
         rm "actions/disable.juju.sh"
