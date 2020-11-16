@@ -11,7 +11,7 @@ app=$1
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  if [ "${app}" = "kube-apiserver" ] || [ "${app}" = "kube-controller-manager" ] || [ "${app}" = "kube-scheduler" ]
+  if [ "${app}" = "kube-controller-manager" ] || [ "${app}" = "kube-scheduler" ]
   then
     echo "${app} will not run on a cluster node"
     exit 0
@@ -66,7 +66,7 @@ then
     refresh_opt_in_config "kubelet-cgroups" "/systemd/system.slice" kubelet
   fi
 
-elif [ "${app}" = "kube-apiserver" ] || [ "${app}" = "kube-proxy" ]
+elif [ "${app}" = "kube-proxy" ]
 then
   # Check if we advertise an address. If we do we do not need to wait for a default network interface.
   if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null
@@ -85,13 +85,6 @@ then
     done
   fi
 
-  if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
-  then
-    # Mark the api server as starting. This is needed incase you
-    # microk8s stop and then snap start microk8s
-    rm -f ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
-  fi
-
   if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]
   then
     ipvs="ipv4 ipv6"
@@ -106,8 +99,7 @@ then
     done
   fi
 
-  if [ "${app}" = "kube-proxy" ] &&
-     [ -f "${SNAP_DATA}/var/lock/host-access-enabled" ] &&
+  if [ -f "${SNAP_DATA}/var/lock/host-access-enabled" ] &&
      ! ip link show lo:microk8s &> /dev/null
   then
     IP_ADDRESS=$(<"${SNAP_DATA}/var/lock/host-access-enabled")

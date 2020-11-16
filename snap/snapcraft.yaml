@@ -28,7 +28,7 @@ apps:
     command: run-containerd-with-args
     daemon: simple
   daemon-apiserver:
-    command: run-with-config-args kube-apiserver
+    command: run-apiserver-with-args
     daemon: simple
   daemon-apiserver-kicker:
     command: apiservice-kicker

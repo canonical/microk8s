@@ -91,6 +91,19 @@ run_with_sudo() {
   fi
 }
 
+get_opt_in_config() {
+    # return the value of an option in a configuration file or ""
+    local opt="$1"
+    local config_file="$SNAP_DATA/args/$2"
+    val=""
+    if $(grep -qE "^$opt=" $config_file); then
+      val="$(grep -E "^$opt" "$config_file" | cut -d'=' -f2)"
+    elif $(grep -qE "^$opt " $config_file); then
+      val="$(grep -E "^$opt" "$config_file" | cut -d' ' -f2)"
+    fi
+    echo "$val"
+}
+
 refresh_opt_in_config() {
     # add or replace an option inside the config file.
     # Create the file if doesn't exist

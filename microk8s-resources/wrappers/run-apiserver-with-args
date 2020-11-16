@@ -1,0 +1,54 @@
+#!/bin/bash
+set -ex
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+ARCH="$($SNAP/bin/uname -m)"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+
+source $SNAP/actions/common/utils.sh
+
+app=kube-apiserver
+
+if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  echo "${app} will not run on a cluster node"
+  exit 0
+fi
+
+
+# Check if we advertise an address. If we do we do not need to wait for a default network interface.
+if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null
+then
+  # we keep this command to cleanup the file, as it is no longer needed.
+  rm -f ${SNAP_DATA}/external_ip.txt
+  # wait up to two minutes for the default network interface to appear.
+  n=0
+  until [ $n -ge 20 ]
+  do
+    ip route | grep default &> /dev/null && break
+    ip -6 route | grep default &> /dev/null && break
+    echo "Waiting for default route to appear. (attempt $n)"
+    n=$[$n+1]
+    sleep 6
+  done
+fi
+
+if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
+then
+  # Mark the api server as starting. This is needed incase you
+  # microk8s stop and then snap start microk8s
+  rm -f ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+fi
+
+if [ -e ${SNAP_DATA}/args/ha-conf ]
+then
+  storage_param="$(get_opt_in_config '--storage-dir' 'kube-apiserver')"
+  storage_dir="$(eval echo $storage_param)"
+  if $(grep -qE "^failure-domain" "${SNAP_DATA}/args/ha-conf"); then
+    val="$(get_opt_in_config 'failure-domain' 'ha-conf')"
+    echo "$val" > $storage_dir/failure-domain
+  fi
+fi
+
+declare -a args="($(cat $SNAP_DATA/args/$app))"
+exec "$SNAP/$app" "${args[@]}"
