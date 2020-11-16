@@ -22,6 +22,7 @@ from validators import (
     validate_kubeflow,
     validate_metallb_config,
     validate_prometheus,
+    validate_portainer,
 )
 from utils import (
     microk8s_enable,
@@ -321,6 +322,17 @@ class TestAddons(object):
         validate_multus()
         print("Disabling Multus")
         microk8s_disable("multus")
+
+    def test_portainer(self):
+        """
+        Sets up and validates Portainer.
+        """
+        print("Enabling Portainer")
+        microk8s_enable("portainer")
+        print("Validating Portainer")
+        validate_portainer()
+        print("Disabling Portainer")
+        microk8s_disable("portainer")
 
     def test_backup_restore(self):
         """

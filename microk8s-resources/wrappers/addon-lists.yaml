@@ -166,10 +166,19 @@ microk8s-addons:
       check_status: "deployment.apps/ambassador-operator"
       supported_architectures:
       - amd64
+        
     - name: "ha-cluster"
       description: "Configure high availability on the current node"
       version: "0.1.0"
       check_status: "${SNAP_DATA}/var/lock/ha-cluster"
+      supported_architectures:
+      - arm64
+      - amd64
+        
+    - name: "portainer"
+      description: "Portainer UI for your Kubernetes cluster"
+      version: "2.0.0"
+      check_status: "pod/portainer"
       supported_architectures:
       - arm64
       - amd64
