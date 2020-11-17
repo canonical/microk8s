@@ -48,7 +48,7 @@ spec:
   selector:
     app: microbot
 ---
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
  name: microbot-ingress-xip
@@ -58,11 +58,14 @@ spec:
      http:
        paths:
          - path: /
+           pathType: Prefix
            backend:
-             serviceName: microbot
-             servicePort: 80
+             service:
+               name: microbot
+               port:
+                 number: 80
 ---
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
  name: microbot-ingress-nip
@@ -72,6 +75,9 @@ spec:
      http:
        paths:
          - path: /
+           pathType: Prefix
            backend:
-             serviceName: microbot
-             servicePort: 80
+             service:
+               name: microbot
+               port:
+                 number: 80
