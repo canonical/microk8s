@@ -289,7 +289,7 @@ def main():
         '-nkube-system',
         'rollout',
         'status',
-        'ds/calico-node',
+        'deployment.apps/calico-kube-controllers',
         debug=args['debug'],
     )
 
