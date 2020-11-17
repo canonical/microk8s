@@ -3,6 +3,7 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
+
 CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
 
 ARCH=$(arch)
@@ -36,7 +37,7 @@ echo "Enabling Cilium"
 
 read -ra CILIUM_VERSION <<< "$1"
 if [ -z "$CILIUM_VERSION" ]; then
-  CILIUM_VERSION="v1.6"
+  CILIUM_VERSION="v1.8"
 fi
 CILIUM_ERSION=$(echo $CILIUM_VERSION | sed 's/v//g')
 
@@ -64,6 +65,8 @@ else
   run_with_sudo mv "$SNAP_DATA/args/cni-network/flannel.conflist" "$SNAP_DATA/args/cni-network/20-flanneld.conflist" 2>/dev/null || true
   run_with_sudo cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF" "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
 
+  run_with_sudo mkdir -p "$SNAP_DATA/actions/cilium/"
+
   # Generate the YAMLs for Cilium and apply them
   (cd "${SNAP_DATA}/tmp/cilium/$CILIUM_DIR/install/kubernetes"
   ${SNAP_DATA}/bin/helm3 template cilium \
@@ -73,11 +76,9 @@ else
       --set global.cni.customConf=true \
       --set global.containerRuntime.integration="containerd" \
       --set global.containerRuntime.socketPath="$SNAP_COMMON/run/containerd.sock" \
-      | run_with_sudo tee cilium.yaml >/dev/null)
-
-  run_with_sudo mkdir -p "$SNAP_DATA/actions/cilium/"
-  run_with_sudo cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/install/kubernetes/cilium.yaml" "$SNAP_DATA/actions/cilium.yaml"
-  run_with_sudo sed -i 's;path: \(/var/run/cilium\);path: '"$SNAP_DATA"'\1;g' "$SNAP_DATA/actions/cilium.yaml"
+      --set global.daemon.runPath="$SNAP_DATA/var/run/cilium" \
+      --set operator.numReplicas=1 \
+      | run_with_sudo tee "$SNAP_DATA/actions/cilium.yaml" >/dev/null)
 
   ${SNAP}/microk8s-status.wrapper --wait-ready >/dev/null
   echo "Deploying $SNAP_DATA/actions/cilium.yaml. This may take several minutes."
@@ -87,6 +88,8 @@ else
   if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]
   then
     "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" delete -f "$SNAP_DATA/args/cni-network/cni.yaml"
+    # give a bit slack before moving the file out, sometimes it gives out this error "rpc error: code = Unknown desc = checkpoint in progress".
+    sleep 2s
     run_with_sudo mv "$SNAP_DATA/args/cni-network/cni.yaml" "$SNAP_DATA/args/cni-network/cni.yaml.disabled"
   fi
 
