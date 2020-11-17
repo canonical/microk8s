@@ -1,6 +1,5 @@
 import pytest
 import os
-import platform
 import time
 import requests
 from utils import (
