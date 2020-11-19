@@ -113,9 +113,19 @@ apply_cni() {
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s reset on the master."
+  echo "This MicroK8s deployment is acting as a node in a cluster."
+  echo "Please remove the node before calling reset."
   exit 0
 fi
+
+NODES_NUM=$($KUBECTL get no -o name | wc -l)
+if [ $NODES_NUM -ge 2 ]
+then
+  echo "This is a multi-node MicroK8s deployment. Reset is applicable for single node clusters."
+  echo "Please remove all joined nodes before calling reset."
+  exit 0
+fi
+
 
 destroy_storage_enabled=false
 while getopts ':h-:' opt; do
@@ -148,6 +158,13 @@ while getopts ':h-:' opt; do
 
   esac
 done
+
+# Fail if there are parameters we do not expect
+if [ $(( $# - $OPTIND )) -ge 0 ]; then
+  echo "Invalid parameter" >&2
+  echo "Try '${SNAP_NAME} --help' for more information."
+  exit 2
+fi
 
 exit_if_stopped
 exit_if_no_permissions
