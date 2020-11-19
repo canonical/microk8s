@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-echo "Switching master to dqlite"
+echo "Switching master to flannel-etcd"
 
 source $SNAP/actions/common/utils.sh
 CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt

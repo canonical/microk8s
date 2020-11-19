@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-echo "Rolling back dqlite upgrade on master"
+echo "Rolling back flannel-etcd upgrade on master"
 
 source $SNAP/actions/common/utils.sh
 CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
@@ -41,4 +41,4 @@ if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]; then
   $KUBECTL apply -f "$SNAP_DATA/args/cni-network/cni.yaml"
 fi
 
-echo "Flannle-etcd rolled back"
+echo "Flannel-etcd rolled back"
