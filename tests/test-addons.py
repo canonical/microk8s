@@ -24,6 +24,7 @@ from validators import (
     validate_prometheus,
     validate_portainer,
     validate_traefik,
+    validate_keda,
 )
 from utils import (
     microk8s_enable,
@@ -216,6 +217,10 @@ class TestAddons(object):
         microk8s_disable("metrics-server")
 
     @pytest.mark.skipif(
+        platform.machine() != 'x86_64',
+        reason="Linkerd tests are only relevant in x86 architectures",
+    )
+    @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
         reason="Skipping Linkerd tests as we are under time pressure",
     )
@@ -351,3 +356,21 @@ class TestAddons(object):
         validate_traefik()
         print("Disabling traefik")
         microk8s_disable("traefik")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64', reason="KEDA tests are only relevant in x86 architectures"
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping KEDA tests as we are under time pressure",
+    )
+    def test_keda(self):
+        """
+        Sets up and validates keda.
+        """
+        print("Enabling keda")
+        microk8s_enable("keda")
+        print("Validating keda")
+        validate_keda()
+        print("Disabling keda")
+        microk8s_disable("keda")
