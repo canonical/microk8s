@@ -490,6 +490,9 @@ parts:
         rm "actions/enable.multus.sh"
         rm "actions/disable.multus.sh"
         rm "actions/multus.yaml"
+        # KEDA support
+        rm "actions/enable.keda.sh"
+        rm "actions/disable.keda.sh"        
       fi
 
       echo "Creating inspect hook"
