@@ -354,4 +354,4 @@ class TestAddons(object):
         print("Validating traefik")
         validate_traefik()
         print("Disabling traefik")
-        microk8s_disable("trafik")
+        microk8s_disable("traefik")
