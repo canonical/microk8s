@@ -70,6 +70,8 @@ jobs:
         sudo pip3 install pytest sh kfp requests pyyaml
         git clone https://github.com/juju-solutions/bundle-kubeflow.git
         cd bundle-kubeflow
+        sudo microk8s status --wait-ready
+        sudo microk8s kubectl -n kube-system rollout status ds/calico-node
         trap 'sudo pkill -f svc/pipelines-api' SIGINT SIGTERM EXIT
         sudo microk8s kubectl -n kubeflow port-forward svc/pipelines-api 8888:8888 &
         (i=30; while ! curl localhost:8888 ; do ((--i)) || exit; sleep 1; done)
@@ -179,6 +181,8 @@ jobs:
           sudo pip3 install pytest sh kfp requests pyyaml
           git clone https://github.com/juju-solutions/bundle-kubeflow.git
           cd bundle-kubeflow
+          sudo microk8s status --wait-ready
+          sudo microk8s kubectl -n kube-system rollout status ds/calico-node
           trap 'sudo pkill -f svc/pipelines-api' SIGINT SIGTERM EXIT
           microk8s kubectl -n kubeflow port-forward svc/pipelines-api 8888:8888 &
           (i=30; while ! curl localhost:8888 ; do ((--i)) || exit; sleep 1; done)
