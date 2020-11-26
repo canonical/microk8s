@@ -1,78 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+export PYTHONNOUSERSITE=false
 
 source $SNAP/actions/common/utils.sh
 
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s disable on the master."
-  exit 0
-fi
-
-if echo "$*" | grep -q -- '--help'; then
-    prog=$(basename -s.wrapper "$0" | tr - .)
-    echo "Usage: $prog ADDON..."
-    echo "Disable one or more ADDON included with microk8s"
-    echo "Example: $prog dns storage"
-    echo
-    echo "Available addons:"
-    echo
-    actions="$(find "${SNAP}/actions" -name '*.yaml' -or -name 'disable.*.sh')"
-    actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
-    for action in $actions; do
-        echo "  $action"
-    done
-    exit 0
-fi
-
-exit_if_stopped
 exit_if_no_permissions
 
-result=1
-for addon in "$@"; do
-  # Making sure the cluster is up and running befor each addon
-  ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 >/dev/null
-  action="$(addon_name $addon)"
-  arguments="$(addon_arguments $addon)"
-  # Check if the addon is already disabled, then skip.
-  if ${SNAP}/microk8s-status.wrapper --addon $action | grep "disabled" >/dev/null &&
-     ! [ "$action" = "kubeflow" ]
-  then
-    echo "Addon $action is already disabled."
-    result=0
-    continue
-  fi
-
-  # If there is a script to execute for the action $1 run the script and ignore any yamls
-  if [ -f "${SNAP}/actions/disable.$action.sh" ]; then
-    "${SNAP}/actions/disable.$action.sh" "${arguments}"
-    disable_result="$?"
-    if [ "$disable_result" = "0" ]
-    then
-      result=0
-    else
-      echo "Failed to disable $action"
-      exit 1
-    fi
-  elif [ -f "${SNAP}/actions/$action.yaml" ]; then
-    echo "Disabling $action"
-    use_manifest $action delete
-    if [ "$use_manifest_result" = "0" ]
-    then
-      echo "$action disabled"
-      result=0
-    else
-      echo "Failed to disable $action"
-      exit 1
-    fi
-  else
-    echo "Nothing to do for $action"
-    exit 2
-  fi
-done
-exit $result
+LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/disable.py $@

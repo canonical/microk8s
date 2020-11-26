@@ -1,64 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+export PYTHONNOUSERSITE=false
 
 source $SNAP/actions/common/utils.sh
 
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s enable on the master."
-  exit 0
-fi
-
-if echo "$*" | grep -q -- '--help'; then
-    LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/enable.py $@
-    exit
-fi
-
-exit_if_stopped
 exit_if_no_permissions
 
-result=1
-for addon in "$@"; do
-  # Making sure the cluster is up and running before each addon
-  action="$(addon_name $addon)"
-  arguments="$(addon_arguments $addon)"
-  # Check if the addon is already enabled, then skip.
-  if ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 --addon $action | grep "enabled" >/dev/null; then
-    echo "Addon $action is already enabled."
-    result=0
-    continue
-  fi
-  
-  # If there is a script to execute for the $action run the script and ignore any yamls
-  if [ -f "${SNAP}/actions/enable.$action.sh" ]; then
-    "${SNAP}/actions/enable.$action.sh" "${arguments}"
-    enable_result="$?"
-    if [ "$enable_result" = "0" ]
-    then
-      result=0
-    else
-      echo "Failed to enable $action"
-      exit 1
-    fi
-  elif [ -f "${SNAP}/actions/$action.yaml" ]; then
-    echo "Enabling $action"
-    use_manifest $action apply
-    if [ "$use_manifest_result" = "0" ]
-    then
-      echo "$action enabled"
-      result=0
-    else
-      echo "Failed to enable $action"
-      exit 1
-    fi
-  else
-    echo "Nothing to do for $action"
-    exit 2
-  fi
-done
-exit $result
+LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/enable.py $@
