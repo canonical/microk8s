@@ -115,7 +115,7 @@ def get_dqlite_info():
 def is_cluster_locked():
     if (snap_data() / 'var/lock/clustered.lock').exists():
         click.echo('This MicroK8s deployment is acting as a node in a cluster.')
-        click.echo('Please use `microk8s enable` on the master.')
+        click.echo('Please use the master node.')
         sys.exit(1)
 
 
@@ -161,7 +161,7 @@ def exit_if_no_permission():
 
 def ensure_started():
     if (snap_data() / 'var/lock/stopped.lock').exists():
-        click.secho('microk8s is not running, try microk8s start', fg='red', err=True)
+        click.echo('microk8s is not running, try microk8s start', err=True)
         sys.exit(1)
 
 
@@ -233,7 +233,7 @@ def xable(action: str, addons: list, xabled_addons: list):
     Collated into a single function since the logic is identical other than
     the script names.
     """
-    actions = Path(__file__).absolute().parent / "../../../microk8s-resources/actions"
+    actions = Path(__file__).absolute().parent / "../../../actions"
     existing_addons = {sh.with_suffix('').name[7:] for sh in actions.glob('enable.*.sh')}
 
     # Backwards compatibility with enabling multiple addons at once, e.g.
@@ -256,29 +256,17 @@ def xable(action: str, addons: list, xabled_addons: list):
             sys.exit(0)
 
         if addon not in existing_addons:
-            click.secho("Addon `%s` not found." % addon, fg='red', err=True)
-            click.echo("The available addons are:\n - %s" % '\n - '.join(existing_addons), err=True)
+            click.echo("Nothing to do for `%s`." % addon, err=True)
             sys.exit(1)
 
         if args and addons[1:]:
-            click.secho(
-                click.style(
-                    "Can't pass string arguments and flag arguments simultaneously!\n", fg='red'
-                )
-                + textwrap.dedent(
-                    """
-                    {0} an addon with only one argument style at a time:
-
-                        microk8s {1} foo:'bar'
-                    or
-
-                        microk8s {1} foo --bar
-                """.format(
-                        action.title(), action
-                    )
-                ),
-                err=True,
-            )
+            click.echo("Can't pass string arguments and flag arguments simultaneously!\n"
+                       "{0} an addon with only one argument style at a time:\n"
+                       "\n"
+                       "    microk8s {1} foo:'bar'\n"
+                       "or\n"
+                       "    microk8s {1} foo --bar\n".format(action.title(), action)
+                       )
             sys.exit(1)
 
         script = [str(actions / ('%s.%s.sh' % (action, addon)))]
