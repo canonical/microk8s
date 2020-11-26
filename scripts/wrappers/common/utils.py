@@ -260,13 +260,14 @@ def xable(action: str, addons: list, xabled_addons: list):
             sys.exit(1)
 
         if args and addons[1:]:
-            click.echo("Can't pass string arguments and flag arguments simultaneously!\n"
-                       "{0} an addon with only one argument style at a time:\n"
-                       "\n"
-                       "    microk8s {1} foo:'bar'\n"
-                       "or\n"
-                       "    microk8s {1} foo --bar\n".format(action.title(), action)
-                       )
+            click.echo(
+                "Can't pass string arguments and flag arguments simultaneously!\n"
+                "{0} an addon with only one argument style at a time:\n"
+                "\n"
+                "    microk8s {1} foo:'bar'\n"
+                "or\n"
+                "    microk8s {1} foo --bar\n".format(action.title(), action)
+            )
             sys.exit(1)
 
         script = [str(actions / ('%s.%s.sh' % (action, addon)))]
