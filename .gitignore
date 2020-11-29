@@ -15,3 +15,5 @@ tests/__pycache__
 /installer/**/__pycache__
 /installer/dist/
 /installer/build/
+.tox_env/
+__pycache__/

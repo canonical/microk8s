@@ -1,0 +1,6 @@
+kubernetes
+jinja2
+pylxd
+pytest
+pytest-xdist
+pyyaml

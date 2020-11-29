@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox
+  namespace: default
+spec:
+  containers:
+  - name: busybox
+    # nslookup on latest busybox is broken:
+    # https://github.com/docker-library/busybox/issues/48
+    image: {{ image if image != None else 'busybox:1.28.4' }}
+    command:
+      - sleep
+      - "3600"
+    imagePullPolicy: IfNotPresent
+  restartPolicy: Always
