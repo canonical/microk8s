@@ -80,10 +80,11 @@ microk8s-addons:
 
     - name: "prometheus"
       description: "Prometheus operator for monitoring and logging"
-      version: "v0.6.0"
-      check_status: "pod/prometheus-k8s-0"
+      version: "v2.23.0"
+      check_status: "pod/prometheus"
       supported_architectures:
       - amd64
+      - arm64
 
     - name: "fluentd"
       description: "Elasticsearch-Fluentd-Kibana logging and monitoring"
@@ -94,10 +95,11 @@ microk8s-addons:
 
     - name: "jaeger"
       description: "Kubernetes Jaeger operator with its simple config"
-      version: "1.14.0"
+      version: "1.21.2"
       check_status: "pod/jaeger-operator"
       supported_architectures:
       - amd64
+      - arm64
 
     - name: "linkerd"
       description: "Linkerd is a service mesh for Kubernetes and other frameworks"
@@ -174,7 +176,7 @@ microk8s-addons:
       supported_architectures:
       - arm64
       - amd64
-        
+
     - name: "portainer"
       description: "Portainer UI for your Kubernetes cluster"
       version: "2.0.0"
