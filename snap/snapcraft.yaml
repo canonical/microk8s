@@ -470,10 +470,6 @@ parts:
         # Knative support
         rm "actions/enable.knative.sh"
         rm "actions/disable.knative.sh"
-        # Prometheus support
-        rm "actions/enable.prometheus.sh"
-        rm "actions/disable.prometheus.sh"
-        rm -rf "actions/prometheus"
         # Fluentd support
         rm "actions/enable.fluentd.sh"
         rm "actions/disable.fluentd.sh"

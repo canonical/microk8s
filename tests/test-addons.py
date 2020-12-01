@@ -134,15 +134,15 @@ class TestAddons(object):
 
     @pytest.mark.skipif(
         platform.machine() != 'x86_64',
-        reason="Fluentd, prometheus, jaeger tests are only relevant in x86 architectures",
+        reason="Fluentd and jaeger tests are only relevant in x86 architectures",
     )
     @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping jaeger, prometheus and fluentd tests as we are under time pressure",
+        reason="Skipping jaeger and fluentd tests as we are under time pressure",
     )
     def test_monitoring_addons(self):
         """
-        Test jaeger, prometheus and fluentd.
+        Test jaeger and fluentd.
 
         """
 
@@ -159,10 +159,6 @@ class TestAddons(object):
         print("Disabling fluentd")
         microk8s_disable("fluentd")
 
-    @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
-        reason="Prometheus is only relevant in x86 architectures",
-    )
     @pytest.mark.skipif(
         os.environ.get('SKIP_PROMETHEUS') == 'True',
         reason="Skipping prometheus if it crash loops on lxd",
