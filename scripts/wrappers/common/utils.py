@@ -226,6 +226,20 @@ def set_service_expected_to_start(service, start=True):
         os.close(fd)
 
 
+def check_help_flag(addons: list) -> bool:
+    """Checks to see if a help message needs to be printed for an addon.
+
+    Not all addons check for help flags themselves. Until they do, intercept
+    calls to print help text and print out a generic message to that effect.
+    """
+    addon = addons[0]
+    if any(arg in addons for arg in ('-h', '--help')) and addon != 'kubeflow':
+        print("Addon %s does not yet have a help message." % addon)
+        print("For more information about it, visit https://microk8s.io/docs/addons")
+        return True
+    return False
+
+
 def xable(action: str, addons: list, xabled_addons: list):
     """Enables or disables the given addons.
 
@@ -243,7 +257,9 @@ def xable(action: str, addons: list, xabled_addons: list):
                 click.echo("Addon %s is already %sd." % (addon, action))
             else:
                 addon, *args = addon.split(':')
+                wait_for_ready(timeout=30)
                 subprocess.run([str(actions / ('%s.%s.sh' % (action, addon)))] + args)
+                wait_for_ready(timeout=30)
 
     # The new way of xabling addons, that allows for unix-style argument passing,
     # such as `microk8s.enable foo --bar`.
@@ -269,8 +285,11 @@ def xable(action: str, addons: list, xabled_addons: list):
             )
             sys.exit(1)
 
+        wait_for_ready(timeout=30)
         script = [str(actions / ('%s.%s.sh' % (action, addon)))]
         if args:
             subprocess.run(script + args)
         else:
             subprocess.run(script + list(addons[1:]))
+
+        wait_for_ready(timeout=30)

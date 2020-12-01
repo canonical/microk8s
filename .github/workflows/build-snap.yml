@@ -53,8 +53,19 @@ jobs:
         (cd tests; sudo -E pytest -s -ra test-addons.py)
         sudo microk8s reset
         sudo snap remove microk8s --purge
+
+    - name: Running --help handling tests
+      run: |
+        set -eux
+        sudo snap install *.snap --classic --dangerous
+        sudo pip3 install sh
+        sudo pytest tests/test-addons.py -k addon_args
+        sudo snap remove microk8s --purge
+
     - name: Running upgrade tests
       run: |
         set -x
         export UNDER_TIME_PRESSURE="True"
         sudo -E UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade.py
+
+        

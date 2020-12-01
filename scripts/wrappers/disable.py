@@ -2,8 +2,15 @@
 
 import click
 
-from common.utils import ensure_started, exit_if_no_permission, is_cluster_locked, xable
-from status import get_status, get_available_addons, get_current_arch
+from common.utils import (
+    ensure_started,
+    exit_if_no_permission,
+    is_cluster_locked,
+    check_help_flag,
+    wait_for_ready,
+    xable,
+)
+from status import get_available_addons, get_current_arch, get_status
 
 
 @click.command(context_settings={'ignore_unknown_options': True})
@@ -18,9 +25,13 @@ def disable(addons):
         microk8s disable ADDON -- --help
     """
 
+    if check_help_flag(addons):
+        return
+
     is_cluster_locked()
     exit_if_no_permission()
     ensure_started()
+    wait_for_ready(timeout=30)
 
     _, disabled_addons = get_status(get_available_addons(get_current_arch()), True)
     disabled_addons = {a['name'] for a in disabled_addons}
