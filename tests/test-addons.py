@@ -216,10 +216,6 @@ class TestAddons(object):
         microk8s_disable("metrics-server")
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
-        reason="Linkerd tests are only relevant in x86 architectures",
-    )
-    @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
         reason="Skipping Linkerd tests as we are under time pressure",
     )
