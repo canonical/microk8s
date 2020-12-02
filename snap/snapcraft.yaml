@@ -100,16 +100,6 @@ apps:
     command: microk8s-dbctl.wrapper
 
 parts:
-  libco:
-    source: https://github.com/canonical/libco
-    build-attributes: [no-patchelf]
-    source-type: git
-    plugin: make
-    organize:
-      usr/lib/: lib/
-    prime:
-      - lib/libco*so*
-
   raft:
     source: https://github.com/canonical/raft
     build-attributes: [no-patchelf]
@@ -153,7 +143,6 @@ parts:
 
   dqlite:
     after:
-      - libco
       - raft
       - sqlite
     source: https://github.com/canonical/dqlite
