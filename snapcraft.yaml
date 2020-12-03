@@ -114,10 +114,9 @@ parts:
   containerd:
     build-snaps: [go]
     after: [iptables]
-    source: https://github.com/containerd/containerd
+    source: .
     source-type: git
-    plugin: go
-    go-importpath: github.com/containerd/containerd
+    plugin: dump
     build-packages:
     - btrfs-tools
     - libseccomp-dev
@@ -150,7 +149,7 @@ parts:
       cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
 
       # Assemble the snap
-      # snapcraftctl build
+      snapcraftctl build
     organize:
       containerd/install/bin/*: bin/
     stage-packages:
