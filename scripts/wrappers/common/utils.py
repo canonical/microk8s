@@ -118,19 +118,16 @@ def is_cluster_locked():
         sys.exit(1)
 
 
-def wait_for_ready(wait_ready, timeout):
+def wait_for_ready(timeout):
     start_time = time.time()
-    isReady = False
 
     while True:
-        if (timeout > 0 and (time.time() > (start_time + timeout))) or isReady:
-            break
-        try:
-            isReady = is_cluster_ready()
-        except Exception:
+        if is_cluster_ready():
+            return True
+        elif timeout and time.time() > start_time + timeout:
+            return False
+        else:
             time.sleep(2)
-
-    return isReady
 
 
 def exit_if_stopped():
