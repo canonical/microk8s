@@ -11,7 +11,6 @@ from validators import (
     validate_metrics_server,
     validate_fluentd,
     validate_jaeger,
-    validate_cilium,
     validate_metallb_config,
 )
 from subprocess import check_call, CalledProcessError, check_output
