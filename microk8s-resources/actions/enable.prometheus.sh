@@ -35,6 +35,17 @@ get_kube_prometheus () {
   fi
 }
 
+use_multiarch_images() {
+  # Use multi-arch kube-state-metrics
+  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-state-metrics:v1.9.5@gcr.io/k8s-staging-kube-state-metrics/kube-state-metrics:v1.9.7@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
+  # use kube-rbac-proxy multi-arch
+  # This is the same image used in the master branch of kube-prometheus
+  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-rbac-proxy:v0.4.1@quay.io/brancz/kube-rbac-proxy:v0.8.0@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
+  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-rbac-proxy:v0.4.1@quay.io/brancz/kube-rbac-proxy:v0.8.0@g' ${SNAP_DATA}/kube-prometheus/manifests/node-exporter-daemonset.yaml
+  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-rbac-proxy:v0.4.1@quay.io/brancz/kube-rbac-proxy:v0.8.0@g' ${SNAP_DATA}/kube-prometheus/manifests/setup/prometheus-operator-deployment.yaml
+}
+
+
 set_replicas_to_one() {
   # alert manager must be set to 1 replica
   run_with_sudo $SNAP/bin/sed -i 's@replicas: .@replicas: 1@g' ${SNAP_DATA}/kube-prometheus/manifests/alertmanager-alertmanager.yaml
@@ -62,6 +73,7 @@ done
 do_prerequisites
 get_kube_prometheus
 set_replicas_to_one
+use_multiarch_images
 enable_prometheus
 
 echo "The Prometheus operator is enabled (user/pass: admin/admin)"

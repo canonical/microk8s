@@ -84,6 +84,7 @@ microk8s-addons:
       check_status: "pod/prometheus-k8s-0"
       supported_architectures:
       - amd64
+      - arm64
 
     - name: "fluentd"
       description: "Elasticsearch-Fluentd-Kibana logging and monitoring"
