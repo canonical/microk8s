@@ -502,3 +502,18 @@ def validate_portainer():
     Validate portainer
     """
     wait_for_pod_state("", "portainer", "running", label="app.kubernetes.io/name=portainer")
+
+
+def validate_keda():
+    """
+    Validate keda
+    """
+    wait_for_installation()
+    wait_for_pod_state("", "keda", "running", label="app=keda-operator")
+    print("KEDA operator up and running.")
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "keda-scaledobject.yaml")
+    kubectl("apply -f {}".format(manifest))
+    scaledObject = kubectl("-n gonuts get scaledobject.keda.sh")
+    assert "stan-scaledobject" in scaledObject
+    kubectl("delete -f {}".format(manifest))
