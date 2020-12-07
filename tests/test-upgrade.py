@@ -151,6 +151,8 @@ class TestUpgrade(object):
             except CalledProcessError:
                 print('Will not test the jaeger addon')
 
+            # We are not testing cilium because we want to test the upgrade of the default CNI
+            """
             try:
                 enable = microk8s_enable("cilium", timeout_insec=300)
                 assert "Nothing to do for" not in enable
@@ -158,6 +160,7 @@ class TestUpgrade(object):
                 test_matrix['cilium'] = validate_cilium
             except CalledProcessError:
                 print('Will not test the cilium addon')
+            """
             try:
                 ip_ranges = (
                     "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111,192.168.1.240/28"
