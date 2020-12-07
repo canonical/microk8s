@@ -1,8 +1,12 @@
 name: Test Kubeflow
 
 on:
-  - push
-  - pull_request
+  push:
+    paths-ignore:
+      - 'docs/**'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
 
 jobs:
   build:
@@ -121,6 +125,7 @@ jobs:
     name: AWS
     runs-on: ubuntu-latest
     needs: [build]
+    if: github.event.pull_request.head.repo.full_name == github.repository
     strategy:
       fail-fast: false
       matrix:
