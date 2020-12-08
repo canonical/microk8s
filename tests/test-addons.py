@@ -1,42 +1,42 @@
+import pytest
 import os
 import platform
-from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
-
-import pytest
 import sh
 import yaml
 
-from utils import (
-    microk8s_disable,
-    microk8s_enable,
-    microk8s_reset,
-    wait_for_namespace_termination,
-    wait_for_pod_state,
-)
 from validators import (
-    validate_ambassador,
-    validate_cilium,
     validate_dns_dashboard,
-    validate_fluentd,
-    validate_forward,
-    validate_gpu,
+    validate_storage,
     validate_ingress,
+    validate_ambassador,
+    validate_gpu,
     validate_istio,
+    validate_knative,
+    validate_registry,
+    validate_forward,
+    validate_metrics_server,
+    validate_fluentd,
     validate_jaeger,
     validate_keda,
-    validate_knative,
-    validate_kubeflow,
     validate_linkerd,
-    validate_metallb_config,
-    validate_metrics_server,
-    validate_multus,
-    validate_portainer,
-    validate_prometheus,
     validate_rbac,
-    validate_registry,
-    validate_storage,
+    validate_cilium,
+    validate_multus,
+    validate_kubeflow,
+    validate_metallb_config,
+    validate_prometheus,
     validate_traefik,
+    validate_coredns_config,
+    validate_portainer,
 )
+from utils import (
+    microk8s_enable,
+    wait_for_pod_state,
+    wait_for_namespace_termination,
+    microk8s_disable,
+    microk8s_reset,
+)
+from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
 
 
 class TestAddons(object):
@@ -335,15 +335,19 @@ class TestAddons(object):
         print("Disabling Portainer")
         microk8s_disable("portainer")
 
-    def test_backup_restore(self):
-        """
-        Test backup and restore commands.
-        """
-        print('Checking dbctl backup and restore')
-        if os.path.exists('backupfile.tar.gz'):
-            os.remove('backupfile.tar.gz')
-        check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
-        check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping dns tests as we are under time pressure",
+    )
+    def test_dns_addon(self):
+        ip_ranges = "8.8.8.8,1.1.1.1"
+        print("Enabling DNS")
+        microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
+        wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
+        print("Validating DNS config")
+        validate_coredns_config(ip_ranges)
+        print("Disabling DNS")
+        microk8s_disable("dns")
 
     def test_traefik(self):
         """
@@ -373,6 +377,16 @@ class TestAddons(object):
         validate_keda()
         print("Disabling keda")
         microk8s_disable("keda")
+
+    def test_backup_restore(self):
+        """
+        Test backup and restore commands.
+        """
+        print('Checking dbctl backup and restore')
+        if os.path.exists('backupfile.tar.gz'):
+            os.remove('backupfile.tar.gz')
+        check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
+        check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
 
 
 @pytest.mark.addon_args

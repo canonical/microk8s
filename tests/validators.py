@@ -490,18 +490,15 @@ def validate_metallb_config(ip_ranges="192.168.0.105"):
         assert ip_range in out
 
 
-def validate_traefik():
+def validate_coredns_config(ip_ranges="8.8.8.8,1.1.1.1"):
     """
-    Validate traefik
+    Validate dns
     """
-    wait_for_pod_state("", "traefik", "running", label="name=traefik-ingress-lb")
-
-
-def validate_portainer():
-    """
-    Validate portainer
-    """
-    wait_for_pod_state("", "portainer", "running", label="app.kubernetes.io/name=portainer")
+    out = kubectl("get configmap coredns -n kube-system -o jsonpath='{.data.Corefile}'")
+    expected_forward_val = "forward ."
+    for ip_range in ip_ranges.split(","):
+        expected_forward_val = expected_forward_val + " " + ip_range
+    assert expected_forward_val in out
 
 
 def validate_keda():
@@ -517,3 +514,17 @@ def validate_keda():
     scaledObject = kubectl("-n gonuts get scaledobject.keda.sh")
     assert "stan-scaledobject" in scaledObject
     kubectl("delete -f {}".format(manifest))
+
+
+def validate_traefik():
+    """
+    Validate traefik
+    """
+    wait_for_pod_state("", "traefik", "running", label="name=traefik-ingress-lb")
+
+
+def validate_portainer():
+    """
+    Validate portainer
+    """
+    wait_for_pod_state("", "portainer", "running", label="app.kubernetes.io/name=portainer")
