@@ -1,42 +1,37 @@
+import pytest
 import os
 import platform
-from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
 
-import pytest
-import sh
-import yaml
-
-from utils import (
-    microk8s_disable,
-    microk8s_enable,
-    microk8s_reset,
-    wait_for_namespace_termination,
-    wait_for_pod_state,
-)
 from validators import (
-    validate_ambassador,
-    validate_cilium,
     validate_dns_dashboard,
-    validate_fluentd,
-    validate_forward,
-    validate_gpu,
-    validate_ingress,
-    validate_istio,
-    validate_jaeger,
-    validate_keda,
-    validate_knative,
-    validate_kubeflow,
-    validate_linkerd,
-    validate_metallb_config,
-    validate_metrics_server,
-    validate_multus,
-    validate_portainer,
-    validate_prometheus,
-    validate_rbac,
-    validate_registry,
     validate_storage,
-    validate_traefik,
+    validate_ingress,
+    validate_ambassador,
+    validate_gpu,
+    validate_istio,
+    validate_knative,
+    validate_registry,
+    validate_forward,
+    validate_metrics_server,
+    validate_fluentd,
+    validate_jaeger,
+    validate_linkerd,
+    validate_rbac,
+    validate_cilium,
+    validate_multus,
+    validate_kubeflow,
+    validate_metallb_config,
+    validate_prometheus,
+    validate_coredns_config
 )
+from utils import (
+    microk8s_enable,
+    wait_for_pod_state,
+    wait_for_namespace_termination,
+    microk8s_disable,
+    microk8s_reset,
+)
+from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
 
 
 class TestAddons(object):
@@ -335,6 +330,15 @@ class TestAddons(object):
         print("Disabling Portainer")
         microk8s_disable("portainer")
 
+    def test_dns_addon(self):
+        addon = "dns"
+        ip_ranges = "8.8.8.8,8.8.8.4"
+        print("Enabling dns")
+        microk8s_enable("{}:{}".format(addon, ip_ranges), timeout_insec=500)
+        validate_coredns_config(ip_ranges)
+        print("Disabling dns")
+        microk8s_disable("dns")
+
     def test_backup_restore(self):
         """
         Test backup and restore commands.
@@ -344,57 +348,3 @@ class TestAddons(object):
             os.remove('backupfile.tar.gz')
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
-
-    def test_traefik(self):
-        """
-        Sets up and validates traefik.
-        """
-        print("Enabling traefik")
-        microk8s_enable("traefik")
-        print("Validating traefik")
-        validate_traefik()
-        print("Disabling traefik")
-        microk8s_disable("traefik")
-
-    @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="KEDA tests are only relevant in x86 architectures"
-    )
-    @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping KEDA tests as we are under time pressure",
-    )
-    def test_keda(self):
-        """
-        Sets up and validates keda.
-        """
-        print("Enabling keda")
-        microk8s_enable("keda")
-        print("Validating keda")
-        validate_keda()
-        print("Disabling keda")
-        microk8s_disable("keda")
-
-
-@pytest.mark.addon_args
-def test_invalid_addon():
-    with pytest.raises(sh.ErrorReturnCode_1):
-        sh.microk8s.enable.foo()
-
-
-@pytest.mark.addon_args
-def test_help_text():
-    status = yaml.load(sh.microk8s.status(format='yaml').stdout)
-    expected = {a['name']: 'disabled' for a in status['addons']}
-    expected['ha-cluster'] = 'enabled'
-
-    assert expected == {a['name']: a['status'] for a in status['addons']}
-
-    for addon in status['addons']:
-        sh.microk8s.enable(addon['name'], '--', '--help')
-
-    assert expected == {a['name']: a['status'] for a in status['addons']}
-
-    for addon in status['addons']:
-        sh.microk8s.disable(addon['name'], '--', '--help')
-
-    assert expected == {a['name']: a['status'] for a in status['addons']}

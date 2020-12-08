@@ -19,36 +19,32 @@ use_manifest coredns apply "$(declare -p map)"
 sleep 5
 
 read -ra ARGUMENTS <<< "$1"
-if [[ -z "${ARGUMENTS[@]}" ]]
+if [[ ! -z "${ARGUMENTS[@]}" ]]
 then
-  read -p "By default it will forward to predefined resolvers(/etc/resolv.conf). To forward to specific resolvers, enter nameservers' IP address delimited by comma (e.g. '8.8.8.8,8.8.4.4'): " nameservers
-  if [[ -z "${nameservers}" ]]
-  then
-    nameservers=""
-  fi
-else
   nameservers="${ARGUMENTS[@]}"
+else
+  nameservers="8.8.8.8,8.8.4.4"
 fi
 
-REGEX_IP_ADDR='^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$'
-# get ip addresses separated by , as a list
-nameservers_list=(${nameservers//,/ })
-nameserver_str=""
-for nameserver in "${nameservers_list[@]}"
-do
-  if [[ $nameserver =~ $REGEX_IP_ADDR ]]
-  then
-    nameserver_str="${nameserver_str}${nameserver} "
-  else
-    echo "Your input value ($nameserver) is not a valid IP address"
-    exit 1
-  fi
-done
-
 # if none passed use resolv.conf
-if [[ $nameserver_str == "" ]]
+if [[ $nameservers == "/etc/resolv.conf" ]]
 then
    nameserver_str="/etc/resolv.conf"
+else
+  REGEX_IP_ADDR='^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$'
+  # get ip addresses separated by , as a list
+  nameservers_list=(${nameservers//,/ })
+  nameserver_str=""
+  for nameserver in "${nameservers_list[@]}"
+  do
+    if [[ $nameserver =~ $REGEX_IP_ADDR ]]
+    then
+      nameserver_str="${nameserver_str}${nameserver} "
+    else
+      echo "Your input value ($nameserver) is not a valid IP address"
+      exit 1
+    fi
+  done
 fi
 
 cat coredns.yaml | sed "s@{{nameservers}}@$nameserver_str@g"
