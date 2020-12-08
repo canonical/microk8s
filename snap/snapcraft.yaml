@@ -317,15 +317,14 @@ parts:
   containerd:
     build-snaps: [go]
     after: [iptables]
-    source: .
-    source-type: git
+    source: build-scripts/
     plugin: dump
     build-packages:
     - btrfs-tools
     - libseccomp-dev
     override-build: |
       set -eux
-      . $SNAPCRAFT_PROJECT_DIR/build-scripts/set-env-variables.sh
+      . $SNAPCRAFT_PART_SRC/set-env-variables.sh
       snap refresh go --channel=1.15/stable || true
       go version
       export GOPATH=$(realpath ../go)
