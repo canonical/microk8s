@@ -7,16 +7,6 @@ KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 # Apply the dns yaml
 # We do not need to see dns pods running at this point just give some slack
 echo "Enabling DNS"
-echo "Applying manifest"
-ALLOWESCALATION="false"
-if grep  -e ubuntu /proc/version | grep 16.04 &> /dev/null
-then
-  ALLOWESCALATION="true"
-fi
-declare -A map
-map[\$ALLOWESCALATION]="$ALLOWESCALATION"
-use_manifest coredns apply "$(declare -p map)"
-sleep 5
 
 read -ra ARGUMENTS <<< "$1"
 if [[ ! -z "${ARGUMENTS[@]}" ]]
@@ -47,7 +37,17 @@ else
   done
 fi
 
-cat $SNAP/actions/coredns.yaml | $SNAP/bin/sed "s@{{nameservers}}@$nameserver_str@g" | $KUBECTL apply -f -
+echo "Applying manifest"
+ALLOWESCALATION="false"
+if grep  -e ubuntu /proc/version | grep 16.04 &> /dev/null
+then
+  ALLOWESCALATION="true"
+fi
+declare -A map
+map[\$ALLOWESCALATION]="$ALLOWESCALATION"
+map[\$NAMESERVERS]="$nameserver_str"
+use_manifest coredns apply "$(declare -p map)"
+sleep 5
 
 echo "Restarting kubelet"
 #TODO(kjackal): do not hardcode the info below. Get it from the yaml

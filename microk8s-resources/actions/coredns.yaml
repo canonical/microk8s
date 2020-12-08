@@ -32,7 +32,7 @@ data:
           fallthrough in-addr.arpa ip6.arpa
         }
         prometheus :9153
-        forward . {{nameservers}}
+        forward . $NAMESERVERS
         cache 30
         loop
         reload
