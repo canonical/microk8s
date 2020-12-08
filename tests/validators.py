@@ -499,3 +499,32 @@ def validate_coredns_config(ip_ranges="8.8.8.8,1.1.1.1"):
     for ip_range in ip_ranges.split(","):
         expected_forward_val = expected_forward_val + " " + ip_range
     assert expected_forward_val in out
+
+
+def validate_keda():
+    """
+    Validate keda
+    """
+    wait_for_installation()
+    wait_for_pod_state("", "keda", "running", label="app=keda-operator")
+    print("KEDA operator up and running.")
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "keda-scaledobject.yaml")
+    kubectl("apply -f {}".format(manifest))
+    scaledObject = kubectl("-n gonuts get scaledobject.keda.sh")
+    assert "stan-scaledobject" in scaledObject
+    kubectl("delete -f {}".format(manifest))
+
+
+def validate_traefik():
+    """
+    Validate traefik
+    """
+    wait_for_pod_state("", "traefik", "running", label="name=traefik-ingress-lb")
+
+
+def validate_portainer():
+    """
+    Validate portainer
+    """
+    wait_for_pod_state("", "portainer", "running", label="app.kubernetes.io/name=portainer")
