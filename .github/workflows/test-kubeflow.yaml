@@ -63,12 +63,7 @@ jobs:
         sudo snap install juju-helpers --classic
 
     - name: Enable kubeflow
-      run: |
-        set -eux
-        export KUBEFLOW_BUNDLE=edge
-        export KUBEFLOW_DEBUG=true
-        export KUBEFLOW_IGNORE_MIN_MEM=true
-        sg microk8s -c 'microk8s enable kubeflow'
+      run: sg microk8s -c 'microk8s enable kubeflow --debug --bundle=edge --ignore-min-mem --password=hunter2'
 
     - name: Test kubeflow
       run: |
@@ -79,6 +74,8 @@ jobs:
         sudo pip3 install pytest sh kfp requests pyyaml
         git clone https://github.com/juju-solutions/bundle-kubeflow.git
         cd bundle-kubeflow
+        sudo microk8s status --wait-ready
+        sudo microk8s kubectl -n kube-system rollout status ds/calico-node
         trap 'sudo pkill -f svc/pipelines-api' SIGINT SIGTERM EXIT
         sudo microk8s kubectl -n kubeflow port-forward svc/pipelines-api 8888:8888 &
         (i=30; while ! curl localhost:8888 ; do ((--i)) || exit; sleep 1; done)
@@ -175,6 +172,7 @@ jobs:
           export KUBEFLOW_BUNDLE=${{ matrix.bundle }}
           export KUBEFLOW_DEBUG=true
           export KUBEFLOW_IGNORE_MIN_MEM=true
+          export KUBEFLOW_AUTH_PASSWORD=hunter2
           microk8s enable kubeflow
         EOF
 
@@ -188,6 +186,8 @@ jobs:
           sudo pip3 install pytest sh kfp requests pyyaml
           git clone https://github.com/juju-solutions/bundle-kubeflow.git
           cd bundle-kubeflow
+          sudo microk8s status --wait-ready
+          sudo microk8s kubectl -n kube-system rollout status ds/calico-node
           trap 'sudo pkill -f svc/pipelines-api' SIGINT SIGTERM EXIT
           microk8s kubectl -n kubeflow port-forward svc/pipelines-api 8888:8888 &
           (i=30; while ! curl localhost:8888 ; do ((--i)) || exit; sleep 1; done)

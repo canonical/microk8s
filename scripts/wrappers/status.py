@@ -219,7 +219,7 @@ if __name__ == '__main__':
     yaml_short = args.yaml
 
     if wait_ready:
-        isReady = wait_for_ready(wait_ready, timeout)
+        isReady = wait_for_ready(timeout)
     else:
         isReady = is_cluster_ready()
 

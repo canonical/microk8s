@@ -1,39 +1,42 @@
-import pytest
 import os
 import platform
-
-from validators import (
-    validate_dns_dashboard,
-    validate_storage,
-    validate_ingress,
-    validate_ambassador,
-    validate_gpu,
-    validate_istio,
-    validate_knative,
-    validate_registry,
-    validate_forward,
-    validate_metrics_server,
-    validate_fluentd,
-    validate_jaeger,
-    validate_linkerd,
-    validate_rbac,
-    validate_cilium,
-    validate_multus,
-    validate_kubeflow,
-    validate_metallb_config,
-    validate_prometheus,
-    validate_portainer,
-    validate_traefik,
-    validate_keda,
-)
-from utils import (
-    microk8s_enable,
-    wait_for_pod_state,
-    wait_for_namespace_termination,
-    microk8s_disable,
-    microk8s_reset,
-)
 from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
+
+import pytest
+import sh
+import yaml
+
+from utils import (
+    microk8s_disable,
+    microk8s_enable,
+    microk8s_reset,
+    wait_for_namespace_termination,
+    wait_for_pod_state,
+)
+from validators import (
+    validate_ambassador,
+    validate_cilium,
+    validate_dns_dashboard,
+    validate_fluentd,
+    validate_forward,
+    validate_gpu,
+    validate_ingress,
+    validate_istio,
+    validate_jaeger,
+    validate_keda,
+    validate_knative,
+    validate_kubeflow,
+    validate_linkerd,
+    validate_metallb_config,
+    validate_metrics_server,
+    validate_multus,
+    validate_portainer,
+    validate_prometheus,
+    validate_rbac,
+    validate_registry,
+    validate_storage,
+    validate_traefik,
+)
 
 
 class TestAddons(object):
@@ -135,15 +138,15 @@ class TestAddons(object):
 
     @pytest.mark.skipif(
         platform.machine() != 'x86_64',
-        reason="Fluentd and jaeger tests are only relevant in x86 architectures",
+        reason="Fluentd, prometheus, jaeger tests are only relevant in x86 architectures",
     )
     @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping jaeger and fluentd tests as we are under time pressure",
+        reason="Skipping jaeger, prometheus and fluentd tests as we are under time pressure",
     )
     def test_monitoring_addons(self):
         """
-        Test jaeger and fluentd.
+        Test jaeger, prometheus and fluentd.
 
         """
 
@@ -160,6 +163,10 @@ class TestAddons(object):
         print("Disabling fluentd")
         microk8s_disable("fluentd")
 
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64',
+        reason="Prometheus is only relevant in x86 architectures",
+    )
     @pytest.mark.skipif(
         os.environ.get('SKIP_PROMETHEUS') == 'True',
         reason="Skipping prometheus if it crash loops on lxd",
@@ -212,10 +219,6 @@ class TestAddons(object):
         print("Disabling metrics-server")
         microk8s_disable("metrics-server")
 
-    @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
-        reason="Linkerd tests are only relevant in x86 architectures",
-    )
     @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
         reason="Skipping Linkerd tests as we are under time pressure",
@@ -353,20 +356,27 @@ class TestAddons(object):
         print("Disabling traefik")
         microk8s_disable("traefik")
 
-    @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="KEDA tests are only relevant in x86 architectures"
-    )
-    @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping KEDA tests as we are under time pressure",
-    )
-    def test_keda(self):
-        """
-        Sets up and validates keda.
-        """
-        print("Enabling keda")
-        microk8s_enable("keda")
-        print("Validating keda")
-        validate_keda()
-        print("Disabling keda")
-        microk8s_disable("keda")
+
+@pytest.mark.addon_args
+def test_invalid_addon():
+    with pytest.raises(sh.ErrorReturnCode_1):
+        sh.microk8s.enable.foo()
+
+
+@pytest.mark.addon_args
+def test_help_text():
+    status = yaml.load(sh.microk8s.status(format='yaml').stdout)
+    expected = {a['name']: 'disabled' for a in status['addons']}
+    expected['ha-cluster'] = 'enabled'
+
+    assert expected == {a['name']: a['status'] for a in status['addons']}
+
+    for addon in status['addons']:
+        sh.microk8s.enable(addon['name'], '--', '--help')
+
+    assert expected == {a['name']: a['status'] for a in status['addons']}
+
+    for addon in status['addons']:
+        sh.microk8s.disable(addon['name'], '--', '--help')
+
+    assert expected == {a['name']: a['status'] for a in status['addons']}
