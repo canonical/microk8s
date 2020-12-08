@@ -362,6 +362,19 @@ then
   need_api_restart=true
 fi
 
+if ! grep -e "service-account-issuer" ${SNAP_DATA}/args/kube-apiserver
+then
+  refresh_opt_in_config service-account-issuer 'https://kubernetes.default.svc' kube-apiserver
+  need_api_restart=true
+fi
+
+if ! grep -e "service-account-signing-key-file" ${SNAP_DATA}/args/kube-apiserver
+then
+  refresh_opt_in_config service-account-signing-key-file \${SNAP_DATA}/certs/serviceaccount.key kube-apiserver
+  need_api_restart=true
+fi
+
+
 if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
 then
   refresh_opt_in_config enable-v2 true etcd
