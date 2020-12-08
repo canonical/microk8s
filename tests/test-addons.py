@@ -1,6 +1,8 @@
 import pytest
 import os
 import platform
+import sh
+import yaml
 
 from validators import (
     validate_dns_dashboard,
@@ -15,6 +17,7 @@ from validators import (
     validate_metrics_server,
     validate_fluentd,
     validate_jaeger,
+    validate_keda,
     validate_linkerd,
     validate_rbac,
     validate_cilium,
@@ -22,7 +25,9 @@ from validators import (
     validate_kubeflow,
     validate_metallb_config,
     validate_prometheus,
+    validate_traefik,
     validate_coredns_config,
+    validate_portainer,
 )
 from utils import (
     microk8s_enable,
@@ -344,6 +349,35 @@ class TestAddons(object):
         print("Disabling DNS")
         microk8s_disable("dns")
 
+    def test_traefik(self):
+        """
+        Sets up and validates traefik.
+        """
+        print("Enabling traefik")
+        microk8s_enable("traefik")
+        print("Validating traefik")
+        validate_traefik()
+        print("Disabling traefik")
+        microk8s_disable("traefik")
+
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64', reason="KEDA tests are only relevant in x86 architectures"
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping KEDA tests as we are under time pressure",
+    )
+    def test_keda(self):
+        """
+        Sets up and validates keda.
+        """
+        print("Enabling keda")
+        microk8s_enable("keda")
+        print("Validating keda")
+        validate_keda()
+        print("Disabling keda")
+        microk8s_disable("keda")
+
     def test_backup_restore(self):
         """
         Test backup and restore commands.
@@ -353,3 +387,28 @@ class TestAddons(object):
             os.remove('backupfile.tar.gz')
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
+
+
+@pytest.mark.addon_args
+def test_invalid_addon():
+    with pytest.raises(sh.ErrorReturnCode_1):
+        sh.microk8s.enable.foo()
+
+
+@pytest.mark.addon_args
+def test_help_text():
+    status = yaml.load(sh.microk8s.status(format='yaml').stdout)
+    expected = {a['name']: 'disabled' for a in status['addons']}
+    expected['ha-cluster'] = 'enabled'
+
+    assert expected == {a['name']: a['status'] for a in status['addons']}
+
+    for addon in status['addons']:
+        sh.microk8s.enable(addon['name'], '--', '--help')
+
+    assert expected == {a['name']: a['status'] for a in status['addons']}
+
+    for addon in status['addons']:
+        sh.microk8s.disable(addon['name'], '--', '--help')
+
+    assert expected == {a['name']: a['status'] for a in status['addons']}
