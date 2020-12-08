@@ -356,6 +356,24 @@ class TestAddons(object):
         print("Disabling traefik")
         microk8s_disable("traefik")
 
+    @pytest.mark.skipif(
+        platform.machine() != 'x86_64', reason="KEDA tests are only relevant in x86 architectures"
+    )
+    @pytest.mark.skipif(
+        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        reason="Skipping KEDA tests as we are under time pressure",
+    )
+    def test_keda(self):
+        """
+        Sets up and validates keda.
+        """
+        print("Enabling keda")
+        microk8s_enable("keda")
+        print("Validating keda")
+        validate_keda()
+        print("Disabling keda")
+        microk8s_disable("keda")
+
 
 @pytest.mark.addon_args
 def test_invalid_addon():
