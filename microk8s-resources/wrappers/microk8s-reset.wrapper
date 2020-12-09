@@ -41,6 +41,9 @@ clean_cluster() {
   echo "Calling clean_cluster"
   # Clean the cluster
 
+  echo "Calling clean_cluster"
+  # Clean the cluster
+
   NSES=$($KUBECTL get ns -o=name | awk -F/ '{print $2}' | paste -s --delimiters=' ')
   for NS in $NSES
   do
@@ -48,48 +51,48 @@ clean_cluster() {
     # we remove first resources that are automatically recreated so we do not risk race conditions
     # during which a deployment for example is recreated while any tokens are missing
     # delete all replicationcontrollers
-    $KUBECTL delete --all replicationcontrollers --namespace="$NS"
+    $KUBECTL delete --all replicationcontrollers --namespace="$NS"  --timeout=60s ||true
     # delete all daemonsets
-    $KUBECTL delete --all daemonsets --namespace="$NS"
+    $KUBECTL delete --all daemonsets --namespace="$NS" --timeout=60s ||true
     # delete all deployments
-    $KUBECTL delete --all deployments --namespace="$NS"
+    $KUBECTL delete --all deployments --namespace="$NS" --timeout=60s ||true
 
     # Remove all resource types except the standard k8s apiservices themselves
-    $KUBECTL delete --all $($KUBECTL api-resources -o name --verbs=delete --namespaced=true | grep -v '^apiservices$' | paste -s --delimiters=',') --namespace="$NS"
+    $KUBECTL delete --all $($KUBECTL api-resources -o name --verbs=delete --namespaced=true | grep -v '^apiservices$' | paste -s --delimiters=',') --namespace="$NS" --timeout=60s ||true
   done
 
   echo "Removing CRDs"
-  $KUBECTL delete --all customresourcedefinitions.apiextensions.k8s.io
+  $KUBECTL delete --all customresourcedefinitions.apiextensions.k8s.io --timeout=60s ||true
 
   echo "Removing PriorityClasses"
   REMOVEABLE_PCS=$($KUBECTL get priorityclasses -o=name | awk -F/ '{if ($2 !~ /^(system-cluster-critical|system-node-critical)$/) print}' | paste -s --delimiters=' ')
   if [ -n "$REMOVEABLE_PCS" ]
   then
-    $KUBECTL delete $REMOVEABLE_PCS
+    $KUBECTL delete $REMOVEABLE_PCS --timeout=60s ||true
   fi
 
   echo "Removing StorageClasses"
   REMOVEABLE_SCS=$($KUBECTL get storageclasses -o=name | awk -F/ '{if ($2 !~ /^(microk8s-hostpath)$/) print}' | paste -s --delimiters=' ')
   if [ -n "$REMOVEABLE_SCS" ]
   then
-    $KUBECTL delete $REMOVEABLE_SCS
+    $KUBECTL delete $REMOVEABLE_SCS --timeout=60s ||true
   fi
 
   # Finally clean up the namespaces
   REMOVEABLE_NSES=$($KUBECTL get ns -o=name | awk -F/ '{if ($2 !~ /^(default|kube-public|kube-system|kube-node-lease)$/) print}' | paste -s --delimiters=' ')
   if [ -n "$REMOVEABLE_NSES" ]
   then
-    $KUBECTL delete $REMOVEABLE_NSES
+    $KUBECTL delete $REMOVEABLE_NSES --timeout=60s ||true
   fi
 
   ${SNAP}/microk8s-stop.wrapper
   sleep 5
   ${SNAP}/microk8s-start.wrapper
 
-  # Wait for 200 secs at most.
+  # Wait for 60 secs at most.
   echo "Waiting for kubernetes resources to be released"
   n=0
-  until [ $n -ge 10 ]
+  until [ $n -ge 3 ]
   do
     ($KUBECTL get po --all-namespaces 2>&1 | grep "No resources found" 2>&1 > /dev/null) && break
     n=$[$n+1]
