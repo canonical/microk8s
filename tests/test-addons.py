@@ -40,7 +40,7 @@ from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
 
 
 class TestAddons(object):
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(scope="session", autouse=True)
     def clean_up(self):
         """
         Clean up after a test
