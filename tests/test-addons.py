@@ -53,9 +53,12 @@ class TestAddons(object):
         Sets up and tests dashboard, dns, storage, registry, ingress.
 
         """
+        ip_ranges = "8.8.8.8,1.1.1.1"
         print("Enabling DNS")
-        microk8s_enable("dns")
+        microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
         wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
+        print("Validating DNS config")
+        validate_coredns_config(ip_ranges)
         print("Enabling ingress")
         microk8s_enable("ingress")
         print("Validating ingress")
@@ -334,20 +337,6 @@ class TestAddons(object):
         validate_portainer()
         print("Disabling Portainer")
         microk8s_disable("portainer")
-
-    @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping dns tests as we are under time pressure",
-    )
-    def test_dns_addon(self):
-        ip_ranges = "8.8.8.8,1.1.1.1"
-        print("Enabling DNS")
-        microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
-        wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
-        print("Validating DNS config")
-        validate_coredns_config(ip_ranges)
-        print("Disabling DNS")
-        microk8s_disable("dns")
 
     def test_traefik(self):
         """
