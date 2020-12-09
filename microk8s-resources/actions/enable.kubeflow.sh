@@ -20,7 +20,7 @@ import click
 
 MIN_MEM_GB = 14
 CONNECTIVITY_CHECKS = [
-    'https://api.jujucharms.com/charmstore/v5/~kubeflow-charmers/ambassador-88/icon.svg',
+    'https://api.jujucharms.com/charmstore/v5/istio-pilot-5/icon.svg',
 ]
 
 
@@ -173,30 +173,15 @@ def parse_hostname(hostname: str) -> ParseResult:
 
 
 def get_hostname():
-    """Gets the hostname that Ambassador will respond to."""
+    """Gets the hostname that Kubeflow will respond to."""
 
-    # Check if we've manually set a hostname on the ingress
+    # See if we've set up metallb with a custom service
     try:
         output = run(
             "microk8s-kubectl.wrapper",
             "get",
             "--namespace=kubeflow",
-            "ingress/ambassador",
-            "-ojson",
-            stdout=False,
-            die=False,
-        )
-        return json.loads(output)["spec"]["rules"][0]["host"]
-    except (KeyError, subprocess.CalledProcessError):
-        pass
-
-    # Otherwise, see if we've set up metallb with a custom service
-    try:
-        output = run(
-            "microk8s-kubectl.wrapper",
-            "get",
-            "--namespace=kubeflow",
-            "svc/ambassador",
+            "svc/istio-ingressgateway",
             "-ojson",
             stdout=False,
             die=False,
@@ -204,10 +189,8 @@ def get_hostname():
         pub_ip = json.loads(output)["status"]["loadBalancer"]["ingress"][0]["ip"]
         return "%s.xip.io" % pub_ip
     except (KeyError, subprocess.CalledProcessError):
-        pass
-
-    # If all else fails, just use localhost
-    return "localhost"
+        print("WARNING: Unable to determine hostname, defaulting to localhost")
+        return "localhost"
 
 
 @click.command()
