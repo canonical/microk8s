@@ -291,7 +291,7 @@ class TestAddons(object):
         print("Disabling metallb")
         microk8s_disable("metallb")
 
-    #@pytest.mark.skip("disabling the test while we work on a 1.20 release")
+    @pytest.mark.skip("disabling the test while we work on a 1.20 release")
     @pytest.mark.skipif(
         platform.machine() != 'x86_64',
         reason="Ambassador tests are only relevant in x86 architectures",
