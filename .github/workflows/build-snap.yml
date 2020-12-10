@@ -51,7 +51,6 @@ jobs:
         export SKIP_PROMETHEUS="False"
         (cd tests; pytest -s verify-branches.py)
         (cd tests; sudo -E pytest -s -ra test-addons.py)
-        sudo microk8s reset
         sudo snap remove microk8s --purge
     - name: Running upgrade tests
       run: |

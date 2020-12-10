@@ -21,4 +21,6 @@ do
   n=$[$n+1]
   sleep 20
 done
+
+sudo /snap/bin/microk8s kubectl -n kube-system rollout status deployment.apps/calico-kube-controllers
 exit 1
