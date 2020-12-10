@@ -185,6 +185,7 @@ class TestAddons(object):
         validate_prometheus()
         print("Disabling prometheus")
         microk8s_disable("prometheus")
+        microk8s_reset()
 
     @pytest.mark.skipif(
         platform.machine() != 'x86_64', reason="Cilium tests are only relevant in x86 architectures"
