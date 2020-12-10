@@ -114,6 +114,14 @@ apply_cni() {
   fi
 }
 
+clear_cni() {
+  if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ]
+  then
+    echo "Deleting CNI"
+    $KUBECTL delete -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+  fi
+}
+
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
   echo "This MicroK8s deployment is acting as a node in a cluster."
@@ -173,6 +181,7 @@ exit_if_stopped
 exit_if_no_permissions
 
 disable_addons
+clear_cni
 clean_cluster
 
 apply_cni

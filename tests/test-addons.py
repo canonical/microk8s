@@ -209,6 +209,7 @@ class TestAddons(object):
         validate_cilium()
         print("Disabling Cilium")
         microk8s_disable("cilium")
+        microk8s_reset()
 
     def test_metrics_server(self):
         """
