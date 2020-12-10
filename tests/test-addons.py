@@ -48,16 +48,42 @@ class TestAddons(object):
         yield
         microk8s_reset()
 
+    def test_invalid_addon(self):
+        with pytest.raises(sh.ErrorReturnCode_1):
+            sh.microk8s.enable.foo()
+
+    def test_help_text(self):
+        status = yaml.load(sh.microk8s.status(format='yaml').stdout)
+        expected = {a['name']: 'disabled' for a in status['addons']}
+        expected['ha-cluster'] = 'enabled'
+
+        assert expected == {a['name']: a['status'] for a in status['addons']}
+
+        for addon in status['addons']:
+            sh.microk8s.enable(addon['name'], '--', '--help')
+
+        assert expected == {a['name']: a['status'] for a in status['addons']}
+
+        for addon in status['addons']:
+            sh.microk8s.disable(addon['name'], '--', '--help')
+
+        assert expected == {a['name']: a['status'] for a in status['addons']}
+
     def test_basic(self):
         """
-        Sets up and tests dashboard, dns, storage, registry, ingress.
+        Sets up and tests dashboard, dns, storage, registry, ingress, metrics server.
 
         """
+        ip_ranges = "8.8.8.8,1.1.1.1"
         print("Enabling DNS")
-        microk8s_enable("dns")
+        microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
         wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
+        print("Validating DNS config")
+        validate_coredns_config(ip_ranges)
         print("Enabling ingress")
         microk8s_enable("ingress")
+        print("Enabling metrics-server")
+        microk8s_enable("metrics-server")
         print("Validating ingress")
         validate_ingress()
         print("Disabling ingress")
@@ -75,6 +101,10 @@ class TestAddons(object):
         validate_registry()
         print("Validating Port Forward")
         validate_forward()
+        print("Validating the Metrics Server")
+        validate_metrics_server()
+        print("Disabling metrics-server")
+        microk8s_disable("metrics-server")
         print("Disabling registry")
         microk8s_disable("registry")
         print("Disabling dashboard")
@@ -182,6 +212,7 @@ class TestAddons(object):
         validate_prometheus()
         print("Disabling prometheus")
         microk8s_disable("prometheus")
+        microk8s_reset()
 
     @pytest.mark.skipif(
         platform.machine() != 'x86_64', reason="Cilium tests are only relevant in x86 architectures"
@@ -206,19 +237,9 @@ class TestAddons(object):
         validate_cilium()
         print("Disabling Cilium")
         microk8s_disable("cilium")
+        microk8s_reset()
 
-    def test_metrics_server(self):
-        """
-        Test the metrics server.
-
-        """
-        print("Enabling metrics-server")
-        microk8s_enable("metrics-server")
-        print("Validating the Metrics Server")
-        validate_metrics_server()
-        print("Disabling metrics-server")
-        microk8s_disable("metrics-server")
-
+    @pytest.mark.skip("disabling the test while we work on a 1.20 release")
     @pytest.mark.skipif(
         os.environ.get('UNDER_TIME_PRESSURE') == 'True',
         reason="Skipping Linkerd tests as we are under time pressure",
@@ -286,6 +307,7 @@ class TestAddons(object):
         print("Disabling metallb")
         microk8s_disable("metallb")
 
+    @pytest.mark.skip("disabling the test while we work on a 1.20 release")
     @pytest.mark.skipif(
         platform.machine() != 'x86_64',
         reason="Ambassador tests are only relevant in x86 architectures",
@@ -335,20 +357,6 @@ class TestAddons(object):
         print("Disabling Portainer")
         microk8s_disable("portainer")
 
-    @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping dns tests as we are under time pressure",
-    )
-    def test_dns_addon(self):
-        ip_ranges = "8.8.8.8,1.1.1.1"
-        print("Enabling DNS")
-        microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
-        wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
-        print("Validating DNS config")
-        validate_coredns_config(ip_ranges)
-        print("Disabling DNS")
-        microk8s_disable("dns")
-
     def test_traefik(self):
         """
         Sets up and validates traefik.
@@ -387,28 +395,3 @@ class TestAddons(object):
             os.remove('backupfile.tar.gz')
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
-
-
-@pytest.mark.addon_args
-def test_invalid_addon():
-    with pytest.raises(sh.ErrorReturnCode_1):
-        sh.microk8s.enable.foo()
-
-
-@pytest.mark.addon_args
-def test_help_text():
-    status = yaml.load(sh.microk8s.status(format='yaml').stdout)
-    expected = {a['name']: 'disabled' for a in status['addons']}
-    expected['ha-cluster'] = 'enabled'
-
-    assert expected == {a['name']: a['status'] for a in status['addons']}
-
-    for addon in status['addons']:
-        sh.microk8s.enable(addon['name'], '--', '--help')
-
-    assert expected == {a['name']: a['status'] for a in status['addons']}
-
-    for addon in status['addons']:
-        sh.microk8s.disable(addon['name'], '--', '--help')
-
-    assert expected == {a['name']: a['status'] for a in status['addons']}
