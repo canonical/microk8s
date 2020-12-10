@@ -48,9 +48,30 @@ class TestAddons(object):
         yield
         microk8s_reset()
 
+    def test_help_text(self):
+        status = yaml.load(sh.microk8s.status(format='yaml').stdout)
+        expected = {a['name']: 'disabled' for a in status['addons']}
+        expected['ha-cluster'] = 'enabled'
+
+        assert expected == {a['name']: a['status'] for a in status['addons']}
+
+        for addon in status['addons']:
+            sh.microk8s.enable(addon['name'], '--', '--help')
+
+        assert expected == {a['name']: a['status'] for a in status['addons']}
+
+        for addon in status['addons']:
+            sh.microk8s.disable(addon['name'], '--', '--help')
+
+        assert expected == {a['name']: a['status'] for a in status['addons']}
+
+    def test_invalid_addon(self):
+        with pytest.raises(sh.ErrorReturnCode_1):
+            sh.microk8s.enable.foo()
+
     def test_basic(self):
         """
-        Sets up and tests dashboard, dns, storage, registry, ingress.
+        Sets up and tests dashboard, dns, storage, registry, ingress, metrics server.
 
         """
         ip_ranges = "8.8.8.8,1.1.1.1"
@@ -61,6 +82,8 @@ class TestAddons(object):
         validate_coredns_config(ip_ranges)
         print("Enabling ingress")
         microk8s_enable("ingress")
+        print("Enabling metrics-server")
+        microk8s_enable("metrics-server")
         print("Validating ingress")
         validate_ingress()
         print("Disabling ingress")
@@ -78,6 +101,10 @@ class TestAddons(object):
         validate_registry()
         print("Validating Port Forward")
         validate_forward()
+        print("Validating the Metrics Server")
+        validate_metrics_server()
+        print("Disabling metrics-server")
+        microk8s_disable("metrics-server")
         print("Disabling registry")
         microk8s_disable("registry")
         print("Disabling dashboard")
@@ -211,18 +238,6 @@ class TestAddons(object):
         print("Disabling Cilium")
         microk8s_disable("cilium")
         microk8s_reset()
-
-    def test_metrics_server(self):
-        """
-        Test the metrics server.
-
-        """
-        print("Enabling metrics-server")
-        microk8s_enable("metrics-server")
-        print("Validating the Metrics Server")
-        validate_metrics_server()
-        print("Disabling metrics-server")
-        microk8s_disable("metrics-server")
 
     @pytest.mark.skip("disabling the test while we work on a 1.20 release")
     @pytest.mark.skipif(
@@ -380,25 +395,3 @@ class TestAddons(object):
             os.remove('backupfile.tar.gz')
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
-
-    def test_help_text(self):
-        microk8s_reset()
-        status = yaml.load(sh.microk8s.status(format='yaml').stdout)
-        expected = {a['name']: 'disabled' for a in status['addons']}
-        expected['ha-cluster'] = 'enabled'
-
-        assert expected == {a['name']: a['status'] for a in status['addons']}
-
-        for addon in status['addons']:
-            sh.microk8s.enable(addon['name'], '--', '--help')
-
-        assert expected == {a['name']: a['status'] for a in status['addons']}
-
-        for addon in status['addons']:
-            sh.microk8s.disable(addon['name'], '--', '--help')
-
-        assert expected == {a['name']: a['status'] for a in status['addons']}
-
-    def test_invalid_addon(self):
-        with pytest.raises(sh.ErrorReturnCode_1):
-            sh.microk8s.enable.foo()
