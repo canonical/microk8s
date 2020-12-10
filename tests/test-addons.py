@@ -291,7 +291,7 @@ class TestAddons(object):
         print("Disabling metallb")
         microk8s_disable("metallb")
 
-    @pytest.mark.skip("disabling the test while we work on a 1.20 release")
+    #@pytest.mark.skip("disabling the test while we work on a 1.20 release")
     @pytest.mark.skipif(
         platform.machine() != 'x86_64',
         reason="Ambassador tests are only relevant in x86 architectures",
@@ -380,27 +380,24 @@ class TestAddons(object):
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
 
+    def test_help_text(self):
+        microk8s_reset()
+        status = yaml.load(sh.microk8s.status(format='yaml').stdout)
+        expected = {a['name']: 'disabled' for a in status['addons']}
+        expected['ha-cluster'] = 'enabled'
 
-@pytest.mark.addon_args
-def test_invalid_addon():
-    with pytest.raises(sh.ErrorReturnCode_1):
-        sh.microk8s.enable.foo()
+        assert expected == {a['name']: a['status'] for a in status['addons']}
 
+        for addon in status['addons']:
+            sh.microk8s.enable(addon['name'], '--', '--help')
 
-@pytest.mark.addon_args
-def test_help_text():
-    status = yaml.load(sh.microk8s.status(format='yaml').stdout)
-    expected = {a['name']: 'disabled' for a in status['addons']}
-    expected['ha-cluster'] = 'enabled'
+        assert expected == {a['name']: a['status'] for a in status['addons']}
 
-    assert expected == {a['name']: a['status'] for a in status['addons']}
+        for addon in status['addons']:
+            sh.microk8s.disable(addon['name'], '--', '--help')
 
-    for addon in status['addons']:
-        sh.microk8s.enable(addon['name'], '--', '--help')
+        assert expected == {a['name']: a['status'] for a in status['addons']}
 
-    assert expected == {a['name']: a['status'] for a in status['addons']}
-
-    for addon in status['addons']:
-        sh.microk8s.disable(addon['name'], '--', '--help')
-
-    assert expected == {a['name']: a['status'] for a in status['addons']}
+    def test_invalid_addon(self):
+        with pytest.raises(sh.ErrorReturnCode_1):
+            sh.microk8s.enable.foo()

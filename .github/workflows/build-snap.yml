@@ -53,14 +53,6 @@ jobs:
         (cd tests; sudo -E pytest -s -ra test-addons.py)
         sudo microk8s reset
         sudo snap remove microk8s --purge
-
-    - name: Running --help handling tests
-      run: |
-        set -eux
-        sudo snap install *.snap --classic --dangerous
-        sudo pytest tests/test-addons.py -k addon_args
-        sudo snap remove microk8s --purge
-
     - name: Running upgrade tests
       run: |
         set -x
