@@ -27,3 +27,8 @@ devices:
     path: /dev/kmsg
     source: /dev/kmsg
     type: disk
+  aadisable4:
+    path: /sys/fs/bpf
+    source: /sys/fs/bpf
+    type: disk
+
