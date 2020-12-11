@@ -55,17 +55,17 @@ fi
 
 # Test addons upgrade
 # TODO Handle local in the upgrade
-#create_machine $NAME $PROXY
+create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-#lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade.py"
-#lxc delete $NAME --force
+lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade.py"
+lxc delete $NAME --force
 
 # Test upgrade-path
-#NAME=machine-$RANDOM
-#create_machine $NAME $PROXY
-## use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-#lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade-path.py"
-#lxc delete $NAME --force
+NAME=machine-$RANDOM
+create_machine $NAME $PROXY
+# use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
+lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade-path.py"
+lxc delete $NAME --force
 
 # Test addons
 NAME=machine-$RANDOM
@@ -79,5 +79,6 @@ else
 fi
 lxc exec $NAME -- /var/tmp/tests/patch-kube-proxy.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "pytest -s /var/tmp/tests/test-addons.py::TestAddons::test_cilium"
+lxc exec $NAME -- script -e -c "pytest -s /var/tmp/tests/test-addons.py"
+lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
