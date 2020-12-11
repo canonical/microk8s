@@ -1,6 +1,6 @@
 # MicroK8s
 
-![](https://img.shields.io/badge/Kubernetes-1.19-326de6.svg) [![Build Status](https://travis-ci.org/ubuntu/microk8s.svg?branch=master)](https://travis-ci.org/ubuntu/microk8s)
+![](https://img.shields.io/badge/Kubernetes-1.20-326de6.svg)
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">
 
