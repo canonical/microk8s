@@ -528,3 +528,10 @@ def validate_portainer():
     Validate portainer
     """
     wait_for_pod_state("", "portainer", "running", label="app.kubernetes.io/name=portainer")
+
+
+def validate_openfaas():
+    """
+    Validate openfaas
+    """
+    wait_for_pod_state("", "openfaas", "running", label="app=gateway")

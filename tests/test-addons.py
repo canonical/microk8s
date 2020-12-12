@@ -28,6 +28,7 @@ from validators import (
     validate_traefik,
     validate_coredns_config,
     validate_portainer,
+    validate_openfaas,
 )
 from utils import (
     microk8s_enable,
@@ -356,6 +357,17 @@ class TestAddons(object):
         validate_portainer()
         print("Disabling Portainer")
         microk8s_disable("portainer")
+
+    def test_openfaas(self):
+        """
+        Sets up and validates OpenFaaS.
+        """
+        print("Enabling openfaas")
+        microk8s_enable("openfaas")
+        print("Validating openfaas")
+        validate_openfaas()
+        print("Disabling openfaas")
+        microk8s_disable("openfaas")
 
     def test_traefik(self):
         """

@@ -198,3 +198,11 @@ microk8s-addons:
       check_status: "pod/keda-operator"
       supported_architectures:
       - amd64
+
+    - name: "openfaas"
+      description: "openfaas serverless framework"
+      version: "6.2.2"
+      check_status: "pod/gateway"
+      supported_architectures:
+      - arm64
+      - amd64
