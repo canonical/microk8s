@@ -103,14 +103,14 @@ class MultipassCommand:
             install_snaps(["multipass/latest/stable"])
         elif platform == "darwin":
             try:
-                subprocess.check_call(["brew", "cask", "install", "multipass"])
+                subprocess.check_call(["brew", "install", "multipass", "--cask"])
             except subprocess.CalledProcessError:
                 raise errors.ProviderStartError(
                     provider_name=cls.provider_name,
                     error_message="Failed to install multipass using homebrew.\n"
                     "Verify your homebrew installation and try again.\n"
                     "Alternatively, manually install multipass by running"
-                    " 'brew cask install multipass'.",
+                    " 'brew install multipass --cask'.",
                 )
         elif platform == "win32":
             windows_install_multipass(echoer)
