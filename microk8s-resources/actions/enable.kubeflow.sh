@@ -181,7 +181,7 @@ def get_hostname():
             "microk8s-kubectl.wrapper",
             "get",
             "--namespace=kubeflow",
-            "svc/istio-ingressgateway",
+            "svc/ambassador",
             "-ojson",
             stdout=False,
             die=False,
@@ -196,7 +196,7 @@ def get_hostname():
 @click.command()
 @click.option(
     '--bundle',
-    default='cs:kubeflow-230',
+    default='cs:kubeflow-206',
     help='The Kubeflow bundle to deploy. Can be one of full, lite, edge, or a charm store URL.',
 )
 @click.option(
@@ -276,13 +276,49 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
     # user to specify a full charm store URL if they'd like, such as
     # `cs:kubeflow-lite-123`.
     if bundle == 'full':
-        bundle = 'cs:kubeflow-230'
+        bundle = 'cs:kubeflow-206'
+        bundle_type = 'full'
+        password_overlay = {
+            "applications": {
+                "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
+                "katib-db": {"options": {"root_password": get_random_pass()}},
+                "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
+                "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
+                "pipelines-db": {"options": {"root_password": get_random_pass()}},
+            }
+        }
     elif bundle == 'lite':
-        bundle = 'cs:kubeflow-lite-17'
+        bundle = 'cs:~kubeflow-charmers/bundle/kubeflow-lite-6'
+        bundle_type = 'lite'
+        password_overlay = {
+            "applications": {
+                "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
+                "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
+                "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
+                "pipelines-db": {"options": {"root_password": get_random_pass()}},
+            }
+        }
     elif bundle == 'edge':
-        bundle = 'cs:kubeflow-edge-16'
+        bundle = 'cs:~kubeflow-charmers/bundle/kubeflow-edge-12'
+        bundle_type = 'edge'
+        password_overlay = {
+            "applications": {
+                "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
+                "pipelines-db": {"options": {"root_password": get_random_pass()}},
+            }
+        }
     else:
         bundle = bundle
+        bundle_type = 'full'
+        password_overlay = {
+            "applications": {
+                "dex-auth": {"options": {"static-username": "admin", "static-password": password}},
+                "katib-db": {"options": {"root_password": get_random_pass()}},
+                "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
+                "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
+                "pipelines-db": {"options": {"root_password": get_random_pass()}},
+            }
+        }
 
     run("microk8s-status.wrapper", "--wait-ready", debug=debug)
     run(
@@ -339,9 +375,12 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
         juju("bootstrap", "microk8s", "uk8s")
         juju("add-model", "kubeflow", "microk8s")
     print("Bootstrap complete.")
+    with tempfile.NamedTemporaryFile("w+") as f:
+        json.dump(password_overlay, f)
+        f.flush()
 
-    print("Successfully bootstrapped, deploying...")
-    juju("deploy", bundle, "--channel", channel)
+        print("Successfully bootstrapped, deploying...")
+        juju("deploy", bundle, "--channel", channel, "--overlay", f.name)
 
     print("Kubeflow deployed.")
     print("Waiting for operator pods to become ready.")
@@ -365,7 +404,7 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
     print("Operator pods ready.")
     print("Waiting for service pods to become ready.")
 
-    if kubectl_exists('service/pipelines-api'):
+    if bundle_type in ('full', 'lite'):
         with tempfile.NamedTemporaryFile(mode='w+') as f:
             json.dump(
                 {
@@ -386,14 +425,6 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
             f.flush()
             run('microk8s-kubectl.wrapper', 'apply', '-f', f.name)
 
-    hostname = parse_hostname(hostname or get_hostname())
-
-    if kubectl_exists('service/dex-auth'):
-        juju("config", "dex-auth", "public-url=%s" % hostname.geturl())
-
-    if kubectl_exists('service/oidc-gatekeeper'):
-        juju("config", "oidc-gatekeeper", "public-url=%s" % hostname.geturl())
-
     retry_run(
         "microk8s-kubectl.wrapper",
         "wait",
@@ -406,9 +437,23 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
         times=100,
     )
 
+    if bundle_type == 'full':
+        run(
+            'microk8s-kubectl.wrapper',
+            'delete',
+            'mutatingwebhookconfigurations/katib-mutating-webhook-config',
+            'validatingwebhookconfigurations/katib-validating-webhook-config',
+        )
+
     print("Congratulations, Kubeflow is now available.")
 
-    if kubectl_exists('service/istio-ingressgateway'):
+    if bundle_type in ('full', 'lite'):
+        hostname = parse_hostname(hostname or get_hostname())
+        juju("config", "dex-auth", "public-url=%s" % hostname.geturl())
+        juju("config", "oidc-gatekeeper", "public-url=%s" % hostname.geturl())
+        juju("config", "ambassador", "juju-external-hostname=%s" % hostname.hostname)
+        juju("expose", "ambassador")
+
         print(
             textwrap.dedent(
                 """
