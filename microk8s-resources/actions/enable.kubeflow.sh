@@ -263,7 +263,7 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
         sys.exit(1)
 
     try:
-        juju("show-controller", "uk8s", die=False, stdout=False)
+        juju("show-controller", "uk8s", die=False)
     except subprocess.CalledProcessError:
         pass
     else:
