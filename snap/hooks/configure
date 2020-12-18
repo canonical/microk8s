@@ -463,7 +463,7 @@ then
   # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
   timeout="120"
   KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-  while ! ($KUBECTL get all --all-namespaces | grep -z "service/kubernetes") &> /dev/null
+  while ! (is_apiserver_ready) 
   do
     sleep 5
     now="$(date +%s)"
@@ -475,7 +475,8 @@ then
   # if the API server came up try to load the CNI manifest
   now="$(date +%s)"
   if [[ "$now" < "$(($start_timer + $timeout))" ]] ; then
-    if $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+    if (is_apiserver_ready) &&
+        $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml" 
     then
       touch "${SNAP_DATA}/var/lock/cni-loaded"
     fi

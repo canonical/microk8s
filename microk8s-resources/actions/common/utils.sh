@@ -589,3 +589,12 @@ function update_configs {
   $SNAP/microk8s-stop.wrapper || true
   $SNAP/microk8s-start.wrapper
 }
+
+is_apiserver_ready() {
+  if (${SNAP}/usr/bin/curl -L --cert ${SNAP_DATA}/certs/server.crt --key ${SNAP_DATA}/certs/server.key --cacert ${SNAP_DATA}/certs/ca.crt https://127.0.0.1:16443/readyz | grep -z "ok") &> /dev/null
+  then
+    return 0
+  else
+    return 1
+  fi
+}
