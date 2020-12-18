@@ -87,7 +87,7 @@ rules:
   resources:
   - configmaps
   resourceNames:
-  - ingress-controller-leader-nginx
+  - ingress-controller-leader-public
   verbs:
   - create
   - update
