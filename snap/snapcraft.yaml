@@ -185,10 +185,25 @@ parts:
   etcd:
     plugin: dump
     source: build-scripts/
+    build-snaps: [go]
     override-build: |
       . ./set-env-variables.sh
-      curl -LO https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
-      tar -xzvf etcd-*.tar.gz --strip-components=1
+      case ${SNAPCRAFT_ARCH_TRIPLET%%-*} in
+      x86_64|aarch64)
+        echo "Supported arch by etcd - use official binary"
+        curl -LO https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
+        tar -xzvf etcd-*.tar.gz --strip-components=1
+        ;;
+      *)
+        echo "Unsupported arch by etcd - build from sources"
+        curl -LO https://github.com/etcd-io/etcd/archive/${ETCD_VERSION}.tar.gz
+        tar -xzf *.tar.gz
+        cd etcd-*
+        go mod vendor
+        ./build
+        cp -av bin/* ../
+        echo "End of build"
+      esac
       snapcraftctl build
     stage:
       - etcd
@@ -454,9 +469,9 @@ parts:
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
 
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
-      if [ "${ARCH}" = "arm64" ]
+      if [ "${ARCH}" != "amd64" ]
       then
-        # Some actions are not available on arm64
+        # Some actions are only available on amd64
         # Nvidia support
         rm "actions/enable.gpu.sh"
         rm "actions/disable.gpu.sh"
