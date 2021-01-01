@@ -15,7 +15,7 @@ kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/clie
 
 def get_current_arch():
     # architecture mapping
-    arch_mapping = {'aarch64': 'arm64', 'x86_64': 'amd64'}
+    arch_mapping = {'aarch64': 'arm64', 'armv7l': 'armhf', 'x86_64': 'amd64'}
 
     return arch_mapping[platform.machine()]
 
