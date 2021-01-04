@@ -52,7 +52,7 @@ do
        ! [ -e "${SNAP_DATA}/var/lock/cni-loaded" ]
     then
       echo "Setting up the CNI"
-      if (${SNAP}/usr/bin/curl -L --cert ${SNAP_DATA}/certs/server.crt --key ${SNAP_DATA}/certs/server.key --cacert ${SNAP_DATA}/certs/ca.crt https://127.0.0.1:16443/readyz | grep -z "ok") &&
+      if (is_apiserver_ready)  &&
          "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
       then
         touch "${SNAP_DATA}/var/lock/cni-loaded"
