@@ -340,10 +340,12 @@ parts:
       cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
 
       # Build containerd
+      rm -rf $GOPATH
+      mkdir -p $GOPATH
       go get -d github.com/containerd/containerd
       (
         cd $GOPATH/src/github.com/containerd/containerd
-        git checkout ${CONTAINERD_COMMIT}
+        git checkout -f ${CONTAINERD_COMMIT}
         # building the btrfs driver can be disabled via the
         # build tag no_btrfs, removing this dependency
         make
