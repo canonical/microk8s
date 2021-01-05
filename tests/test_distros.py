@@ -1,8 +1,8 @@
 #!/bin/env python3
 
+import os
 from distutils.util import strtobool
 from pathlib import Path
-import os
 
 import yaml
 
@@ -30,6 +30,7 @@ class InstallTests:
     keep_node = bool(strtobool(os.environ.get("MK8S_KEEP_NODE", "false")))
     existing_node = os.environ.get("MK8S_EXISTING_NODE", None)
     install_version = os.environ.get("MK8S_INSTALL_VERSION", "beta")
+    timeout_coefficient = os.environ.get("MK8S_TIMEOUT_COEFFICIENT", 1.0)
 
     addons = [
         {"addon": "dns", "input": ""},
@@ -60,7 +61,8 @@ class InstallTests:
             self.node = self.node_type()
             self.node.start()
 
-        self.validators = []
+        self.node.timeout_coefficient = self.timeout_coefficient
+        self.node.kubernetes.set_timeout_coefficient(self.timeout_coefficient)
 
     def teardown_class(self):
         if self.keep_node:

@@ -64,6 +64,16 @@ class Kubernetes:
         self._config = config
         self._api = None
         self._api_network = None
+        self._timeout_coefficient = 1.0
+
+    def set_timeout_coefficient(self, coefficient):
+        self._timeout_coefficient = float(coefficient)
+
+    def _get_deadline(self, timeout):
+        deadline = datetime.datetime.now() + datetime.timedelta(
+            seconds=timeout * self._timeout_coefficient
+        )
+        return deadline
 
     @property
     def api(self):
@@ -103,7 +113,7 @@ class Kubernetes:
 
     def get_raw_api(self, url, timeout=60):
         self.api
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        deadline = self._get_deadline(timeout)
 
         while True:
             try:
@@ -184,7 +194,7 @@ class Kubernetes:
 
     def wait_pvc_phase(self, name, namespace, phase="Bound", timeout=60):
         """Wait for a PVC to enter the given phase"""
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        deadline = self._get_deadline(timeout)
 
         while True:
             claim = self.api.read_namespaced_persistent_volume_claim_status(name, namespace)
@@ -197,7 +207,7 @@ class Kubernetes:
 
     def wait_nodes_ready(self, count, timeout=60):
         """Wait for nodes to become ready"""
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        deadline = self._get_deadline(timeout)
         nodes = self.api.list_node().items
 
         while True:
@@ -252,7 +262,7 @@ class Kubernetes:
         raise NotFound(f"load_balancer_ip not found for {name} in {namespace}")
 
     def wait_load_balancer_ip(self, namespace, name, timeout=60):
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        deadline = self._get_deadline(timeout)
 
         while True:
             try:
@@ -299,7 +309,7 @@ class Kubernetes:
 
     def wait_containers_ready(self, namespace, label=None, field=None, timeout=60):
         """Wait up to timeout for all containers to be ready."""
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        deadline = self._get_deadline(timeout)
 
         while True:
             if self.all_containers_ready(namespace, label, field):
@@ -311,7 +321,7 @@ class Kubernetes:
 
     def wait_ingress_ready(self, name, namespace, timeout=60):
         """Wait for an ingress to get an address"""
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        deadline = self._get_deadline(timeout)
 
         while True:
             result = self.api_network.read_namespaced_ingress(name, namespace)

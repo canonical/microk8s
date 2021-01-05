@@ -5,9 +5,9 @@ from subprocess import CalledProcessError, CompletedProcess
 
 import yaml
 
+import pylxd
 from testnode.api import Kubernetes
 from testnode.executors import Docker, Executor, Kubectl, Microk8s, Snap
-import pylxd
 
 
 class Node:
@@ -20,6 +20,10 @@ class Node:
         self.docker = Docker(self)
         self.microk8s = Microk8s(self)
         self.kubernetes = Kubernetes(config=self.microk8s.get_config)
+        self._timeout_coefficient = 1.0
+
+    def set_timeout_coefficient(self, coefficient):
+        self._timeout_coefficient = float(coefficient)
 
 
 class Lxd(Node):

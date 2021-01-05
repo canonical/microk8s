@@ -1,8 +1,8 @@
 #!/bin/env python3
 
-from subprocess import CalledProcessError
 import datetime
 import time
+from subprocess import CalledProcessError
 
 import yaml
 
@@ -34,6 +34,12 @@ class Executor:
 
         return self.node.check_output(full_cmd)
 
+    def _get_deadline(self, timeout):
+        deadline = datetime.datetime.now() + datetime.timedelta(
+            seconds=timeout * self.node._timeout_coefficient
+        )
+        return deadline
+
     def run_until_success(self, cmd, timeout=60):
         """
         Run a command until it succeeds or times out.
@@ -44,7 +50,7 @@ class Executor:
         Returns: The string output of the command
 
         """
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        deadline = self._get_deadline(timeout)
 
         while True:
             try:
@@ -191,7 +197,7 @@ class Microk8s(Executor):
 
     def wait_until_running(self, timeout=60):
         """Wait until the status returns running"""
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        deadline = self._get_deadline(timeout)
 
         while True:
             status = self.status()
@@ -204,8 +210,8 @@ class Microk8s(Executor):
 
     def wait_until_service_running(self, service, timeout=60):
         """Wait until a microk8s service is running"""
+        deadline = self._get_deadline(timeout)
 
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
         cmd = [
             "systemctl",
             "is-active",
