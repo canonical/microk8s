@@ -214,7 +214,7 @@ class Jaeger(Addon):
 
     def validate(self):
         self.node.kubernetes.wait_containers_ready("default", label="name=jaeger-operator")
-        self.node.kubernetes.wait_ingress_ready("simplest-query", "default", timeout=240)
+        self.node.kubernetes.wait_ingress_ready("simplest-query", "default", timeout=180)
 
 
 class Metallb(Addon):

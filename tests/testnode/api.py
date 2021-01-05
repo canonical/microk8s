@@ -145,15 +145,23 @@ class Kubernetes:
             k8s_client=self.api_client, yaml_file=yaml_file, verbose=verbose, namespace=namespace
         )
 
-    def get_service_proxy(self, name, namespace, path=None):
+    def get_service_proxy(self, name, namespace, path=None, timeout=30):
         """Return a GET call to a proxied service"""
+        deadline = self._get_deadline(timeout)
 
-        if path:
-            response = self.api.connect_get_namespaced_service_proxy(name, namespace, path)
-        else:
-            response = self.api.connect_get_namespaced_service_proxy(name, namespace)
-
-        return response
+        while True:
+            try:
+                if path:
+                    response = self.api.connect_get_namespaced_service_proxy(name, namespace, path)
+                else:
+                    response = self.api.connect_get_namespaced_service_proxy(name, namespace)
+                return response
+            except kubernetes.client.exceptions.ApiException:
+                if datetime.datetime.now() > deadline:
+                    raise TimeoutError(
+                        f"Timeout waiting for service proxy {name}, response: {response}"
+                    )
+                time.sleep(1)
 
     def create_pvc(
         self,
@@ -329,6 +337,6 @@ class Kubernetes:
             if result.status.load_balancer.ingress is not None:
                 return result.status.load_balancer.ingress
             elif datetime.datetime.now() > deadline:
-                raise TimeoutError(f"Timeout waiting for Ingress {name}")
+                raise TimeoutError(f"Timeout waiting for Ingress {name}, result: {result}")
             else:
                 time.sleep(1)
