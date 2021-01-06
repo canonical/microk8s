@@ -473,10 +473,6 @@ parts:
         # Kubeflow support
         rm "actions/enable.kubeflow.sh"
         rm "actions/disable.kubeflow.sh"
-        # Kubeflow support
-        rm "actions/enable.multus.sh"
-        rm "actions/disable.multus.sh"
-        rm "actions/multus.yaml"
         # KEDA support
         rm "actions/enable.keda.sh"
         rm "actions/disable.keda.sh"        

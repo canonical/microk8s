@@ -121,6 +121,7 @@ microk8s-addons:
       check_status: "${SNAP_DATA}/args/cni-network/00-multus.conf"
       supported_architectures:
       - amd64
+      - arm64
 
     - name: "helm"
       description: "Helm 2 - the package manager for Kubernetes"
