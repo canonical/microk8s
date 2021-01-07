@@ -23,7 +23,7 @@ from typing import Dict
 from typing import Optional, Sequence
 
 from . import errors
-from .snaps import SnapPackage
+from .repo.snaps import SnapPackage
 from ._multipass._instance_info import InstanceInfo
 
 logger = logging.getLogger(__name__)
