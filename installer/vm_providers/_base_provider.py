@@ -23,6 +23,7 @@ from typing import Dict
 from typing import Optional, Sequence
 
 from . import errors
+from .snaps import SnapPackage
 from ._multipass._instance_info import InstanceInfo
 
 logger = logging.getLogger(__name__)
@@ -155,7 +156,14 @@ class Provider(abc.ABC):
                 raise
 
     def _setup_microk8s(self, specs: Dict) -> None:
-        self.run("snap install microk8s --classic --channel {}".format(specs['channel']).split())
+        microk8s_snap = SnapPackage("microk8s/{}".format(specs['channel']))
+        microk8s_snap.install()
+        if sys.platform == "win32":
+            integrator_snap = SnapPackage("microk8s-integrator-windows")
+            integrator_snap.install()
+        elif sys.platform == "darwin":
+            integrator_snap = SnapPackage("microk8s-integrator-macos")
+            integrator_snap.install()
 
     def _get_env_command(self) -> Sequence[str]:
         """Get command sequence for `env` with configured flags."""
