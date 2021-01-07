@@ -153,9 +153,7 @@ def set_addon(addon, state):
     :param state: 'enable' or 'disable'
     """
     if state not in ("enable", "disable"):
-        raise ValueError(
-            f"Wrong value '{state}' for state. Must be one of 'enable' or 'disable'"
-        )
+        raise ValueError(f"Wrong value '{state}' for state. Must be one of 'enable' or 'disable'")
     else:
         print(f"Setting add-on {addon} to {state} on nodes.")
         remote_op = {

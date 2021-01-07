@@ -115,9 +115,7 @@ class MultipassCommand:
         elif platform == "win32":
             windows_install_multipass(echoer)
         else:
-            raise OSError(
-                f"Setting up multipass for {platform!r} is not supported."
-            )
+            raise OSError(f"Setting up multipass for {platform!r} is not supported.")
 
         # wait for multipassd to be available
         cls._wait_for_multipass_ready(echoer=echoer)

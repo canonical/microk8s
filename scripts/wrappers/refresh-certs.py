@@ -69,9 +69,7 @@ def update_configs():
     """
     Update all kubeconfig files used by the client and the services
     """
-    p = subprocess.Popen(
-        ['bash', '-c', f'. {snap_path}/actions/common/utils.sh; update_configs']
-    )
+    p = subprocess.Popen(['bash', '-c', f'. {snap_path}/actions/common/utils.sh; update_configs'])
     p.communicate()
 
 
@@ -95,9 +93,7 @@ def produce_certs():
     subprocess.check_call(f'rm -rf {snapdata_path}/certs/ca.crt'.split())
     subprocess.check_call(f'rm -rf {snapdata_path}/certs/front-proxy-ca.crt'.split())
     subprocess.check_call(f'rm -rf {snapdata_path}/certs/csr.conf'.split())
-    p = subprocess.Popen(
-        ['bash', '-c', f'. {snap_path}/actions/common/utils.sh; produce_certs']
-    )
+    p = subprocess.Popen(['bash', '-c', f'. {snap_path}/actions/common/utils.sh; produce_certs'])
     p.communicate()
     subprocess.check_call('rm -rf .slr'.split())
 
@@ -132,9 +128,7 @@ def install_certs(ca_dir):
     """
     subprocess.check_call(f'cp {ca_dir}/ca.crt {snapdata_path}/certs/'.split())
     subprocess.check_call(f'cp {ca_dir}/ca.key {snapdata_path}/certs/'.split())
-    p = subprocess.Popen(
-        ['bash', '-c', f'. {snap_path}/actions/common/utils.sh; gen_server_cert']
-    )
+    p = subprocess.Popen(['bash', '-c', f'. {snap_path}/actions/common/utils.sh; gen_server_cert'])
     p.communicate()
 
 
@@ -143,9 +137,7 @@ def validate_certificates(ca_dir):
     Perform some basic testing of the user provided CA
     :param ca_dir: path to the ca.crt and ca.key
     """
-    if not os.path.isfile(f'{ca_dir}/ca.crt') or not os.path.isfile(
-        f'{ca_dir}/ca.key'
-    ):
+    if not os.path.isfile(f'{ca_dir}/ca.crt') or not os.path.isfile(f'{ca_dir}/ca.key'):
         click.echo(f'Could not find ca.crt and ca.key files in {ca_dir}')
         exit(30)
 

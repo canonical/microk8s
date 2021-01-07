@@ -176,9 +176,9 @@ def uninstall() -> None:
         if provider_error.prompt_installable:
             if echo.is_tty_connected():
                 echo.warning(
-                        "MicroK8s is not running. VM provider {!r} has been removed.".format(
-                            provider_error.provider
-                        )
+                    "MicroK8s is not running. VM provider {!r} has been removed.".format(
+                        provider_error.provider
+                    )
                 )
             return 1
         else:

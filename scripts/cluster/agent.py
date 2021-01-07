@@ -128,9 +128,7 @@ def sign_client_cert(cert_request, token):
     with open(req_file, 'w') as fp:
         fp.write(cert_request)
     subprocess.check_call(sign_cmd.split())
-    with open(
-        f"{snapdata_path}/certs/server.{token}.crt"
-    ) as fp:
+    with open(f"{snapdata_path}/certs/server.{token}.crt") as fp:
         cert = fp.read()
     return cert
 
@@ -428,9 +426,7 @@ def configure():
             if "restart" in service and service["restart"]:
                 service_name = get_service_name(service["name"])
                 print("restarting {}".format(service["name"]))
-                subprocess.check_call(
-                    f"snapctl restart microk8s.daemon-{service_name}".split()
-                )
+                subprocess.check_call(f"snapctl restart microk8s.daemon-{service_name}".split())
 
     if "addon" in configuration:
         for addon in configuration["addon"]:
@@ -574,9 +570,7 @@ def join_node_dqlite():
 
     agent_port = get_cluster_agent_port()
     if port != agent_port:
-        error_msg = {
-            "error": f"The port of the cluster agent has to be set to {agent_port}."
-        }
+        error_msg = {"error": f"The port of the cluster agent has to be set to {agent_port}."}
         return Response(json.dumps(error_msg), mimetype='application/json', status=502)
 
     voters = get_dqlite_voters()  # type: List[str]
@@ -665,9 +659,7 @@ def upgrade():
 
 def usage():
     print("Agent responsible for setting up a cluster. Arguments:")
-    print(
-        f"-l, --listen:   interfaces to listen to (defaults to {default_listen_interface})"
-    )
+    print(f"-l, --listen:   interfaces to listen to (defaults to {default_listen_interface})")
     print(f"-p, --port:     port to listen to (default {default_port})")
 
 

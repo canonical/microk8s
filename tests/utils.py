@@ -92,9 +92,7 @@ def wait_for_pod_state(
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         if datetime.datetime.now() > deadline:
-            raise TimeoutError(
-                f"Pod {pod} not in {desired_state} after {timeout_insec} seconds."
-            )
+            raise TimeoutError(f"Pod {pod} not in {desired_state} after {timeout_insec} seconds.")
         cmd = f'po {pod} -n {namespace}'
         if label:
             cmd += f' -l {label}'

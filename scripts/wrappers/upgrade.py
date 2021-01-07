@@ -130,9 +130,7 @@ def get_nodes_info(safe=True):
     node_info = []
     if safe:
         try:
-            nodes = subprocess.check_output(
-                f"{snap_path}/microk8s-kubectl.wrapper get no".split()
-            )
+            nodes = subprocess.check_output(f"{snap_path}/microk8s-kubectl.wrapper get no".split())
             if os.path.isfile(callback_tokens_file):
                 with open(callback_tokens_file, "r+") as fp:
                     for _, line in enumerate(fp):

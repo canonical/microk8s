@@ -378,12 +378,8 @@ def reset_current_dqlite_installation():
     os.mkdir(cluster_dir)
     if os.path.isfile(f"{cluster_backup_dir}/cluster.crt"):
         # reuse the certificates we had before the cluster formation
-        shutil.copy(
-            f"{cluster_backup_dir}/cluster.crt", f"{cluster_dir}/cluster.crt"
-        )
-        shutil.copy(
-            f"{cluster_backup_dir}/cluster.key", f"{cluster_dir}/cluster.key"
-        )
+        shutil.copy(f"{cluster_backup_dir}/cluster.crt", f"{cluster_dir}/cluster.crt")
+        shutil.copy(f"{cluster_backup_dir}/cluster.key", f"{cluster_dir}/cluster.key")
     else:
         # This node never joined a cluster. A cluster was formed around it.
         hostname = socket.gethostname()  # type: str
