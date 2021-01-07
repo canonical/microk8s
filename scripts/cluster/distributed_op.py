@@ -19,8 +19,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
-callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
-callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
+callback_tokens_file = f"{snapdata_path}/credentials/callback-tokens.txt"
+callback_token_file = f"{snapdata_path}/credentials/callback-token.txt"
 
 
 def do_op(remote_op):
@@ -36,23 +36,23 @@ def do_op(remote_op):
                 token = fp.read()
 
             subprocess.check_output(
-                "{}/microk8s-status.wrapper --wait-ready --timeout=60".format(snap_path).split()
+                f"{snap_path}/microk8s-status.wrapper --wait-ready --timeout=60".split()
             )
             nodes_info = subprocess.check_output(
-                "{}/microk8s-kubectl.wrapper get no -o json".format(snap_path).split()
+                f"{snap_path}/microk8s-kubectl.wrapper get no -o json".split()
             )
             info = json.loads(nodes_info.decode())
             for node_info in info["items"]:
                 node_ip = get_internal_ip_from_get_node(node_info)
                 if is_same_server(hostname, node_ip):
                     continue
-                print("Configuring node {}".format(node_ip))
+                print(f"Configuring node {node_ip}")
                 # TODO: make port configurable
                 node_ep = "{}:{}".format(node_ip, '25000')
                 remote_op["callback"] = token.rstrip()
                 # TODO: handle ssl verification
                 res = requests.post(
-                    "https://{}/{}/configure".format(node_ep, CLUSTER_API),
+                    f"https://{node_ep}/{CLUSTER_API}/configure",
                     json=remote_op,
                     verify=False,
                 )
@@ -74,11 +74,11 @@ def do_op(remote_op):
                 parts = line.split()
                 node_ep = parts[0]
                 host = node_ep.split(":")[0]
-                print("Applying to node {}.".format(host))
+                print(f"Applying to node {host}.")
                 try:
                     # Make sure this node exists
                     subprocess.check_call(
-                        "{}/microk8s-kubectl.wrapper get no {}".format(snap_path, host).split(),
+                        f"{snap_path}/microk8s-kubectl.wrapper get no {host}".split(),
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
                     )
@@ -86,7 +86,7 @@ def do_op(remote_op):
                     remote_op["callback"] = token
                     # TODO: handle ssl verification
                     res = requests.post(
-                        "https://{}/{}/configure".format(node_ep, CLUSTER_API),
+                        f"https://{node_ep}/{CLUSTER_API}/configure",
                         json=remote_op,
                         verify=False,
                     )
@@ -97,7 +97,7 @@ def do_op(remote_op):
                             )
                         )
                 except subprocess.CalledProcessError:
-                    print("Node {} not present".format(host))
+                    print(f"Node {host} not present")
 
 
 def restart(service):
@@ -108,7 +108,7 @@ def restart(service):
     """
     print("Restarting nodes.")
     remote_op = {
-        "action_str": "restart {}".format(service),
+        "action_str": f"restart {service}",
         "service": [{"name": service, "restart": "yes"}],
     }
     do_op(remote_op)
@@ -122,9 +122,9 @@ def update_argument(service, key, value):
     :param key: the argument we configure
     :param value: the value we set
     """
-    print("Adding argument {} to nodes.".format(key))
+    print(f"Adding argument {key} to nodes.")
     remote_op = {
-        "action_str": "change of argument {} to {}".format(key, value),
+        "action_str": f"change of argument {key} to {value}",
         "service": [{"name": service, "arguments_update": [{key: value}]}],
     }
     do_op(remote_op)
@@ -137,9 +137,9 @@ def remove_argument(service, key):
     :param service: the service we configure
     :param key: the argument we configure
     """
-    print("Removing argument {} from nodes.".format(key))
+    print(f"Removing argument {key} from nodes.")
     remote_op = {
-        "action_str": "removal of argument {}".format(key),
+        "action_str": f"removal of argument {key}",
         "service": [{"name": service, "arguments_remove": [key]}],
     }
     do_op(remote_op)
@@ -154,12 +154,12 @@ def set_addon(addon, state):
     """
     if state not in ("enable", "disable"):
         raise ValueError(
-            "Wrong value '{}' for state. Must be one of 'enable' or 'disable'".format(state)
+            f"Wrong value '{state}' for state. Must be one of 'enable' or 'disable'"
         )
     else:
-        print("Setting add-on {} to {} on nodes.".format(addon, state))
+        print(f"Setting add-on {addon} to {state} on nodes.")
         remote_op = {
-            "action_str": "set of {} to {}".format(addon, state),
+            "action_str": f"set of {addon} to {state}",
             "addon": [{"name": addon, state: "true"}],
         }
         do_op(remote_op)

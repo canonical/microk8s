@@ -12,7 +12,7 @@ upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
 upgrade_to = os.environ.get('UPGRADE_MICROK8S_TO', 'edge')
 
 
-class TestUpgradePath(object):
+class TestUpgradePath:
     """
     Validates a microk8s upgrade path
     """
@@ -57,27 +57,27 @@ class TestUpgradePath(object):
         )
         assert last_stable_minor is not None
 
-        channel = "1.{}/stable".format(start_channel)
-        print("Installing {}".format(channel))
-        cmd = "sudo snap install microk8s --classic --channel={}".format(channel)
+        channel = f"1.{start_channel}/stable"
+        print(f"Installing {channel}")
+        cmd = f"sudo snap install microk8s --classic --channel={channel}"
         run_until_success(cmd)
         wait_for_installation()
         channel_minor = start_channel
         channel_minor += 1
         while channel_minor <= last_stable_minor:
-            channel = "1.{}/stable".format(channel_minor)
-            print("Refreshing to {}".format(channel))
-            cmd = "sudo snap refresh microk8s --classic --channel={}".format(channel)
+            channel = f"1.{channel_minor}/stable"
+            print(f"Refreshing to {channel}")
+            cmd = f"sudo snap refresh microk8s --classic --channel={channel}"
             run_until_success(cmd)
             wait_for_installation()
             time.sleep(30)
             channel_minor += 1
 
-        print("Installing {}".format(upgrade_to))
+        print(f"Installing {upgrade_to}")
         if upgrade_to.endswith('.snap'):
-            cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to)
+            cmd = f"sudo snap install {upgrade_to} --classic --dangerous"
         else:
-            cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to)
+            cmd = f"sudo snap refresh microk8s --channel={upgrade_to}"
         run_until_success(cmd, timeout_insec=600)
         # Allow for the refresh to be processed
         time.sleep(20)

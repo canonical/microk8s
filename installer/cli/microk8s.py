@@ -90,7 +90,7 @@ Commands:
         if command in definitions.command_descriptions:
             click.echo("  {:<15} {}".format(command, definitions.command_descriptions[command]))
         else:
-            click.echo("  {:<15}".format(command))
+            click.echo(f"  {command:<15}")
     if len(commands) == 2:
         click.echo("")
         click.echo("Install and start MicroK8s to see the full list of commands.")
@@ -176,11 +176,9 @@ def uninstall() -> None:
         if provider_error.prompt_installable:
             if echo.is_tty_connected():
                 echo.warning(
-                    (
                         "MicroK8s is not running. VM provider {!r} has been removed.".format(
                             provider_error.provider
                         )
-                    )
                 )
             return 1
         else:
@@ -241,7 +239,7 @@ def dashboard_proxy() -> None:
 
         ip = instance.get_instance_info().ipv4[0]
 
-        echo.info("Dashboard will be available at https://{}:10443".format(ip))
+        echo.info(f"Dashboard will be available at https://{ip}:10443")
         echo.info("Use the following token to login:")
         echo.info(token)
 
@@ -298,7 +296,7 @@ def run(cmd) -> None:
             echo.warning("MicroK8s is not running. Please run `microk8s start`.")
             return 1
         command = cmd[0]
-        cmd[0] = "microk8s.{}".format(command)
+        cmd[0] = f"microk8s.{command}"
         instance.run(cmd)
     except ProviderInstanceNotFoundError:
         _not_installed(echo)

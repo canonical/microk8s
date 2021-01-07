@@ -32,7 +32,7 @@ def run_until_success(cmd, timeout_insec=60, err_out=None):
                 return output
             if datetime.datetime.now() > deadline:
                 raise
-            print("Retrying {}".format(cmd))
+            print(f"Retrying {cmd}")
             time.sleep(3)
 
 
@@ -93,11 +93,11 @@ def wait_for_pod_state(
     while True:
         if datetime.datetime.now() > deadline:
             raise TimeoutError(
-                "Pod {} not in {} after {} seconds.".format(pod, desired_state, timeout_insec)
+                f"Pod {pod} not in {desired_state} after {timeout_insec} seconds."
             )
-        cmd = 'po {} -n {}'.format(pod, namespace)
+        cmd = f'po {pod} -n {namespace}'
         if label:
-            cmd += ' -l {}'.format(label)
+            cmd += f' -l {label}'
         data = kubectl_get(cmd, timeout_insec)
         if pod == "":
             if len(data['items']) > 0:
@@ -148,11 +148,11 @@ def wait_for_namespace_termination(namespace, timeout_insec=360):
     Wait for the termination of the provided namespace.
     """
 
-    print("Waiting for namespace {} to be removed".format(namespace))
+    print(f"Waiting for namespace {namespace} to be removed")
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         try:
-            cmd = '/snap/bin/microk8s.kubectl get ns {}'.format(namespace)
+            cmd = f'/snap/bin/microk8s.kubectl get ns {namespace}'
             check_output(cmd.split()).strip().decode('utf8')
             print('Waiting...')
         except CalledProcessError:
@@ -179,7 +179,7 @@ def microk8s_enable(addon, timeout_insec=300):
             print("Not a cuda capable system. Will not test gpu addon")
             raise CalledProcessError(1, "Nothing to do for gpu")
 
-    cmd = '/snap/bin/microk8s.enable {}'.format(addon)
+    cmd = f'/snap/bin/microk8s.enable {addon}'
     return run_until_success(cmd, timeout_insec)
 
 
@@ -191,7 +191,7 @@ def microk8s_disable(addon):
         addon: name of the addon
 
     """
-    cmd = '/snap/bin/microk8s.disable {}'.format(addon)
+    cmd = f'/snap/bin/microk8s.disable {addon}'
     return run_until_success(cmd, timeout_insec=300)
 
 

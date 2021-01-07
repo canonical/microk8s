@@ -64,28 +64,28 @@ def backup(fname=None, debug=False):
         fname = generate_backup_name()
     if fname.endswith('.tar.gz'):
         fname = fname[:-7]
-    fname_tar = '{}.tar.gz'.format(fname)
+    fname_tar = f'{fname}.tar.gz'
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         backup_cmd = '{}/bin/migrator --mode backup-dqlite --db-dir {}'.format(
-            snap_path, "{}/{}".format(tmpdirname, fname)
+            snap_path, f"{tmpdirname}/{fname}"
         )
         if debug:
             backup_cmd = "{} {}".format(backup_cmd, "--debug")
         try:
             rc = run_command(backup_cmd)
             if rc > 0:
-                print("Backup process failed. {}".format(rc))
+                print(f"Backup process failed. {rc}")
                 exit(1)
             with tarfile.open(fname_tar, "w:gz") as tar:
                 tar.add(
-                    "{}/{}".format(tmpdirname, fname),
-                    arcname=os.path.basename("{}/{}".format(tmpdirname, fname)),
+                    f"{tmpdirname}/{fname}",
+                    arcname=os.path.basename(f"{tmpdirname}/{fname}"),
                 )
 
-            print("The backup is: {}".format(fname_tar))
+            print(f"The backup is: {fname_tar}")
         except subprocess.CalledProcessError as e:
-            print("Backup process failed. {}".format(e))
+            print(f"Backup process failed. {e}")
             exit(2)
 
 
@@ -106,17 +106,17 @@ def restore(fname_tar, debug=False):
             fname = fname_tar
         fname = os.path.basename(fname)
         restore_cmd = '{}/bin/migrator --mode restore-to-dqlite --db-dir {}'.format(
-            snap_path, "{}/{}".format(tmpdirname, fname)
+            snap_path, f"{tmpdirname}/{fname}"
         )
         if debug:
             restore_cmd = "{} {}".format(restore_cmd, "--debug")
         try:
             rc = run_command(restore_cmd)
             if rc > 0:
-                print("Restore process failed. {}".format(rc))
+                print(f"Restore process failed. {rc}")
                 exit(3)
         except subprocess.CalledProcessError as e:
-            print("Restore process failed. {}".format(e))
+            print(f"Restore process failed. {e}")
             exit(4)
 
 
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
     if 'backup-file' in args:
         fname = vars(args)['backup-file']
-        print("Restoring from {}".format(fname))
+        print(f"Restoring from {fname}")
         restore(fname, args.debug)
     elif 'o' in args:
         print("Backing up the datastore")

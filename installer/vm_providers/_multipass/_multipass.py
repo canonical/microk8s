@@ -106,11 +106,11 @@ class Multipass(Provider):
             ) from instance_error
 
     def _umount(self, *, mountpoint: str) -> None:
-        mount = "{}:{}".format(self.instance_name, mountpoint)
+        mount = f"{self.instance_name}:{mountpoint}"
         self._multipass_cmd.umount(mount=mount)
 
     def _push_file(self, *, source: str, destination: str) -> None:
-        destination = "{}:{}".format(self.instance_name, destination)
+        destination = f"{self.instance_name}:{destination}"
         self._multipass_cmd.copy_files(source=source, destination=destination)
 
     def __init__(
@@ -154,7 +154,7 @@ class Multipass(Provider):
         self._run(command=["test", "-f", name])
 
         # copy file from instance
-        source = "{}:{}".format(self.instance_name, name)
+        source = f"{self.instance_name}:{name}"
         self._multipass_cmd.copy_files(source=source, destination=destination)
         if delete:
             self._run(command=["rm", name])

@@ -8,7 +8,7 @@ from shutil import disk_usage
 logger = logging.getLogger(__name__)
 
 
-class Auxiliary(object):
+class Auxiliary:
     """
     Base OS auxiliary class.
     """
@@ -49,7 +49,7 @@ class Windows(Auxiliary):
         :param args: ArgumentParser
         :return: None
         """
-        super(Windows, self).__init__(args)
+        super().__init__(args)
 
     @staticmethod
     def check_admin() -> bool:
@@ -114,4 +114,4 @@ class MacOS(Auxiliary):
         :param args: ArgumentParser
         :return: None
         """
-        super(MacOS, self).__init__(args)
+        super().__init__(args)

@@ -39,7 +39,7 @@ from utils import (
 from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
 
 
-class TestAddons(object):
+class TestAddons:
     @pytest.fixture(scope="session", autouse=True)
     def clean_up(self):
         """
@@ -302,7 +302,7 @@ class TestAddons(object):
         addon = "metallb"
         ip_ranges = "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111,192.168.1.240/28"
         print("Enabling metallb")
-        microk8s_enable("{}:{}".format(addon, ip_ranges), timeout_insec=500)
+        microk8s_enable(f"{addon}:{ip_ranges}", timeout_insec=500)
         validate_metallb_config(ip_ranges)
         print("Disabling metallb")
         microk8s_disable("metallb")

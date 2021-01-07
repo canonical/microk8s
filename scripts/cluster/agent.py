@@ -32,10 +32,10 @@ CLUSTER_API = "cluster/api/v1.0"
 CLUSTER_API_V2 = "cluster/api/v2.0"
 snapdata_path = os.environ.get('SNAP_DATA')
 snap_path = os.environ.get('SNAP')
-cluster_tokens_file = "{}/credentials/cluster-tokens.txt".format(snapdata_path)
-callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
-callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
-certs_request_tokens_file = "{}/credentials/certs-request-tokens.txt".format(snapdata_path)
+cluster_tokens_file = f"{snapdata_path}/credentials/cluster-tokens.txt"
+callback_token_file = f"{snapdata_path}/credentials/callback-token.txt"
+callback_tokens_file = f"{snapdata_path}/credentials/callback-tokens.txt"
+certs_request_tokens_file = f"{snapdata_path}/credentials/certs-request-tokens.txt"
 default_port = 25000
 dqlite_default_port = 19001
 default_listen_interface = "0.0.0.0"
@@ -63,20 +63,20 @@ def update_service_argument(service, key, val):
     :param val: the value for the argument
     """
 
-    args_file = "{}/args/{}".format(snapdata_path, service)
-    args_file_tmp = "{}/args/{}.tmp".format(snapdata_path, service)
+    args_file = f"{snapdata_path}/args/{service}"
+    args_file_tmp = f"{snapdata_path}/args/{service}.tmp"
     found = False
     with open(args_file_tmp, "w+") as bfp:
         with open(args_file, "r+") as fp:
             for _, line in enumerate(fp):
                 if line.startswith(key):
                     if val is not None:
-                        bfp.write("{}={}\n".format(key, val))
+                        bfp.write(f"{key}={val}\n")
                     found = True
                 else:
-                    bfp.write("{}\n".format(line.rstrip()))
+                    bfp.write(f"{line.rstrip()}\n")
         if not found and val is not None:
-            bfp.write("{}={}\n".format(key, val))
+            bfp.write(f"{key}={val}\n")
 
     try_set_file_permissions(args_file_tmp)
     shutil.move(args_file_tmp, args_file)
@@ -89,7 +89,7 @@ def store_callback_token(node, callback_token):
     :param node: the node
     :param callback_token: the token
     """
-    tmp_file = "{}.tmp".format(callback_tokens_file)
+    tmp_file = f"{callback_tokens_file}.tmp"
     if not os.path.isfile(callback_tokens_file):
         open(callback_tokens_file, 'a+')
         os.chmod(callback_tokens_file, 0o600)
@@ -99,12 +99,12 @@ def store_callback_token(node, callback_token):
         with open(callback_tokens_file, 'r+') as callback_fp:
             for _, line in enumerate(callback_fp):
                 if line.startswith(node):
-                    backup_fp.write("{} {}\n".format(node, callback_token))
+                    backup_fp.write(f"{node} {callback_token}\n")
                     found = True
                 else:
                     backup_fp.write(line)
         if not found:
-            backup_fp.write("{} {}\n".format(node, callback_token))
+            backup_fp.write(f"{node} {callback_token}\n")
 
     try_set_file_permissions(tmp_file)
     shutil.move(tmp_file, callback_tokens_file)
@@ -118,7 +118,7 @@ def sign_client_cert(cert_request, token):
     :param token: a token acting as a request uuid
     :returns: the certificate
     """
-    req_file = "{}/certs/request.{}.csr".format(snapdata_path, token)
+    req_file = f"{snapdata_path}/certs/request.{token}.csr"
     sign_cmd = (
         "openssl x509 -sha256 -req -in {csr} -CA {SNAP_DATA}/certs/ca.crt -CAkey"
         " {SNAP_DATA}/certs/ca.key -CAcreateserial -out {SNAP_DATA}/certs/server.{token}.crt"
@@ -129,7 +129,7 @@ def sign_client_cert(cert_request, token):
         fp.write(cert_request)
     subprocess.check_call(sign_cmd.split())
     with open(
-        "{SNAP_DATA}/certs/server.{token}.crt".format(SNAP_DATA=snapdata_path, token=token)
+        f"{snapdata_path}/certs/server.{token}.crt"
     ) as fp:
         cert = fp.read()
     return cert
@@ -142,7 +142,7 @@ def add_token_to_certs_request(token):
     :param token: the token
     """
     with open(certs_request_tokens_file, "a+") as fp:
-        fp.write("{}\n".format(token))
+        fp.write(f"{token}\n")
 
 
 def get_token(name):
@@ -152,7 +152,7 @@ def get_token(name):
     :param name: the name of the node
     :returns: the token or None(if name doesn't exist)
     """
-    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
+    file = f"{snapdata_path}/credentials/known_tokens.csv"
     with open(file) as fp:
         for _, line in enumerate(fp):
             if name in line:
@@ -168,8 +168,8 @@ def add_kubelet_token(hostname):
     :param hostname: the name of the node
     :returns: the token added
     """
-    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
-    old_token = get_token("system:node:{}".format(hostname))
+    file = f"{snapdata_path}/credentials/known_tokens.csv"
+    old_token = get_token(f"system:node:{hostname}")
     if old_token:
         return old_token.rstrip()
 
@@ -178,7 +178,7 @@ def add_kubelet_token(hostname):
     uid = ''.join(random.SystemRandom().choice(string.digits) for _ in range(8))
     with open(file, 'a') as fp:
         # TODO double check this format. Why is userid unique?
-        line = "{},system:node:{},kubelet-{},\"system:nodes\"".format(token, hostname, uid)
+        line = f"{token},system:node:{hostname},kubelet-{uid},\"system:nodes\""
         fp.write(line + os.linesep)
     return token.rstrip()
 
@@ -189,7 +189,7 @@ def getCA():
 
     :returns: the CA file contents
     """
-    ca_file = "{}/certs/ca.crt".format(snapdata_path)
+    ca_file = f"{snapdata_path}/certs/ca.crt"
     with open(ca_file) as fp:
         ca = fp.read()
     return ca
@@ -203,7 +203,7 @@ def get_arg(key, file):
     :param file: the arguments file to search in
     :returns: the value of the argument or None(if the key doesn't exist)
     """
-    filename = "{}/args/{}".format(snapdata_path, file)
+    filename = f"{snapdata_path}/args/{file}"
     with open(filename) as fp:
         for _, line in enumerate(fp):
             if line.startswith(key):
@@ -244,11 +244,11 @@ def read_kubelet_args_file(node=None):
     :param node: node to add a host override (defaults to None)
     :returns: the kubelet args file
     """
-    filename = "{}/args/kubelet".format(snapdata_path)
+    filename = f"{snapdata_path}/args/kubelet"
     with open(filename) as fp:
         args = fp.read()
         if node:
-            args = "{}--hostname-override {}".format(args, node)
+            args = f"{args}--hostname-override {node}"
         return args
 
 
@@ -268,7 +268,7 @@ def get_node_ep(hostname, remote_addr):
     return remote_addr
 
 
-@app.route('/{}/join'.format(CLUSTER_API), methods=['POST'])
+@app.route(f'/{CLUSTER_API}/join', methods=['POST'])
 def join_node_etcd():
     """
     Web call to join a node to the cluster
@@ -304,7 +304,7 @@ def join_node_etcd():
     remove_token_from_file(token, cluster_tokens_file)
 
     node_addr = get_node_ep(hostname, request.remote_addr)
-    node_ep = "{}:{}".format(node_addr, port)
+    node_ep = f"{node_addr}:{port}"
     store_callback_token(node_ep, callback_token)
 
     ca = getCA()
@@ -329,7 +329,7 @@ def join_node_etcd():
     )
 
 
-@app.route('/{}/sign-cert'.format(CLUSTER_API), methods=['POST'])
+@app.route(f'/{CLUSTER_API}/sign-cert', methods=['POST'])
 def sign_cert():
     """
     Web call to sign a certificate
@@ -355,7 +355,7 @@ def sign_cert():
     return jsonify(certificate=signed_cert)
 
 
-@app.route('/{}/configure'.format(CLUSTER_API), methods=['POST'])
+@app.route(f'/{CLUSTER_API}/configure', methods=['POST'])
 def configure():
     """
     Web call to configure the node
@@ -418,18 +418,18 @@ def configure():
                 print("Updating arguments")
                 for argument in service["arguments_update"]:
                     for key, val in argument.items():
-                        print("{} is {}".format(key, val))
+                        print(f"{key} is {val}")
                         update_service_argument(service["name"], key, val)
             if "arguments_remove" in service:
                 print("Removing arguments")
                 for argument in service["arguments_remove"]:
-                    print("{}".format(argument))
+                    print(f"{argument}")
                     update_service_argument(service["name"], argument, None)
             if "restart" in service and service["restart"]:
                 service_name = get_service_name(service["name"])
                 print("restarting {}".format(service["name"]))
                 subprocess.check_call(
-                    "snapctl restart microk8s.daemon-{}".format(service_name).split()
+                    f"snapctl restart microk8s.daemon-{service_name}".split()
                 )
 
     if "addon" in configuration:
@@ -458,13 +458,13 @@ def get_dqlite_voters():
     :param : the list with the voting members
     """
     snapdata_path = "/var/snap/microk8s/current"
-    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+    cluster_dir = f"{snapdata_path}/var/kubernetes/backend"
 
     waits = 10
     print("Waiting for access to cluster.", end=" ", flush=True)
     while waits > 0:
         try:
-            with open("{}/info.yaml".format(cluster_dir)) as f:
+            with open(f"{cluster_dir}/info.yaml") as f:
                 data = yaml.load(f, Loader=yaml.FullLoader)
                 out = subprocess.check_output(
                     "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
@@ -505,10 +505,10 @@ def update_dqlite_ip(host):
     subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
     time.sleep(10)
 
-    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
+    cluster_dir = f"{snapdata_path}/var/kubernetes/backend"
     # TODO make the port configurable
-    update_data = {'Address': "{}:{}".format(host, dqlite_port)}
-    with open("{}/update.yaml".format(cluster_dir), 'w') as f:
+    update_data = {'Address': f"{host}:{dqlite_port}"}
+    with open(f"{cluster_dir}/update.yaml", 'w') as f:
         yaml.dump(update_data, f)
     subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
     time.sleep(10)
@@ -530,7 +530,7 @@ def get_cert(certificate):
 
     :returns: the certificate file contents
     """
-    cert_file = "{}/certs/{}".format(snapdata_path, certificate)
+    cert_file = f"{snapdata_path}/certs/{certificate}"
     with open(cert_file) as fp:
         cert = fp.read()
     return cert
@@ -542,17 +542,17 @@ def get_cluster_certs():
 
     :returns: the cluster certificate files
     """
-    file = "{}/var/kubernetes/backend/cluster.crt".format(snapdata_path)
+    file = f"{snapdata_path}/var/kubernetes/backend/cluster.crt"
     with open(file) as fp:
         cluster_cert = fp.read()
-    file = "{}/var/kubernetes/backend/cluster.key".format(snapdata_path)
+    file = f"{snapdata_path}/var/kubernetes/backend/cluster.key"
     with open(file) as fp:
         cluster_key = fp.read()
 
     return cluster_cert, cluster_key
 
 
-@app.route('/{}/join'.format(CLUSTER_API_V2), methods=['POST'])
+@app.route(f'/{CLUSTER_API_V2}/join', methods=['POST'])
 def join_node_dqlite():
     """
     Web call to join a node to the cluster
@@ -575,7 +575,7 @@ def join_node_dqlite():
     agent_port = get_cluster_agent_port()
     if port != agent_port:
         error_msg = {
-            "error": "The port of the cluster agent has to be set to {}.".format(agent_port)
+            "error": f"The port of the cluster agent has to be set to {agent_port}."
         }
         return Response(json.dumps(error_msg), mimetype='application/json', status=502)
 
@@ -608,7 +608,7 @@ def join_node_dqlite():
     )
 
 
-@app.route('/{}/upgrade'.format(CLUSTER_API), methods=['POST'])
+@app.route(f'/{CLUSTER_API}/upgrade', methods=['POST'])
 def upgrade():
     """
     Web call to upgrade the node
@@ -631,32 +631,32 @@ def upgrade():
     }
     '''
     if phase == "prepare":
-        upgrade_script = '{}/upgrade-scripts/{}/prepare-node.sh'.format(snap_path, upgrade_request)
+        upgrade_script = f'{snap_path}/upgrade-scripts/{upgrade_request}/prepare-node.sh'
         if not os.path.isfile(upgrade_script):
-            print("Not ready to execute {}".format(upgrade_script))
+            print(f"Not ready to execute {upgrade_script}")
             resp_data = {"result": "not ok"}
             resp = Response(json.dumps(resp_data), status=404, mimetype='application/json')
             return resp
         else:
-            print("Executing {}".format(upgrade_script))
+            print(f"Executing {upgrade_script}")
             subprocess.check_call(upgrade_script)
             resp_data = {"result": "ok"}
             resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
             return resp
 
     elif phase == "commit":
-        upgrade_script = '{}/upgrade-scripts/{}/commit-node.sh'.format(snap_path, upgrade_request)
-        print("Ready to execute {}".format(upgrade_script))
-        print("Executing {}".format(upgrade_script))
+        upgrade_script = f'{snap_path}/upgrade-scripts/{upgrade_request}/commit-node.sh'
+        print(f"Ready to execute {upgrade_script}")
+        print(f"Executing {upgrade_script}")
         subprocess.check_call(upgrade_script)
         resp_data = {"result": "ok"}
         resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
         return resp
 
     elif phase == "rollback":
-        upgrade_script = '{}/upgrade-scripts/{}/rollback-node.sh'.format(snap_path, upgrade_request)
-        print("Ready to execute {}".format(upgrade_script))
-        print("Executing {}".format(upgrade_script))
+        upgrade_script = f'{snap_path}/upgrade-scripts/{upgrade_request}/rollback-node.sh'
+        print(f"Ready to execute {upgrade_script}")
+        print(f"Executing {upgrade_script}")
         subprocess.check_call(upgrade_script)
         resp_data = {"result": "ok"}
         resp = Response(json.dumps(resp_data), status=200, mimetype='application/json')
@@ -666,14 +666,14 @@ def upgrade():
 def usage():
     print("Agent responsible for setting up a cluster. Arguments:")
     print(
-        "-l, --listen:   interfaces to listen to (defaults to {})".format(default_listen_interface)
+        f"-l, --listen:   interfaces to listen to (defaults to {default_listen_interface})"
     )
-    print("-p, --port:     port to listen to (default {})".format(default_port))
+    print(f"-p, --port:     port to listen to (default {default_port})")
 
 
 if __name__ == '__main__':
-    server_cert = "{SNAP_DATA}/certs/server.crt".format(SNAP_DATA=snapdata_path)
-    server_key = "{SNAP_DATA}/certs/server.key".format(SNAP_DATA=snapdata_path)
+    server_cert = f"{snapdata_path}/certs/server.crt"
+    server_key = f"{snapdata_path}/certs/server.key"
     try:
         opts, args = getopt.gnu_getopt(sys.argv[1:], "hl:p:", ["help", "listen=", "port="])
     except getopt.GetoptError as err:

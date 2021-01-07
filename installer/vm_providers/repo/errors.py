@@ -88,7 +88,7 @@ class PackageBrokenError(RepoError):
 class PackageNotFoundError(RepoError):
     @property
     def message(self):
-        message = "The package {!r} was not found.".format(self.package_name)
+        message = f"The package {self.package_name!r} was not found."
         # If the package was multiarch, try to help.
         return message
 

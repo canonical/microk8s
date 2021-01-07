@@ -79,7 +79,7 @@ def get_dqlite_info():
     waits = 10
     while waits > 0:
         try:
-            with open("{}/info.yaml".format(cluster_dir), mode='r') as f:
+            with open(f"{cluster_dir}/info.yaml", mode='r') as f:
                 data = yaml.load(f, Loader=yaml.FullLoader)
                 out = subprocess.check_output(
                     "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
@@ -149,7 +149,7 @@ def exit_if_no_permission():
             )
         )
         print("")
-        print("    sudo usermod -a -G microk8s {}".format(user))
+        print(f"    sudo usermod -a -G microk8s {user}")
         print("")
         print("The new group will be available on the user's next login.")
         exit(1)
@@ -177,7 +177,7 @@ def kubectl_get_clusterroles():
 def get_available_addons(arch):
     addon_dataset = os.path.expandvars("${SNAP}/addon-lists.yaml")
     available = []
-    with open(addon_dataset, 'r') as file:
+    with open(addon_dataset) as file:
         # The FullLoader parameter handles the conversion from YAML
         # scalar values to Python the dictionary format
         addons = yaml.load(file, Loader=yaml.FullLoader)
@@ -204,7 +204,7 @@ def is_service_expected_to_start(service):
     :return: True if the service is meant to start
     """
     lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
-    lock = "{}/{}".format(lock_path, service)
+    lock = f"{lock_path}/{service}"
     return os.path.exists(lock_path) and not os.path.isfile(lock)
 
 
@@ -215,7 +215,7 @@ def set_service_expected_to_start(service, start=True):
     :param start: should the service start or not
     """
     lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
-    lock = "{}/{}".format(lock_path, service)
+    lock = f"{lock_path}/{service}"
     if start:
         os.remove(lock)
     else:
@@ -251,11 +251,11 @@ def xable(action: str, addons: list, xabled_addons: list):
     if all(a.split(':')[0] in existing_addons for a in addons) and len(addons) > 1:
         for addon in addons:
             if addon in xabled_addons and addon != 'kubeflow':
-                click.echo("Addon %s is already %sd." % (addon, action))
+                click.echo(f"Addon {addon} is already {action}d.")
             else:
                 addon, *args = addon.split(':')
                 wait_for_ready(timeout=30)
-                subprocess.run([str(actions / ('%s.%s.sh' % (action, addon)))] + args)
+                subprocess.run([str(actions / (f'{action}.{addon}.sh'))] + args)
                 wait_for_ready(timeout=30)
 
     # The new way of xabling addons, that allows for unix-style argument passing,
@@ -264,7 +264,7 @@ def xable(action: str, addons: list, xabled_addons: list):
         addon, *args = addons[0].split(':')
 
         if addon in xabled_addons and addon != 'kubeflow':
-            click.echo("Addon %s is already %sd." % (addon, action))
+            click.echo(f"Addon {addon} is already {action}d.")
             sys.exit(0)
 
         if addon not in existing_addons:
@@ -283,7 +283,7 @@ def xable(action: str, addons: list, xabled_addons: list):
             sys.exit(1)
 
         wait_for_ready(timeout=30)
-        script = [str(actions / ('%s.%s.sh' % (action, addon)))]
+        script = [str(actions / (f'{action}.{addon}.sh'))]
         if args:
             subprocess.run(script + args)
         else:

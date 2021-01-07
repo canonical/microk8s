@@ -18,7 +18,7 @@ from validators import (
 from utils import wait_for_pod_state
 
 
-class TestLiveAddons(object):
+class TestLiveAddons:
     """
     Validates a microk8s with all the addons enabled
     """

@@ -27,7 +27,7 @@ upgrade_to = os.environ.get('UPGRADE_MICROK8S_TO', 'edge')
 under_time_pressure = os.environ.get('UNDER_TIME_PRESSURE', 'False')
 
 
-class TestUpgrade(object):
+class TestUpgrade:
     """
     Validates a microk8s upgrade path
     """
@@ -37,9 +37,9 @@ class TestUpgrade(object):
         Deploy, probe, upgrade, validate nothing broke.
 
         """
-        print("Testing upgrade from {} to {}".format(upgrade_from, upgrade_to))
+        print(f"Testing upgrade from {upgrade_from} to {upgrade_to}")
 
-        cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from)
+        cmd = f"sudo snap install microk8s --classic --channel={upgrade_from}"
         run_until_success(cmd)
         wait_for_installation()
         if is_container():
@@ -48,7 +48,7 @@ class TestUpgrade(object):
             # to fail.
             here = os.path.dirname(os.path.abspath(__file__))
             apply_patch = os.path.join(here, "patch-kube-proxy.sh")
-            check_call("sudo {}".format(apply_patch).split())
+            check_call(f"sudo {apply_patch}".split())
 
         # Run through the validators and
         # select those that were valid for the original snap
@@ -186,9 +186,9 @@ class TestUpgrade(object):
 
         # Refresh the snap to the target
         if upgrade_to.endswith('.snap'):
-            cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to)
+            cmd = f"sudo snap install {upgrade_to} --classic --dangerous"
         else:
-            cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to)
+            cmd = f"sudo snap refresh microk8s --channel={upgrade_to}"
         run_until_success(cmd)
         # Allow for the refresh to be processed
         time.sleep(10)
@@ -196,7 +196,7 @@ class TestUpgrade(object):
 
         # Test any validations that were valid for the original snap
         for test, validation in test_matrix.items():
-            print("Testing {}".format(test))
+            print(f"Testing {test}")
             validation()
 
         if not is_container():
@@ -212,7 +212,7 @@ def is_container():
     try:
         if os.path.isdir('/run/systemd/system'):
             container = check_output('sudo systemd-detect-virt --container'.split())
-            print("Tests are running in {}".format(container))
+            print(f"Tests are running in {container}")
             return True
     except CalledProcessError:
         print("systemd-detect-virt did not detect a container")

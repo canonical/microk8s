@@ -149,7 +149,7 @@ class Provider(abc.ABC):
 
             if url:
                 raise errors.ConnectivityError(
-                    "The VM cannot connect to snapcraft.io, please see {}".format(url)
+                    f"The VM cannot connect to snapcraft.io, please see {url}"
                 )
             else:
                 raise

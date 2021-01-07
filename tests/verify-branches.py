@@ -2,7 +2,7 @@ import requests
 from subprocess import check_output
 
 
-class TestMicrok8sBranches(object):
+class TestMicrok8sBranches:
     def test_branches(self):
         """Ensures LP builders push to correct snap tracks.
 
@@ -25,7 +25,7 @@ class TestMicrok8sBranches(object):
         else:
             major = int(version_parts[0][1:]) - 1
             minor = self._get_max_minor(major)
-            prev_major_minor_version = "{}.{}".format(major, minor)
+            prev_major_minor_version = f"{major}.{minor}"
         print(
             "Current stable is {}. Making sure we have a branch for {}".format(
                 major_minor_upstream_version, prev_major_minor_version
@@ -57,7 +57,7 @@ class TestMicrok8sBranches(object):
 
     def _upstream_release_exists(self, major, minor):
         """Return true if the major.minor release exists"""
-        release_url = "https://dl.k8s.io/release/stable-{}.{}.txt".format(major, minor)
+        release_url = f"https://dl.k8s.io/release/stable-{major}.{minor}.txt"
         r = requests.get(release_url)
         if r.status_code == 200:
             return True

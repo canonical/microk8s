@@ -115,8 +115,8 @@ class MultipassCommand:
         elif platform == "win32":
             windows_install_multipass(echoer)
         else:
-            raise EnvironmentError(
-                "Setting up multipass for {!r} is not supported.".format(platform)
+            raise OSError(
+                f"Setting up multipass for {platform!r} is not supported."
             )
 
         # wait for multipassd to be available
@@ -152,7 +152,7 @@ class MultipassCommand:
         :param str cloud_init: path to a user-data cloud-init configuration.
         """
         if remote is not None:
-            image = "{}:{}".format(remote, image)
+            image = f"{remote}:{image}"
         cmd = [self.provider_cmd, "launch", image, "--name", instance_name]
         if cloud_init is not None:
             cmd.extend(["--cloud-init", cloud_init])
@@ -280,11 +280,11 @@ class MultipassCommand:
         if uid_map is None:
             uid_map = dict()
         for host_map, instance_map in uid_map.items():
-            cmd.extend(["--uid-map", "{}:{}".format(host_map, instance_map)])
+            cmd.extend(["--uid-map", f"{host_map}:{instance_map}"])
         if gid_map is None:
             gid_map = dict()
         for host_map, instance_map in gid_map.items():
-            cmd.extend(["--gid-map", "{}:{}".format(host_map, instance_map)])
+            cmd.extend(["--gid-map", f"{host_map}:{instance_map}"])
         try:
             _run(cmd)
         except subprocess.CalledProcessError as process_error:

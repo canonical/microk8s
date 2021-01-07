@@ -31,15 +31,15 @@ def remove_expired_token_from_file(file):
 
     :param file: the file to be removed from
     """
-    backup_file = "{}.backup".format(file)
+    backup_file = f"{file}.backup"
     # That is a critical section. We need to protect it.
     # We are safe for now because flask serves one request at a time.
     with open(backup_file, 'w') as back_fp:
-        with open(file, 'r') as fp:
+        with open(file) as fp:
             for _, line in enumerate(fp):
                 if is_token_expired(line):
                     continue
-                back_fp.write("{}".format(line))
+                back_fp.write(f"{line}")
 
     try_set_file_permissions(backup_file)
     shutil.copyfile(backup_file, file)
@@ -52,17 +52,17 @@ def remove_token_from_file(token, file):
     :param token: the token to be removed
     :param file: the file to be removed from
     """
-    backup_file = "{}.backup".format(file)
+    backup_file = f"{file}.backup"
     # That is a critical section. We need to protect it.
     # We are safe for now because flask serves one request at a time.
     with open(backup_file, 'w') as back_fp:
-        with open(file, 'r') as fp:
+        with open(file) as fp:
             for _, line in enumerate(fp):
                 # Not considering cluster tokens with expiry in this method.
                 if "|" not in line:
                     if line.strip() == token:
                         continue
-                back_fp.write("{}".format(line))
+                back_fp.write(f"{line}")
 
     try_set_file_permissions(backup_file)
     shutil.copyfile(backup_file, file)
@@ -89,14 +89,14 @@ def get_callback_token():
     :returns: the token
     """
     snapdata_path = os.environ.get('SNAP_DATA')
-    callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
+    callback_token_file = f"{snapdata_path}/credentials/callback-token.txt"
     if os.path.exists(callback_token_file):
         with open(callback_token_file) as fp:
             token = fp.read()
     else:
         token = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(64))
         with open(callback_token_file, "w") as fp:
-            fp.write("{}\n".format(token))
+            fp.write(f"{token}\n")
         try_set_file_permissions(callback_token_file)
 
     return token
@@ -120,8 +120,8 @@ def get_dqlite_port():
     """
     # We get the dqlite port from the already existing deployment
     snapdata_path = os.environ.get('SNAP_DATA')
-    cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
-    dqlite_info = "{}/info.yaml".format(cluster_dir)
+    cluster_dir = f"{snapdata_path}/var/kubernetes/backend"
+    dqlite_info = f"{cluster_dir}/info.yaml"
     port = 19001
     if os.path.exists(dqlite_info):
         with open(dqlite_info) as f:
@@ -140,7 +140,7 @@ def get_cluster_agent_port():
     """
     cluster_agent_port = "25000"
     snapdata_path = os.environ.get('SNAP_DATA')
-    filename = "{}/args/cluster-agent".format(snapdata_path)
+    filename = f"{snapdata_path}/args/cluster-agent"
     with open(filename) as fp:
         for _, line in enumerate(fp):
             if line.startswith("--bind"):
@@ -169,7 +169,7 @@ def is_same_server(hostname, ip):
         hname, _, _ = socket.gethostbyaddr(ip)
         if hname == hostname:
             return True
-    except socket.error:
+    except OSError:
         # Ignore any unresolvable IP by host, surely this is not from the same node.
         pass
 
@@ -183,7 +183,7 @@ def apply_cni_manifest(timeout_insec=60):
     """
     yaml = '{}/args/cni-network/cni.yaml'.format(os.environ.get('SNAP_DATA'))
     snap_path = os.environ.get('SNAP')
-    cmd = '{}/microk8s-kubectl.wrapper apply -f {}'.format(snap_path, yaml)
+    cmd = f'{snap_path}/microk8s-kubectl.wrapper apply -f {yaml}'
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         try:
@@ -191,10 +191,10 @@ def apply_cni_manifest(timeout_insec=60):
             break
         except CalledProcessError as err:
             output = err.output.strip().decode('utf8').replace('\\n', '\n')
-            print("Applying {} failed with {}".format(yaml, output))
+            print(f"Applying {yaml} failed with {output}")
             if datetime.datetime.now() > deadline:
                 raise
-            print("Retrying {}".format(cmd))
+            print(f"Retrying {cmd}")
             time.sleep(3)
 
 
@@ -217,13 +217,13 @@ def patch_cni(ip):
     :param ip: The IP another k8s node has.
     """
     cni_yaml = '{}/args/cni-network/cni.yaml'.format(os.environ.get('SNAP_DATA'))
-    backup_file = "{}.backup".format(cni_yaml)
+    backup_file = f"{cni_yaml}.backup"
     with open(backup_file, 'w') as back_fp:
-        with open(cni_yaml, 'r') as fp:
+        with open(cni_yaml) as fp:
             for _, line in enumerate(fp):
                 if "first-found" in line:
-                    line = line.replace("first-found", "can-reach={}".format(ip))
-                back_fp.write("{}".format(line))
+                    line = line.replace("first-found", f"can-reach={ip}")
+                back_fp.write(f"{line}")
 
     try_set_file_permissions(backup_file)
     shutil.copyfile(backup_file, cni_yaml)

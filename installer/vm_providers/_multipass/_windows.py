@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 _MULTIPASS_RELEASES_API_URL = "https://api.github.com/repos/canonical/multipass/releases"
 _MULTIPASS_DL_VERSION = "1.2.0"
-_MULTIPASS_DL_NAME = "multipass-{version}+win-win64.exe".format(version=_MULTIPASS_DL_VERSION)
+_MULTIPASS_DL_NAME = f"multipass-{_MULTIPASS_DL_VERSION}+win-win64.exe"
 _MULTIPASS_DL_SHA3_384 = "6478cb37294052259f7a0337077264f5494e0788f23d4b5e2acac8f553ca5bc55031737c484397418e68e4ad2d0dc62f"  # noqa: E501
 
 
@@ -134,7 +134,7 @@ def _fetch_installer_url() -> str:
         data = resp.json()
     except simplejson.JSONDecodeError:
         raise ProviderMultipassDownloadFailed(
-            "failed to fetch valid release data from {}".format(_MULTIPASS_RELEASES_API_URL)
+            f"failed to fetch valid release data from {_MULTIPASS_RELEASES_API_URL}"
         )
 
     for assets in data:
@@ -157,7 +157,7 @@ def _download_multipass(dl_dir: str, echoer) -> str:
     dl_basename = os.path.basename(dl_url)
     dl_path = os.path.join(dl_dir, dl_basename)
 
-    echoer.info("Downloading Multipass installer...\n{} -> {}".format(dl_url, dl_path))
+    echoer.info(f"Downloading Multipass installer...\n{dl_url} -> {dl_path}")
 
     try:
         request = requests.get(dl_url, stream=True, allow_redirects=True)

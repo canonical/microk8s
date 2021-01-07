@@ -50,7 +50,7 @@ def validate_storage():
     wait_for_pod_state("", "kube-system", "running", label="k8s-app=hostpath-provisioner")
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "pvc.yaml")
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     wait_for_pod_state("hostpath-test-pod", "default", "running")
 
     attempt = 50
@@ -70,7 +70,7 @@ def validate_storage():
     assert found
     assert "myclaim" in output
     assert "Bound" in output
-    kubectl("delete -f {}".format(manifest))
+    kubectl(f"delete -f {manifest}")
 
 
 def common_ingress():
@@ -135,12 +135,12 @@ def validate_ingress():
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "ingress.yaml")
     update_yaml_with_arch(manifest)
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     wait_for_pod_state("", "default", "running", label="app=microbot")
 
     common_ingress()
 
-    kubectl("delete -f {}".format(manifest))
+    kubectl(f"delete -f {manifest}")
 
 
 def validate_ambassador():
@@ -157,7 +157,7 @@ def validate_ambassador():
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "ingress.yaml")
     update_yaml_with_arch(manifest)
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     wait_for_pod_state("", "default", "running", label="app=microbot")
 
     # `Ingress`es must be annotatated for being recognized by Ambassador
@@ -166,7 +166,7 @@ def validate_ambassador():
 
     common_ingress()
 
-    kubectl("delete -f {}".format(manifest))
+    kubectl(f"delete -f {manifest}")
 
 
 def validate_gpu():
@@ -184,10 +184,10 @@ def validate_gpu():
     get_pod = kubectl_get("po")
     if "cuda-vector-add" in str(get_pod):
         # Cleanup
-        kubectl("delete -f {}".format(manifest))
+        kubectl(f"delete -f {manifest}")
         time.sleep(10)
 
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     wait_for_pod_state("cuda-vector-add", "default", "terminated")
     result = kubectl("logs pod/cuda-vector-add")
     assert "PASSED" in result
@@ -210,13 +210,13 @@ def validate_istio():
         "sidecar-injector",
     ]
     for service in istio_services:
-        wait_for_pod_state("", "istio-system", "running", label="istio={}".format(service))
+        wait_for_pod_state("", "istio-system", "running", label=f"istio={service}")
 
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "bookinfo.yaml")
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     wait_for_pod_state("", "default", "running", label="app=details")
-    kubectl("delete -f {}".format(manifest))
+    kubectl(f"delete -f {manifest}")
 
 
 def validate_knative():
@@ -234,13 +234,13 @@ def validate_knative():
         "controller",
     ]
     for service in knative_services:
-        wait_for_pod_state("", "knative-serving", "running", label="app={}".format(service))
+        wait_for_pod_state("", "knative-serving", "running", label=f"app={service}")
 
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "knative-helloworld.yaml")
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     wait_for_pod_state("", "default", "running", label="serving.knative.dev/service=helloworld-go")
-    kubectl("delete -f {}".format(manifest))
+    kubectl(f"delete -f {manifest}")
 
 
 def validate_registry():
@@ -259,11 +259,11 @@ def validate_registry():
 
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "bbox-local.yaml")
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     wait_for_pod_state("busybox", "default", "running")
     output = kubectl("describe po busybox")
     assert "localhost:32000/my-busybox" in output
-    kubectl("delete -f {}".format(manifest))
+    kubectl(f"delete -f {manifest}")
 
 
 def validate_forward():
@@ -272,7 +272,7 @@ def validate_forward():
     """
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "nginx-pod.yaml")
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     wait_for_pod_state("", "default", "running", label="app=nginx")
     os.system('killall kubectl')
     os.system('/snap/bin/microk8s.kubectl port-forward pod/nginx 5123:80 &')
@@ -384,9 +384,9 @@ def validate_linkerd():
     print("Linkerd proxy injector up and running.")
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "emojivoto.yaml")
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     wait_for_pod_state("", "emojivoto", "running", label="app=emoji-svc", timeout_insec=600)
-    kubectl("delete -f {}".format(manifest))
+    kubectl(f"delete -f {manifest}")
 
 
 def validate_rbac():
@@ -429,15 +429,15 @@ def validate_cilium():
 
     # Try up to three times to get nginx under cilium
     for attempt in range(0, 10):
-        kubectl("apply -f {}".format(manifest))
+        kubectl(f"apply -f {manifest}")
         wait_for_pod_state("", "default", "running", label="app=nginx")
         output = cilium('endpoint list -o json', timeout_insec=20)
         if "nginx" in output:
-            kubectl("delete -f {}".format(manifest))
+            kubectl(f"delete -f {manifest}")
             break
         else:
             print("Cilium not ready will retry testing.")
-            kubectl("delete -f {}".format(manifest))
+            kubectl(f"delete -f {manifest}")
             time.sleep(20)
     else:
         print("Cilium testing failed.")
@@ -454,16 +454,16 @@ def validate_multus():
     here = os.path.dirname(os.path.abspath(__file__))
     shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
     networks = os.path.join(here, "templates", "multus-networks.yaml")
-    kubectl("create -f {}".format(networks))
+    kubectl(f"create -f {networks}")
     manifest = os.path.join(here, "templates", "multus-alpine.yaml")
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     wait_for_pod_state("", "default", "running", label="app=multus-alpine")
     output = kubectl("exec multus-alpine -- ifconfig eth1", timeout_insec=900, err_out='no')
     assert "10.111.111.111" in output
     output = kubectl("exec multus-alpine -- ifconfig eth2", timeout_insec=900, err_out='no')
     assert "10.222.222.222" in output
-    kubectl("delete -f {}".format(manifest))
-    kubectl("delete -f {}".format(networks))
+    kubectl(f"delete -f {manifest}")
+    kubectl(f"delete -f {networks}")
     shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
 
 
@@ -510,10 +510,10 @@ def validate_keda():
     print("KEDA operator up and running.")
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "keda-scaledobject.yaml")
-    kubectl("apply -f {}".format(manifest))
+    kubectl(f"apply -f {manifest}")
     scaledObject = kubectl("-n gonuts get scaledobject.keda.sh")
     assert "stan-scaledobject" in scaledObject
-    kubectl("delete -f {}".format(manifest))
+    kubectl(f"delete -f {manifest}")
 
 
 def validate_traefik():

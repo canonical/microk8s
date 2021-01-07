@@ -25,10 +25,10 @@ def start_control_plane_services():
     """
     for service in services:
         if not is_service_expected_to_start(service):
-            systemd_service_name = "microk8s.daemon-{}".format(service)
-            print("Starting {}".format(systemd_service_name), flush=True)
-            cmd = "snapctl start {}".format(systemd_service_name)
-            subprocess.check_output((cmd.split()))
+            systemd_service_name = f"microk8s.daemon-{service}"
+            print(f"Starting {systemd_service_name}", flush=True)
+            cmd = f"snapctl start {systemd_service_name}"
+            subprocess.check_output(cmd.split())
             set_service_expected_to_start(service, True)
 
 
@@ -38,9 +38,9 @@ def stop_control_plane_services():
     """
     for service in services:
         if is_service_expected_to_start(service):
-            systemd_service_name = "microk8s.daemon-{}".format(service)
-            print("Stopping {}".format(systemd_service_name), flush=True)
-            cmd = "snapctl stop {}".format(systemd_service_name)
+            systemd_service_name = f"microk8s.daemon-{service}"
+            print(f"Stopping {systemd_service_name}", flush=True)
+            cmd = f"snapctl stop {systemd_service_name}"
             subprocess.check_output(cmd.split())
             set_service_expected_to_start(service, False)
 
@@ -64,9 +64,9 @@ def set_dqlite_file_permissions():
     """
     dqlite_path = os.path.expandvars("${SNAP_DATA}/var/kubernetes/backend")
     try:
-        cmd = "chmod -R ug+rwX {}".format(dqlite_path)
+        cmd = f"chmod -R ug+rwX {dqlite_path}"
         subprocess.check_call(cmd.split())
-        cmd = "chgrp microk8s -R {}".format(dqlite_path)
+        cmd = f"chgrp microk8s -R {dqlite_path}"
         subprocess.check_call(cmd.split())
     except Exception as e:
         print("Failed to set the file permissions in dqlite.")

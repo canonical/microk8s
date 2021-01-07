@@ -138,7 +138,7 @@ class SnapPackage:
             local_snap_info = self.get_local_snap_info()
             current_channel = local_snap_info["channel"]
             if any([current_channel.startswith(risk) for risk in _CHANNEL_RISKS]):
-                current_channel = "latest/{}".format(current_channel)
+                current_channel = f"latest/{current_channel}"
         return current_channel
 
     def has_assertions(self) -> bool:
@@ -172,7 +172,7 @@ class SnapPackage:
         # We write an empty assertions file for dangerous installs to
         # have a consistent interface.
         if self.has_assertions():
-            assertions.append(["snap-declaration", "snap-name={}".format(self.name)])
+            assertions.append(["snap-declaration", f"snap-name={self.name}"])
             assertions.append(
                 [
                     "snap-revision",
@@ -266,7 +266,7 @@ def download_snaps(*, snaps_list: Sequence[str], directory: str) -> None:
             )
 
         # TODO: use dependency injected echoer
-        logger.info("Downloading snap {!r}".format(snap_pkg.name))
+        logger.info(f"Downloading snap {snap_pkg.name!r}")
         snap_pkg.download(directory=directory)
 
 
