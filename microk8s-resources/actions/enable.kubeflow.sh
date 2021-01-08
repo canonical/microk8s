@@ -272,7 +272,7 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
 
     # Allow specifying the bundle as one of the main types of kubeflow bundles
     # that we create in the charm store, namely full, lite, or edge. The user
-    # shoudn't have to specify a version for those bundles. However, allow the
+    # should not have to specify a version for those bundles. However, allow the
     # user to specify a full charm store URL if they'd like, such as
     # `cs:kubeflow-lite-123`.
     if bundle == 'full':

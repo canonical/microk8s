@@ -14,7 +14,7 @@ export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
 
-# This is really the only way I could find to get the args passed in correctly. WTF
+# This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/cluster-agent))"
 
 cd ${SNAP}/scripts/

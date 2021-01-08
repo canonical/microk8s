@@ -285,7 +285,7 @@ do
   chmod -R o-rwX ${dir}
 done
 
-# Try to greate the microk8s group. DO not fail the installation if something goes wrong
+# Try to great the microk8s group. DO not fail the installation if something goes wrong
 if ! getent group microk8s >/dev/null 2>&1
 then
   groupadd --system microk8s || true
@@ -414,7 +414,7 @@ then
   fi
 fi
 
-# This patches flanneld conf template by adding cniversion if it doesnt exist.
+# This patches flanneld conf template by adding cniversion if it does not exist.
 if [ -e ${SNAP_DATA}/args/flannel-template.conflist ] && ! grep -e "cniVersion" ${SNAP_DATA}/args/flannel-template.conflist
 then
     "$SNAP/bin/sed" -i 's@"name": "microk8s-flannel-network",@"name": "microk8s-flannel-network",\n    "cniVersion": "0.3.1",@g' ${SNAP_DATA}/args/flannel-template.conflist

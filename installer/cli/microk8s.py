@@ -7,7 +7,7 @@ from sys import exit, platform
 import click
 
 from cli.echo import Echo
-from common.auxillary import Windows, MacOS
+from common.auxiliary import Windows, MacOS
 from common.errors import BaseError
 from vm_providers.factory import get_provider_for
 from vm_providers.errors import ProviderNotFound, ProviderInstanceNotFoundError

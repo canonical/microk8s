@@ -110,7 +110,7 @@ def usage():
 
 def set_arg(key, value, file):
     """
-    Set an arguement to a file
+    Set an argument to a file
 
     :param key: argument name
     :param value: value

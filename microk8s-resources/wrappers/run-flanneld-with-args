@@ -42,7 +42,7 @@ fi
 
 "${SNAP}/etcdctl" --endpoint "${etcd_endpoints}" --cert-file "${cert_file}" --key-file "${key_file}" --ca-file "${ca_file}" set "/coreos.com/network/config" "$data"
 
-# This is really the only way I could find to get the args passed in correctly. WTF
+# This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/flanneld))"
 export CORE_LD_LIBRARY_PATH="$SNAP/../../core/current/lib/$ARCH-linux-gnu"
 export LD_LIBRARY_PATH="$CORE_LD_LIBRARY_PATH:$LD_LIBRARY_PATH"
