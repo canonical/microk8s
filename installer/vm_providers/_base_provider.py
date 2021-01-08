@@ -156,6 +156,10 @@ class Provider(abc.ABC):
 
     def _setup_microk8s(self, specs: Dict) -> None:
         self.run("snap install microk8s --classic --channel {}".format(specs['channel']).split())
+        if sys.platform == "win32":
+            self.run("snap install microk8s-integrator-windows".split())
+        elif sys.platform == "darwin":
+            self.run("snap install microk8s-integrator-macos".split())
 
     def _get_env_command(self) -> Sequence[str]:
         """Get command sequence for `env` with configured flags."""
