@@ -15,6 +15,7 @@
 --allow-privileged=true
 --service-account-issuer='https://kubernetes.default.svc'
 --service-account-signing-key-file=${SNAP_DATA}/certs/serviceaccount.key
+--feature-gates=RemoveSelfLink=false
 
 # Enable the aggregation layer
 --requestheader-client-ca-file=${SNAP_DATA}/certs/front-proxy-ca.crt
