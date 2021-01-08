@@ -16,10 +16,11 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get install python3-setuptools
-        sudo pip3 install black flake8
+        sudo pip3 install black codespell flake8
 
     - name: Check formatting
       run: |
         set -eux
         black --check . microk8s-resources/actions/enable.kubeflow.sh
+        codespell --ignore-words-list="aks" --quiet-level=2 --skip="*.patch,*.spec" || true
         flake8 . microk8s-resources/actions/enable.kubeflow.sh
