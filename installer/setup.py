@@ -11,7 +11,6 @@ setup(
     packages=['cli', 'common', 'vm_providers', 'vm_providers._multipass', 'vm_providers.repo'],
     install_requires=[
         'click~=7.0',
-        'jsonschema==2.5.1',
         'progressbar33==2.4',
         'requests==2.20.0',
         'requests_unixsocket==0.1.5',
