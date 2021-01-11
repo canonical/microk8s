@@ -10,7 +10,6 @@ setup(
     description='MicroK8s is a small, fast, single-package Kubernetes for developers, IoT and edge',
     packages=['cli', 'common', 'vm_providers', 'vm_providers._multipass', 'vm_providers.repo'],
     install_requires=[
-        'setuptools',
         'click~=7.0',
         'jsonschema==2.5.1',
         'progressbar33==2.4',
@@ -19,7 +18,6 @@ setup(
         'simplejson==3.8.2',
         'toml==0.10.0',
         'urllib3==1.24.2',
-        'wheel',
     ],
     platforms='any',
     entry_points={
