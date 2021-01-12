@@ -84,6 +84,7 @@ class InstallTests:
         self.node.snap.install("microk8s", channel=self.install_version, classic=True)
         # Required for registry
         self.node.snap.install("docker", channel="stable", classic=True)
+        self.node.docker.set_storage_driver("vfs")
 
     def test_start_microk8s(self):
         """Test starting microk8s"""

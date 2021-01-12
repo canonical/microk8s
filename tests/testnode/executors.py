@@ -1,6 +1,7 @@
 #!/bin/env python3
 
 import datetime
+import json
 import time
 from subprocess import CalledProcessError
 
@@ -89,11 +90,33 @@ class Snap(Executor):
             cmd.append("--classic")
         self.run_until_success(cmd)
 
+    def restart(self, snap):
+        """ Restart a snap """
+        cmd = ["restart", f"{snap}"]
+
+        self.run_until_success(cmd)
+
 
 class Docker(Executor):
     """Node aware Docker executor"""
 
     prefix = ["docker"]
+
+    def set_config(self, config, merge=True):
+        if merge:
+            config_path = "/var/snap/docker/current/config/daemon.json"
+            config_string = self.node.check_output(["cat", f"{config_path}"])
+            config_loaded = json.loads(config_string)
+            config_loaded.update(config)
+        else:
+            config_loaded = config
+
+        config_new_string = json.dumps(config_loaded)
+        self.node.write(config_path, config_new_string)
+        self.node.snap.restart("docker")
+
+    def set_storage_driver(self, driver="vfs"):
+        self.set_config({"storage-driver": driver}, True)
 
     def cmd(self, args):
         self.run_until_success(args)
