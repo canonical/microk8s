@@ -1,22 +1,50 @@
-From 30b410f4e8b9696295361a55006e0dc32e5e4e5d Mon Sep 17 00:00:00 2001
+From 89e61db6d12e257145c3be5c83a9003259f0a936 Mon Sep 17 00:00:00 2001
 From: Konstantinos <kos.tsakalozos@canonical.com>
 Date: Thu, 24 Sep 2020 21:06:03 +0300
-Subject: [PATCH] kubelite first iteration
+Subject: [PATCH] kubelite, single binary k8s
 
 ---
- cmd/kubelet/app/server.go           | 13 +++--
- cmd/kubelite/app/daemons/daemon.go  | 83 +++++++++++++++++++++++++++++
+ cmd/kube-apiserver/app/server.go    |  9 ++--
+ cmd/kubelet/app/server.go           | 14 +++--
+ cmd/kubelite/app/daemons/daemon.go  | 84 +++++++++++++++++++++++++++++
  cmd/kubelite/app/options/options.go | 72 +++++++++++++++++++++++++
- cmd/kubelite/app/server.go          | 73 +++++++++++++++++++++++++
+ cmd/kubelite/app/server.go          | 75 ++++++++++++++++++++++++++
  cmd/kubelite/kubelite.go            | 28 ++++++++++
- 5 files changed, 265 insertions(+), 4 deletions(-)
+ 6 files changed, 274 insertions(+), 8 deletions(-)
  create mode 100644 cmd/kubelite/app/daemons/daemon.go
  create mode 100644 cmd/kubelite/app/options/options.go
  create mode 100644 cmd/kubelite/app/server.go
  create mode 100644 cmd/kubelite/kubelite.go
 
+diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
+index a7d35f8c06f..494d4307c86 100644
+--- a/cmd/kube-apiserver/app/server.go
++++ b/cmd/kube-apiserver/app/server.go
+@@ -93,7 +93,7 @@ const (
+ )
+ 
+ // NewAPIServerCommand creates a *cobra.Command object with default parameters
+-func NewAPIServerCommand() *cobra.Command {
++func NewAPIServerCommand(stopCh... <- chan struct{}) *cobra.Command {
+ 	s := options.NewServerRunOptions()
+ 	cmd := &cobra.Command{
+ 		Use: "kube-apiserver",
+@@ -124,8 +124,11 @@ cluster's shared state through which all other components interact.`,
+ 			if errs := completedOptions.Validate(); len(errs) != 0 {
+ 				return utilerrors.NewAggregate(errs)
+ 			}
+-
+-			return Run(completedOptions, genericapiserver.SetupSignalHandler())
++			if len(stopCh) != 0 {
++				return Run(completedOptions, stopCh[0])
++			} else {
++				return Run(completedOptions, genericapiserver.SetupSignalHandler())
++			}
+ 		},
+ 		Args: func(cmd *cobra.Command, args []string) error {
+ 			for _, arg := range args {
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 5f7e3555aab..65b7b416092 100644
+index 5f7e3555aab..3ea9fd9d651 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
 @@ -22,6 +22,7 @@ import (
@@ -44,10 +72,11 @@ index 5f7e3555aab..65b7b416092 100644
  	cleanFlagSet := pflag.NewFlagSet(componentKubelet, pflag.ContinueOnError)
  	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
  	kubeletFlags := options.NewKubeletFlags()
-@@ -261,11 +261,16 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -260,12 +260,16 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+ 			// add the kubelet config controller to kubeletDeps
  			kubeletDeps.KubeletConfigController = kubeletConfigController
  
- 			// set up signal context here in order to be reused by kubelet and docker shim
+-			// set up signal context here in order to be reused by kubelet and docker shim
 -			ctx := genericapiserver.SetupSignalContext()
 +			runctx := context.Background()
 +			if len(ctx) == 0 {
@@ -65,10 +94,10 @@ index 5f7e3555aab..65b7b416092 100644
  		},
 diff --git a/cmd/kubelite/app/daemons/daemon.go b/cmd/kubelite/app/daemons/daemon.go
 new file mode 100644
-index 00000000000..c013484a9e0
+index 00000000000..7691af5ab26
 --- /dev/null
 +++ b/cmd/kubelite/app/daemons/daemon.go
-@@ -0,0 +1,83 @@
+@@ -0,0 +1,84 @@
 +package daemon
 +
 +import (
@@ -86,23 +115,23 @@ index 00000000000..c013484a9e0
 +	"time"
 +)
 +
-+func StartControllerManager(args []string) {
++func StartControllerManager(args []string, ctx context.Context) {
 +	command := controller.NewControllerManagerCommand()
 +	command.SetArgs(args)
 +
 +	klog.Info("Starting Controller Manager")
-+	if err := command.Execute(); err != nil {
++	if err := command.ExecuteContext(ctx); err != nil {
 +		klog.Fatalf("Controller Manager exited %v", err)
 +	}
 +	klog.Info("Stopping Controller Manager")
 +}
 +
-+func StartScheduler(args []string) {
++func StartScheduler(args []string, ctx context.Context) {
 +	command := scheduler.NewSchedulerCommand()
 +	command.SetArgs(args)
 +
 +	klog.Info("Starting Scheduler")
-+	if err := command.Execute(); err != nil {
++	if err := command.ExecuteContext(ctx); err != nil {
 +		klog.Fatalf("Scheduler exited %v", err)
 +	}
 +	klog.Info("Stopping Scheduler")
@@ -119,8 +148,8 @@ index 00000000000..c013484a9e0
 +	klog.Info("Stopping Proxy")
 +}
 +
-+func StartKubelet(args []string) {
-+	command := kubelet.NewKubeletCommand(context.Background())
++func StartKubelet(args []string, ctx context.Context) {
++	command := kubelet.NewKubeletCommand(ctx)
 +	command.SetArgs(args)
 +
 +	klog.Info("Starting Kubelet")
@@ -130,8 +159,8 @@ index 00000000000..c013484a9e0
 +	klog.Info("Stopping Kubelet")
 +}
 +
-+func StartAPIServer(args []string) {
-+	command := apiserver.NewAPIServerCommand()
++func StartAPIServer(args []string, ctx <-chan struct{}) {
++	command := apiserver.NewAPIServerCommand(ctx)
 +	command.SetArgs(args)
 +	klog.Info("Starting API Server")
 +	if err := command.Execute(); err != nil {
@@ -141,6 +170,7 @@ index 00000000000..c013484a9e0
 +}
 +
 +func WaitForAPIServer(kubeconfigpath string, timeout time.Duration) {
++	klog.Info("Waiting for the API server")
 +	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigpath)
 +	if err != nil {
 +		klog.Fatalf("could not find the cluster's kubeconfig file %v", err)
@@ -233,10 +263,10 @@ index 00000000000..2cb25eadb8b
 +}
 diff --git a/cmd/kubelite/app/server.go b/cmd/kubelite/app/server.go
 new file mode 100644
-index 00000000000..d00c16d5297
+index 00000000000..e70f19194a4
 --- /dev/null
 +++ b/cmd/kubelite/app/server.go
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,75 @@
 +/*
 +Copyright © 2020 NAME HERE <EMAIL ADDRESS>
 +
@@ -257,6 +287,7 @@ index 00000000000..d00c16d5297
 +import (
 +	"fmt"
 +	"github.com/spf13/cobra"
++	genericapiserver "k8s.io/apiserver/pkg/server"
 +	daemon "k8s.io/kubernetes/cmd/kubelite/app/daemons"
 +	"k8s.io/kubernetes/cmd/kubelite/app/options"
 +	"os"
@@ -273,21 +304,22 @@ index 00000000000..d00c16d5297
 +	// Uncomment the following line if your bare application
 +	// has an action associated with it:
 +	Run: func(cmd *cobra.Command, args []string) {
++		ctx := genericapiserver.SetupSignalContext()
 +		apiserverArgs := options.ReadArgsFromFile(opts.APIServerArgsFile)
-+		go daemon.StartAPIServer(apiserverArgs)
-+		daemon.WaitForAPIServer(opts.KubeconfigFile, 120 * time.Second)
++		go daemon.StartAPIServer(apiserverArgs, ctx.Done())
++		daemon.WaitForAPIServer(opts.KubeconfigFile, 360 * time.Second)
 +
 +		controllerArgs := options.ReadArgsFromFile(opts.ControllerManagerArgsFile)
-+		go daemon.StartControllerManager(controllerArgs)
++		go daemon.StartControllerManager(controllerArgs, ctx)
 +
 +		proxyArgs := options.ReadArgsFromFile(opts.ProxyArgsFile)
 +		go daemon.StartProxy(proxyArgs)
 +
-+		kubeletArgs := options.ReadArgsFromFile(opts.KubeletArgsFile)
-+		go daemon.StartKubelet(kubeletArgs)
-+
 +		schedulerArgs := options.ReadArgsFromFile(opts.SchedulerArgsFile)
-+		daemon.StartScheduler(schedulerArgs)
++		go daemon.StartScheduler(schedulerArgs, ctx)
++
++		kubeletArgs := options.ReadArgsFromFile(opts.KubeletArgsFile)
++		daemon.StartKubelet(kubeletArgs, ctx)
 +	},
 +}
 +
