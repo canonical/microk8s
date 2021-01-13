@@ -127,7 +127,7 @@ then
   fi
 fi
 
-# This is really the only way I could find to get the args passed in correctly. WTF
+# This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/$app))"
 if [ -f $SNAP/$app ]
 then

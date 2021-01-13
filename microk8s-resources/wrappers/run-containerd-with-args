@@ -44,7 +44,7 @@ then
   sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${SNAP_COMMON}@'"${SNAP_COMMON}"'@g' $SNAP_DATA/args/flannel-template.conflist > $SNAP_DATA/args/cni-network/flannel.conflist
 fi
 
-# This is really the only way I could find to get the args passed in correctly. WTF
+# This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/$app))"
 set -a
 . "${SNAP_DATA}/args/${app}-env"

@@ -8,9 +8,9 @@ from shutil import disk_usage
 logger = logging.getLogger(__name__)
 
 
-class Auxillary(object):
+class Auxiliary(object):
     """
-    Base OS auxillary class.
+    Base OS auxiliary class.
     """
 
     def __init__(self, args) -> None:
@@ -39,9 +39,9 @@ class Auxillary(object):
         return self._free_space() > self.minimum_disk
 
 
-class Windows(Auxillary):
+class Windows(Auxiliary):
     """
-    Windows auxillary methods.
+    Windows auxiliary methods.
     """
 
     def __init__(self, args) -> None:
@@ -104,9 +104,9 @@ class Windows(Auxillary):
                 raise
 
 
-class MacOS(Auxillary):
+class MacOS(Auxiliary):
     """
-    MacOS auxillary methods.
+    MacOS auxiliary methods.
     """
 
     def __init__(self, args) -> None:

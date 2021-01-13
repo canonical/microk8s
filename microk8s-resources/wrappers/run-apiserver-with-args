@@ -35,7 +35,7 @@ fi
 
 if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
 then
-  # Mark the api server as starting. This is needed incase you
+  # Mark the api server as starting. This is needed in case you
   # microk8s stop and then snap start microk8s
   rm -f ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
 fi

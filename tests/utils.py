@@ -11,7 +11,7 @@ arch_translate = {'aarch64': 'arm64', 'x86_64': 'amd64'}
 
 def run_until_success(cmd, timeout_insec=60, err_out=None):
     """
-    Run a command untill it succeeds or times out.
+    Run a command until it succeeds or times out.
     Args:
         cmd: Command to run
         timeout_insec: Time out in seconds

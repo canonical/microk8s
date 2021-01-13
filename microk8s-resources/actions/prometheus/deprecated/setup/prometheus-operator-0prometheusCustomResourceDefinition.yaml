@@ -3435,7 +3435,7 @@ spec:
                           type: integer
                         regex:
                           description: Regular expression against which the extracted
-                            value is matched. defailt is '(.*)'
+                            value is matched. default is '(.*)'
                           type: string
                         replacement:
                           description: Replacement value against which a regex replace
@@ -5512,7 +5512,7 @@ spec:
               format: int32
               type: integer
             paused:
-              description: Represents whether any actions on the underlaying managed
+              description: Represents whether any actions on the underlying managed
                 objects are being performed. Only delete actions will be performed.
               type: boolean
             replicas:
