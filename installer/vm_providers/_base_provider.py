@@ -158,7 +158,7 @@ class Provider(abc.ABC):
 
     def _copy_kubeconfig_to_kubectl(self):
         install_directory = os.path.basename(os.path.abspath(__file__))
-        kubeconfig = self._run(command=["microk8s", "config"], hide_output=True)
+        kubeconfig = self.run(command=["microk8s", "config"], hide_output=True)
         import pdb; pdb.set_trace()
         if sys.platform == "win32":
             with open(os.path.join(install_directory, "kubectl", "config"), "w") as f:
@@ -196,7 +196,7 @@ class Provider(abc.ABC):
             return self._cached_home_directory
 
         command = ["printenv", "HOME"]
-        run_output = self._run(command=command, hide_output=True)
+        run_output = self.run(command=command, hide_output=True)
 
         # Shouldn't happen, but due to _run()'s return type as being Optional,
         # we need to check for it anyways for mypy.
