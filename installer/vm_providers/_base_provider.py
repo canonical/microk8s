@@ -158,7 +158,7 @@ class Provider(abc.ABC):
 
     def _copy_kubeconfig_to_kubectl(self):
         install_directory = os.path.basename(os.path.abspath(__file__))
-        kubeconfig = self.run("microk8s config")
+        kubeconfig = self.run("microk8s config".split())
         if sys.platform == "win32":
             with open(os.path.join(install_directory, "kubectl", "config"), "w") as f:
                 f.write(kubeconfig)
