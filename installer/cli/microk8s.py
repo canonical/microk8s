@@ -51,8 +51,7 @@ def cli(ctx, help):
             stop()
             exit(0)
         elif ctx.args[0] == "kubectl":
-            kubectl(ctx.args[1:])
-            exit()
+            exit(kubectl(ctx.args[1:]))
         elif ctx.args[0] == "dashboard-proxy":
             dashboard_proxy()
             exit(0)
@@ -196,11 +195,11 @@ def uninstall() -> None:
     echo.info("Thank you for using MicroK8s!")
 
 
-def kubectl(args) -> None:
+def kubectl(args) -> int:
     if platform == "win32":
-        Windows(args).kubectl()
+        return Windows(args).kubectl()
     if platform == "darwin":
-        MacOS(args).kubectl()
+        return MacOS(args).kubectl()
 
 
 def dashboard_proxy() -> None:

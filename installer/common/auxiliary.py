@@ -61,20 +61,22 @@ class Auxiliary(ABC):
 
         return os.path.join(d, "kubectl")
 
-    def kubectl(self) -> None:
+    def kubectl(self) -> int:
         """
         Run kubectl on the host, with the generated kubeconf.
 
         :return: None
         """
-        import pdb; pdb.set_trace()
         kctl_dir = self.get_kubectl_directory()
-        subprocess.check_output(
-            [
-                os.path.join(kctl_dir, "kubectl.exe"),
-                "--kubeconfig={}".format(os.path.join(kctl_dir, "config"))
-            ] + self._args
-        )
+        try:
+            exit_code = subprocess.check_call(
+                [
+                    os.path.join(kctl_dir, "kubectl.exe"),
+                    "--kubeconfig={}".format(os.path.join(kctl_dir, "config"))
+                ] + self._args,
+            )
+        finally:
+            return exit_code
 
 
 class Windows(Auxiliary):
