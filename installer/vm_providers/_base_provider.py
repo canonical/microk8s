@@ -24,6 +24,7 @@ from typing import Dict
 from typing import Optional, Sequence
 
 from . import errors
+from ..common.auxiliary import get_kubectl_directory
 from ._multipass._instance_info import InstanceInfo
 
 logger = logging.getLogger(__name__)
@@ -157,13 +158,11 @@ class Provider(abc.ABC):
                 raise
 
     def _copy_kubeconfig_to_kubectl(self):
-        if getattr(sys, "frozen", False):
-            install_directory = os.path.dirname(sys.executable)
-        else:
-            install_directory = os.path.dirname(os.path.abspath(__file__))
+        kubeconfig_dir = get_kubectl_directory()
         kubeconfig = self.run(command=["microk8s", "config"], hide_output=True)
+
         if sys.platform == "win32":
-            with open(os.path.join(install_directory, "kubectl", "config"), "wb") as f:
+            with open(os.path.join(kubeconfig_dir, "config"), "wb") as f:
                 f.write(kubeconfig)
         if sys.platform == "darwin":
             pass  # TODO

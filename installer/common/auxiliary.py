@@ -1,14 +1,34 @@
 import ctypes
 import logging
+import os
 import subprocess
+import sys
 
+from abc import ABC
 from os.path import realpath
 from shutil import disk_usage
 
 logger = logging.getLogger(__name__)
 
 
-class Auxiliary(object):
+def get_kubectl_directory() -> str:
+    """
+    Get the correct directory to put the kubeconfig
+    file in.  This is then read by the installed
+    kubectl and won't interfere with one in the user's
+    home.
+
+    :return: None
+    """
+    if getattr(sys, "frozen", None):
+        d =  os.path.dirname(sys.executable)
+    else:
+        d = os.path.dirname(os.path.abspath(__file__))
+
+    return os.path.join(d, "kubectl")
+
+
+class Auxiliary(ABC):
     """
     Base OS auxiliary class.
     """
@@ -19,7 +39,11 @@ class Auxiliary(object):
         :return: None
         """
         self._args = args
-        self.minimum_disk = self._args.disk * 1024 * 1024 * 1024
+
+        if getattr(self._args, "disk", None):
+            self.minimum_disk = self._args.disk * 1024 * 1024 * 1024
+        else:
+            self.minimum_disk = 0
 
     @staticmethod
     def _free_space() -> int:
@@ -37,6 +61,20 @@ class Auxiliary(object):
         :return: Boolean
         """
         return self._free_space() > self.minimum_disk
+
+    def kubectl(self) -> None:
+        """
+        Run kubectl on the host, with the generated kubeconf.
+
+        :return: None
+        """
+        kctl_dir = get_kubectl_directory()
+        subprocess.check_output(
+            [
+                os.path.join(kctl_dir, "kubectl.exe"),
+                "--kubeconfig={}".format(os.path.join(kctl_dir, "config"))
+            ] + self._args
+        )
 
 
 class Windows(Auxiliary):
