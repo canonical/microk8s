@@ -16,6 +16,7 @@
 
 import abc
 import logging
+import os
 import pathlib
 import shlex
 import sys
@@ -134,6 +135,7 @@ class Provider(abc.ABC):
             self._check_connectivity()
             # We need to setup MicroK8s and scan for cli commands
             self._setup_microk8s(specs)
+            self._copy_kubeconfig_to_kubectl()
 
     def _check_connectivity(self) -> None:
         """Check that the VM can access the internet."""
@@ -153,6 +155,15 @@ class Provider(abc.ABC):
                 )
             else:
                 raise
+
+    def _copy_kubeconfig_to_kubectl(self):
+        install_directory = os.path.basename(os.path.abspath(__file__))
+        kubeconfig = self.run("microk8s config")
+        if sys.platform == "win32":
+            with open(os.path.join(install_directory, "kubectl", "config"), "w") as f:
+                f.write(kubeconfig)
+        if sys.platform == "darwin":
+            pass  # TODO
 
     def _setup_microk8s(self, specs: Dict) -> None:
         self.run("snap install microk8s --classic --channel {}".format(specs['channel']).split())
