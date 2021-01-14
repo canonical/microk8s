@@ -71,6 +71,17 @@ Section "Multipass (Required)" multipass_id
     endMultipass:
 SectionEnd
 
+Section "Kubectl (Required)" kubectl_id
+    SectionIn RO
+    beginKubectl:
+        SetOutPath $INSTDIR
+        File "kubectl.exe"
+        CopyFiles "$INSTDIR\kubectl.exe" "$INSTDIR\kubectl\kubectl.exe"
+        Delete "$INSTDIR\kubectl.exe"
+        Goto endKubectl
+    endKubectl:
+SectionEnd
+
 Section -Install
     SectionIn RO
     SetOutPath $INSTDIR
