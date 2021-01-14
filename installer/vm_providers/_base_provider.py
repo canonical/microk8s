@@ -163,7 +163,7 @@ class Provider(abc.ABC):
             install_directory = os.path.dirname(os.path.abspath(__file__))
         kubeconfig = self.run(command=["microk8s", "config"], hide_output=True)
         if sys.platform == "win32":
-            with open(os.path.join(install_directory, "kubectl", "config"), "w") as f:
+            with open(os.path.join(install_directory, "kubectl", "config"), "wb") as f:
                 f.write(kubeconfig)
         if sys.platform == "darwin":
             pass  # TODO
