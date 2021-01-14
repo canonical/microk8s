@@ -158,9 +158,9 @@ class Provider(abc.ABC):
 
     def _copy_kubeconfig_to_kubectl(self):
         if getattr(sys, "frozen", False):
-            install_directory = os.path.basename(sys.executable)
+            install_directory = os.path.dirname(sys.executable)
         else:
-            install_directory = os.path.basename(os.path.abspath(__file__))
+            install_directory = os.path.dirname(os.path.abspath(__file__))
         kubeconfig = self.run(command=["microk8s", "config"], hide_output=True)
         if sys.platform == "win32":
             with open(os.path.join(install_directory, "kubectl", "config"), "w") as f:
