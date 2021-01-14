@@ -1,4 +1,4 @@
-From 89e61db6d12e257145c3be5c83a9003259f0a936 Mon Sep 17 00:00:00 2001
+From b6850dc2b981edd1514ce8a36c7c4de79017a2c2 Mon Sep 17 00:00:00 2001
 From: Konstantinos <kos.tsakalozos@canonical.com>
 Date: Thu, 24 Sep 2020 21:06:03 +0300
 Subject: [PATCH] kubelite, single binary k8s
@@ -17,10 +17,10 @@ Subject: [PATCH] kubelite, single binary k8s
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index a7d35f8c06f..494d4307c86 100644
+index 100007bd0ad..1b1f0985e63 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
-@@ -93,7 +93,7 @@ const (
+@@ -91,7 +91,7 @@ const (
  )
  
  // NewAPIServerCommand creates a *cobra.Command object with default parameters
@@ -29,7 +29,7 @@ index a7d35f8c06f..494d4307c86 100644
  	s := options.NewServerRunOptions()
  	cmd := &cobra.Command{
  		Use: "kube-apiserver",
-@@ -124,8 +124,11 @@ cluster's shared state through which all other components interact.`,
+@@ -122,8 +122,11 @@ cluster's shared state through which all other components interact.`,
  			if errs := completedOptions.Validate(); len(errs) != 0 {
  				return utilerrors.NewAggregate(errs)
  			}
@@ -44,7 +44,7 @@ index a7d35f8c06f..494d4307c86 100644
  		Args: func(cmd *cobra.Command, args []string) error {
  			for _, arg := range args {
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 5f7e3555aab..3ea9fd9d651 100644
+index ff7e05feec1..569ada4ef04 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
 @@ -22,6 +22,7 @@ import (
@@ -94,7 +94,7 @@ index 5f7e3555aab..3ea9fd9d651 100644
  		},
 diff --git a/cmd/kubelite/app/daemons/daemon.go b/cmd/kubelite/app/daemons/daemon.go
 new file mode 100644
-index 00000000000..7691af5ab26
+index 00000000000..dbef03cf07e
 --- /dev/null
 +++ b/cmd/kubelite/app/daemons/daemon.go
 @@ -0,0 +1,84 @@
@@ -105,7 +105,7 @@ index 00000000000..7691af5ab26
 +	"k8s.io/client-go/kubernetes"
 +	"k8s.io/client-go/tools/clientcmd"
 +	"k8s.io/klog/v2"
-+	genericcontrollermanager "k8s.io/kubernetes/cmd/controller-manager/app"
++	genericcontrollermanager "k8s.io/controller-manager/app"
 +	apiserver "k8s.io/kubernetes/cmd/kube-apiserver/app"
 +	controller "k8s.io/kubernetes/cmd/kube-controller-manager/app"
 +	proxy "k8s.io/kubernetes/cmd/kube-proxy/app"
