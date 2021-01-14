@@ -91,6 +91,32 @@ At the time of the v3.13.2 release. The `calico.yaml` manifest is a slightly mod
               value: "first-found"
 ```
 
+## Running the tests locally
+
+The `test-addons.py` and `test-upgrade.py` files under the `tests` directory are the two main files of out test suite.
+Running the tests is done with pytest:
+```
+pytest -s test-addons.py
+pytest -s test-upgrade.py
+```
+
+To successfully run the tests you need to install:
+1. From your distribution's repository:
+   - python3
+   - pytest
+   - pip3
+   - docker.io
+1. From pip3:
+   - requests
+   - pyyaml
+   - sh
+
+For example on ubuntu 18.04 to get these dependencies you would:
+```
+apt-get install python3-pip docker.io -y
+pip3 install -U pytest requests pyyaml sh
+```
+
 ## References
 
 - https://snapcraft.io/docs/snapcraft-overview
