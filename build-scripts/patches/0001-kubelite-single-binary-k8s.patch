@@ -1,4 +1,4 @@
-From b6850dc2b981edd1514ce8a36c7c4de79017a2c2 Mon Sep 17 00:00:00 2001
+From 43d97aabd7c927790641b37e0ec2dcb8e59635a9 Mon Sep 17 00:00:00 2001
 From: Konstantinos <kos.tsakalozos@canonical.com>
 Date: Thu, 24 Sep 2020 21:06:03 +0300
 Subject: [PATCH] kubelite, single binary k8s
@@ -7,10 +7,10 @@ Subject: [PATCH] kubelite, single binary k8s
  cmd/kube-apiserver/app/server.go    |  9 ++--
  cmd/kubelet/app/server.go           | 14 +++--
  cmd/kubelite/app/daemons/daemon.go  | 84 +++++++++++++++++++++++++++++
- cmd/kubelite/app/options/options.go | 72 +++++++++++++++++++++++++
+ cmd/kubelite/app/options/options.go | 78 +++++++++++++++++++++++++++
  cmd/kubelite/app/server.go          | 75 ++++++++++++++++++++++++++
  cmd/kubelite/kubelite.go            | 28 ++++++++++
- 6 files changed, 274 insertions(+), 8 deletions(-)
+ 6 files changed, 280 insertions(+), 8 deletions(-)
  create mode 100644 cmd/kubelite/app/daemons/daemon.go
  create mode 100644 cmd/kubelite/app/options/options.go
  create mode 100644 cmd/kubelite/app/server.go
@@ -185,10 +185,10 @@ index 00000000000..dbef03cf07e
 \ No newline at end of file
 diff --git a/cmd/kubelite/app/options/options.go b/cmd/kubelite/app/options/options.go
 new file mode 100644
-index 00000000000..2cb25eadb8b
+index 00000000000..ca5e7b3d207
 --- /dev/null
 +++ b/cmd/kubelite/app/options/options.go
-@@ -0,0 +1,72 @@
+@@ -0,0 +1,78 @@
 +/*
 +Copyright 2018 The Kubernetes Authors.
 +
@@ -249,10 +249,16 @@ index 00000000000..2cb25eadb8b
 +	for scanner.Scan() {
 +		line := scanner.Text()
 +		line = strings.TrimSpace(line)
++		// ignore lines with # and empty lines
 +		if len(line) <= 0 || strings.HasPrefix(line, "#") {
 +			continue
 +		}
++		// remove " and '
++		for _, r := range "\"'" {
++			line = strings.ReplaceAll(line, string(r), "")
++		}
 +		for _, part := range strings.Split(line, " ") {
++
 +			args = append(args, os.ExpandEnv(part))
 +		}
 +	}
