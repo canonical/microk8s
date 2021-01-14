@@ -103,9 +103,14 @@ Section "Add 'microk8s' to PATH" add_to_path_id
     EnVar::AddValue "path" "$INSTDIR"
 SectionEnd
 
+Section /o "Add 'kubectl' to PATH" add_kubectl_to_path_id
+    EnVar::AddValue "path" "$INSTDIR\kubectl"
+SectionEnd
+
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
     !insertmacro MUI_DESCRIPTION_TEXT ${multipass_id} "REQUIRED: If already installed, will be unticked and skipped.$\n$\nSee https://multipass.run for more."
     !insertmacro MUI_DESCRIPTION_TEXT ${add_to_path_id} "Add the 'microk8s' executable to PATH.$\n$\nThis will allow you to run the command 'microk8s' in cmd and PowerShell in any directory."
+    !insertmacro MUI_DESCRIPTION_TEXT ${add_kubectl_to_path_id} "Add the 'kubectl' executable to PATH.$\n$\nThis will set the bundled 'kubectl' as system default."
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Function .onInit
