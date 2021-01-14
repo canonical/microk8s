@@ -190,10 +190,14 @@ Section "Uninstall"
     ExecWait "$INSTDIR\microk8s.exe uninstall"
     Delete $INSTDIR\uninstall.exe
     Delete $INSTDIR\microk8s.exe
+    Delete $INSTDIR\kubectl\kubectl.exe
+    Delete $INSTDIR\kubectl\config
+    RMDir $INSTDIR\kubectl
     RMDir $INSTDIR
 
     DeleteRegKey HKLM \
         "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 
     EnVar::DeleteValue "path" "$INSTDIR"
+    EnVar::DeleteValue "path" "$INSTDIR\kubectl"
 SectionEnd
