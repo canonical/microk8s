@@ -11,23 +11,6 @@ from shutil import disk_usage
 logger = logging.getLogger(__name__)
 
 
-def get_kubectl_directory() -> str:
-    """
-    Get the correct directory to put the kubeconfig
-    file in.  This is then read by the installed
-    kubectl and won't interfere with one in the user's
-    home.
-
-    :return: None
-    """
-    if getattr(sys, "frozen", None):
-        d =  os.path.dirname(sys.executable)
-    else:
-        d = os.path.dirname(os.path.abspath(__file__))
-
-    return os.path.join(d, "kubectl")
-
-
 class Auxiliary(ABC):
     """
     Base OS auxiliary class.
@@ -62,13 +45,29 @@ class Auxiliary(ABC):
         """
         return self._free_space() > self.minimum_disk
 
+    def get_kubectl_directory(self) -> str:
+        """
+        Get the correct directory to put the kubeconfig
+        file in.  This is then read by the installed
+        kubectl and won't interfere with one in the user's
+        home.
+
+        :return: None
+        """
+        if getattr(sys, "frozen", None):
+            d =  os.path.dirname(sys.executable)
+        else:
+            d = os.path.dirname(os.path.abspath(__file__))
+
+        return os.path.join(d, "kubectl")
+
     def kubectl(self) -> None:
         """
         Run kubectl on the host, with the generated kubeconf.
 
         :return: None
         """
-        kctl_dir = get_kubectl_directory()
+        kctl_dir = self.get_kubectl_directory()
         subprocess.check_output(
             [
                 os.path.join(kctl_dir, "kubectl.exe"),

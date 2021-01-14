@@ -24,7 +24,6 @@ from typing import Dict
 from typing import Optional, Sequence
 
 from . import errors
-from ..common.auxiliary import get_kubectl_directory
 from ._multipass._instance_info import InstanceInfo
 
 logger = logging.getLogger(__name__)
@@ -136,7 +135,7 @@ class Provider(abc.ABC):
             self._check_connectivity()
             # We need to setup MicroK8s and scan for cli commands
             self._setup_microk8s(specs)
-            self._copy_kubeconfig_to_kubectl()
+            self._copy_kubeconfig_to_kubectl(specs)
 
     def _check_connectivity(self) -> None:
         """Check that the VM can access the internet."""
@@ -157,8 +156,8 @@ class Provider(abc.ABC):
             else:
                 raise
 
-    def _copy_kubeconfig_to_kubectl(self):
-        kubeconfig_dir = get_kubectl_directory()
+    def _copy_kubeconfig_to_kubectl(self, specs: Dict):
+        kubeconfig_dir = specs.get("kubeconfig")
         kubeconfig = self.run(command=["microk8s", "config"], hide_output=True)
 
         if sys.platform == "win32":

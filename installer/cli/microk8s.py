@@ -165,7 +165,7 @@ def install(args) -> None:
             raise provider_error
 
     instance = vm_provider_class(echoer=echo)
-    instance.launch_instance(vars(args))
+    instance.launch_instance(vars(args).update({"kubeconfig": aux.get_kubectl_directory()}))
     echo.info("MicroK8s is up and running. See the available commands with `microk8s --help`.")
 
 
