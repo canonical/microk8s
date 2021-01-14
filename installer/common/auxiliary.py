@@ -67,6 +67,7 @@ class Auxiliary(ABC):
 
         :return: None
         """
+        import pdb; pdb.set_trace()
         kctl_dir = self.get_kubectl_directory()
         subprocess.check_output(
             [
