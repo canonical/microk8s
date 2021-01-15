@@ -3,7 +3,12 @@ set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
 
-snapctl stop ${SNAP_NAME}.daemon-kubelet 2>&1 || true
+if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
+then
+  snapctl stop ${SNAP_NAME}.daemon-kubelite 2>&1 || true
+else
+  snapctl stop ${SNAP_NAME}.daemon-kubelet 2>&1 || true
+fi
 snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
 
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"

@@ -182,7 +182,18 @@ skip_opt_in_config() {
 restart_service() {
     # restart a systemd service
     # argument $1 is the service name
-    run_with_sudo preserve_env snapctl restart "microk8s.daemon-$1"
+
+    if [ "$1" == "apiserver" ] || [ "$1" == "proxy" ] || [ "$1" == "kubelet" ] || [ "$1" == "scheduler" ] || [ "$1" == "controller-manager" ]
+    then
+      if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
+      then
+        run_with_sudo preserve_env snapctl restart "microk8s.daemon-kubelite"
+      else
+        run_with_sudo preserve_env snapctl restart "microk8s.daemon-$1"
+      fi
+    else
+      run_with_sudo preserve_env snapctl restart "microk8s.daemon-$1"
+    fi
 
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
@@ -281,6 +292,14 @@ wait_for_service() {
     # Wait for a service to start
     # Return fail if the service did not start in 30 seconds
     local service_name="$1"
+    if [ "$1" == "apiserver" ] || [ "$1" == "proxy" ] || [ "$1" == "kubelet" ] || [ "$1" == "scheduler" ] || [ "$1" == "controller-manager" ]
+    then
+      if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
+      then
+        service_name="kubelite"
+      fi
+    fi
+
     local TRY_ATTEMPT=0
     while ! (run_with_sudo preserve_env snapctl services ${SNAP_NAME}.daemon-${service_name} | grep active) &&
           ! [ ${TRY_ATTEMPT} -eq 30 ]

@@ -9,6 +9,13 @@ source $SNAP/actions/common/utils.sh
 
 app=kube-apiserver
 
+if [ -e ${SNAP_DATA}/var/lock/lite.lock ]
+then
+  echo "${app} will not run along with kubelite"
+  exit 0
+fi
+
+
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
   echo "${app} will not run on a cluster node"
