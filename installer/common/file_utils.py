@@ -96,6 +96,7 @@ def get_kubeconfig_path():
 
 def clear_kubeconfig():
     """Clean kubeconfig file."""
-    shutil.rmtree(
-        os.path.dirname(get_kubeconfig_path())
-    )
+    if os.path.isdir(get_kubeconfig_path()):
+        shutil.rmtree(
+            os.path.dirname(get_kubeconfig_path())
+        )
