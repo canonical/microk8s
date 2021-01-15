@@ -23,6 +23,7 @@ from .common.utils import (
     get_dqlite_port,
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
+    service,
 )
 
 from flask import Flask, jsonify, request, Response
@@ -312,7 +313,7 @@ def join_node_etcd():
     api_port = get_arg('--secure-port', 'kube-apiserver')
     proxy_token = get_token('kube-proxy')
     kubelet_token = add_kubelet_token(node_addr)
-    subprocess.check_call("snapctl restart microk8s.daemon-apiserver".split())
+    service('restart', 'apiservice')
     if node_addr != hostname:
         kubelet_args = read_kubelet_args_file(node_addr)
     else:
@@ -429,7 +430,7 @@ def configure():
                 service_name = get_service_name(service["name"])
                 print("restarting {}".format(service["name"]))
                 subprocess.check_call(
-                    "snapctl restart microk8s.daemon-{}".format(service_name).split()
+                    service('restart', service_name)
                 )
 
     if "addon" in configuration:
@@ -502,7 +503,7 @@ def update_dqlite_ip(host):
     :param : the host others see for this node
     """
     dqlite_port = get_dqlite_port()
-    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
+    service('stop', 'apiserver')
     time.sleep(10)
 
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
@@ -510,7 +511,7 @@ def update_dqlite_ip(host):
     update_data = {'Address': "{}:{}".format(host, dqlite_port)}
     with open("{}/update.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(update_data, f)
-    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
+    service('start', 'apiserver')
     time.sleep(10)
     attempts = 12
     while True:
