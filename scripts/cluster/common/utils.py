@@ -1,5 +1,6 @@
 import os
 import shutil
+import subprocess
 import time
 import string
 import random
@@ -8,7 +9,6 @@ from subprocess import check_output, CalledProcessError
 
 import yaml
 import socket
-
 
 def try_set_file_permissions(file):
     """
@@ -243,3 +243,28 @@ def try_initialise_cni_autodetect_for_clustering(ip, apply_cni=True):
     patch_cni(ip)
     if apply_cni:
         apply_cni_manifest()
+
+
+def is_kubelite():
+    """
+    Do we run kubelite?
+    """
+    snap_data = os.environ.get('SNAP_DATA')
+    if not snap_data:
+        snap_data = '/var/snap/microk8s/current/'
+    kubelite_lock = '{}/var/lock/lite.lock'.format(snap_data)
+    return os.path.exists(kubelite_lock)
+
+
+def service(service_name, operation):
+    """
+    Restart a service. Handle case where kubelite is enabled.
+
+    :param service_name: The service name
+    :param operation: Operation to perform on the service
+    """
+    if (service == "apiserver" or service == "proxy" or service == "kubelet" or service == "scheduler"
+        or service == "controller-manager") and is_kubelite():
+        subprocess.check_call("snapctl {} microk8s.daemon-kubelite".format(operation).split())
+    else:
+        subprocess.check_call("snapctl {} microk8s.daemon-{}".format(operation, service_name).split())

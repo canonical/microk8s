@@ -73,6 +73,15 @@ def set_dqlite_file_permissions():
         print(e)
 
 
+def is_kubelite():
+    """
+    Do we run kubelite?
+    """
+    snap_data = os.environ.get('SNAP_DATA')
+    kubelite_lock = '{}/var/lock/lite.lock'.format(snap_data)
+    return os.path.exists(kubelite_lock)
+
+
 if __name__ == '__main__':
     while True:
         # Check for changes every 10 seconds
@@ -87,6 +96,10 @@ if __name__ == '__main__':
             # 2. We are not on an HA cluster
             # 3. The control plane kicker is disabled
             # 4. dqlite has less than 4 nodes
+            # 5. we do not run kubelite
+            if is_kubelite():
+                continue
+
             if (
                 not is_cluster_ready()
                 or not is_ha_enabled()
