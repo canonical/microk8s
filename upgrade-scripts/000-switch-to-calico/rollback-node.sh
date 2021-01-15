@@ -16,13 +16,11 @@ fi
 echo "Restarting kubelet"
 if [ -e "$BACKUP_DIR/args/kubelet" ]; then
   cp "$BACKUP_DIR"/args/kubelet "$SNAP_DATA/args/"
-  snapctl restart ${SNAP_NAME}.daemon-kubelet
 fi
 
 echo "Restarting kube-proxy"
 if [ -e "$BACKUP_DIR/args/kube-proxy" ]; then
   cp "$BACKUP_DIR"/args/kube-proxy "$SNAP_DATA/args/"
-  snapctl restart ${SNAP_NAME}.daemon-proxy
 fi
 
 echo "Restarting kube-apiserver"
@@ -30,6 +28,14 @@ if [ -e "$BACKUP_DIR/args/kube-apiserver" ]; then
   cp "$BACKUP_DIR"/args/kube-apiserver "$SNAP_DATA/args/"
 fi
 
+if [ -e "$SNAP_DATA"/var/lock/lite.lock ]
+then
+  snapctl restart ${SNAP_NAME}.daemon-kubelite
+else
+  snapctl restart ${SNAP_NAME}.daemon-apiserver
+  snapctl restart ${SNAP_NAME}.daemon-kubelet
+  snapctl restart ${SNAP_NAME}.daemon-proxy
+fi
 
 echo "Restarting flannel"
 set_service_expected_to_start flanneld
