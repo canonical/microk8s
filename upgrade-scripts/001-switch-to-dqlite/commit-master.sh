@@ -35,7 +35,12 @@ then
   init_cluster
 fi
 
-snapctl start microk8s.daemon-apiserver
+if [ -e "$SNAP_DATA"/var/lock/lite.lock ]
+then
+  snapctl restart ${SNAP_NAME}.daemon-kubelite
+else
+  snapctl restart ${SNAP_NAME}.daemon-apiserver
+fi
 
 run_etcd="$(is_service_expected_to_start etcd)"
 if [ "${run_etcd}" == "1" ]
