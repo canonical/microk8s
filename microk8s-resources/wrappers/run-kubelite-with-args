@@ -13,6 +13,13 @@ source $SNAP/actions/common/utils.sh
 
 app=kubelite
 
+if ! [ -e ${SNAP_DATA}/var/lock/lite.lock ]
+then
+  echo "${app} will not run"
+  exit 0
+fi
+
+
 # wait up to two minutes for the default network interface to appear.
 n=0
 until [ $n -ge 20 ]

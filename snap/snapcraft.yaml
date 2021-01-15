@@ -30,9 +30,9 @@ apps:
   daemon-kubelite:
     command: run-kubelite-with-args
     daemon: simple
-#  daemon-apiserver:
-#    command: run-with-config-args kube-apiserver
-#    daemon: simple
+  daemon-apiserver:
+    command: run-with-config-args kube-apiserver
+    daemon: simple
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
@@ -42,18 +42,18 @@ apps:
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
-#  daemon-controller-manager:
-#    command: run-with-config-args kube-controller-manager
-#    daemon: simple
-#  daemon-scheduler:
-#    command: run-with-config-args kube-scheduler
-#    daemon: simple
-#  daemon-kubelet:
-#    command: run-with-config-args kubelet
-#    daemon: simple
-#  daemon-proxy:
-#    command: run-with-config-args kube-proxy
-#    daemon: simple
+  daemon-controller-manager:
+    command: run-with-config-args kube-controller-manager
+    daemon: simple
+  daemon-scheduler:
+    command: run-with-config-args kube-scheduler
+    daemon: simple
+  daemon-kubelet:
+    command: run-with-config-args kubelet
+    daemon: simple
+  daemon-proxy:
+    command: run-with-config-args kube-proxy
+    daemon: simple
   dashboard-proxy:
     command: microk8s-dashboard-proxy.wrapper
   kubectl:
