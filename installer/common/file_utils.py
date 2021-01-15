@@ -67,14 +67,12 @@ def get_kubeconfig_path():
     else:
         return os.path.join(
             os.path.expanduser('~'),
-            ".microk8s.kubeconfig"
+            ".microk8s",
+            "config"
         )
 
 def clear_kubeconfig():
     """Clean kubeconfig file."""
-    if sys.platform == "win32":
-        shutil.rmtree(
-            os.path.dirname(get_kubeconfig_path())
-        )
-    else:
-        os.remove(get_kubeconfig_path())
+    shutil.rmtree(
+        os.path.dirname(get_kubeconfig_path())
+    )

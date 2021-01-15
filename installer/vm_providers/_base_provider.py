@@ -148,9 +148,8 @@ class Provider(abc.ABC):
         kubeconfig_path = specs.get("kubeconfig")
         kubeconfig = self.run(command=["microk8s", "config"], hide_output=True)
 
-        if sys.platform == "win32":  # We don't want to make $HOME for *nix systems.
-            if not os.path.isdir(os.path.dirname(kubeconfig_path)):
-                os.mkdir(os.path.dirname(kubeconfig_path))
+        if not os.path.isdir(os.path.dirname(kubeconfig_path)):
+            os.mkdir(os.path.dirname(kubeconfig_path))
 
         with open(kubeconfig_path, "wb") as f:
             f.write(kubeconfig)
