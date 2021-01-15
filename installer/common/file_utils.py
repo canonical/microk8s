@@ -68,7 +68,7 @@ def get_kubectl_directory() -> str:
     """
     if sys.platform == "win32":
         if getattr(sys, "frozen", None):
-            d =  os.path.dirname(sys.executable)
+            d = os.path.dirname(sys.executable)
         else:
             d = os.path.dirname(os.path.abspath(__file__))
 
@@ -81,22 +81,12 @@ def get_kubectl_directory() -> str:
 def get_kubeconfig_path():
     """Return a MicroK8s specific kubeconfig path."""
     if sys.platform == "win32":
-        return os.path.join(
-            os.environ.get('LocalAppData'),
-            "MicroK8s",
-            "config"
-        )
+        return os.path.join(os.environ.get('LocalAppData'), "MicroK8s", "config")
     else:
-        return os.path.join(
-            os.path.expanduser('~'),
-            ".microk8s",
-            "config"
-        )
+        return os.path.join(os.path.expanduser('~'), ".microk8s", "config")
 
 
 def clear_kubeconfig():
     """Clean kubeconfig file."""
     if os.path.isdir(get_kubeconfig_path()):
-        shutil.rmtree(
-            os.path.dirname(get_kubeconfig_path())
-        )
+        shutil.rmtree(os.path.dirname(get_kubeconfig_path()))

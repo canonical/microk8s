@@ -68,7 +68,6 @@ class Auxiliary(ABC):
         """
         return get_kubeconfig_path()
 
-
     def kubectl(self) -> int:
         """
         Run kubectl on the host, with the generated kubeconf.
@@ -80,11 +79,12 @@ class Auxiliary(ABC):
             exit_code = subprocess.check_call(
                 [
                     os.path.join(kctl_dir, "kubectl"),
-                    "--kubeconfig={}".format(self.get_kubeconfig_path())
-                ] + self._args,
+                    "--kubeconfig={}".format(self.get_kubeconfig_path()),
+                ]
+                + self._args,
             )
         except subprocess.CalledProcessError as e:
-            return(e.returncode)
+            return e.returncode
         else:
             return exit_code
 
