@@ -46,7 +46,7 @@ run_with_sudo touch "$SNAP_USER_COMMON/istio.lock"
 if ! grep -e "\-\-allow-privileged" ${SNAP_DATA}/args/kube-apiserver
 then
   refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-  run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-apiserver"
+  restart_service apiserver
   sleep 5
 fi
 
