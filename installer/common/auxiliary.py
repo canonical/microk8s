@@ -75,7 +75,9 @@ class Auxiliary(ABC):
                     "--kubeconfig={}".format(os.path.join(kctl_dir, "config"))
                 ] + self._args,
             )
-        finally:
+        except subprocess.CalledProcessError as e:
+            return(e.returncode)
+        else:
             return exit_code
 
 
