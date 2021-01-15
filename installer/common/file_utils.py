@@ -18,7 +18,6 @@ import hashlib
 import logging
 import os
 import shutil
-import subprocess
 import sys
 
 if sys.version_info < (3, 6):

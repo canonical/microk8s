@@ -2,9 +2,8 @@ import ctypes
 import logging
 import os
 import subprocess
-import sys
 
-from abc import ABC, abstractclassmethod
+from abc import ABC
 from os.path import realpath
 from shutil import disk_usage
 
