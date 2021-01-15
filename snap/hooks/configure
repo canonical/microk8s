@@ -467,6 +467,11 @@ then
   need_api_restart=true
 fi
 
+if [ -e ${SNAP_DATA}/args/kubelite ]
+then
+  cp ${SNAP}/default-args/kubelite ${SNAP_DATA}/args/kubelite
+fi
+
 # Restart reconfigured services
 if ${need_api_restart} ||
    ${need_proxy_restart} ||
