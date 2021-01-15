@@ -207,6 +207,8 @@ def kubectl(args) -> int:
         return Windows(args).kubectl()
     if platform == "darwin":
         return MacOS(args).kubectl()
+    else:
+        return Linux(args).kubectl()
 
 
 def dashboard_proxy() -> None:

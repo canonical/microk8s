@@ -8,7 +8,7 @@ from abc import ABC, abstractclassmethod
 from os.path import realpath
 from shutil import disk_usage
 
-from .file_utils import get_kubeconfig_path
+from .file_utils import get_kubeconfig_path, get_kubectl_directory
 
 logger = logging.getLogger(__name__)
 
@@ -55,12 +55,7 @@ class Auxiliary(ABC):
 
         :return: String
         """
-        if getattr(sys, "frozen", None):
-            d =  os.path.dirname(sys.executable)
-        else:
-            d = os.path.dirname(os.path.abspath(__file__))
-
-        return os.path.join(d, "kubectl")
+        return get_kubectl_directory()
 
     def get_kubeconfig_path(self) -> str:
         """
@@ -84,7 +79,7 @@ class Auxiliary(ABC):
         try:
             exit_code = subprocess.check_call(
                 [
-                    os.path.join(kctl_dir, "kubectl.exe"),
+                    os.path.join(kctl_dir, "kubectl"),
                     "--kubeconfig={}".format(self.get_kubeconfig_path())
                 ] + self._args,
             )

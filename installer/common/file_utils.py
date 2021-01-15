@@ -18,6 +18,7 @@ import hashlib
 import logging
 import os
 import shutil
+import subprocess
 import sys
 
 if sys.version_info < (3, 6):
@@ -56,6 +57,27 @@ def is_dumb_terminal():
     is_term_dumb = os.environ.get("TERM", "") == "dumb"
     return not is_stdout_tty or is_term_dumb
 
+
+def get_kubectl_directory() -> str:
+    """
+    Get the correct directory to install kubectl into,
+    we can then call this when running `microk8s kubectl`
+    without interfering with any systemwide install.
+
+    :return: String
+    """
+    if sys.platform == "win32":
+        if getattr(sys, "frozen", None):
+            d =  os.path.dirname(sys.executable)
+        else:
+            d = os.path.dirname(os.path.abspath(__file__))
+
+        return os.path.join(d, "kubectl")
+    else:
+        full_path = shutil.which("kubectl")
+        return os.path.dirname(full_path)
+
+
 def get_kubeconfig_path():
     """Return a MicroK8s specific kubeconfig path."""
     if sys.platform == "win32":
@@ -70,6 +92,7 @@ def get_kubeconfig_path():
             ".microk8s",
             "config"
         )
+
 
 def clear_kubeconfig():
     """Clean kubeconfig file."""
