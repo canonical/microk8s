@@ -17,6 +17,7 @@
 import hashlib
 import logging
 import os
+import shutil
 import sys
 
 if sys.version_info < (3, 6):
@@ -54,3 +55,26 @@ def is_dumb_terminal():
     is_stdout_tty = os.isatty(1)
     is_term_dumb = os.environ.get("TERM", "") == "dumb"
     return not is_stdout_tty or is_term_dumb
+
+def get_kubeconfig_path():
+    """Return a MicroK8s specific kubeconfig path."""
+    if sys.platform == "win32":
+        return os.path.join(
+            os.environ.get('LocalAppData'),
+            "MicroK8s",
+            "config"
+        )
+    else:
+        return os.path.join(
+            os.path.expanduser('~'),
+            ".microk8s.kubeconfig"
+        )
+
+def clear_kubeconfig():
+    """Clean kubeconfig file."""
+    if sys.platform == "win32":
+        shutil.rmtree(
+            os.path.dirname(get_kubeconfig_path())
+        )
+    else:
+        os.remove(get_kubeconfig_path())

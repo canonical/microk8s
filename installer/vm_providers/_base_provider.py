@@ -48,18 +48,6 @@ class Provider(abc.ABC):
 
         self._cached_home_directory: Optional[pathlib.Path] = None
 
-    def __enter__(self):
-        try:
-            self.create()
-        except errors.ProviderBaseError:
-            # Destroy is idempotent
-            self.destroy()
-            raise
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.destroy()
-
     @classmethod
     def ensure_provider(cls) -> None:
         """Necessary steps to ensure the provider is correctly setup."""
@@ -128,12 +116,12 @@ class Provider(abc.ABC):
 
     def launch_instance(self, specs: Dict) -> None:
         try:
-            # An ProviderStartError exception here means we need to create
+            # An ProviderStartError exception here means we need to create.
             self._start()
         except errors.ProviderInstanceNotFoundError:
             self._launch(specs)
             self._check_connectivity()
-            # We need to setup MicroK8s and scan for cli commands
+            # We need to setup MicroK8s and scan for cli commands.
             self._setup_microk8s(specs)
             self._copy_kubeconfig_to_kubectl(specs)
 
@@ -157,14 +145,16 @@ class Provider(abc.ABC):
                 raise
 
     def _copy_kubeconfig_to_kubectl(self, specs: Dict):
-        kubeconfig_dir = specs.get("kubeconfig")
+        kubeconfig_path = specs.get("kubeconfig")
         kubeconfig = self.run(command=["microk8s", "config"], hide_output=True)
 
-        if sys.platform == "win32":
-            with open(os.path.join(kubeconfig_dir, "config"), "wb") as f:
-                f.write(kubeconfig)
-        if sys.platform == "darwin":
-            pass  # TODO
+        if sys.platform == "win32":  # We don't want to make $HOME for *nix systems.
+            if not os.path.isdir(os.path.dirname(kubeconfig_path)):
+                os.mkdir(os.path.dirname(kubeconfig_path))
+
+        with open(kubeconfig_path, "wb") as f:
+            f.write(kubeconfig)
+
 
     def _setup_microk8s(self, specs: Dict) -> None:
         self.run("snap install microk8s --classic --channel {}".format(specs['channel']).split())

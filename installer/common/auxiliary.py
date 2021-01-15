@@ -4,9 +4,11 @@ import os
 import subprocess
 import sys
 
-from abc import ABC
+from abc import ABC, abstractclassmethod
 from os.path import realpath
 from shutil import disk_usage
+
+from .file_utils import get_kubeconfig_path
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +49,11 @@ class Auxiliary(ABC):
 
     def get_kubectl_directory(self) -> str:
         """
-        Get the correct directory to put the kubeconfig
-        file in.  This is then read by the installed
-        kubectl and won't interfere with one in the user's
-        home.
+        Get the correct directory to install kubectl into,
+        we can then call this when running `microk8s kubectl`
+        without interfering with any systemwide install.
 
-        :return: None
+        :return: String
         """
         if getattr(sys, "frozen", None):
             d =  os.path.dirname(sys.executable)
@@ -60,6 +61,18 @@ class Auxiliary(ABC):
             d = os.path.dirname(os.path.abspath(__file__))
 
         return os.path.join(d, "kubectl")
+
+    def get_kubeconfig_path(self) -> str:
+        """
+        Get the correct path to write the kubeconfig
+        file to.  This is then read by the installed
+        kubectl and won't interfere with one in the user's
+        home.
+
+        :return: String
+        """
+        return get_kubeconfig_path()
+
 
     def kubectl(self) -> int:
         """
@@ -72,7 +85,7 @@ class Auxiliary(ABC):
             exit_code = subprocess.check_call(
                 [
                     os.path.join(kctl_dir, "kubectl.exe"),
-                    "--kubeconfig={}".format(os.path.join(kctl_dir, "config"))
+                    "--kubeconfig={}".format(self.get_kubeconfig_path())
                 ] + self._args,
             )
         except subprocess.CalledProcessError as e:
@@ -146,7 +159,20 @@ class Windows(Auxiliary):
                 raise
 
 
-class MacOS(Auxiliary):
+class Linux(Auxiliary):
+    """
+    MacOS auxiliary methods.
+    """
+
+    def __init__(self, args) -> None:
+        """
+        :param args: ArgumentParser
+        :return: None
+        """
+        super(Linux, self).__init__(args)
+
+
+class MacOS(Linux):
     """
     MacOS auxiliary methods.
     """

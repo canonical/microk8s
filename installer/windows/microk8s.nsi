@@ -191,7 +191,6 @@ Section "Uninstall"
     Delete $INSTDIR\uninstall.exe
     Delete $INSTDIR\microk8s.exe
     Delete $INSTDIR\kubectl\kubectl.exe
-    Delete $INSTDIR\kubectl\config
     RMDir $INSTDIR\kubectl
     RMDir $INSTDIR
 
