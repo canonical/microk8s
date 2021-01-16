@@ -256,7 +256,7 @@ def is_kubelite():
     return os.path.exists(kubelite_lock)
 
 
-def service(service_name, operation):
+def service(operation, service_name):
     """
     Restart a service. Handle case where kubelite is enabled.
 
