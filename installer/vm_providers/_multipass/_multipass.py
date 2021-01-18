@@ -128,10 +128,10 @@ class Multipass(Provider):
         self._multipass_cmd = MultipassCommand(platform=sys.platform)
         self._instance_info: Optional[InstanceInfo] = None
 
-    def create(self) -> None:
+    def create(self, specs: Dict) -> None:
         """Create the multipass instance and setup the build environment."""
         self.echoer.info("Launching a VM.")
-        self.launch_instance()
+        self.launch_instance(specs)
         self._instance_info = self._get_instance_info()
 
     def destroy(self) -> None:
@@ -151,16 +151,16 @@ class Multipass(Provider):
         # TODO add instance check.
 
         # check if file exists in instance
-        self._run(command=["test", "-f", name])
+        self.run(command=["test", "-f", name])
 
         # copy file from instance
         source = "{}:{}".format(self.instance_name, name)
         self._multipass_cmd.copy_files(source=source, destination=destination)
         if delete:
-            self._run(command=["rm", name])
+            self.run(command=["rm", name])
 
     def shell(self) -> None:
-        self._run(command=["/bin/bash"])
+        self.run(command=["/bin/bash"])
 
     def _get_instance_info(self) -> InstanceInfo:
         instance_info_raw = self._multipass_cmd.info(
