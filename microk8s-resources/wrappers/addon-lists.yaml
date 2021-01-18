@@ -198,3 +198,11 @@ microk8s-addons:
       check_status: "pod/keda-operator"
       supported_architectures:
       - amd64
+        
+    - name: "falco"
+      description: "enable falco - for runtime security and audit logs"
+      version: "0.26.2"
+      check_status: "pod/falco"
+      supported_architectures:
+      - arm64
+      - amd64

@@ -28,6 +28,7 @@ from validators import (
     validate_traefik,
     validate_coredns_config,
     validate_portainer,
+    validate_falco,
 )
 from utils import (
     microk8s_enable,
@@ -395,3 +396,14 @@ class TestAddons(object):
             os.remove('backupfile.tar.gz')
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
+
+    def test_falco(self):
+        """
+        Sets up and validates falco.
+        """
+        print("Enabling falco")
+        microk8s_enable("falc")
+        print("Validating falco")
+        validate_keda()
+        print("Disabling falco")
+        microk8s_disable("falco")
