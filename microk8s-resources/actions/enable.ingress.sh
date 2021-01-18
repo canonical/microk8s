@@ -46,12 +46,6 @@ then
   echo "Setting ${CERT_SECRET} as default ingress certificate"
 fi
 
-if [ ! -z "$BACKEND_SERVICE" ]
-then
-  DEFAULT_BACKEND_SERVICE="- --default-backend-service=${BACKEND_SERVICE}"
-  echo "Setting ${BACKEND_SERVICE} as default ingress service"
-fi
-
 declare -A map
 map[\$TAG]="$TAG"
 map[\$DEFAULT_CERT]="$DEFAULT_CERT"
