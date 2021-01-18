@@ -219,5 +219,6 @@ spec:
         - --tcp-services-configmap=$(POD_NAMESPACE)/nginx-ingress-tcp-microk8s-conf
         - --udp-services-configmap=$(POD_NAMESPACE)/nginx-ingress-udp-microk8s-conf
         - --ingress-class=public
+        $DEFAULT_BACKEND_SERVICE
         $DEFAULT_CERT
         $EXTRA_ARGS
