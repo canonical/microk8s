@@ -196,7 +196,7 @@ def get_hostname():
 @click.command()
 @click.option(
     '--bundle',
-    default='cs:kubeflow-239',
+    default='cs:kubeflow-241',
     help='The Kubeflow bundle to deploy. Can be one of full, lite, edge, or a charm store URL.',
 )
 @click.option(
@@ -276,11 +276,11 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
     # user to specify a full charm store URL if they'd like, such as
     # `cs:kubeflow-lite-123`.
     if bundle == 'full':
-        bundle = 'cs:kubeflow-239'
+        bundle = 'cs:kubeflow-241'
     elif bundle == 'lite':
-        bundle = 'cs:kubeflow-lite-26'
+        bundle = 'cs:kubeflow-lite-28'
     elif bundle == 'edge':
-        bundle = 'cs:kubeflow-edge-23'
+        bundle = 'cs:kubeflow-edge-25'
     else:
         bundle = bundle
 
@@ -390,6 +390,7 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
 
     if kubectl_exists('service/dex-auth'):
         juju("config", "dex-auth", "public-url=%s" % hostname.geturl())
+        juju('config', 'dex-auth', 'static-password=%s' % password)
 
     if kubectl_exists('service/oidc-gatekeeper'):
         juju("config", "oidc-gatekeeper", "public-url=%s" % hostname.geturl())
