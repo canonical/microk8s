@@ -458,13 +458,16 @@ fi
 if ! [ -e ${SNAP_DATA}/var/lock/lite.lock ]
 then
   touch ${SNAP_DATA}/var/lock/lite.lock
+  if ! snapctl services microk8s.daemon-apiserver | grep active &> /dev/null
+  then
+    snapctl stop ${SNAP_NAME}.daemon-kubelite
+    need_api_restart=true
+  fi
   snapctl stop ${SNAP_NAME}.daemon-apiserver
   snapctl stop ${SNAP_NAME}.daemon-proxy
   snapctl stop ${SNAP_NAME}.daemon-kubelet
   snapctl stop ${SNAP_NAME}.daemon-controller-manager
   snapctl stop ${SNAP_NAME}.daemon-scheduler
-
-  need_api_restart=true
 fi
 
 if [ -e ${SNAP_DATA}/args/kubelite ]
