@@ -27,6 +27,13 @@ do
 
     # every 3 seconds
     sleep 3
+    if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
+      getent group microk8s >/dev/null 2>&1
+    then
+      chmod -R ug+rwX ${SNAP_DATA}/var/kubernetes/backend || true
+      chgrp microk8s -R ${SNAP_DATA}/var/kubernetes/backend || true
+    fi
+
     if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
        ip route | grep default &> /dev/null
     then
