@@ -23,7 +23,6 @@ from common.utils import (
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
     service,
-    is_kubelite,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
