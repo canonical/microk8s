@@ -279,15 +279,9 @@ def mark_cluster_node():
     lock_file = "{}/var/lock/clustered.lock".format(snapdata_path)
     open(lock_file, 'a').close()
     os.chmod(lock_file, 0o700)
-    services = ['etcd']
-    if is_kubelite():
-        services.append('kubelite')
-    else:
-        for s in ['apiserver', 'apiserver-kicker', 'controller-manager', 'scheduler']:
-            services.append(s)
-
+    services = ['etcd', 'apiserver-kicker', 'kubelite']
     for s in services:
-        subprocess.check_call("snapctl restart microk8s.daemon-{}".format(s).split())
+        service('restart', s)
 
 
 def generate_callback_token():

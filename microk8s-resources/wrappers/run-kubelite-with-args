@@ -31,6 +31,5 @@ do
   sleep 6
 done
 
-# This is really the only way I could find to get the args passed in correctly. WTF
 declare -a args="($(cat $SNAP_DATA/args/$app))"
 exec "$SNAP/$app" "${args[@]}"
