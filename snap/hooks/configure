@@ -2,6 +2,8 @@
 
 set -eux
 
+date
+
 source $SNAP/actions/common/utils.sh
 
 need_api_restart=false
@@ -284,7 +286,7 @@ then
 fi
 
 # Securing important directories
-for dir in "${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock"
+for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
@@ -454,15 +456,27 @@ then
   need_proxy_restart=true
 fi
 
-# Enable kubelite, maybe if memory is not enough or always
+if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
+then
+  snapctl stop ${SNAP_NAME}.daemon-kubelite
+fi
+
+# Enable kubelite
 if ! [ -e ${SNAP_DATA}/var/lock/lite.lock ]
 then
-  touch ${SNAP_DATA}/var/lock/lite.lock
-  if ! snapctl services microk8s.daemon-apiserver | grep active &> /dev/null
+  touch "${SNAP_DATA}/var/lock/lite.lock"
+  if ! [ -e ${SNAP_DATA}/args/kubelite ]
+  then
+    cp ${SNAP}/default-args/kubelite ${SNAP_DATA}/args/kubelite
+  fi
+  date
+  if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
   then
     snapctl stop ${SNAP_NAME}.daemon-kubelite
-    need_api_restart=true
+  else
+    snapctl start ${SNAP_NAME}.daemon-kubelite
   fi
+  date
   snapctl stop ${SNAP_NAME}.daemon-apiserver
   snapctl stop ${SNAP_NAME}.daemon-proxy
   snapctl stop ${SNAP_NAME}.daemon-kubelet
@@ -470,9 +484,10 @@ then
   snapctl stop ${SNAP_NAME}.daemon-scheduler
 fi
 
-if [ -e ${SNAP_DATA}/args/kubelite ]
+if ! [ -e ${SNAP_DATA}/args/kubelite ]
 then
   cp ${SNAP}/default-args/kubelite ${SNAP_DATA}/args/kubelite
+  need_api_restart=true
 fi
 
 # Restart reconfigured services
@@ -485,26 +500,8 @@ then
   then
     snapctl restart ${SNAP_NAME}.daemon-kubelite
   else
-    if ${need_api_restart}
-    then
-      snapctl restart ${SNAP_NAME}.daemon-apiserver
-    fi
-    if ${need_proxy_restart}
-    then
-      snapctl restart ${SNAP_NAME}.daemon-proxy
-    fi
-    if ${need_kubelet_restart}
-    then
-      snapctl restart ${SNAP_NAME}.daemon-kubelet
-    fi
-    if ${need_kubelet_restart}
-    then
-      snapctl restart ${SNAP_NAME}.daemon-controller-manager
-    fi
-    if ${need_scheduler_restart}
-    then
-      snapctl restart ${SNAP_NAME}.daemon-scheduler
-    fi
+    echo "Unable to restart service"
+    exit 1
   fi
 fi
 
