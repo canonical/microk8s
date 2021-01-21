@@ -1,5 +1,5 @@
 --cert-dir=${SNAP_DATA}/certs
---service-cluster-ip-range=10.152.183.0/24
+--service-cluster-ip-range=10.152.0.0/16
 --authorization-mode=AlwaysAllow
 --service-account-key-file=${SNAP_DATA}/certs/serviceaccount.key
 --client-ca-file=${SNAP_DATA}/certs/ca.crt

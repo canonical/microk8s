@@ -448,7 +448,7 @@ then
   snapctl restart ${SNAP_NAME}.daemon-flanneld
 fi
 
-if grep -e "\-\-cluster-cidr=10.152.183.0/24" ${SNAP_DATA}/args/kube-proxy
+if grep -e "\-\-cluster-cidr=10.152.0.0/16" ${SNAP_DATA}/args/kube-proxy
 then
   refresh_opt_in_config cluster-cidr 10.1.0.0/16 kube-proxy
   snapctl restart ${SNAP_NAME}.daemon-proxy

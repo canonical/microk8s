@@ -9,7 +9,7 @@
 # as specified in /var/snap/microk8s/current/args/kube-proxy and
 # /var/snap/microk8s/current/args/kube-apiserver
 #
-# NO_PROXY=10.1.0.0/16,10.152.183.0/24
+# NO_PROXY=10.1.0.0/16,10.152.0.0/16
 #
 # Remember to restart MicroK8s after editing this file:
 #
