@@ -226,6 +226,7 @@ def get_hostname():
 @click.password_option(
     envvar='KUBEFLOW_AUTH_PASSWORD',
     default=get_random_pass,
+    prompt=False,
     help='The Kubeflow dashboard password.',
 )
 def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, password):
