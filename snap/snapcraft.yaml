@@ -413,6 +413,7 @@ parts:
     - file
     - dpkg
     stage-packages:
+    - ethtool
     - libatm1
     - net-tools
     - util-linux
