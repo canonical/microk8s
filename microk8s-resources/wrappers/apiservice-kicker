@@ -29,7 +29,7 @@ deactivate_offloading() {
 
 check_offloading() {
   # Return an error if at least one offload is enabled (rx or tx)
-  if ethtool --show-offload $nic_name | grep -E '^.x-checksumming:' | grep -q  ': on'; then
+  if ethtool --show-offload $nic_name 2>&1 | grep -E '^.x-checksumming:' | grep -q  ': on'; then
     return 1
   else
     return 0
@@ -80,7 +80,8 @@ do
     fi
 
     if [ -e "${SNAP_DATA}/var/lock/cni-loaded" ] &&
-      is_nic_available
+      is_nic_available &&
+      ! check_offloading
     then
       echo "Network interface $nic_name found! Disabling offloading on it..."
       deactivate_offloading
