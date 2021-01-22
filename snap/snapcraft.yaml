@@ -288,7 +288,7 @@ parts:
   iptables:
     after:
     - libnftnl
-    source: https://www.netfilter.org/projects/iptables/files/iptables-1.6.1.tar.bz2
+    source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
     plugin: autotools
     build-packages:
     - bison
