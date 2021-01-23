@@ -4,7 +4,7 @@
 !include "Sections.nsh"
 
 !define PRODUCT_NAME "MicroK8s"
-!define PRODUCT_VERSION "2.0.0"
+!define PRODUCT_VERSION "2.1.0"
 !define PRODUCT_PUBLISHER "Canonical"
 !define MUI_ICON ".\microk8s.ico"
 !define MUI_HEADERIMAGE
@@ -71,6 +71,17 @@ Section "Multipass (Required)" multipass_id
     endMultipass:
 SectionEnd
 
+Section "Kubectl (Required)" kubectl_id
+    SectionIn RO
+    beginKubectl:
+        SetOutPath $INSTDIR
+        File "kubectl.exe"
+        CopyFiles "$INSTDIR\kubectl.exe" "$INSTDIR\kubectl\kubectl.exe"
+        Delete "$INSTDIR\kubectl.exe"
+        Goto endKubectl
+    endKubectl:
+SectionEnd
+
 Section -Install
     SectionIn RO
     SetOutPath $INSTDIR
@@ -92,9 +103,14 @@ Section "Add 'microk8s' to PATH" add_to_path_id
     EnVar::AddValue "path" "$INSTDIR"
 SectionEnd
 
+Section /o "Add 'kubectl' to PATH" add_kubectl_to_path_id
+    EnVar::AddValue "path" "$INSTDIR\kubectl"
+SectionEnd
+
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
     !insertmacro MUI_DESCRIPTION_TEXT ${multipass_id} "REQUIRED: If already installed, will be unticked and skipped.$\n$\nSee https://multipass.run for more."
     !insertmacro MUI_DESCRIPTION_TEXT ${add_to_path_id} "Add the 'microk8s' executable to PATH.$\n$\nThis will allow you to run the command 'microk8s' in cmd and PowerShell in any directory."
+    !insertmacro MUI_DESCRIPTION_TEXT ${add_kubectl_to_path_id} "Add the 'kubectl' executable to PATH.$\n$\nThis will set the bundled 'kubectl' as system default."
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Function .onInit
@@ -174,10 +190,13 @@ Section "Uninstall"
     ExecWait "$INSTDIR\microk8s.exe uninstall"
     Delete $INSTDIR\uninstall.exe
     Delete $INSTDIR\microk8s.exe
+    Delete $INSTDIR\kubectl\kubectl.exe
+    RMDir $INSTDIR\kubectl
     RMDir $INSTDIR
 
     DeleteRegKey HKLM \
         "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 
     EnVar::DeleteValue "path" "$INSTDIR"
+    EnVar::DeleteValue "path" "$INSTDIR\kubectl"
 SectionEnd

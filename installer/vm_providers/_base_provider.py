@@ -16,6 +16,7 @@
 
 import abc
 import logging
+import os
 import pathlib
 import shlex
 import sys
@@ -46,18 +47,6 @@ class Provider(abc.ABC):
         self.build_provider_flags = build_provider_flags.copy()
 
         self._cached_home_directory: Optional[pathlib.Path] = None
-
-    def __enter__(self):
-        try:
-            self.create()
-        except errors.ProviderBaseError:
-            # Destroy is idempotent
-            self.destroy()
-            raise
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.destroy()
 
     @classmethod
     def ensure_provider(cls) -> None:
@@ -127,13 +116,14 @@ class Provider(abc.ABC):
 
     def launch_instance(self, specs: Dict) -> None:
         try:
-            # An ProviderStartError exception here means we need to create
+            # An ProviderStartError exception here means we need to create.
             self._start()
         except errors.ProviderInstanceNotFoundError:
             self._launch(specs)
             self._check_connectivity()
-            # We need to setup MicroK8s and scan for cli commands
+            # We need to setup MicroK8s and scan for cli commands.
             self._setup_microk8s(specs)
+            self._copy_kubeconfig_to_kubectl(specs)
 
     def _check_connectivity(self) -> None:
         """Check that the VM can access the internet."""
@@ -153,6 +143,16 @@ class Provider(abc.ABC):
                 )
             else:
                 raise
+
+    def _copy_kubeconfig_to_kubectl(self, specs: Dict):
+        kubeconfig_path = specs.get("kubeconfig")
+        kubeconfig = self.run(command=["microk8s", "config"], hide_output=True)
+
+        if not os.path.isdir(os.path.dirname(kubeconfig_path)):
+            os.mkdir(os.path.dirname(kubeconfig_path))
+
+        with open(kubeconfig_path, "wb") as f:
+            f.write(kubeconfig)
 
     def _setup_microk8s(self, specs: Dict) -> None:
         self.run("snap install microk8s --classic --channel {}".format(specs['channel']).split())
@@ -184,7 +184,7 @@ class Provider(abc.ABC):
             return self._cached_home_directory
 
         command = ["printenv", "HOME"]
-        run_output = self._run(command=command, hide_output=True)
+        run_output = self.run(command=command, hide_output=True)
 
         # Shouldn't happen, but due to _run()'s return type as being Optional,
         # we need to check for it anyways for mypy.

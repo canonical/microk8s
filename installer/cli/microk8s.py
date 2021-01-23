@@ -7,11 +7,12 @@ from sys import exit, platform
 import click
 
 from cli.echo import Echo
-from common.auxiliary import Windows, MacOS
+from common import definitions
+from common.auxiliary import Windows, MacOS, Linux
 from common.errors import BaseError
+from common.file_utils import get_kubeconfig_path, clear_kubeconfig
 from vm_providers.factory import get_provider_for
 from vm_providers.errors import ProviderNotFound, ProviderInstanceNotFoundError
-from common import definitions
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,8 @@ def cli(ctx, help):
             run(ctx.args)
             stop()
             exit(0)
+        elif ctx.args[0] == "kubectl":
+            exit(kubectl(ctx.args[1:]))
         elif ctx.args[0] == "dashboard-proxy":
             dashboard_proxy()
             exit(0)
@@ -142,6 +145,11 @@ def install(args) -> None:
         if not aux.is_enough_space():
             echo.warning("VM disk size requested exceeds free space on host.")
 
+    else:
+        aux = Linux(args)
+        if not aux.is_enough_space():
+            echo.warning("VM disk size requested exceeds free space on host.")
+
     vm_provider_name: str = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
     try:
@@ -162,7 +170,9 @@ def install(args) -> None:
             raise provider_error
 
     instance = vm_provider_class(echoer=echo)
-    instance.launch_instance(vars(args))
+    spec = vars(args)
+    spec.update({"kubeconfig": get_kubeconfig_path()})
+    instance.launch_instance(spec)
     echo.info("MicroK8s is up and running. See the available commands with `microk8s --help`.")
 
 
@@ -186,7 +196,17 @@ def uninstall() -> None:
 
     instance = vm_provider_class(echoer=echo)
     instance.destroy()
+    clear_kubeconfig()
     echo.info("Thank you for using MicroK8s!")
+
+
+def kubectl(args) -> int:
+    if platform == "win32":
+        return Windows(args).kubectl()
+    if platform == "darwin":
+        return MacOS(args).kubectl()
+    else:
+        return Linux(args).kubectl()
 
 
 def dashboard_proxy() -> None:

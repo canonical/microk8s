@@ -22,5 +22,5 @@ jobs:
       run: |
         set -eux
         black --check . microk8s-resources/actions/enable.kubeflow.sh
-        codespell --ignore-words-list="aks" --quiet-level=2 --skip="*.patch,*.spec" || true
+        codespell --ignore-words-list="aks" --quiet-level=2 --skip="*.patch,*.spec"
         flake8 . microk8s-resources/actions/enable.kubeflow.sh
