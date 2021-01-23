@@ -413,25 +413,23 @@ def configure():
     '''
 
     if "service" in configuration:
-        for service in configuration["service"]:
-            print("{}".format(service["name"]))
-            if "arguments_update" in service:
+        for srv in configuration["service"]:
+            print("{}".format(srv["name"]))
+            if "arguments_update" in srv:
                 print("Updating arguments")
-                for argument in service["arguments_update"]:
+                for argument in srv["arguments_update"]:
                     for key, val in argument.items():
                         print("{} is {}".format(key, val))
-                        update_service_argument(service["name"], key, val)
-            if "arguments_remove" in service:
+                        update_service_argument(srv["name"], key, val)
+            if "arguments_remove" in srv:
                 print("Removing arguments")
-                for argument in service["arguments_remove"]:
+                for argument in srv["arguments_remove"]:
                     print("{}".format(argument))
-                    update_service_argument(service["name"], argument, None)
-            if "restart" in service and service["restart"]:
-                service_name = get_service_name(service["name"])
-                print("restarting {}".format(service["name"]))
-                subprocess.check_call(
-                    service('restart', service_name)
-                )
+                    update_service_argument(srv["name"], argument, None)
+            if "restart" in srv and srv["restart"]:
+                service_name = get_service_name(srv["name"])
+                print("restarting {}".format(srv["name"]))
+                subprocess.check_call(service('restart', service_name))
 
     if "addon" in configuration:
         for addon in configuration["addon"]:

@@ -10,6 +10,7 @@ from subprocess import check_output, CalledProcessError
 import yaml
 import socket
 
+
 def try_set_file_permissions(file):
     """
     Try setting the ownership group and permission of the file
@@ -263,8 +264,15 @@ def service(operation, service_name):
     :param service_name: The service name
     :param operation: Operation to perform on the service
     """
-    if (service_name == "apiserver" or service_name == "proxy" or service_name == "kubelet" or service_name == "scheduler"
-        or service_name == "controller-manager") and is_kubelite():
+    if (
+        service_name == "apiserver"
+        or service_name == "proxy"
+        or service_name == "kubelet"
+        or service_name == "scheduler"
+        or service_name == "controller-manager"
+    ) and is_kubelite():
         subprocess.check_call("snapctl {} microk8s.daemon-kubelite".format(operation).split())
     else:
-        subprocess.check_call("snapctl {} microk8s.daemon-{}".format(operation, service_name).split())
+        subprocess.check_call(
+            "snapctl {} microk8s.daemon-{}".format(operation, service_name).split()
+        )

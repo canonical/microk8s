@@ -23,7 +23,6 @@ from common.utils import (
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
     service,
-    is_kubelite,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -279,15 +278,9 @@ def mark_cluster_node():
     lock_file = "{}/var/lock/clustered.lock".format(snapdata_path)
     open(lock_file, 'a').close()
     os.chmod(lock_file, 0o700)
-    services = ['etcd']
-    if is_kubelite():
-        services.append('kubelite')
-    else:
-        for s in ['apiserver', 'apiserver-kicker', 'controller-manager', 'scheduler']:
-            services.append(s)
-
+    services = ['etcd', 'apiserver-kicker', 'kubelite']
     for s in services:
-        subprocess.check_call("snapctl restart microk8s.daemon-{}".format(s).split())
+        service('restart', s)
 
 
 def generate_callback_token():
