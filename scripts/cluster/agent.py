@@ -429,7 +429,7 @@ def configure():
             if "restart" in srv and srv["restart"]:
                 service_name = get_service_name(srv["name"])
                 print("restarting {}".format(srv["name"]))
-                subprocess.check_call(service('restart', service_name))
+                service('restart', service_name)
 
     if "addon" in configuration:
         for addon in configuration["addon"]:
