@@ -17,6 +17,25 @@ fi
 
 restart_attempt=0
 installed_registry_help=0
+nic_name="vxlan.calico"
+
+is_nic_available() {
+  ip a show dev $nic_name > /dev/null 2>&1
+}
+
+deactivate_offloading() {
+  ethtool --offload $nic_name rx off tx off
+}
+
+check_offloading() {
+  # Return an error if at least one offload is enabled (rx or tx)
+  if ethtool --show-offload $nic_name 2>&1 | grep -E '^.x-checksumming:' | grep -q  ': on'; then
+    return 1
+  else
+    return 0
+  fi
+}
+
 while true
 do
     if [ $restart_attempt -ge 5 ]
@@ -27,6 +46,7 @@ do
 
     # every 3 seconds
     sleep 3
+
     if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
        ip route | grep default &> /dev/null &&
        snapctl services microk8s.daemon-apiserver | grep active &> /dev/null
@@ -56,6 +76,20 @@ do
          "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
       then
         touch "${SNAP_DATA}/var/lock/cni-loaded"
+      fi
+    fi
+
+    if [ -e "${SNAP_DATA}/var/lock/cni-loaded" ] &&
+      is_nic_available &&
+      ! check_offloading
+    then
+      echo "Network interface $nic_name found! Disabling offloading on it..."
+      deactivate_offloading
+      sleep 2
+      if check_offloading; then
+        echo "Offloading successfully disabled on interface $nic_name"
+      else
+        echo "Offloading has not been disabled correctly on interface $nic_name. Please check what happened"
       fi
     fi
 

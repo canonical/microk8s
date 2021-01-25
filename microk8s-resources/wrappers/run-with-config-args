@@ -34,6 +34,8 @@ then
       # to the previous manual approach of pointing people to the troubleshooting guide.
       iptables -t filter -A FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
       iptables -t filter -A FORWARD -d "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+      iptables-nft -t filter -A FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+      iptables-nft -t filter -A FORWARD -d "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
     fi
   fi
 

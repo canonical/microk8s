@@ -278,22 +278,26 @@ parts:
       - kubelet
       - actions
 
-  libnftnl:
+  libmnl:
     plugin: autotools
-    source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
+    source: https://www.netfilter.org/pub/libmnl/libmnl-1.0.4.tar.bz2
+
+  libnftnl:
+    after:
+    - libmnl
+    plugin: autotools
+    source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
     build-packages:
     - libjansson-dev
-    - libmnl-dev
 
   iptables:
     after:
     - libnftnl
-    source: https://www.netfilter.org/projects/iptables/files/iptables-1.6.1.tar.bz2
+    source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
     plugin: autotools
     build-packages:
     - bison
     - flex
-    - libmnl-dev
     - libnfnetlink-dev
     - libnetfilter-conntrack3
     - libnetfilter-conntrack-dev
@@ -409,6 +413,7 @@ parts:
     - file
     - dpkg
     stage-packages:
+    - ethtool
     - libatm1
     - net-tools
     - util-linux
