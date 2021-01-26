@@ -255,7 +255,9 @@ def xable(action: str, addons: list, xabled_addons: list):
             else:
                 addon, *args = addon.split(':')
                 wait_for_ready(timeout=30)
-                subprocess.run([str(actions / ('%s.%s.sh' % (action, addon)))] + args)
+                p = subprocess.run([str(actions / ('%s.%s.sh' % (action, addon)))] + args)
+                if p.returncode:
+                    sys.exit(p.returncode)
                 wait_for_ready(timeout=30)
 
     # The new way of xabling addons, that allows for unix-style argument passing,
@@ -285,8 +287,11 @@ def xable(action: str, addons: list, xabled_addons: list):
         wait_for_ready(timeout=30)
         script = [str(actions / ('%s.%s.sh' % (action, addon)))]
         if args:
-            subprocess.run(script + args)
+            p = subprocess.run(script + args)
         else:
-            subprocess.run(script + list(addons[1:]))
+            p = subprocess.run(script + list(addons[1:]))
+
+        if p.returncode:
+            sys.exit(p.returncode)
 
         wait_for_ready(timeout=30)
