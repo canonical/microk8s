@@ -106,7 +106,7 @@ parts:
     source-type: git
     plugin: autotools
     configflags:
-      - --enable-debug  
+      - --enable-debug
     stage-packages:
       - libuv1
     organize:
@@ -150,7 +150,7 @@ parts:
     source-type: git
     plugin: autotools
     configflags:
-      - --enable-debug       
+      - --enable-debug
     stage-packages:
       - libuv1
     build-packages:
@@ -399,6 +399,10 @@ parts:
     - gunicorn3
     - python3-click
     - python3-dateutil
+    override-pull: |
+      apt-get install -y python3-pip
+      PYTHONHOME=/usr PYTHONUSERBASE=$SNAPCRAFT_PART_INSTALL $SNAPCRAFT_PART_INSTALL/usr/bin/python3 -m pip install --upgrade 'pip; python_version >= "3.6"' 'pip<21; python_version < "3.6"' --user
+      snapcraftctl pull
 
   microk8s:
     after: [containerd, dqlite, k8s-binaries]
@@ -484,7 +488,7 @@ parts:
         rm "actions/multus.yaml"
         # KEDA support
         rm "actions/enable.keda.sh"
-        rm "actions/disable.keda.sh"        
+        rm "actions/disable.keda.sh"
       fi
 
       echo "Creating inspect hook"
