@@ -388,7 +388,8 @@ parts:
     source: https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz
     source-type: tar
     plugin: autotools
-    configflags: [--prefix=/usr, --enable-optimizations]
+    configflags:
+      [--prefix=/usr, --enable-optimizations, --with-ensurepip=install]
     build-packages:
       - libc6-dev
       - libffi-dev
@@ -411,18 +412,36 @@ parts:
     python-version: python3
     source: .
     python-packages:
+      - gunicorn
+      - pyopenssl
+      - requests
+      - click
+      - python-dateutil
       - flask
       - PyYAML
       - netifaces
     stage-packages:
-      - python3-openssl
+      - curl
       - openssl
-      - python3-requests
-      - gunicorn3
-      - python3-click
-      - python3-dateutil
     stage:
       - -usr/bin/py*
+    override-stage: |
+      $SNAPCRAFT_STAGE/usr/bin/python3 -m pip install --upgrade \
+        pip \
+        setuptools \
+        wheel
+
+      $SNAPCRAFT_STAGE/usr/bin/python3 -m pip install \
+        gunicorn \
+        pyopenssl \
+        requests \
+        click \
+        python-dateutil \
+        flask \
+        PyYAML \
+        netifaces
+
+      snapcraftctl stage
 
   microk8s:
     after: [containerd, dqlite, k8s-binaries, python]
@@ -443,10 +462,14 @@ parts:
       - util-linux
       - zfsutils-linux
       - iproute2
-      - python3-click
     source: .
     stage:
       - -usr/bin/py*
+    override-stage: |
+      $SNAPCRAFT_STAGE/usr/bin/python3 -m pip install \
+        click
+
+      snapcraftctl stage
     prime:
       - -README*
       - -installer*
