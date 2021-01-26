@@ -425,7 +425,7 @@ parts:
       - -usr/bin/py*
 
   microk8s:
-    after: [containerd, dqlite, k8s-binaries]
+    after: [containerd, dqlite, k8s-binaries, python]
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
@@ -445,6 +445,8 @@ parts:
       - iproute2
       - python3-click
     source: .
+    stage:
+      - -usr/bin/py*
     prime:
       - -README*
       - -installer*
@@ -552,8 +554,6 @@ parts:
       else
         echo "Skipped"
       fi
-    stage:
-      - -usr/bin/py*
 
   libnvidia:
     plugin: dump
