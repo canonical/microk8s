@@ -552,6 +552,8 @@ parts:
       else
         echo "Skipped"
       fi
+    stage:
+      - -usr/bin/py*
 
   libnvidia:
     plugin: dump
