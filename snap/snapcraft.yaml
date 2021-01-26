@@ -5,11 +5,11 @@ version-script: |
 version: "latest"
 summary: Kubernetes for workstations and appliances
 description: |-
- MicroK8s is a small, fast, secure, single node Kubernetes that installs on
- just about any Linux box. Use it for offline development, prototyping,
- testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's
- also a great k8s for appliances - develop your IoT apps for k8s and deploy
- them to MicroK8s on your boxes.
+  MicroK8s is a small, fast, secure, single node Kubernetes that installs on
+  just about any Linux box. Use it for offline development, prototyping,
+  testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's
+  also a great k8s for appliances - develop your IoT apps for k8s and deploy
+  them to MicroK8s on your boxes.
 
 grade: stable
 confinement: classic
@@ -207,8 +207,8 @@ parts:
     organize:
       ./cni/*: opt/cni/bin/
     filesets:
-      bins: [ ./opt/cni/bin/* ]
-    stage: [ $bins ]
+      bins: [./opt/cni/bin/*]
+    stage: [$bins]
 
   flanneld:
     plugin: dump
@@ -284,27 +284,27 @@ parts:
 
   libnftnl:
     after:
-    - libmnl
+      - libmnl
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
     build-packages:
-    - libjansson-dev
+      - libjansson-dev
 
   iptables:
     after:
-    - libnftnl
+      - libnftnl
     source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
     plugin: autotools
     build-packages:
-    - bison
-    - flex
-    - libnfnetlink-dev
-    - libnetfilter-conntrack3
-    - libnetfilter-conntrack-dev
+      - bison
+      - flex
+      - libnfnetlink-dev
+      - libnetfilter-conntrack3
+      - libnetfilter-conntrack-dev
     configflags:
-    - "--disable-shared"
-    - "--enable-static"
-    prime: [ -bin/iptables-xml ]
+      - "--disable-shared"
+      - "--enable-static"
+    prime: [-bin/iptables-xml]
 
   migrator:
     build-snaps: [go]
@@ -324,8 +324,8 @@ parts:
     source: build-scripts/
     plugin: dump
     build-packages:
-    - btrfs-tools
-    - libseccomp-dev
+      - btrfs-tools
+      - libseccomp-dev
     override-build: |
       set -eux
       . $SNAPCRAFT_PART_SRC/set-env-variables.sh
@@ -362,68 +362,88 @@ parts:
     organize:
       containerd/install/bin/*: bin/
     stage-packages:
-    - libnss-myhostname
-    - libnss-resolve
-    - libnss-mymachines
-    - conntrack
-    - curl
-    - aufs-tools
-    - gawk
-    - sed
-    - socat
-    - grep
-    - jq
-    - libssl1.0.0
-    - coreutils
-    - hostname
-    - diffutils
-    - squashfs-tools
-    - tar
+      - libnss-myhostname
+      - libnss-resolve
+      - libnss-mymachines
+      - conntrack
+      - curl
+      - aufs-tools
+      - gawk
+      - sed
+      - socat
+      - grep
+      - jq
+      - libssl1.0.0
+      - coreutils
+      - hostname
+      - diffutils
+      - squashfs-tools
+      - tar
     stage:
-    - -sbin/xtables-multi
-    - -sbin/iptables*
-    - -lib/xtables
+      - -sbin/xtables-multi
+      - -sbin/iptables*
+      - -lib/xtables
+
+  python:
+    source: https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz
+    source-type: tar
+    plugin: autotools
+    configflags: [--prefix=/usr, --enable-optimizations]
+    build-packages:
+      - libc6-dev
+      - libffi-dev
+      - libssl-dev
+      - libsqlite3-dev
+      - libbz2-dev
+      - liblzma-dev
+      - libdb-dev
+      - libgdbm-dev
+      - libreadline-dev
+    stage:
+      - usr/bin/*
+      - usr/lib/*
+      - usr/include/python3.9/*
+      - usr/share/man/man1/*
 
   cluster-agent:
+    after: [python]
     plugin: python
     python-version: python3
     source: .
     python-packages:
-    - flask
-    - PyYAML
-    - netifaces
+      - flask
+      - PyYAML
+      - netifaces
     stage-packages:
-    - python3-openssl
-    - openssl
-    - python3-requests
-    - gunicorn3
-    - python3-click
-    - python3-dateutil
-    override-pull: |
-      apt-get install -y python3-pip
-      PYTHONHOME=/usr PYTHONUSERBASE=$SNAPCRAFT_PART_INSTALL $SNAPCRAFT_PART_INSTALL/usr/bin/python3 -m pip install --upgrade 'pip; python_version >= "3.6"' 'pip<21; python_version < "3.6"' --user
-      snapcraftctl pull
+      - python3-openssl
+      - openssl
+      - python3-requests
+      - gunicorn3
+      - python3-click
+      - python3-dateutil
+    stage:
+      - -usr/bin/py*
 
   microk8s:
     after: [containerd, dqlite, k8s-binaries]
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
-    - make
-    - mercurial
-    - git
-    - rsync
-    - openssl
-    - file
-    - dpkg
+      - make
+      - mercurial
+      - git
+      - rsync
+      - openssl
+      - file
+      - dpkg
     stage-packages:
-    - ethtool
-    - libatm1
-    - net-tools
-    - util-linux
-    - zfsutils-linux
-    - iproute2
-    - python3-click
+      - ethtool
+      - libatm1
+      - net-tools
+      - util-linux
+      - zfsutils-linux
+      - iproute2
+      - python3-click
     source: .
     prime:
       - -README*
@@ -576,4 +596,3 @@ slots:
     content: microk8s
     source:
       read: [$SNAP/.microk8s-info/microk8s]
-
