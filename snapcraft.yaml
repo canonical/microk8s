@@ -193,6 +193,10 @@ parts:
     - openssl
     - python3-requests
     - gunicorn3
+    override-pull: |
+      apt-get install -y python3-pip
+      PYTHONHOME=/usr PYTHONUSERBASE=$SNAPCRAFT_PART_INSTALL $SNAPCRAFT_PART_INSTALL/usr/bin/python3 -m pip install --upgrade 'pip; python_version >= "3.6"' 'pip<21; python_version < "3.6"' --user
+      snapcraftctl pull
   microk8s:
     after: [containerd]
     plugin: dump
