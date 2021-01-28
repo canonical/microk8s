@@ -120,16 +120,15 @@ parts:
   containerd:
     build-snaps: [go]
     after: [iptables]
-    source: .
-    source-type: git
+    source: build-scripts/
     plugin: dump
     build-packages:
     - btrfs-tools
     - libseccomp-dev
     override-build: |
       set -eux
-      . $SNAPCRAFT_PROJECT_DIR/build-scripts/set-env-variables.sh
-
+      . $SNAPCRAFT_PART_SRC/set-env-variables.sh
+      snap refresh go --channel=1.15/stable || true
       go version
       export GOPATH=$(realpath ../go)
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
@@ -144,10 +143,12 @@ parts:
       cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
 
       # Build containerd
+      rm -rf $GOPATH
+      mkdir -p $GOPATH
       go get -d github.com/containerd/containerd
       (
         cd $GOPATH/src/github.com/containerd/containerd
-        git checkout ${CONTAINERD_COMMIT}
+        git checkout -f ${CONTAINERD_COMMIT}
         # building the btrfs driver can be disabled via the
         # build tag no_btrfs, removing this dependency
         make
@@ -193,6 +194,10 @@ parts:
     - openssl
     - python3-requests
     - gunicorn3
+    override-pull: |
+      apt-get install -y python3-pip
+      PYTHONHOME=/usr PYTHONUSERBASE=$SNAPCRAFT_PART_INSTALL $SNAPCRAFT_PART_INSTALL/usr/bin/python3 -m pip install --upgrade 'pip; python_version >= "3.6"' 'pip<21; python_version < "3.6"' --user
+      snapcraftctl pull
   microk8s:
     after: [containerd]
     plugin: dump
