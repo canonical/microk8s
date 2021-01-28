@@ -529,9 +529,9 @@ def validate_portainer():
     """
     wait_for_pod_state("", "portainer", "running", label="app.kubernetes.io/name=portainer")
 
+
 def validate_falco():
     """
     Validate falco
     """
     wait_for_pod_state("", "falco", "running", label="app=falco-k8s-audit")
-
