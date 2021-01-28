@@ -28,6 +28,7 @@ from validators import (
     validate_traefik,
     validate_coredns_config,
     validate_portainer,
+    validate_falco.
 )
 from utils import (
     microk8s_enable,
