@@ -9,8 +9,40 @@ import sys
 import tempfile
 import textwrap
 import time
-from itertools import count
 from distutils.util import strtobool
+from itertools import count
+from pathlib import Path
+from urllib.error import URLError
+from urllib.parse import ParseResult, urlparse
+from urllib.request import urlopen
+import click
+
+
+MIN_MEM_GB = 14
+CONNECTIVITY_CHECKS = [
+    'https://api.jujucharms.com/charmstore/v5/istio-pilot-5/icon.svg',
+]
+
+
+def kubectl_exists(resource):
+    try:
+        run('microk8s-kubectl.wrapper', 'get', '-nkubeflow', resource, die=False)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
+def retry_run(*args, die=True, debug=False, stdout=True, times=3):
+    for attempt in range(1, times + 1):
+        try:
+            return run(*args, die=(times == attempt and die), debug=debug, stdout=stdout)
+        except subprocess.CalledProcessError as err:
+            if times == attempt:
+                raise
+            else:
+                if debug and stdout:
+                    print(err)
+                    print("Retrying.")
 
 
 def run(*args, die=True, debug=False, stdout=True):
@@ -52,9 +84,7 @@ def run(*args, die=True, debug=False, stdout=True):
 
 
 def get_random_pass():
-    return "".join(
-        random.choice(string.ascii_uppercase + string.digits) for _ in range(30)
-    )
+    return "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
 
 
 def juju(*args, **kwargs):
@@ -64,31 +94,94 @@ def juju(*args, **kwargs):
         return run("microk8s-juju.wrapper", *args, **kwargs)
 
 
-def get_hostname():
-    """Gets the hostname that Ambassador will respond to."""
+def check_connectivity():
+    """Checks connectivity to URLs from within and without the cluster.
 
-    # Check if we've manually set a hostname on the ingress
-    try:
-        output = run(
-            "microk8s-kubectl.wrapper",
-            "get",
-            "--namespace=kubeflow",
-            "ingress/ambassador",
-            "-ojson",
-            stdout=False,
-            die=False,
+    For each URL in `CONNECTIVITY_CHECKS`, checks that the URL is reachable from
+    the host, then spins up a pod and checks from within MicroK8s.
+    """
+
+    for url in CONNECTIVITY_CHECKS:
+        host = urlparse(url).netloc
+        try:
+            response = urlopen(url)
+        except URLError:
+            print("Couldn't contact %s" % host)
+            print("Please check your network connectivity before enabling Kubeflow.")
+            sys.exit(1)
+
+        if response.status != 200:
+            print("URL connectivity check failed with response %s" % response.status)
+            print("Please check your network connectivity before enabling Kubeflow.")
+            sys.exit(1)
+
+        try:
+            run(
+                'microk8s-kubectl.wrapper',
+                'run',
+                '--rm',
+                '-i',
+                '--restart=Never',
+                '--image=curlimages/curl',
+                'connectivity-check',
+                '--',
+                url,
+                die=False,
+                stdout=False,
+            )
+        except subprocess.CalledProcessError:
+            print("\nCouldn't contact %s from within the Kubernetes cluster" % host)
+            print("Please check your network connectivity before enabling Kubeflow.\n")
+            print("See here for troubleshooting help:\n")
+            print("    https://microk8s.io/docs/troubleshooting#heading--common-issues")
+            sys.exit(1)
+
+
+def parse_hostname(hostname: str) -> ParseResult:
+    if '//' in hostname:
+        parsed = urlparse(hostname)
+    else:
+        parsed = urlparse('//' + hostname)
+
+    if not parsed.scheme:
+        parsed = parsed._replace(scheme='http')
+
+    if not parsed.hostname:
+        print("Manual hostname `%s` leaves hostname unspecified" % hostname)
+        sys.exit(1)
+
+    if not parsed.port:
+        parsed = parsed._replace(netloc=parsed.hostname or '' + (parsed.port or ''))
+
+    if parsed.path not in ('', '/'):
+        print("WARNING: The path `%s` was set on the hostname, but was ignored." % parsed.path)
+
+    if parsed.params:
+        print(
+            "WARNING: The params `%s` were set on the hostname, but were ignored." % parsed.params
         )
-        return json.loads(output)["spec"]["rules"][0]["host"]
-    except (KeyError, subprocess.CalledProcessError):
-        pass
 
-    # Otherwise, see if we've set up metallb with a custom service
+    if parsed.query:
+        print("WARNING: The query `%s` was set on the hostname, but was ignored." % parsed.query)
+
+    if parsed.params:
+        print(
+            "WARNING: The fragment `%s` was set on the hostname, but was ignored." % parsed.fragment
+        )
+
+    return parsed._replace(path='', params='', query='', fragment='')
+
+
+def get_hostname():
+    """Gets the hostname that Kubeflow will respond to."""
+
+    # See if we've set up metallb with a custom service
     try:
         output = run(
             "microk8s-kubectl.wrapper",
             "get",
             "--namespace=kubeflow",
-            "svc/ambassador",
+            "svc/istio-ingressgateway",
             "-ojson",
             stdout=False,
             die=False,
@@ -96,32 +189,111 @@ def get_hostname():
         pub_ip = json.loads(output)["status"]["loadBalancer"]["ingress"][0]["ip"]
         return "%s.xip.io" % pub_ip
     except (KeyError, subprocess.CalledProcessError):
+        print("WARNING: Unable to determine hostname, defaulting to localhost")
+        return "localhost"
+
+
+@click.command()
+@click.option(
+    '--bundle',
+    default='cs:kubeflow-245',
+    help='The Kubeflow bundle to deploy. Can be one of full, lite, edge, or a charm store URL.',
+)
+@click.option(
+    '--channel',
+    default='stable',
+    type=click.Choice(['stable', 'candidate', 'beta', 'edge']),
+    help='Which channel to deploy the bundle from. In most cases, this should be `stable`.',
+)
+@click.option(
+    '--debug/--no-debug',
+    default=False,
+    help='If true, shows more verbose output when enabling Kubeflow.',
+)
+@click.option(
+    '--hostname',
+    help='If set, this hostname is used instead of a hostname generated by MetalLB.',
+)
+@click.option(
+    '--ignore-min-mem/--no-ignore-min-mem',
+    default=False,
+    help='If set, overrides the minimum memory check.',
+)
+@click.option(
+    '--no-proxy',
+    help='Allows setting the juju-no-proxy configuration option.',
+)
+@click.password_option(
+    envvar='KUBEFLOW_AUTH_PASSWORD',
+    default=get_random_pass,
+    prompt=False,
+    help='The Kubeflow dashboard password.',
+)
+def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, password):
+    if os.geteuid() == 0:
+        print("This command can't be run as root.")
+        print("Try `microk8s enable kubeflow` instead.")
+        sys.exit(1)
+
+    juju_path = Path(os.environ['SNAP_DATA']) / 'juju'
+    if juju_path.stat().st_gid == 0:
+        print("Found bad permissions on %s, fixing..." % juju_path)
+        try:
+            run('sudo', 'chgrp', '-R', 'microk8s', str(juju_path), die=False)
+            run('sudo', 'chmod', '-R', '775', str(juju_path), die=False)
+        except subprocess.CalledProcessError as err:
+            print("Encountered error while attempting to fix permissions:")
+            print(err)
+            print("You can attempt to fix this yourself with:\n")
+            print("sudo chgrp -R microk8s %s" % juju_path)
+            print("sudo chmod -R 775 %s\n" % juju_path)
+            sys.exit(1)
+
+    with open("/proc/meminfo") as f:
+        memtotal_lines = [line for line in f.readlines() if "MemTotal" in line]
+
+    try:
+        total_mem = int(memtotal_lines[0].split(" ")[-2])
+    except IndexError:
+        print("Couldn't determine total memory.")
+        print("Kubeflow recommends at least %s GB of memory." % MIN_MEM_GB)
+
+    if total_mem < MIN_MEM_GB * 1024 * 1024 and not ignore_min_mem:
+        print("Kubeflow recommends at least %s GB of memory." % MIN_MEM_GB)
+        print("Use `--ignore-min-mem` if you'd like to proceed anyways.")
+        sys.exit(1)
+
+    try:
+        juju("show-controller", "uk8s", die=False, stdout=False)
+    except subprocess.CalledProcessError:
         pass
+    else:
+        print("Kubeflow has already been enabled.")
+        sys.exit(1)
 
-    # If all else fails, just use localhost
-    return "localhost"
+    # Allow specifying the bundle as one of the main types of kubeflow bundles
+    # that we create in the charm store, namely full, lite, or edge. The user
+    # should not have to specify a version for those bundles. However, allow the
+    # user to specify a full charm store URL if they'd like, such as
+    # `cs:kubeflow-lite-123`.
+    if bundle == 'full':
+        bundle = 'cs:kubeflow-245'
+    elif bundle == 'lite':
+        bundle = 'cs:kubeflow-lite-32'
+    elif bundle == 'edge':
+        bundle = 'cs:kubeflow-edge-29'
+    else:
+        bundle = bundle
 
-
-def main():
-    password = os.environ.get("KUBEFLOW_AUTH_PASSWORD") or get_random_pass()
-    bundle = os.environ.get("KUBEFLOW_BUNDLE") or "cs:kubeflow-195"
-    channel = os.environ.get("KUBEFLOW_CHANNEL") or "stable"
-    no_proxy = os.environ.get("KUBEFLOW_NO_PROXY") or None
-    hostname = os.environ.get("KUBEFLOW_HOSTNAME") or None
-    debug = strtobool(os.environ.get("KUBEFLOW_DEBUG") or "false")
-
-    password_overlay = {
-        "applications": {
-            "dex-auth": {
-                "options": {"static-username": "admin", "static-password": password}
-            },
-            "katib-db": {"options": {"root_password": get_random_pass()}},
-            "modeldb-db": {"options": {"root_password": get_random_pass()}},
-            "oidc-gatekeeper": {"options": {"client-secret": get_random_pass()}},
-            "pipelines-api": {"options": {"minio-secret-key": "minio123"}},
-            "pipelines-db": {"options": {"root_password": get_random_pass()}},
-        }
-    }
+    run("microk8s-status.wrapper", "--wait-ready", debug=debug)
+    run(
+        'microk8s-kubectl.wrapper',
+        '-nkube-system',
+        'rollout',
+        'status',
+        'deployment.apps/calico-kube-controllers',
+        debug=debug,
+    )
 
     for service in [
         "dns",
@@ -134,6 +306,14 @@ def main():
         run("microk8s-enable.wrapper", service, debug=debug)
 
     run("microk8s-status.wrapper", "--wait-ready", debug=debug)
+    run(
+        'microk8s-kubectl.wrapper',
+        '-nkube-system',
+        'rollout',
+        'status',
+        'ds/calico-node',
+        debug=debug,
+    )
 
     print("Waiting for DNS and storage plugins to finish setting up")
     run(
@@ -147,15 +327,11 @@ def main():
         debug=debug,
     )
 
-    try:
-        juju("show-controller", "uk8s", die=False, stdout=False)
-    except subprocess.CalledProcessError:
-        pass
-    else:
-        print("Kubeflow has already been enabled.")
-        sys.exit(1)
+    print("DNS and storage setup complete. Checking connectivity...")
 
-    print("Deploying Kubeflow...")
+    check_connectivity()
+
+    print("Bootstrapping...")
     if no_proxy is not None:
         juju("bootstrap", "microk8s", "uk8s", "--config=juju-no-proxy=%s" % no_proxy)
         juju("add-model", "kubeflow", "microk8s")
@@ -163,20 +339,16 @@ def main():
     else:
         juju("bootstrap", "microk8s", "uk8s")
         juju("add-model", "kubeflow", "microk8s")
+    print("Bootstrap complete.")
 
-    with tempfile.NamedTemporaryFile("w+") as f:
-        json.dump(password_overlay, f)
-        f.flush()
-
-        juju("deploy", bundle, "--channel", channel, "--overlay", f.name)
+    print("Successfully bootstrapped, deploying...")
+    juju("deploy", bundle, "--channel", channel)
 
     print("Kubeflow deployed.")
     print("Waiting for operator pods to become ready.")
     wait_seconds = 15
     for i in count():
-        status = json.loads(
-            juju("status", "-m", "uk8s:kubeflow", "--format=json", stdout=False)
-        )
+        status = json.loads(juju("status", "-m", "uk8s:kubeflow", "--format=json", stdout=False))
         unready_apps = [
             name
             for name, app in status["applications"].items()
@@ -193,72 +365,83 @@ def main():
 
     print("Operator pods ready.")
     print("Waiting for service pods to become ready.")
-    run(
+
+    if kubectl_exists('service/pipelines-api'):
+        with tempfile.NamedTemporaryFile(mode='w+') as f:
+            json.dump(
+                {
+                    'apiVersion': 'v1',
+                    'kind': 'Service',
+                    'metadata': {'labels': {'juju-app': 'pipelines-api'}, 'name': 'ml-pipeline'},
+                    'spec': {
+                        'ports': [
+                            {'name': 'grpc', 'port': 8887, 'protocol': 'TCP', 'targetPort': 8887},
+                            {'name': 'http', 'port': 8888, 'protocol': 'TCP', 'targetPort': 8888},
+                        ],
+                        'selector': {'juju-app': 'pipelines-api'},
+                        'type': 'ClusterIP',
+                    },
+                },
+                f,
+            )
+            f.flush()
+            run('microk8s-kubectl.wrapper', 'apply', '-f', f.name)
+
+    hostname = parse_hostname(hostname or get_hostname())
+
+    if kubectl_exists('service/dex-auth'):
+        juju("config", "dex-auth", "public-url=%s" % hostname.geturl())
+        juju('config', 'dex-auth', 'static-password=%s' % password)
+
+    if kubectl_exists('service/oidc-gatekeeper'):
+        juju("config", "oidc-gatekeeper", "public-url=%s" % hostname.geturl())
+
+    retry_run(
         "microk8s-kubectl.wrapper",
         "wait",
         "--namespace=kubeflow",
         "--for=condition=Ready",
         "pod",
-        "--timeout=-1s",
+        "--timeout=30s",
         "--all",
         debug=debug,
+        times=100,
     )
 
-    with tempfile.NamedTemporaryFile(mode='w+') as f:
-        json.dump(
-            {
-                'apiVersion': 'v1',
-                'kind': 'Service',
-                'metadata': {'labels': {'juju-app': 'pipelines-api'}, 'name': 'ml-pipeline',},
-                'spec': {
-                    'ports': [
-                        {'name': 'grpc', 'port': 8887, 'protocol': 'TCP', 'targetPort': 8887},
-                        {'name': 'http', 'port': 8888, 'protocol': 'TCP', 'targetPort': 8888},
-                    ],
-                    'selector': {'juju-app': 'pipelines-api'},
-                    'type': 'ClusterIP',
-                },
-            },
-            f,
+    print("Congratulations, Kubeflow is now available.")
+
+    if kubectl_exists('service/istio-ingressgateway'):
+        print(
+            textwrap.dedent(
+                """
+        The dashboard is available at %s
+
+            Username: admin
+            Password: %s
+
+        To see these values again, run:
+
+            microk8s juju config dex-auth static-username
+            microk8s juju config dex-auth static-password
+
+        """
+                % (hostname.geturl(), password)
+            )
         )
-        f.flush()
-        run('microk8s-kubectl.wrapper', 'apply', '-f', f.name)
-
-    run(
-        'microk8s-kubectl.wrapper',
-        'delete',
-        'mutatingwebhookconfigurations/katib-mutating-webhook-config',
-        'validatingwebhookconfigurations/katib-validating-webhook-config',
-    )
-
-    hostname = hostname or get_hostname()
-    juju("config", "dex-auth", "public-url=http://%s:80" % hostname)
-    juju("config", "oidc-gatekeeper", "public-url=http://%s:80" % hostname)
-    juju("config", "ambassador", "juju-external-hostname=%s" % hostname)
-    juju("expose", "ambassador")
+    else:
+        print("\nYou have deployed the edge bundle.")
+        print("For more information on how to use Kubeflow, see https://www.kubeflow.org/docs/")
 
     print(
         textwrap.dedent(
             """
-    Congratulations, Kubeflow is now available.
-    The dashboard is available at http://%s/
+        To tear down Kubeflow and associated infrastructure, run:
 
-        Username: admin
-        Password: %s
-
-    To see these values again, run:
-
-        microk8s juju config dex-auth static-username
-        microk8s juju config dex-auth static-password
-
-    To tear down Kubeflow and associated infrastructure, run:
-
-       microk8s disable kubeflow
+            microk8s disable kubeflow
     """
-            % (hostname, password)
         )
     )
 
 
 if __name__ == "__main__":
-    main()
+    kubeflow(prog_name='microk8s enable kubeflow', auto_envvar_prefix='KUBEFLOW')
