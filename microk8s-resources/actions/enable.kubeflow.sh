@@ -122,18 +122,18 @@ def check_connectivity():
                 '--rm',
                 '-i',
                 '--restart=Never',
-                '--image=ubuntu',
+                '--image=curlimages/curl',
                 'connectivity-check',
                 '--',
-                'bash',
-                '-c',
-                'apt update && apt install -y curl && curl %s' % url,
+                url,
                 die=False,
                 stdout=False,
             )
         except subprocess.CalledProcessError:
-            print("Couldn't contact %s from within the Kubernetes cluster" % host)
-            print("Please check your network connectivity before enabling Kubeflow.")
+            print("\nCouldn't contact %s from within the Kubernetes cluster" % host)
+            print("Please check your network connectivity before enabling Kubeflow.\n")
+            print("See here for troubleshooting help:\n")
+            print("    https://microk8s.io/docs/troubleshooting#heading--common-issues")
             sys.exit(1)
 
 
@@ -226,6 +226,7 @@ def get_hostname():
 @click.password_option(
     envvar='KUBEFLOW_AUTH_PASSWORD',
     default=get_random_pass,
+    prompt=False,
     help='The Kubeflow dashboard password.',
 )
 def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, password):
