@@ -1,8 +1,5 @@
 name: microk8s
-version-script: |
-  . build-scripts/set-env-variables.sh > /dev/null
-  echo $KUBE_VERSION
-version: "latest"
+adopt-info: microk8s
 summary: Kubernetes for workstations and appliances
 description: |-
  MicroK8s is a small, fast, secure, single node Kubernetes that installs on
@@ -437,6 +434,8 @@ parts:
       set -eux
 
       . build-scripts/set-env-variables.sh
+
+      snapcraftctl set-version "${KUBE_VERSION}"
 
       echo "Setting default daemon configs"
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/default-args .
