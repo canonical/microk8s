@@ -2,8 +2,6 @@
 
 set -eux
 
-date
-
 source $SNAP/actions/common/utils.sh
 
 need_api_restart=false
@@ -476,12 +474,12 @@ then
   else
     snapctl start ${SNAP_NAME}.daemon-kubelite
   fi
-  date
   snapctl stop ${SNAP_NAME}.daemon-apiserver
   snapctl stop ${SNAP_NAME}.daemon-proxy
   snapctl stop ${SNAP_NAME}.daemon-kubelet
   snapctl stop ${SNAP_NAME}.daemon-controller-manager
   snapctl stop ${SNAP_NAME}.daemon-scheduler
+  snapctl stop ${SNAP_NAME}.daemon-control-plane-kicker
 fi
 
 if ! [ -e ${SNAP_DATA}/args/kubelite ]
