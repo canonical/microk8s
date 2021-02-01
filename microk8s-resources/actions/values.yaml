@@ -1,0 +1,344 @@
+# Default values for Falco.
+
+image:
+  registry: docker.io
+  repository: falcosecurity/falco
+  tag: 0.27.0
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+docker:
+  enabled: true
+  socket: /var/run/docker.sock
+
+containerd:
+  enabled: true
+  socket: /run/containerd/containerd.sock
+
+resources:
+  # Although resources needed are subjective on the actual workload we provide
+  # a sane defaults ones. If you have more questions or concerns, please refer
+  # to #falco slack channel for more info about it
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 200m
+    memory: 1024Mi
+
+extraArgs: []
+nodeSelector: {}
+affinity: {}
+
+rbac:
+  # Create and use rbac resources
+  create: true
+
+podSecurityPolicy:
+  # Create a podSecurityPolicy
+  create: false
+
+serviceAccount:
+  # Create and use serviceAccount resources
+  create: true
+  # Use this value as serviceAccountName
+  name:
+
+fakeEventGenerator:
+  enabled: false
+  args:
+    - run
+    - --loop
+    - ^syscall
+  replicas: 1
+
+daemonset:
+  # Perform rolling updates by default in the DaemonSet agent
+  # ref: https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set/
+  updateStrategy:
+    # You can also customize maxUnavailable, maxSurge or minReadySeconds if you
+    # need it
+    type: RollingUpdate
+
+  ## Extra environment variables that will be pass onto deployment pods
+  env: {}
+
+  ## Add aditional pod annotations on pods created by DaemonSet
+  podAnnotations: {}
+
+# If is behind a proxy you can set the proxy server
+proxy:
+  httpProxy:
+  httpsProxy:
+  noProxy:
+
+# Set daemonset timezone
+timezone:
+
+# Set daemonset priorityClassName
+priorityClassName:
+
+ebpf:
+  # Enable eBPF support for Falco
+  enabled: false
+
+  settings:
+    # Needed to enable eBPF JIT at runtime for performance reasons.
+    # Can be skipped if eBPF JIT is enabled from outside the container
+    hostNetwork: true
+
+auditLog:
+  # true here activates the K8s Audit Log feature for Falco
+  enabled: false
+
+  dynamicBackend:
+    # true here configures an AuditSink who will receive the K8s audit logs
+    enabled: false
+    # define if auditsink client config should point to a fixed url, not the
+    # default webserver service
+    url: ""
+
+falco:
+  # The location of the rules file(s). This can contain one or more paths to
+  # separate rules files.
+  rulesFile:
+    - /etc/falco/falco_rules.yaml
+    - /etc/falco/falco_rules.local.yaml
+    - /etc/falco/k8s_audit_rules.yaml
+    - /etc/falco/rules.d
+  # - /etc/falco/rules.optional.d
+
+  # If true, the times displayed in log messages and output messages
+  # will be in ISO 8601. By default, times are displayed in the local
+  # time zone, as governed by /etc/localtime.
+  timeFormatISO8601: false
+
+  # Whether to output events in json or text
+  jsonOutput: false
+
+  # When using json output, whether or not to include the "output" property
+  # itself (e.g. "File below a known binary directory opened for writing
+  # (user=root ....") in the json output.
+  jsonIncludeOutputProperty: true
+
+  # Send information logs to stderr and/or syslog Note these are *not* security
+  # notification logs! These are just Falco lifecycle (and possibly error) logs.
+  logStderr: true
+  logSyslog: true
+
+  # Minimum log level to include in logs. Note: these levels are
+  # separate from the priority field of rules. This refers only to the
+  # log level of Falco's internal logging. Can be one of "emergency",
+  # "alert", "critical", "error", "warning", "notice", "info", "debug".
+  logLevel: info
+
+  # Minimum rule priority level to load and run. All rules having a
+  # priority more severe than this level will be loaded/run.  Can be one
+  # of "emergency", "alert", "critical", "error", "warning", "notice",
+  # "info", "debug".
+  priority: debug
+
+  # Whether or not output to any of the output channels below is
+  # buffered.
+  bufferedOutputs: false
+
+  # Falco uses a shared buffer between the kernel and userspace to pass
+  # system call information. When Falco detects that this buffer is
+  # full and system calls have been dropped, it can take one or more of
+  # the following actions:
+  #   - "ignore": do nothing. If an empty list is provided, ignore is assumed.
+  #   - "log": log a CRITICAL message noting that the buffer was full.
+  #   - "alert": emit a Falco alert noting that the buffer was full.
+  #   - "exit": exit Falco with a non-zero rc.
+  #
+  # The rate at which log/alert messages are emitted is governed by a
+  # token bucket. The rate corresponds to one message every 30 seconds
+  # with a burst of 10 messages.
+  syscallEventDrops:
+    actions:
+      - log
+      - alert
+    rate: .03333
+    maxBurst: 10
+
+  # Falco continuously monitors outputs performance. When an output channel does not allow
+  # to deliver an alert within a given deadline, an error is reported indicating
+  # which output is blocking notifications.
+  # The timeout error will be reported to the log according to the above log_* settings.
+  # Note that the notification will not be discarded from the output queue; thus,
+  # output channels may indefinitely remain blocked.
+  # An output timeout error indeed indicate a misconfiguration issue or I/O problems
+  # that cannot be recovered by Falco and should be fixed by the user.
+  #
+  # The "output_timeout" value specifies the duration in milliseconds to wait before
+  # considering the deadline exceed.
+  #
+  # With a 2000ms default, the notification consumer can block the Falco output
+  # for up to 2 seconds without reaching the timeout.
+
+  output_timeout: 2000
+
+  # A throttling mechanism implemented as a token bucket limits the
+  # rate of Falco notifications. This throttling is controlled by the following configuration
+  # options:
+  #  - rate: the number of tokens (i.e. right to send a notification)
+  #    gained per second. Defaults to 1.
+  #  - max_burst: the maximum number of tokens outstanding. Defaults to 1000.
+  #
+  # With these defaults, Falco could send up to 1000 notifications after
+  # an initial quiet period, and then up to 1 notification per second
+  # afterward. It would gain the full burst back after 1000 seconds of
+  # no activity.
+  outputs:
+    rate: 1
+    maxBurst: 1000
+
+  # Where security notifications should go.
+  # Multiple outputs can be enabled.
+  syslogOutput:
+    enabled: true
+
+  # If keep_alive is set to true, the file will be opened once and
+  # continuously written to, with each output message on its own
+  # line. If keep_alive is set to false, the file will be re-opened
+  # for each output message.
+  #
+  # Also, the file will be closed and reopened if Falco is signaled with
+  # SIGUSR1.
+  fileOutput:
+    enabled: false
+    keepAlive: false
+    filename: ./events.txt
+
+  stdoutOutput:
+    enabled: true
+
+  # Falco contains an embedded webserver that can be used to accept K8s
+  # Audit Events. These config options control the behavior of that
+  # webserver. (By default, the webserver is enabled).
+  webserver:
+    enabled: true
+    listenPort: 8765
+    nodePort: false
+    k8sAuditEndpoint: /k8s-audit
+    sslEnabled: false
+    sslCertificate: /etc/falco/certs/server.pem
+
+  # Possible additional things you might want to do with program output:
+  #   - send to a slack webhook:
+  #     program: "\"jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX\""
+  #   - logging (alternate method than syslog):
+  #     program: logger -t falco-test
+  #   - send over a network connection:
+  #     program: nc host.example.com 80
+
+  # If keep_alive is set to true, the program will be started once and
+  # continuously written to, with each output message on its own
+  # line. If keep_alive is set to false, the program will be re-spawned
+  # for each output message.
+  #
+  # Also, the program will be closed and reopened if Falco is signaled with
+  # SIGUSR1.
+  programOutput:
+    enabled: false
+    keepAlive: false
+    program: mail -s "Falco Notification" someone@example.com
+    # program: |
+    #   jq 'if .priority == "Emergency" or .priority == "Critical" or .priority == "Error" then
+    #     { attachments: [{ text: .output, color: "danger" }]}
+    #   elif .priority == "Warning" or .priority == "Notice" then
+    #     { attachments: [{ text: .output, color: "warning" }]}
+    #   elif .priority == "Informational" then
+    #     { attachments: [{ text: .output, color: "good" }]}
+    #   else
+    #     { attachments: [{ text: .output }]}
+    #   end' | curl -d @- -X POST https://hooks.slack.com/services/xxxxxxxxx/xxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxx
+
+  httpOutput:
+    enabled: false
+    url: http://some.url
+
+  # Falco supports running a gRPC server with two main binding types
+  # 1. Over the network with mandatory mutual TLS authentication (mTLS)
+  # 2. Over a local unix socket with no authentication
+  # By default, the gRPC server is disabled, with no enabled services (see grpc_output)
+  # please comment/uncomment and change accordingly the options below to configure it.
+  # Important note: if Falco has any troubles creating the gRPC server
+  # this information will be logged, however the main Falco daemon will not be stopped.
+  # gRPC server over network with (mandatory) mutual TLS configuration.
+  # This gRPC server is secure by default so you need to generate certificates and update their paths here.
+  # By default the gRPC server is off.
+  # You can configure the address to bind and expose it.
+  # By modifying the threadiness configuration you can fine-tune the number of threads (and context) it will use.
+  grpc:
+    enabled: false
+    threadiness: 0
+
+    # gRPC unix socket with no authentication
+    unixSocketPath: "unix:///var/run/falco/falco.sock"
+
+    # gRPC over the network (mTLS) / required when unixSocketPath is empty
+    listenPort: 5060
+    privateKey: "/etc/falco/certs/server.key"
+    certChain: "/etc/falco/certs/server.crt"
+    rootCerts: "/etc/falco/certs/ca.crt"
+
+  # gRPC output service.
+  # By default it is off.
+  # By enabling this all the output events will be kept in memory until you read them with a gRPC client.
+  # Make sure to have a consumer for them or leave this disabled.
+  grpcOutput:
+    enabled: false
+
+customRules:
+  {}
+  # Although Falco comes with a nice default rule set for detecting weird
+  # behavior in containers, our users are going to customize the run-time
+  # security rule sets or policies for the specific container images and
+  # applications they run. This feature can be handled in this section.
+  #
+  # Example:
+  #
+  # rules-traefik.yaml: |-
+  #   [ rule body ]
+
+# certificates used by webserver and grpc server
+# paste certificate content or use helm with --set-file
+certs:
+  server:
+    key: ""
+    crt: ""
+  ca:
+    crt: ""
+
+# Allow Falco to run on Kubernetes 1.6 masters.
+tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+
+scc:
+  # true here enabled creation of Security Context Constraints in Openshift
+  create: true
+
+# Add initContainers to Falco pod
+extraInitContainers: []
+
+# Add extra volumes to Falco daemonset
+extraVolumes: []
+# - name: optional-rules-volume
+#   configMap:
+#     name: falco-rules-optional
+#     optional: true
+#     items:
+#       - key: falco_rules.optional.yaml
+#         path: falco_rules.optional.yaml
+
+# Add extra volumeMounts to Falco container in Falco daemonset
+extraVolumeMounts: []
+# - mountPath: /etc/falco/rules.optional.d
+#   name: optional-rules-volume
+
+falcosidekick:
+  # enable falcosidekick deployment
+  enabled: false
+  # for configuration values, see https://github.com/falcosecurity/charts/blob/master/falcosidekick/values.yaml

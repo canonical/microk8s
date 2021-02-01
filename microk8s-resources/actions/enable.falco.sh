@@ -50,10 +50,15 @@ done
 
 echo "Auditlogging  is enabled"
 
+NAMESPACE_PTR1="falco"
+# make sure the "falco" namespace exists
+$KUBECTL create namespace "$NAMESPACE_PTR1" > /dev/null 2>&1 || true
+
 microk8s helm3 repo add falcosecurity https://falcosecurity.github.io/charts
 microk8s helm3 repo update 
-microk8s helm3 install falco --set falco.jsonOutput=true --set falco.jsonIncludeOutputProperty=true --set falco.httpOutput.enabled=true --set falco.httpOutput.url="http://falcosidekick:2801/" falcosecurity/falco 
+#microk8s helm3 install -n "$NAMESPACE_PTR1" falco --set falco.jsonOutput=true --set falco.jsonIncludeOutputProperty=true --set falco.httpOutput.enabled=true --set falco.httpOutput.url="http://falcosidekick:2801/" falcosecurity/falco
+microk8s helm3 install falco falcosecurity/falco -n "$NAMESPACE_PTR1" --set falco.jsonOutput=true --set falco.jsonIncludeOutputProperty=true --set falco.httpOut.enabled=true --set falcosidekick.enabled=true --set falcosidekick.config.debug=true  $@
 sleep 15
 echo "Falco is enabled"
-microk8s helm3 install falcosidekick --set config.debug=true falcosecurity/falcosidekick
+#microk8s helm3 install -n "$NAMESPACE_PTR1" falcosidekick --set config.debug=true $@   falcosecurity/falcosidekick 
 echo "Falcosidekick is enabled"

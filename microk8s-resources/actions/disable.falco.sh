@@ -3,10 +3,10 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
+NAMESPACE_PTR1="falco"
+#microk8s helm3  uninstall -n "$NAMESPACE_PTR1" falcosidekick
 
-microk8s helm3  uninstall falcosidekick
-
-microk8s helm3  uninstall falco
+microk8s helm3  uninstall -n "$NAMESPACE_PTR1" falco
 
 NAMESPACE_PTR="sysdig-agent"
 
@@ -25,6 +25,9 @@ $KUBECTL delete $KUBECTL_DELETE_ARGS -n $NAMESPACE_PTR -f "$MANIFEST_PTR" > /dev
 $KUBECTL delete $KUBECTL_DELETE_ARGS namespace "$NAMESPACE_PTR" > /dev/null 2>&1 || true
 
 echo "sysdigagent is disabled"
+
+# delete the "falco" namespace
+$KUBECTL delete $KUBECTL_DELETE_ARGS namespace "$NAMESPACE_PTR1" > /dev/null 2>&1 || true
 
 
 skip_opt_in_config "audit-log-maxbackup"  kube-apiserver
