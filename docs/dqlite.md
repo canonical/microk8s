@@ -28,7 +28,7 @@ git stash                                                    # put the patch on 
 git reset 52c56ce7a8272c798dbc29846288d7cd9fbae032 --hard    # Go to the 1.18.2 release commit
 git stash apply
 git commit -m "Apply the dqlite patch"
-    ```
+```
 
 You can now proceed with the patch creation with `git format-patch`.
 
