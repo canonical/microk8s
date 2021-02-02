@@ -10,17 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get install python3-setuptools
-        sudo pip3 install black codespell flake8
+      - name: Install dependencies
+        run: |
+          sudo apt-get install python3-setuptools
+          sudo pip3 install black codespell flake8 yamlfmt
+          sudo snap install node --classic
+          sudo npm install -g eclint
 
-    - name: Check formatting
-      run: |
-        set -eux
-        black --check . microk8s-resources/actions/enable.kubeflow.sh
-        codespell --ignore-words-list="aks" --quiet-level=2 --skip="*.patch,*.spec"
-        flake8 . microk8s-resources/actions/enable.kubeflow.sh
+      - name: Check Python formatting
+        run: |
+          set -eux
+          black --check . microk8s-resources/actions/enable.kubeflow.sh
+          codespell --ignore-words-list="aks" --quiet-level=2 --skip="*.patch,*.spec"
+          flake8 . microk8s-resources/actions/enable.kubeflow.sh
+
+      - name: Check YAML formatting
+        run: |
+          set -eux
+          eclint check $(find . -name "*.yaml" -o -name "*.yml")
