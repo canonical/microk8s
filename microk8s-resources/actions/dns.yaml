@@ -54,6 +54,7 @@ data:
   upstreamNameservers: |-
     ["8.8.8.8", "8.8.4.4"]
 
+
 # Why set upstream ns: https://github.com/kubernetes/minikube/issues/2027
 ---
 apiVersion: apps/v1

@@ -4,9 +4,9 @@ metadata:
   name: prometheus-k8s-config
   namespace: monitoring
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get

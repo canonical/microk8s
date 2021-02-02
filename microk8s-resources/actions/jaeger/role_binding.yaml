@@ -4,9 +4,9 @@ metadata:
   name: jaeger-operator
   namespace: default
 subjects:
-- kind: ServiceAccount
-  name: jaeger-operator
-  namespace: default
+  - kind: ServiceAccount
+    name: jaeger-operator
+    namespace: default
 roleRef:
   kind: ClusterRole
   name: jaeger-operator

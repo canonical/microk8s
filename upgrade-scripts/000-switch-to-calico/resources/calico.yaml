@@ -250,6 +250,7 @@ spec:
     singular: networkset
 
 ---
+
 ---
 # Source: calico/templates/rbac.yaml
 
@@ -309,9 +310,9 @@ roleRef:
   kind: ClusterRole
   name: calico-kube-controllers
 subjects:
-- kind: ServiceAccount
-  name: calico-kube-controllers
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: calico-kube-controllers
+    namespace: kube-system
 ---
 # Include a clusterrole for the calico-node DaemonSet,
 # and bind it to the calico-node serviceaccount.
@@ -462,9 +463,9 @@ roleRef:
   kind: ClusterRole
   name: calico-node
 subjects:
-- kind: ServiceAccount
-  name: calico-node
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: calico-node
+    namespace: kube-system
 
 ---
 # Source: calico/templates/calico-node.yaml
@@ -495,7 +496,7 @@ spec:
         # marks the pod as a critical add-on, ensuring it gets
         # priority scheduling and that its resources are reserved
         # if it ever gets evicted.
-        scheduler.alpha.kubernetes.io/critical-pod: ''
+        scheduler.alpha.kubernetes.io/critical-pod: ""
     spec:
       nodeSelector:
         kubernetes.io/os: linux
@@ -583,8 +584,8 @@ spec:
         - name: flexvol-driver
           image: calico/pod2daemon-flexvol:v3.13.2
           volumeMounts:
-          - name: flexvol-driver-host
-            mountPath: /host/driver
+            - name: flexvol-driver-host
+              mountPath: /host/driver
           securityContext:
             privileged: true
       containers:
@@ -656,8 +657,8 @@ spec:
           livenessProbe:
             exec:
               command:
-              - /bin/calico-node
-              - -felix-live
+                - /bin/calico-node
+                - -felix-live
               # - -bird-live
             periodSeconds: 10
             initialDelaySeconds: 10
@@ -665,8 +666,8 @@ spec:
           readinessProbe:
             exec:
               command:
-              - /bin/calico-node
-              - -felix-ready
+                - /bin/calico-node
+                - -felix-ready
               # - -bird-ready
             periodSeconds: 10
           volumeMounts:
@@ -723,7 +724,6 @@ spec:
             type: DirectoryOrCreate
             path: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/nodeagent~uds
 ---
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -756,7 +756,7 @@ spec:
       labels:
         k8s-app: calico-kube-controllers
       annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
+        scheduler.alpha.kubernetes.io/critical-pod: ""
     spec:
       nodeSelector:
         kubernetes.io/os: linux
@@ -780,11 +780,10 @@ spec:
           readinessProbe:
             exec:
               command:
-              - /usr/bin/check-status
-              - -r
+                - /usr/bin/check-status
+                - -r
 
 ---
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -792,11 +791,7 @@ metadata:
   namespace: kube-system
 ---
 # Source: calico/templates/calico-etcd-secrets.yaml
-
 ---
 # Source: calico/templates/calico-typha.yaml
-
 ---
 # Source: calico/templates/configure-canal.yaml
-
-

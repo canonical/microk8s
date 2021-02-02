@@ -7,8 +7,8 @@ metadata:
   namespace: monitoring
 spec:
   endpoints:
-  - interval: 30s
-    port: web
+    - interval: 30s
+      port: web
   selector:
     matchLabels:
       prometheus: k8s
