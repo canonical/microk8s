@@ -7,6 +7,6 @@ roleRef:
   kind: ClusterRole
   name: prometheus-adapter
 subjects:
-- kind: ServiceAccount
-  name: prometheus-adapter
-  namespace: monitoring
+  - kind: ServiceAccount
+    name: prometheus-adapter
+    namespace: monitoring

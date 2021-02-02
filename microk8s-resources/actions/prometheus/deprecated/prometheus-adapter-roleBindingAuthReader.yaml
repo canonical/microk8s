@@ -8,6 +8,6 @@ roleRef:
   kind: Role
   name: extension-apiserver-authentication-reader
 subjects:
-- kind: ServiceAccount
-  name: prometheus-adapter
-  namespace: monitoring
+  - kind: ServiceAccount
+    name: prometheus-adapter
+    namespace: monitoring

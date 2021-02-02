@@ -18,7 +18,7 @@ jobs:
           sudo apt-get install python3-setuptools
           sudo pip3 install black codespell flake8 yamlfmt
           sudo snap install node --classic
-          sudo npm install -g eclint
+          sudo npm install --save-dev --save-exact -g prettier
 
       - name: Check Python formatting
         run: |
@@ -30,4 +30,4 @@ jobs:
       - name: Check YAML formatting
         run: |
           set -eux
-          eclint check $(find . -name "*.yaml" -o -name "*.yml")
+          prettier --check $(find . -name "*.yaml" -o -name "*.yml")

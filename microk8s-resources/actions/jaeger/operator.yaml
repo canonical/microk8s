@@ -18,8 +18,8 @@ spec:
         - name: jaeger-operator
           image: jaegertracing/jaeger-operator:1.14.0
           ports:
-          - containerPort: 8383
-            name: metrics
+            - containerPort: 8383
+              name: metrics
           args: ["start"]
           imagePullPolicy: Always
           env:

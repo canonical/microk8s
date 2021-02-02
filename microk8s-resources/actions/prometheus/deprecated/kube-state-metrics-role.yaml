@@ -4,27 +4,27 @@ metadata:
   name: kube-state-metrics
   namespace: monitoring
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
-- apiGroups:
-  - extensions
-  resourceNames:
-  - kube-state-metrics
-  resources:
-  - deployments
-  verbs:
-  - get
-  - update
-- apiGroups:
-  - apps
-  resourceNames:
-  - kube-state-metrics
-  resources:
-  - deployments
-  verbs:
-  - get
-  - update
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+  - apiGroups:
+      - extensions
+    resourceNames:
+      - kube-state-metrics
+    resources:
+      - deployments
+    verbs:
+      - get
+      - update
+  - apiGroups:
+      - apps
+    resourceNames:
+      - kube-state-metrics
+    resources:
+      - deployments
+    verbs:
+      - get
+      - update
