@@ -18,23 +18,23 @@ spec:
         name: nvidia-device-plugin-ds
     spec:
       tolerations:
-      # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
-      # This, along with the annotation above marks this pod as a critical add-on.
-      - key: CriticalAddonsOnly
-        operator: Exists
+        # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
+        # This, along with the annotation above marks this pod as a critical add-on.
+        - key: CriticalAddonsOnly
+          operator: Exists
       containers:
-      - env:
-        - name: DP_DISABLE_HEALTHCHECKS
-          value: xids
-        image: nvidia/k8s-device-plugin:1.11
-        name: nvidia-device-plugin-ctr
-        securityContext:
-          allowPrivilegeEscalation: true
-          capabilities:
-            drop: ["ALL"]
-        volumeMounts:
-          - name: device-plugin
-            mountPath: /var/lib/kubelet/device-plugins
+        - env:
+            - name: DP_DISABLE_HEALTHCHECKS
+              value: xids
+          image: nvidia/k8s-device-plugin:1.11
+          name: nvidia-device-plugin-ctr
+          securityContext:
+            allowPrivilegeEscalation: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: device-plugin
+              mountPath: /var/lib/kubelet/device-plugins
       volumes:
         - name: device-plugin
           hostPath:

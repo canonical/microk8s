@@ -35,22 +35,22 @@ spec:
         app: registry
     spec:
       containers:
-      - name: registry
-        image: cdkbot/registry-$ARCH:2.6
-        env:
-        - name: REGISTRY_HTTP_ADDR
-          value: :5000
-        - name: REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY
-          value: /var/lib/registry
-        - name: REGISTRY_STORAGE_DELETE_ENABLED
-          value: "yes"
-        ports:
-        - containerPort: 5000
-          name: registry
-          protocol: TCP
-        volumeMounts:
-          - mountPath: /var/lib/registry
-            name: registry-data
+        - name: registry
+          image: cdkbot/registry-$ARCH:2.6
+          env:
+            - name: REGISTRY_HTTP_ADDR
+              value: :5000
+            - name: REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY
+              value: /var/lib/registry
+            - name: REGISTRY_STORAGE_DELETE_ENABLED
+              value: "yes"
+          ports:
+            - containerPort: 5000
+              name: registry
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/registry
+              name: registry-data
       volumes:
         - name: registry-data
           persistentVolumeClaim:
@@ -68,10 +68,10 @@ spec:
   selector:
     app: registry
   ports:
-  - name: "registry"
-    port: 5000
-    targetPort: 5000
-    nodePort: 32000
+    - name: "registry"
+      port: 5000
+      targetPort: 5000
+      nodePort: 32000
 ---
 # https://github.com/kubernetes/enhancements/issues/1755
 apiVersion: v1
