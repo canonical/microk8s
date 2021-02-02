@@ -11,6 +11,7 @@ description: |-
 grade: stable
 confinement: classic
 base: core
+assumes: [snapd2.48.3]
 
 apps:
   microk8s:
