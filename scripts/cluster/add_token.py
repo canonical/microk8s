@@ -28,7 +28,7 @@ def add_token_with_expiry(token, file, ttl):
     :param ttl: How long the token should last before expiry, represented in seconds.
     """
 
-    with open(file, 'a+') as fp:
+    with open(file, "a+") as fp:
         if ttl != -1:
             expiry = int(round(time.time())) + ttl
             fp.write(token_with_expiry.format(token, expiry))
@@ -36,18 +36,18 @@ def add_token_with_expiry(token, file, ttl):
             fp.write(token_without_expiry.format(token))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # initiate the parser with a description
     parser = argparse.ArgumentParser(
-        description='Produce a connection string for a node to join the cluster.',
-        prog='microk8s add-node',
+        description="Produce a connection string for a node to join the cluster.",
+        prog="microk8s add-node",
     )
     parser.add_argument(
         "--token-ttl",
         "-l",
         help="Specify how long the token is valid, before it expires. "
-        "Value of \"-1\" indicates that the token is usable only once "
+        'Value of "-1" indicates that the token is usable only once '
         "(i.e. after joining a node, the token becomes invalid)",
         type=int,
         default="-1",

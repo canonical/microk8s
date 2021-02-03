@@ -17,8 +17,8 @@ from common.utils import (
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
-snapdata_path = os.environ.get('SNAP_DATA')
-snap_path = os.environ.get('SNAP')
+snapdata_path = os.environ.get("SNAP_DATA")
+snap_path = os.environ.get("SNAP")
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
 
@@ -48,7 +48,7 @@ def do_op(remote_op):
                     continue
                 print("Configuring node {}".format(node_ip))
                 # TODO: make port configurable
-                node_ep = "{}:{}".format(node_ip, '25000')
+                node_ep = "{}:{}".format(node_ip, "25000")
                 remote_op["callback"] = token.rstrip()
                 # TODO: handle ssl verification
                 res = requests.post(

@@ -36,7 +36,7 @@ class Auxiliary(ABC):
 
         :return: Integer free space
         """
-        return disk_usage(realpath('/')).free
+        return disk_usage(realpath("/")).free
 
     def is_enough_space(self) -> bool:
         """
@@ -118,12 +118,12 @@ class Windows(Auxiliary):
         """
         try:
             out = subprocess.check_output(
-                ['DISM', '/Online', '/Get-FeatureInfo', '/FeatureName:Microsoft-Hyper-V']
+                ["DISM", "/Online", "/Get-FeatureInfo", "/FeatureName:Microsoft-Hyper-V"]
             )
         except subprocess.CalledProcessError:
             return False
 
-        if 'State : Disabled' in out.decode():
+        if "State : Disabled" in out.decode():
             return False
 
         return True
@@ -138,12 +138,12 @@ class Windows(Auxiliary):
         try:
             subprocess.check_call(
                 [
-                    'DISM',
-                    '/Online',
-                    '/Enable-Feature',
-                    '/All',
-                    '/NoRestart',
-                    '/FeatureName:Microsoft-Hyper-V',
+                    "DISM",
+                    "/Online",
+                    "/Enable-Feature",
+                    "/All",
+                    "/NoRestart",
+                    "/FeatureName:Microsoft-Hyper-V",
                 ]
             )
         except subprocess.CalledProcessError as e:

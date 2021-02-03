@@ -155,7 +155,7 @@ class Provider(abc.ABC):
             f.write(kubeconfig)
 
     def _setup_microk8s(self, specs: Dict) -> None:
-        self.run("snap install microk8s --classic --channel {}".format(specs['channel']).split())
+        self.run("snap install microk8s --classic --channel {}".format(specs["channel"]).split())
         if sys.platform == "win32":
             self.run("snap install microk8s-integrator-windows".split())
         elif sys.platform == "darwin":
