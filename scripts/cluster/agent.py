@@ -23,6 +23,7 @@ from .common.utils import (
     get_dqlite_port,
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
+    service,
 )
 
 from flask import Flask, jsonify, request, Response
@@ -312,7 +313,7 @@ def join_node_etcd():
     api_port = get_arg('--secure-port', 'kube-apiserver')
     proxy_token = get_token('kube-proxy')
     kubelet_token = add_kubelet_token(node_addr)
-    subprocess.check_call("snapctl restart microk8s.daemon-apiserver".split())
+    service('restart', 'apiservice')
     if node_addr != hostname:
         kubelet_args = read_kubelet_args_file(node_addr)
     else:
@@ -412,25 +413,23 @@ def configure():
     '''
 
     if "service" in configuration:
-        for service in configuration["service"]:
-            print("{}".format(service["name"]))
-            if "arguments_update" in service:
+        for srv in configuration["service"]:
+            print("{}".format(srv["name"]))
+            if "arguments_update" in srv:
                 print("Updating arguments")
-                for argument in service["arguments_update"]:
+                for argument in srv["arguments_update"]:
                     for key, val in argument.items():
                         print("{} is {}".format(key, val))
-                        update_service_argument(service["name"], key, val)
-            if "arguments_remove" in service:
+                        update_service_argument(srv["name"], key, val)
+            if "arguments_remove" in srv:
                 print("Removing arguments")
-                for argument in service["arguments_remove"]:
+                for argument in srv["arguments_remove"]:
                     print("{}".format(argument))
-                    update_service_argument(service["name"], argument, None)
-            if "restart" in service and service["restart"]:
-                service_name = get_service_name(service["name"])
-                print("restarting {}".format(service["name"]))
-                subprocess.check_call(
-                    "snapctl restart microk8s.daemon-{}".format(service_name).split()
-                )
+                    update_service_argument(srv["name"], argument, None)
+            if "restart" in srv and srv["restart"]:
+                service_name = get_service_name(srv["name"])
+                print("restarting {}".format(srv["name"]))
+                service('restart', service_name)
 
     if "addon" in configuration:
         for addon in configuration["addon"]:
@@ -502,7 +501,7 @@ def update_dqlite_ip(host):
     :param : the host others see for this node
     """
     dqlite_port = get_dqlite_port()
-    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
+    service('stop', 'apiserver')
     time.sleep(10)
 
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
@@ -510,7 +509,7 @@ def update_dqlite_ip(host):
     update_data = {'Address': "{}:{}".format(host, dqlite_port)}
     with open("{}/update.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(update_data, f)
-    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
+    service('start', 'apiserver')
     time.sleep(10)
     attempts = 12
     while True:

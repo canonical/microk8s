@@ -24,29 +24,32 @@ apps:
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
+  daemon-kubelite:
+    command: run-kubelite-with-args
+    daemon: simple
   daemon-apiserver:
-    command: run-apiserver-with-args
+    command: run-null-daemon
     daemon: simple
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
   daemon-control-plane-kicker:
-    command: control-plane-kicker
+    command: run-null-daemon
     daemon: simple
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
   daemon-controller-manager:
-    command: run-with-config-args kube-controller-manager
+    command: run-null-daemon
     daemon: simple
   daemon-scheduler:
-    command: run-with-config-args kube-scheduler
+    command: run-null-daemon
     daemon: simple
   daemon-kubelet:
-    command: run-with-config-args kubelet
+    command: run-null-daemon
     daemon: simple
   daemon-proxy:
-    command: run-with-config-args kube-proxy
+    command: run-null-daemon
     daemon: simple
   dashboard-proxy:
     command: microk8s-dashboard-proxy.wrapper
@@ -248,7 +251,7 @@ parts:
       else
         echo "Binaries provided in $KUBE_SNAP_BINS"
       fi
-      mkdir bins/
+      mkdir -p bins/
       cp build/kube_bins/$KUBERNETES_TAG/$KUBE_ARCH/* bins/
 
       # Add bash completion for microk8s kubectl.
@@ -266,13 +269,9 @@ parts:
     organize:
       bins/*: .
     stage:
-      - kube-apiserver
-      - kube-controller-manager
-      - kube-proxy
-      - kube-scheduler
+      - kubelite
       - kubectl
       - kubectl.bash
-      - kubelet
       - actions
 
   libmnl:

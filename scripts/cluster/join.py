@@ -22,6 +22,7 @@ from common.utils import (
     is_node_running_dqlite,
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
+    service,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -187,8 +188,7 @@ def update_flannel(etcd, master_ip, master_port, token):
     set_arg("--etcd-cafile", ca_cert_file_via_env, "flanneld")
     set_arg("--etcd-certfile", server_cert_file_via_env, "flanneld")
     set_arg("--etcd-keyfile", "${SNAP_DATA}/certs/server.key", "flanneld")
-
-    subprocess.check_call("snapctl restart microk8s.daemon-flanneld".split())
+    service('restart', 'flanneld')
 
 
 def ca_one_line(ca):
@@ -243,8 +243,7 @@ def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
     set_arg("--master", None, "kube-proxy")
     if hostname_override:
         set_arg("--hostname-override", hostname_override, "kube-proxy")
-
-    subprocess.check_call("snapctl restart microk8s.daemon-proxy".split())
+    service('restart', 'proxy')
 
 
 def update_kubelet(token, ca, master_ip, api_port):
@@ -258,7 +257,7 @@ def update_kubelet(token, ca, master_ip, api_port):
     """
     create_kubeconfig(token, ca, master_ip, api_port, "kubelet.config", "kubelet")
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
-    subprocess.check_call("snapctl restart microk8s.daemon-kubelet".split())
+    service('restart', 'kubelet')
 
 
 def store_remote_ca(ca):
@@ -279,9 +278,9 @@ def mark_cluster_node():
     lock_file = "{}/var/lock/clustered.lock".format(snapdata_path)
     open(lock_file, 'a').close()
     os.chmod(lock_file, 0o700)
-    services = ['etcd', 'apiserver', 'apiserver-kicker', 'controller-manager', 'scheduler']
-    for service in services:
-        subprocess.check_call("snapctl restart microk8s.daemon-{}".format(service).split())
+    services = ['etcd', 'apiserver-kicker', 'kubelite']
+    for s in services:
+        service('restart', s)
 
 
 def generate_callback_token():
@@ -368,7 +367,7 @@ def reset_current_dqlite_installation():
     # 3. wipe out the existing installation
     my_ep, other_ep = get_dqlite_endpoints()
 
-    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
+    service('stop', 'apiserver')
     time.sleep(10)
 
     delete_dqlite_node(my_ep, other_ep)
@@ -422,7 +421,7 @@ def reset_current_dqlite_installation():
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
-    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
+    service('start', 'apiserver')
 
     waits = 10  # type: int
     print("Waiting for node to start.", end=" ", flush=True)
@@ -806,7 +805,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     :param voters: the dqlite voters
     :param host: the hostname others see of this node
     """
-    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
+    service('stop', 'apiserver')
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
     shutil.move(cluster_dir, cluster_backup_dir)
@@ -824,7 +823,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     with open("{}/init.yaml".format(cluster_dir), 'w') as f:
         yaml.dump(init_data, f)
 
-    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
+    service('start', 'apiserver')
 
     waits = 10
     print("Waiting for this node to finish joining the cluster.", end=" ", flush=True)
