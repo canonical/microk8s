@@ -122,6 +122,24 @@ function store_kubeflow_info {
 }
 
 
+function store_pod_logs {
+  # Collect logs from each pod
+  printf -- '  Inspect pod logs\n'
+  mkdir -p "$INSPECT_DUMP"/stdout
+  NAMESPACES=$(sudo -E /snap/bin/microk8s kubectl get ns -o jsonpath='{.items[*].metadata.name}')
+  for ns in $NAMESPACES; do
+    PODS=$(sudo -E /snap/bin/microk8s kubectl get pods -n $ns -o jsonpath='{.items[*].metadata.name}')
+    for pod in $PODS; do
+      CONTAINERS=$(sudo -E /snap/bin/microk8s kubectl get pods -n $ns -o jsonpath="{.spec.containers[*].name}" $pod)
+      for container in $CONTAINERS; do
+        microk8s kubectl logs -n $ns --timestamps $pod -c $container | \
+          sudo tee $INSPECT_DUMP/stdout/$ns-$pod-$container.log > /dev/null
+      done
+    done
+  done
+}
+
+
 function suggest_fixes {
   # Propose fixes
   printf '\n'
@@ -310,6 +328,9 @@ store_juju_info
 
 printf -- 'Inspecting kubeflow\n'
 store_kubeflow_info
+
+printf -- 'Inspecting pod logs\n'
+store_pod_logs
 
 suggest_fixes
 
