@@ -4,9 +4,9 @@ import subprocess
 from dateutil.parser import parse
 import datetime
 
-snapdata_path = os.environ.get('SNAP_DATA')
-snap_path = os.environ.get('SNAP')
-backup_dir = '{}/var/log/ca-backup/'.format(snapdata_path)
+snapdata_path = os.environ.get("SNAP_DATA")
+snap_path = os.environ.get("SNAP")
+backup_dir = "{}/var/log/ca-backup/".format(snapdata_path)
 
 
 def exit_if_no_root():
@@ -15,7 +15,7 @@ def exit_if_no_root():
     """
     if not os.geteuid() == 0:
         click.echo(
-            'Elevated permissions is needed for this operation. Please run this command with sudo.'
+            "Elevated permissions is needed for this operation. Please run this command with sudo."
         )
         exit(50)
 
@@ -29,12 +29,12 @@ def check_certificate():
     )
     try:
         cert_expire = subprocess.check_output(cmd.split())
-        cert_expire_date = cert_expire.decode().split('=')
+        cert_expire_date = cert_expire.decode().split("=")
         date = parse(cert_expire_date[1])
         diff = date - datetime.datetime.now(datetime.timezone.utc)
-        click.echo('The CA certificate will expire in {} days.'.format(diff.days))
+        click.echo("The CA certificate will expire in {} days.".format(diff.days))
     except subprocess.CalledProcessError as e:
-        click.echo('Failed to get CA info. {}'.format(e))
+        click.echo("Failed to get CA info. {}".format(e))
         exit(4)
 
 
@@ -43,25 +43,25 @@ def undo_refresh():
     Revert last certificate operation
     """
     if not os.path.exists(backup_dir):
-        click.echo('No previous backup found')
+        click.echo("No previous backup found")
         exit(1)
 
     try:
-        subprocess.check_call('cp -r {}/certs {}/'.format(backup_dir, snapdata_path).split())
-        subprocess.check_call('cp -r {}/credentials {}'.format(backup_dir, snapdata_path).split())
+        subprocess.check_call("cp -r {}/certs {}/".format(backup_dir, snapdata_path).split())
+        subprocess.check_call("cp -r {}/credentials {}".format(backup_dir, snapdata_path).split())
     except subprocess.CalledProcessError:
-        click.echo('Failed to recover certificates')
+        click.echo("Failed to recover certificates")
         exit(4)
 
     try:
-        subprocess.check_call('{}/microk8s-stop.wrapper'.format(snap_path).split())
+        subprocess.check_call("{}/microk8s-stop.wrapper".format(snap_path).split())
     except subprocess.CalledProcessError:
         pass
 
     try:
-        subprocess.check_call('{}/microk8s-start.wrapper'.format(snap_path).split())
+        subprocess.check_call("{}/microk8s-start.wrapper".format(snap_path).split())
     except subprocess.CalledProcessError:
-        click.echo('Failed to start MicroK8s after reverting the certificates')
+        click.echo("Failed to start MicroK8s after reverting the certificates")
         exit(4)
 
 
@@ -70,7 +70,7 @@ def update_configs():
     Update all kubeconfig files used by the client and the services
     """
     p = subprocess.Popen(
-        ['bash', '-c', '. {}/actions/common/utils.sh; update_configs'.format(snap_path)]
+        ["bash", "-c", ". {}/actions/common/utils.sh; update_configs".format(snap_path)]
     )
     p.communicate()
 
@@ -80,11 +80,11 @@ def take_backup():
     Backup the current certificates and credentials
     """
     try:
-        subprocess.check_call('mkdir -p {}'.format(backup_dir).split())
-        subprocess.check_call('cp -r {}/certs {}'.format(snapdata_path, backup_dir).split())
-        subprocess.check_call('cp -r {}/credentials {}'.format(snapdata_path, backup_dir).split())
+        subprocess.check_call("mkdir -p {}".format(backup_dir).split())
+        subprocess.check_call("cp -r {}/certs {}".format(snapdata_path, backup_dir).split())
+        subprocess.check_call("cp -r {}/credentials {}".format(snapdata_path, backup_dir).split())
     except subprocess.CalledProcessError as e:
-        click.echo('Failed to backup the current CA. {}'.format(e))
+        click.echo("Failed to backup the current CA. {}".format(e))
         exit(10)
 
 
@@ -92,14 +92,14 @@ def produce_certs():
     """
     Produce the CA and the rest of the needed certificates (eg service, front-proxy)
     """
-    subprocess.check_call('rm -rf {}/certs/ca.crt'.format(snapdata_path).split())
-    subprocess.check_call('rm -rf {}/certs/front-proxy-ca.crt'.format(snapdata_path).split())
-    subprocess.check_call('rm -rf {}/certs/csr.conf'.format(snapdata_path).split())
+    subprocess.check_call("rm -rf {}/certs/ca.crt".format(snapdata_path).split())
+    subprocess.check_call("rm -rf {}/certs/front-proxy-ca.crt".format(snapdata_path).split())
+    subprocess.check_call("rm -rf {}/certs/csr.conf".format(snapdata_path).split())
     p = subprocess.Popen(
-        ['bash', '-c', '. {}/actions/common/utils.sh; produce_certs'.format(snap_path)]
+        ["bash", "-c", ". {}/actions/common/utils.sh; produce_certs".format(snap_path)]
     )
     p.communicate()
-    subprocess.check_call('rm -rf .slr'.split())
+    subprocess.check_call("rm -rf .slr".split())
 
 
 def refresh_ca():
@@ -130,10 +130,10 @@ def install_certs(ca_dir):
     Recreate service certificate and front proxy using a user provided CA
     :param ca_dir: path to the ca.crt and ca.key
     """
-    subprocess.check_call('cp {}/ca.crt {}/certs/'.format(ca_dir, snapdata_path).split())
-    subprocess.check_call('cp {}/ca.key {}/certs/'.format(ca_dir, snapdata_path).split())
+    subprocess.check_call("cp {}/ca.crt {}/certs/".format(ca_dir, snapdata_path).split())
+    subprocess.check_call("cp {}/ca.key {}/certs/".format(ca_dir, snapdata_path).split())
     p = subprocess.Popen(
-        ['bash', '-c', '. {}/actions/common/utils.sh; gen_server_cert'.format(snap_path)]
+        ["bash", "-c", ". {}/actions/common/utils.sh; gen_server_cert".format(snap_path)]
     )
     p.communicate()
 
@@ -143,28 +143,28 @@ def validate_certificates(ca_dir):
     Perform some basic testing of the user provided CA
     :param ca_dir: path to the ca.crt and ca.key
     """
-    if not os.path.isfile('{}/ca.crt'.format(ca_dir)) or not os.path.isfile(
-        '{}/ca.key'.format(ca_dir)
+    if not os.path.isfile("{}/ca.crt".format(ca_dir)) or not os.path.isfile(
+        "{}/ca.key".format(ca_dir)
     ):
-        click.echo('Could not find ca.crt and ca.key files in {}'.format(ca_dir))
+        click.echo("Could not find ca.crt and ca.key files in {}".format(ca_dir))
         exit(30)
 
     try:
-        cmd = '{}/usr/bin/openssl rsa -in {}/ca.key -check -noout -out /dev/null'.format(
+        cmd = "{}/usr/bin/openssl rsa -in {}/ca.key -check -noout -out /dev/null".format(
             snap_path, ca_dir
         )
         subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError as e:
-        click.echo('CA private key is invalid. {}'.format(e))
+        click.echo("CA private key is invalid. {}".format(e))
         exit(31)
 
     try:
-        cmd = '{}/usr/bin/openssl x509 -in {}/ca.crt -text -noout -out /dev/null'.format(
+        cmd = "{}/usr/bin/openssl x509 -in {}/ca.crt -text -noout -out /dev/null".format(
             snap_path, ca_dir
         )
         subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError as e:
-        click.echo('CA certificate is invalid. {}'.format(e))
+        click.echo("CA certificate is invalid. {}".format(e))
         exit(32)
 
 
@@ -195,21 +195,21 @@ def install_ca(ca_dir):
 
 
 @click.command(
-    name='refresh-certs',
-    help='Replace the CA certificates with the ca.crt and ca.key found in CA_DIR.\n'
-    'Omit the CA_DIR to auto-generate a new CA.',
+    name="refresh-certs",
+    help="Replace the CA certificates with the ca.crt and ca.key found in CA_DIR.\n"
+    "Omit the CA_DIR to auto-generate a new CA.",
 )
-@click.argument('ca_dir', required=False, default=None, type=click.Path(exists=True))
-@click.option('-u', '--undo', is_flag=True, default=False, help='Revert the last refresh performed')
+@click.argument("ca_dir", required=False, default=None, type=click.Path(exists=True))
+@click.option("-u", "--undo", is_flag=True, default=False, help="Revert the last refresh performed")
 @click.option(
-    '-c',
-    '--check',
+    "-c",
+    "--check",
     is_flag=True,
     default=False,
-    help='Check the expiration time of the installed CA',
+    help="Check the expiration time of the installed CA",
 )
 @click.option(
-    '--help',
+    "--help",
     is_flag=True,
     default=False,
 )
@@ -256,5 +256,5 @@ Options:
     click.echo(msg)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     refresh_certs()

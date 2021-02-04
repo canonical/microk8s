@@ -13,8 +13,8 @@ from common.utils import (
 from status import get_available_addons, get_current_arch, get_status
 
 
-@click.command(context_settings={'ignore_unknown_options': True})
-@click.argument('addons', nargs=-1, required=True)
+@click.command(context_settings={"ignore_unknown_options": True})
+@click.argument("addons", nargs=-1, required=True)
 def disable(addons):
     """Disables one or more MicroK8s addons.
 
@@ -34,10 +34,10 @@ def disable(addons):
     wait_for_ready(timeout=30)
 
     _, disabled_addons = get_status(get_available_addons(get_current_arch()), True)
-    disabled_addons = {a['name'] for a in disabled_addons}
+    disabled_addons = {a["name"] for a in disabled_addons}
 
-    xable('disable', addons, disabled_addons)
+    xable("disable", addons, disabled_addons)
 
 
-if __name__ == '__main__':
-    disable(prog_name='microk8s disable')
+if __name__ == "__main__":
+    disable(prog_name="microk8s disable")

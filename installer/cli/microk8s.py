@@ -346,8 +346,8 @@ def _get_microk8s_commands() -> List:
                 if c.decode().startswith("microk8s.")
             ]
             complete = mk8s
-            if 'dashboard-proxy' not in mk8s:
-                complete += ['dashboard-proxy']
+            if "dashboard-proxy" not in mk8s:
+                complete += ["dashboard-proxy"]
             complete.sort()
             return complete
         else:

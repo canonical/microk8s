@@ -9,8 +9,8 @@ from common.utils import exit_if_no_permission, is_cluster_locked
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
-snapdata_path = os.environ.get('SNAP_DATA')
-snap_path = os.environ.get('SNAP')
+snapdata_path = os.environ.get("SNAP_DATA")
+snap_path = os.environ.get("SNAP")
 
 
 def upgrade_master(upgrade, phase):
@@ -21,7 +21,7 @@ def upgrade_master(upgrade, phase):
     :return:
     """
     try:
-        upgrade_script = '{}/upgrade-scripts/{}/{}-master.sh'.format(snap_path, upgrade, phase)
+        upgrade_script = "{}/upgrade-scripts/{}/{}-master.sh".format(snap_path, upgrade, phase)
         if os.path.isfile(upgrade_script):
             print("Running {}-upgrade script".format(phase))
             out = subprocess.check_output(upgrade_script)
@@ -41,7 +41,7 @@ def node_upgrade(upgrade, phase, node_ep, token):
     :return:
     """
     try:
-        upgrade_script = '{}/upgrade-scripts/{}/{}-node.sh'.format(snap_path, upgrade, phase)
+        upgrade_script = "{}/upgrade-scripts/{}/{}-node.sh".format(snap_path, upgrade, phase)
         if os.path.isfile(upgrade_script):
             remote_op = {"callback": token, "phase": phase, "upgrade": upgrade}
             # TODO: handle ssl verification
@@ -160,7 +160,7 @@ def list_upgrades():
     """
     List all available upgrades
     """
-    upgrades_dir = '{}/upgrade-scripts/'.format(snap_path)
+    upgrades_dir = "{}/upgrade-scripts/".format(snap_path)
     upgrades = [
         dI for dI in os.listdir(upgrades_dir) if os.path.isdir(os.path.join(upgrades_dir, dI))
     ]
@@ -168,20 +168,20 @@ def list_upgrades():
         print(u)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit_if_no_permission()
     is_cluster_locked()
 
     # initiate the parser with a description
-    parser = argparse.ArgumentParser(description='MicroK8s supervised upgrades.', prog='upgrade')
+    parser = argparse.ArgumentParser(description="MicroK8s supervised upgrades.", prog="upgrade")
     parser.add_argument(
-        "-l", "--list", help="list available upgrades", nargs='?', const=True, type=bool
+        "-l", "--list", help="list available upgrades", nargs="?", const=True, type=bool
     )
     parser.add_argument(
-        "-r", "--run", help="run a specific upgrade script", nargs='?', type=str, default=None
+        "-r", "--run", help="run a specific upgrade script", nargs="?", type=str, default=None
     )
     parser.add_argument(
-        "-u", "--undo", help="rollback a specific upgrade", nargs='?', type=str, default=None
+        "-u", "--undo", help="rollback a specific upgrade", nargs="?", type=str, default=None
     )
     args = parser.parse_args()
 

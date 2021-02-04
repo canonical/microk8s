@@ -6,7 +6,7 @@ import platform
 from subprocess import check_output, CalledProcessError
 
 
-arch_translate = {'aarch64': 'arm64', 'x86_64': 'amd64'}
+arch_translate = {"aarch64": "arm64", "x86_64": "amd64"}
 
 
 def run_until_success(cmd, timeout_insec=60, err_out=None):
@@ -23,10 +23,10 @@ def run_until_success(cmd, timeout_insec=60, err_out=None):
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         try:
-            output = check_output(cmd.split()).strip().decode('utf8')
-            return output.replace('\\n', '\n')
+            output = check_output(cmd.split()).strip().decode("utf8")
+            return output.replace("\\n", "\n")
         except CalledProcessError as err:
-            output = err.output.strip().decode('utf8').replace('\\n', '\n')
+            output = err.output.strip().decode("utf8").replace("\\n", "\n")
             print(output)
             if output == err_out:
                 return output
@@ -47,7 +47,7 @@ def kubectl(cmd, timeout_insec=300, err_out=None):
     Returns: the kubectl response in a string
 
     """
-    cmd = '/snap/bin/microk8s.kubectl ' + cmd
+    cmd = "/snap/bin/microk8s.kubectl " + cmd
     return run_until_success(cmd, timeout_insec, err_out)
 
 
@@ -60,10 +60,10 @@ def docker(cmd):
     Returns: the docker response in a string
 
     """
-    docker_bin = '/usr/bin/docker'
-    if os.path.isfile('/snap/bin/microk8s.docker'):
-        docker_bin = '/snap/bin/microk8s.docker'
-    cmd = docker_bin + ' ' + cmd
+    docker_bin = "/usr/bin/docker"
+    if os.path.isfile("/snap/bin/microk8s.docker"):
+        docker_bin = "/snap/bin/microk8s.docker"
+    cmd = docker_bin + " " + cmd
     return run_until_success(cmd)
 
 
@@ -77,7 +77,7 @@ def kubectl_get(target, timeout_insec=300):
     Returns: YAML structured response
 
     """
-    cmd = 'get -o yaml ' + target
+    cmd = "get -o yaml " + target
     output = kubectl(cmd, timeout_insec)
     return yaml.load(output)
 
@@ -95,22 +95,22 @@ def wait_for_pod_state(
             raise TimeoutError(
                 "Pod {} not in {} after {} seconds.".format(pod, desired_state, timeout_insec)
             )
-        cmd = 'po {} -n {}'.format(pod, namespace)
+        cmd = "po {} -n {}".format(pod, namespace)
         if label:
-            cmd += ' -l {}'.format(label)
+            cmd += " -l {}".format(label)
         data = kubectl_get(cmd, timeout_insec)
         if pod == "":
-            if len(data['items']) > 0:
-                status = data['items'][0]['status']
+            if len(data["items"]) > 0:
+                status = data["items"][0]["status"]
             else:
                 status = []
         else:
-            status = data['status']
-        if 'containerStatuses' in status:
-            container_status = status['containerStatuses'][0]
-            state, details = list(container_status['state'].items())[0]
+            status = data["status"]
+        if "containerStatuses" in status:
+            container_status = status["containerStatuses"][0]
+            state, details = list(container_status["state"].items())[0]
             if desired_reason:
-                reason = details.get('reason')
+                reason = details.get("reason")
                 if state == desired_state and reason == desired_reason:
                     break
             elif state == desired_state:
@@ -123,18 +123,18 @@ def wait_for_installation(cluster_nodes=1, timeout_insec=360):
     Wait for kubernetes service to appear.
     """
     while True:
-        cmd = 'svc kubernetes'
+        cmd = "svc kubernetes"
         data = kubectl_get(cmd, timeout_insec)
-        service = data['metadata']['name']
-        if 'kubernetes' in service:
+        service = data["metadata"]["name"]
+        if "kubernetes" in service:
             break
         else:
             time.sleep(3)
 
     while True:
-        cmd = 'get no'
+        cmd = "get no"
         nodes = kubectl(cmd, timeout_insec)
-        if nodes.count(' Ready') == cluster_nodes:
+        if nodes.count(" Ready") == cluster_nodes:
             break
         else:
             time.sleep(3)
@@ -152,9 +152,9 @@ def wait_for_namespace_termination(namespace, timeout_insec=360):
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         try:
-            cmd = '/snap/bin/microk8s.kubectl get ns {}'.format(namespace)
-            check_output(cmd.split()).strip().decode('utf8')
-            print('Waiting...')
+            cmd = "/snap/bin/microk8s.kubectl get ns {}".format(namespace)
+            check_output(cmd.split()).strip().decode("utf8")
+            print("Waiting...")
         except CalledProcessError:
             if datetime.datetime.now() > deadline:
                 raise
@@ -173,13 +173,13 @@ def microk8s_enable(addon, timeout_insec=300):
 
     """
     # NVidia pre-check so as to not wait for a timeout.
-    if addon == 'gpu':
+    if addon == "gpu":
         nv_out = run_until_success("lsmod", timeout_insec=10)
         if "nvidia" not in nv_out:
             print("Not a cuda capable system. Will not test gpu addon")
             raise CalledProcessError(1, "Nothing to do for gpu")
 
-    cmd = '/snap/bin/microk8s.enable {}'.format(addon)
+    cmd = "/snap/bin/microk8s.enable {}".format(addon)
     return run_until_success(cmd, timeout_insec)
 
 
@@ -191,7 +191,7 @@ def microk8s_disable(addon):
         addon: name of the addon
 
     """
-    cmd = '/snap/bin/microk8s.disable {}'.format(addon)
+    cmd = "/snap/bin/microk8s.disable {}".format(addon)
     return run_until_success(cmd, timeout_insec=300)
 
 
@@ -199,14 +199,14 @@ def microk8s_clustering_capable():
     """
     Are we in a clustering capable microk8s?
     """
-    return os.path.isfile('/snap/bin/microk8s.join')
+    return os.path.isfile("/snap/bin/microk8s.join")
 
 
 def microk8s_reset(cluster_nodes=1):
     """
     Call microk8s reset
     """
-    cmd = '/snap/bin/microk8s.reset'
+    cmd = "/snap/bin/microk8s.reset"
     run_until_success(cmd, timeout_insec=300)
     wait_for_installation(cluster_nodes)
 
@@ -220,6 +220,6 @@ def update_yaml_with_arch(manifest_file):
     with open(manifest_file) as f:
         s = f.read()
 
-    with open(manifest_file, 'w') as f:
-        s = s.replace('$ARCH', arch)
+    with open(manifest_file, "w") as f:
+        s = s.replace("$ARCH", arch)
         f.write(s)
