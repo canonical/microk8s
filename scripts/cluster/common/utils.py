@@ -250,10 +250,10 @@ def is_kubelite():
     """
     Do we run kubelite?
     """
-    snap_data = os.environ.get('SNAP_DATA')
+    snap_data = os.environ.get("SNAP_DATA")
     if not snap_data:
-        snap_data = '/var/snap/microk8s/current/'
-    kubelite_lock = '{}/var/lock/lite.lock'.format(snap_data)
+        snap_data = "/var/snap/microk8s/current/"
+    kubelite_lock = "{}/var/lock/lite.lock".format(snap_data)
     return os.path.exists(kubelite_lock)
 
 

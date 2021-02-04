@@ -313,7 +313,7 @@ def join_node_etcd():
     api_port = get_arg("--secure-port", "kube-apiserver")
     proxy_token = get_token("kube-proxy")
     kubelet_token = add_kubelet_token(node_addr)
-    service('restart', 'apiservice')
+    service("restart", "apiservice")
     if node_addr != hostname:
         kubelet_args = read_kubelet_args_file(node_addr)
     else:
@@ -429,7 +429,7 @@ def configure():
             if "restart" in srv and srv["restart"]:
                 service_name = get_service_name(srv["name"])
                 print("restarting {}".format(srv["name"]))
-                service('restart', service_name)
+                service("restart", service_name)
 
     if "addon" in configuration:
         for addon in configuration["addon"]:
@@ -501,7 +501,7 @@ def update_dqlite_ip(host):
     :param : the host others see for this node
     """
     dqlite_port = get_dqlite_port()
-    service('stop', 'apiserver')
+    service("stop", "apiserver")
     time.sleep(10)
 
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
@@ -509,7 +509,7 @@ def update_dqlite_ip(host):
     update_data = {"Address": "{}:{}".format(host, dqlite_port)}
     with open("{}/update.yaml".format(cluster_dir), "w") as f:
         yaml.dump(update_data, f)
-    service('start', 'apiserver')
+    service("start", "apiserver")
     time.sleep(10)
     attempts = 12
     while True:
