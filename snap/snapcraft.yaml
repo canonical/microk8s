@@ -105,8 +105,6 @@ parts:
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
-    configflags:
-      - --enable-debug
     stage-packages:
       - libuv1
     organize:
@@ -149,8 +147,6 @@ parts:
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
-    configflags:
-      - --enable-debug
     stage-packages:
       - libuv1
     build-packages:
