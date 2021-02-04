@@ -280,13 +280,18 @@ check_certificates
 printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"
 check_service "snap.microk8s.daemon-containerd"
-check_service "snap.microk8s.daemon-apiserver"
 check_service "snap.microk8s.daemon-apiserver-kicker"
 check_service "snap.microk8s.daemon-control-plane-kicker"
-check_service "snap.microk8s.daemon-proxy"
-check_service "snap.microk8s.daemon-kubelet"
-check_service "snap.microk8s.daemon-scheduler"
-check_service "snap.microk8s.daemon-controller-manager"
+if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
+then
+  check_service "snap.microk8s.daemon-kubelite"
+else
+  check_service "snap.microk8s.daemon-apiserver"
+  check_service "snap.microk8s.daemon-proxy"
+  check_service "snap.microk8s.daemon-kubelet"
+  check_service "snap.microk8s.daemon-scheduler"
+  check_service "snap.microk8s.daemon-controller-manager"
+fi
 if ! [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then
   check_service "snap.microk8s.daemon-flanneld"

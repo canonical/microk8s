@@ -58,9 +58,9 @@ class Multipass(Provider):
     def _launch(self, specs: Dict) -> None:
         image = "18.04"
 
-        cpus = "{}".format(specs['cpu'])
-        mem = "{}G".format(specs['mem'])
-        disk = "{}G".format(specs['disk'])
+        cpus = "{}".format(specs["cpu"])
+        mem = "{}G".format(specs["mem"])
+        disk = "{}G".format(specs["disk"])
 
         try_for = 10
 

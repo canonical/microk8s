@@ -16,7 +16,7 @@ class TestMicrok8sBranches(object):
         """
         upstream_version = self._upstream_release()
         assert upstream_version
-        version_parts = upstream_version.split('.')
+        version_parts = upstream_version.split(".")
         major_minor_upstream_version = "{}.{}".format(version_parts[0][1:], version_parts[1])
         if version_parts[1] != "0":
             prev_major_minor_version = "{}.{}".format(

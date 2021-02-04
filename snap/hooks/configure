@@ -4,6 +4,12 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
+need_api_restart=false
+need_proxy_restart=false
+need_kubelet_restart=false
+need_controller_restart=false
+need_scheduler_restart=false
+
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
 # and make sure the respective services use them.
@@ -20,8 +26,8 @@ then
   "$SNAP/bin/sed" -i 's@\${SNAP}/certs/serviceaccount.key@\${SNAP_DATA}/certs/serviceaccount.key@g' ${SNAP_DATA}/args/kube-apiserver
   "$SNAP/bin/sed" -i 's@\${SNAP}/certs/ca.crt@\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-controller-manager
   "$SNAP/bin/sed" -i 's@\${SNAP}/certs/serviceaccount.key@\${SNAP_DATA}/certs/serviceaccount.key@g' ${SNAP_DATA}/args/kube-controller-manager
-  snapctl restart ${SNAP_NAME}.daemon-apiserver
-  snapctl restart ${SNAP_NAME}.daemon-controller-manager
+  need_api_restart=true
+  need_controller_restart=true
 fi
 
 #Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
@@ -37,7 +43,7 @@ then
   # Add a new line at the end
   echo "" >> ${SNAP_DATA}/args/kube-apiserver
   echo "--requestheader-client-ca-file=\${SNAP_DATA}/certs/front-proxy-ca.crt" >> ${SNAP_DATA}/args/kube-apiserver
-  snapctl restart ${SNAP_NAME}.daemon-apiserver
+  need_api_restart=true
 fi
 
 # Enable the aggregation layer (continue)
@@ -51,7 +57,7 @@ then
   echo '--requestheader-username-headers=X-Remote-User' >> ${SNAP_DATA}/args/kube-apiserver
   echo '--proxy-client-cert-file=${SNAP_DATA}/certs/front-proxy-client.crt' >> ${SNAP_DATA}/args/kube-apiserver
   echo '--proxy-client-key-file=${SNAP_DATA}/certs/front-proxy-client.key' >> ${SNAP_DATA}/args/kube-apiserver
-  snapctl restart ${SNAP_NAME}.daemon-apiserver
+  need_api_restart=true
 fi
 
 # Patch for issue: https://github.com/ubuntu/microk8s/issues/121
@@ -117,7 +123,7 @@ then
   skip_opt_in_config docker-endpoint kubelet
 
   snapctl restart ${SNAP_NAME}.daemon-containerd
-  snapctl restart ${SNAP_NAME}.daemon-kubelet
+  need_kubelet_restart=true
 
   if [ -e ${SNAP_DATA}/args/dockerd ] && grep -e "default-runtime=nvidia" ${SNAP_DATA}/args/dockerd
   then
@@ -133,8 +139,8 @@ fi
 if [ "$(produce_certs)" == "1" ]
 then
     rm -rf .srl
-    snapctl restart ${SNAP_NAME}.daemon-apiserver
-    snapctl restart ${SNAP_NAME}.daemon-proxy
+    need_api_restart=true
+    need_proxy_restart=true
 fi
 
 # Make containerd stream server listen to localhost
@@ -146,7 +152,7 @@ then
         "$SNAP/bin/sed" -i 's@stream_server_port = "10010"@stream_server_port = "0"@g' ${SNAP_DATA}/args/containerd-template.toml
     fi
     snapctl restart ${SNAP_NAME}.daemon-containerd
-    snapctl restart ${SNAP_NAME}.daemon-kubelet
+    need_kubelet_restart=true
 fi
 
 # With v1.15 allow-privileged is removed from kubelet
@@ -154,7 +160,7 @@ if grep -e "\-\-allow-privileged" ${SNAP_DATA}/args/kubelet
 then
   echo "Patching 1.15 allow-privileged"
   "${SNAP}/bin/sed" -i '/allow-privileged/d' ${SNAP_DATA}/args/kubelet
-  snapctl restart ${SNAP_NAME}.daemon-kubelet
+    need_kubelet_restart=true
 fi
 
 if ([ -f "$SNAP_USER_COMMON/istio-auth.lock" ] || [ -f "$SNAP_USER_COMMON/istio-auth.lock" ]) && ! [ -f "$SNAP_DATA/bin/istioctl" ]
@@ -177,7 +183,6 @@ then
   rm -rf "$SNAP_DATA/tmp/istio"
 fi
 
-need_api_restart=false
 if ! [ -f "$SNAP_DATA/credentials/kubelet.config" ]
 then
   # Create the known tokens
@@ -199,7 +204,7 @@ then
   refresh_opt_in_config kubeconfig \${SNAP_DATA}/credentials/kubelet.config kubelet
   refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
 
-  snapctl restart ${SNAP_NAME}.daemon-kubelet
+  need_kubelet_restart=true
   need_api_restart=true
 fi
 
@@ -224,7 +229,7 @@ then
   skip_opt_in_config master kube-proxy
   refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
 
-  snapctl restart ${SNAP_NAME}.daemon-proxy
+  need_proxy_restart=true
   need_api_restart=true
 fi
 
@@ -249,7 +254,7 @@ then
   skip_opt_in_config master kube-scheduler
   refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
 
-  snapctl restart ${SNAP_NAME}.daemon-scheduler
+  need_scheduler_restart=true
   need_api_restart=true
 fi
 
@@ -275,11 +280,11 @@ then
   refresh_opt_in_config use-service-account-credentials true kube-controller-manager
 
   refresh_opt_in_config token-auth-file \${SNAP_DATA}/credentials/known_tokens.csv kube-apiserver
-  snapctl restart ${SNAP_NAME}.daemon-controller-manager
+  need_controller_restart=true
 fi
 
 # Securing important directories
-for dir in "${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock"
+for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
@@ -387,11 +392,6 @@ then
   snapctl restart ${SNAP_NAME}.daemon-etcd
 fi
 
-if ${need_api_restart}
-then
-  snapctl restart ${SNAP_NAME}.daemon-apiserver
-fi
-
 if [ -L "${SNAP_DATA}/bin/cilium" ]
 then
   echo "Cilium is enabled we need to reconfigure it."
@@ -451,7 +451,56 @@ fi
 if grep -e "\-\-cluster-cidr=10.152.183.0/24" ${SNAP_DATA}/args/kube-proxy
 then
   refresh_opt_in_config cluster-cidr 10.1.0.0/16 kube-proxy
-  snapctl restart ${SNAP_NAME}.daemon-proxy
+  need_proxy_restart=true
+fi
+
+if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
+then
+  snapctl stop ${SNAP_NAME}.daemon-kubelite
+fi
+
+# Enable kubelite
+if ! [ -e ${SNAP_DATA}/var/lock/lite.lock ]
+then
+  touch "${SNAP_DATA}/var/lock/lite.lock"
+  if ! [ -e ${SNAP_DATA}/args/kubelite ]
+  then
+    cp ${SNAP}/default-args/kubelite ${SNAP_DATA}/args/kubelite
+  fi
+  date
+  if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
+  then
+    snapctl stop ${SNAP_NAME}.daemon-kubelite
+  else
+    snapctl start ${SNAP_NAME}.daemon-kubelite
+  fi
+  snapctl stop ${SNAP_NAME}.daemon-apiserver
+  snapctl stop ${SNAP_NAME}.daemon-proxy
+  snapctl stop ${SNAP_NAME}.daemon-kubelet
+  snapctl stop ${SNAP_NAME}.daemon-controller-manager
+  snapctl stop ${SNAP_NAME}.daemon-scheduler
+  snapctl stop ${SNAP_NAME}.daemon-control-plane-kicker
+fi
+
+if ! [ -e ${SNAP_DATA}/args/kubelite ]
+then
+  cp ${SNAP}/default-args/kubelite ${SNAP_DATA}/args/kubelite
+  need_api_restart=true
+fi
+
+# Restart reconfigured services
+if ${need_api_restart} ||
+   ${need_proxy_restart} ||
+   ${need_controller_restart} ||
+   ${need_kubelet_restart}
+then
+  if [ -e ${SNAP_DATA}/var/lock/lite.lock ]
+  then
+    snapctl restart ${SNAP_NAME}.daemon-kubelite
+  else
+    echo "Unable to restart service"
+    exit 1
+  fi
 fi
 
 if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&

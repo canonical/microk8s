@@ -20,6 +20,13 @@ if [ -e "$BACKUP_DIR/args/kube-apiserver" ]; then
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
+if [ -e "$SNAP_DATA"/var/lock/lite.lock ]
+then
+  snapctl restart ${SNAP_NAME}.daemon-kubelite
+else
+  snapctl restart ${SNAP_NAME}.daemon-apiserver
+fi
+
 ${SNAP}/microk8s-start.wrapper
 
 echo "Dqlite rolled back"
