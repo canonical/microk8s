@@ -27,6 +27,7 @@ from validators import (
     validate_prometheus,
     validate_traefik,
     validate_coredns_config,
+    validate_external_dns,
     validate_portainer,
 )
 from utils import (
@@ -80,6 +81,7 @@ class TestAddons(object):
         wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
         print("Validating DNS config")
         validate_coredns_config(ip_ranges)
+        validate_external_dns()
         print("Enabling ingress")
         microk8s_enable("ingress")
         print("Enabling metrics-server")
