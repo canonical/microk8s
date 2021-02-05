@@ -618,3 +618,31 @@ is_apiserver_ready() {
     return 1
   fi
 }
+
+stop_all_containers() {
+    for task in $("${SNAP}/microk8s-ctr.wrapper" task ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" task pause $task &>/dev/null || true
+        "${SNAP}/microk8s-ctr.wrapper" task kill -s SIGKILL $task &>/dev/null || true
+    done
+}
+
+start_all_containers() {
+    for task in $("${SNAP}/microk8s-ctr.wrapper" task ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" task resume $task &>/dev/null || true
+    done
+}
+
+remove_all_containers() {
+    stop_all_containers
+    for task in $("${SNAP}/microk8s-ctr.wrapper" task ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" task delete --force $task &>/dev/null || true
+    done
+
+    for container in $("${SNAP}/microk8s-ctr.wrapper" containers ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" container delete --force $container &>/dev/null || true
+    done
+}

@@ -8,9 +8,9 @@ source $SNAP/actions/common/utils.sh
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  echo "This MicroK8s deployment is acting as a node in a cluster."
-  echo "Use 'snap stop microk8s' to stop services on this node."
-  exit 0
+    echo "This MicroK8s deployment is acting as a node in a cluster."
+    echo "Use 'snap stop microk8s' to stop services on this node."
+    exit 0
 fi
 
 FORCE=false
@@ -37,6 +37,7 @@ while true; do
     esac
 done
 
+stop_all_containers
 
 if ! run_with_sudo snap stop ${SNAP_NAME} --disable
 then

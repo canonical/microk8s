@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -eux
+
+source $SNAP/actions/common/utils.sh
+
+start_all_containers

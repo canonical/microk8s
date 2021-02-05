@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -eu
 
+source $SNAP/actions/common/utils.sh
+
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
+
+remove_all_containers
 
 if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
 then
