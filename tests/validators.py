@@ -507,11 +507,7 @@ def validate_external_dns():
     """
     kubectl("apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml")
 
-    try_addresses = [
-        "canonical.com",
-        "bbc.co.uk",
-        "kubernetes.default"
-    ]
+    try_addresses = ["canonical.com", "bbc.co.uk", "kubernetes.default"]
 
     for address in try_addresses:
         out = kubectl("exec -i -t dnsutils -- nslookup {}".format(address))
