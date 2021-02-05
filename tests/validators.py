@@ -501,6 +501,25 @@ def validate_coredns_config(ip_ranges="8.8.8.8,1.1.1.1"):
     assert expected_forward_val in out
 
 
+def validate_external_dns():
+    """
+    Validate we can lookup external DNS addresses
+    """
+    kubectl("apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml")
+
+    try_addresses = [
+        "canonical.com",
+        "bbc.co.uk",
+        "kubernetes.default"
+    ]
+
+    for address in try_addresses:
+        out = kubectl("exec -i -t dnsutils -- nslookup {}".format(address))
+        assert "no servers could be reached" not in out
+
+    kubectl("delete -f https://k8s.io/examples/admin/dns/dnsutils.yaml")
+
+
 def validate_keda():
     """
     Validate keda
