@@ -104,8 +104,8 @@ get_opt_in_config() {
     echo "$val"
 }
 
-refresh_opt_in_config() {
-    # add or replace an option inside the config file.
+refresh_opt_in_local_config() {
+    # add or replace an option inside the local config file.
     # Create the file if doesn't exist
     local opt="--$1"
     local value="$2"
@@ -116,6 +116,17 @@ refresh_opt_in_config() {
     else
         run_with_sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
+}
+
+refresh_opt_in_config() {
+    # add or replace an option inside the config file and propagate change.
+    # Create the file if doesn't exist
+    refresh_opt_in_local_config "$1" "$2" "$3"
+
+    local opt="--$1"
+    local value="$2"
+    local config_file="$SNAP_DATA/args/$3"
+    local replace_line="$opt=$value"
 
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
