@@ -5,8 +5,6 @@ source $SNAP/actions/common/utils.sh
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
 
-remove_all_containers
-
 if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
 then
   snapctl stop ${SNAP_NAME}.daemon-kubelite 2>&1 || true
@@ -50,3 +48,5 @@ if $SNAP/sbin/ip link show cni0
 then
   $SNAP/sbin/ip link delete cni0
 fi
+
+kill_all_container_shims

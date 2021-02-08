@@ -4,4 +4,5 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
-stop_all_containers
+snapctl stop microk8s --disable
+kill_all_container_shims
