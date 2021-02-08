@@ -14,7 +14,7 @@ class NotFound(Exception):
 
 
 class RetryWrapper:
-    """Generic class for retyring method calls on an object"""
+    """Generic class for retrying method calls on an object"""
 
     def __init__(self, object, exception=Exception, timeout=60):
         self.object = object

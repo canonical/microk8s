@@ -94,7 +94,7 @@ class InstallTests:
         assert "microk8s is running" in status
 
     def test_get_kubeconfig(self):
-        """Test retreiving the kubeconfig"""
+        """Test retrieving the kubeconfig"""
         config = yaml.safe_load(self.node.microk8s.config)
         assert config["clusters"][0]["name"] == "microk8s-cluster"
 
@@ -104,7 +104,7 @@ class InstallTests:
         assert ready == 1
 
     def test_addon(self, addon, input):
-        """Test enableing addon"""
+        """Test enabling addon"""
         addon_attr = getattr(self.node.microk8s, addon)
         if input:
             result = addon_attr.enable(input)
