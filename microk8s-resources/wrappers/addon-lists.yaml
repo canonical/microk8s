@@ -102,7 +102,7 @@ microk8s-addons:
 
     - name: "linkerd"
       description: "Linkerd is a service mesh for Kubernetes and other frameworks"
-      version: "2.9.0"
+      version: "2.9.2"
       check_status: "pod/linkerd-controller"
       supported_architectures:
       - amd64
