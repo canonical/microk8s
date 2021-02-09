@@ -59,12 +59,11 @@ jobs:
         sudo snap install ./microk8s*.snap --classic --dangerous
         sudo usermod --append --groups microk8s $USER
         sudo microk8s status --wait-ready
-        sudo microk8s kubectl -n kube-system rollout status ds/calico-node
         sudo snap install juju-helpers --classic
 
     - name: Enable kubeflow
       timeout-minutes: 45
-      run: sg microk8s -c 'microk8s enable kubeflow --debug --bundle=edge --ignore-min-mem --password=hunter2'
+      run: sg microk8s -c 'KUBEFLOW_DEBUG=true KUBEFLOW_BUNDLE=edge KUBEFLOW_AUTH_PASSWORD=hunter2 microk8s enable kubeflow'
 
     - name: Test kubeflow
       run: |
@@ -76,7 +75,6 @@ jobs:
         cd bundle-kubeflow
         sudo pip3 install -r requirements.txt -r test-requirements.txt
         sudo microk8s status --wait-ready
-        sudo microk8s kubectl -n kube-system rollout status ds/calico-node
         trap 'sudo pkill -f svc/pipelines-api' SIGINT SIGTERM EXIT
         sudo microk8s kubectl -n kubeflow port-forward svc/pipelines-api 8888:8888 &
         (i=30; while ! curl localhost:8888 ; do ((--i)) || exit; sleep 1; done)
@@ -189,7 +187,6 @@ jobs:
           cd bundle-kubeflow
           sudo pip3 install -r requirements.txt -r test-requirements.txt
           sudo microk8s status --wait-ready
-          sudo microk8s kubectl -n kube-system rollout status ds/calico-node
           trap 'sudo pkill -f svc/pipelines-api' SIGINT SIGTERM EXIT
           microk8s kubectl -n kubeflow port-forward svc/pipelines-api 8888:8888 &
           (i=30; while ! curl localhost:8888 ; do ((--i)) || exit; sleep 1; done)
@@ -203,34 +200,6 @@ jobs:
 
     - name: Describe MicroK8s pods
       run: juju ssh ubuntu/0 sudo microk8s kubectl describe pods -nkubeflow
-      if: failure()
-
-    - name: dex-auth logs
-      run: juju ssh ubuntu/0 sudo microk8s kubectl logs -nkubeflow --tail 1000 -l juju-app=dex-auth
-      if: failure()
-
-    - name: katib-ui logs
-      run: juju ssh ubuntu/0 sudo microk8s kubectl logs -nkubeflow --tail 1000 -l juju-app=katib-ui
-      if: failure()
-
-    - name: oidc-gatekeeper logs
-      run: juju ssh ubuntu/0 sudo microk8s kubectl logs -nkubeflow --tail 1000 -l juju-app=oidc-gatekeeper
-      if: failure()
-
-    - name: Get pipeline logs
-      run: |
-        juju ssh ubuntu/0 <<EOF
-          set -eux
-          pods=\$(microk8s kubectl get -nkubeflow pods -l workflows.argoproj.io/completed="true" -o custom-columns=:metadata.name --no-headers)
-          for pod in \$pods; do
-            containers=\$(microk8s kubectl get -nkubeflow pods -o jsonpath="{.spec.containers[*].name}" \$pod)
-            for container in \$containers; do
-              microk8s kubectl logs -nkubeflow --timestamps \$pod -c \$container
-              printf '\n'
-            done
-            printf '\n\n'
-          done
-        EOF
       if: failure()
 
     - name: Generate inspect tarball
