@@ -102,7 +102,7 @@ class Lxd(Node):
         """Copy a file to the destination on node"""
 
         src = Path(source)
-        with src.open(mode='rb') as f:
+        with src.open(mode="rb") as f:
             return self.write(dest, f.read())
 
     def get_primary_address(self):
