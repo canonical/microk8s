@@ -27,6 +27,7 @@ apps:
   daemon-containerd:
     command: run-containerd-with-args
     daemon: simple
+    plugs: [kubernetes-support]
   daemon-apiserver:
     command: run-apiserver-with-args
     daemon: simple
