@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-set -eux
-
-source $SNAP/actions/common/utils.sh
-
-snapctl stop microk8s --disable
-kill_all_container_shims
