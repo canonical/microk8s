@@ -629,3 +629,41 @@ is_apiserver_ready() {
     return 1
   fi
 }
+
+start_all_containers() {
+    for task in $("${SNAP}/microk8s-ctr.wrapper" task ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" task resume $task &>/dev/null || true
+    done
+}
+
+stop_all_containers() {
+    for task in $("${SNAP}/microk8s-ctr.wrapper" task ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" task pause $task &>/dev/null || true
+        "${SNAP}/microk8s-ctr.wrapper" task kill -s SIGKILL $task &>/dev/null || true
+    done
+}
+
+remove_all_containers() {
+    stop_all_containers
+    for task in $("${SNAP}/microk8s-ctr.wrapper" task ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" task delete --force $task &>/dev/null || true
+    done
+
+    for container in $("${SNAP}/microk8s-ctr.wrapper" containers ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" container delete --force $container &>/dev/null || true
+    done
+}
+
+get_container_shim_pids() {
+    ps -e -o pid= -o args= | grep -v 'grep' | sed -e 's/^ *//; s/\s\s*/\t/;' | grep -w '/snap/microk8s/.*/bin/containerd-shim' | cut -f1
+}
+
+kill_all_container_shims() {
+    run_with_sudo systemctl kill snap.microk8s.daemon-kubelite.service --signal=SIGKILL &>/dev/null || true
+    run_with_sudo systemctl kill snap.microk8s.daemon-kubelet.service --signal=SIGKILL &>/dev/null || true
+    run_with_sudo systemctl kill snap.microk8s.daemon-containerd.service --signal=SIGKILL &>/dev/null || true
+}
