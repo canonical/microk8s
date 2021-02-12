@@ -40,13 +40,13 @@ jobs:
     - name: Download Multipass installer
       uses: carlosperate/download-file-action@v1.0.3
       with:
-        file-url: https://github.com/canonical/multipass/releases/download/v1.5.0/multipass-1.5.0+win-win64.exe
+        file-url: https://github.com/canonical/multipass/releases/download/v1.6.1/multipass-1.6.1+win-win64.exe
         file-name: multipass.exe
         location: ${{ github.workspace }}/installer/windows
     - name: Download kubectl
       uses: carlosperate/download-file-action@v1.0.3
       with:
-        file-url: https://storage.googleapis.com/kubernetes-release/release/v1.20.0/bin/windows/amd64/kubectl.exe
+        file-url: https://storage.googleapis.com/kubernetes-release/release/v1.20.2/bin/windows/amd64/kubectl.exe
         file-name: kubectl.exe
         location: ${{ github.workspace }}/installer/windows
     - name: Create installer
