@@ -74,11 +74,11 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
 
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
-            print('{:>2}{}'.format("", "enabled:"))
+            print("{:>2}{}".format("", "enabled:"))
             for enabled in enabled_addons:
                 print(console_formatter.format("", enabled["name"], enabled["description"]))
         if disabled_addons and len(disabled_addons) > 0:
-            print('{:>2}{}'.format("", "disabled:"))
+            print("{:>2}{}".format("", "disabled:"))
             for disabled in disabled_addons:
                 print(console_formatter.format("", disabled["name"], disabled["description"]))
     else:
@@ -159,7 +159,7 @@ def get_status(available_addons, isReady):
         kube_output = kube_output + cluster_output
         for addon in available_addons:
             found = False
-            for row in kube_output.split('\n'):
+            for row in kube_output.split("\n"):
                 if is_enabled(addon["check_status"], row):
                     enabled.append(addon)
                     found = True
@@ -181,14 +181,14 @@ def ha_cluster_formed(info):
     return ha_formed
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit_if_no_permission()
     exit_if_stopped()
     is_cluster_locked()
 
     # initiate the parser with a description
     parser = argparse.ArgumentParser(
-        description='Microk8s cluster status check.', prog='microk8s status'
+        description="Microk8s cluster status check.", prog="microk8s status"
     )
     parser.add_argument(
         "--format",
@@ -197,7 +197,7 @@ if __name__ == '__main__':
         choices={"pretty", "yaml", "short"},
     )
     parser.add_argument(
-        "-w", "--wait-ready", action='store_true', help="wait until the cluster is in ready state"
+        "-w", "--wait-ready", action="store_true", help="wait until the cluster is in ready state"
     )
     parser.add_argument(
         "-t",
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     )
     parser.add_argument("-a", "--addon", help="check the status of an addon.", default="all")
     parser.add_argument(
-        "--yaml", action='store_true', help="DEPRECATED, use '--format yaml' instead"
+        "--yaml", action="store_true", help="DEPRECATED, use '--format yaml' instead"
     )
 
     # read arguments from the command line

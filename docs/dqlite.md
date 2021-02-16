@@ -25,7 +25,7 @@ specific tag.
 ```
 git reset c3c94660a58998dde628de7c716a63b695327016^  --soft 
 git stash                                                    # put the patch on the stash
-git reset 52c56ce7a8272c798dbc29846288d7cd9fbae032 --hard    # Go tho the 1.18.2 release commit
+git reset 52c56ce7a8272c798dbc29846288d7cd9fbae032 --hard    # Go to the 1.18.2 release commit
 git stash apply
 git commit -m "Apply the dqlite patch"
 ```

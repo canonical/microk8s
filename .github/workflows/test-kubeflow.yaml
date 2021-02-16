@@ -19,13 +19,9 @@ jobs:
 
       - name: Install lxd
         run: |
-          set -eux
-          sudo snap install lxd
-          sudo lxd.migrate -yes
-          sudo lxd waitready
           sudo lxd init --auto
           sudo usermod --append --groups lxd $USER
-
+          sg lxd -c 'lxc version'
       - name: Install snapcraft
         run: sudo snap install snapcraft --classic
 
@@ -203,34 +199,6 @@ jobs:
 
       - name: Describe MicroK8s pods
         run: juju ssh ubuntu/0 sudo microk8s kubectl describe pods -nkubeflow
-        if: failure()
-
-      - name: dex-auth logs
-        run: juju ssh ubuntu/0 sudo microk8s kubectl logs -nkubeflow --tail 1000 -l juju-app=dex-auth
-        if: failure()
-
-      - name: katib-ui logs
-        run: juju ssh ubuntu/0 sudo microk8s kubectl logs -nkubeflow --tail 1000 -l juju-app=katib-ui
-        if: failure()
-
-      - name: oidc-gatekeeper logs
-        run: juju ssh ubuntu/0 sudo microk8s kubectl logs -nkubeflow --tail 1000 -l juju-app=oidc-gatekeeper
-        if: failure()
-
-      - name: Get pipeline logs
-        run: |
-          juju ssh ubuntu/0 <<EOF
-            set -eux
-            pods=\$(microk8s kubectl get -nkubeflow pods -l workflows.argoproj.io/completed="true" -o custom-columns=:metadata.name --no-headers)
-            for pod in \$pods; do
-              containers=\$(microk8s kubectl get -nkubeflow pods -o jsonpath="{.spec.containers[*].name}" \$pod)
-              for container in \$containers; do
-                microk8s kubectl logs -nkubeflow --timestamps \$pod -c \$container
-                printf '\n'
-              done
-              printf '\n\n'
-            done
-          EOF
         if: failure()
 
       - name: Generate inspect tarball

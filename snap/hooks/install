@@ -73,7 +73,7 @@ $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/proxy.config
 $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/proxy.config
 $SNAP/bin/sed -i 's/PASSWORD/'"${proxy_token}"'/g' ${SNAP_DATA}/credentials/proxy.config
 
-for dir in "${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/"
+for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
@@ -94,6 +94,7 @@ set_service_not_expected_to_start etcd
 set_service_not_expected_to_start flanneld
 
 touch "${SNAP_DATA}/var/lock/ha-cluster"
+touch "${SNAP_DATA}/var/lock/lite.lock"
 
 RESOURCES="$SNAP/upgrade-scripts/000-switch-to-calico/resources"
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
@@ -106,3 +107,4 @@ rm -rf "$SNAP_DATA"/args/cni-network/*
 cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
 mkdir -p "$SNAP_DATA/opt/cni/bin/"
 cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
+

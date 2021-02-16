@@ -1,0 +1,150 @@
+#!/bin/bash
+
+set -ex
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+ARCH="$($SNAP/bin/uname -m)"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
+export XDG_RUNTIME_DIR="${SNAP_COMMON}/run"
+mkdir -p "${XDG_RUNTIME_DIR}"
+
+source $SNAP/actions/common/utils.sh
+
+app=kubelite
+
+if ! [ -e ${SNAP_DATA}/var/lock/lite.lock ]
+then
+  echo "${app} will not run"
+  exit 0
+fi
+
+## API server configuration
+# wait up to two minutes for the default network interface to appear.
+n=0
+until [ $n -ge 20 ]
+do
+  ip route | grep default &> /dev/null && break
+  ip -6 route | grep default &> /dev/null && break
+  echo "Waiting for default route to appear. (attempt $n)"
+  n=$[$n+1]
+  sleep 6
+done
+
+if [ -e ${SNAP_DATA}/args/ha-conf ]
+then
+  storage_param="$(get_opt_in_config '--storage-dir' 'kube-apiserver')"
+  storage_dir="$(eval echo $storage_param)"
+  if $(grep -qE "^failure-domain" "${SNAP_DATA}/args/ha-conf"); then
+    val="$(get_opt_in_config 'failure-domain' 'ha-conf')"
+    echo "$val" > $storage_dir/failure-domain
+  fi
+fi
+
+## Kubelet configuration
+pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
+if [ -z "$pod_cidr" ]
+then
+  pod_cidr="$(jq .Network $SNAP_DATA/args/flannel-network-mgr-config | tr -d '\"')"
+fi
+if ! [ -z "$pod_cidr" ]
+then
+  if ! iptables -C FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT
+  then
+    # The point of "|| true" is that if for any reason this is failing we "fallback"
+    # to the previous manual approach of pointing people to the troubleshooting guide.
+    iptables -t filter -A FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+    iptables -t filter -A FORWARD -d "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+    iptables-nft -t filter -A FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+    iptables-nft -t filter -A FORWARD -d "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
+  fi
+fi
+
+# wait for containerd socket
+if grep -e "--address " $SNAP_DATA/args/containerd &> /dev/null
+then
+  socket=$(grep -e "--address " $SNAP_DATA/args/containerd | gawk '{print $2}')
+  # socket_file may be of the form ${SNAP_DATA}/containerd.sock
+  # we need to replace any variables
+  socket_file_expand=$(eval echo ${socket})
+  # wait up until 20 seconds for the docker socket to appear
+  n=0
+  until [ $n -ge 10 ]
+  do
+    test -S "${socket_file_expand}" && break
+    echo "Waiting for containerd socket ${socket_file_expand} to appear. (attempt $n)"
+    n=$[$n+1]
+    sleep 2
+  done
+fi
+
+# Handle non-unified cgroups https://github.com/ubuntu/microk8s/issues/519
+if [ -e /proc/$$/cgroup ] &&
+ [[ $(gawk -F '[:]' '(/cpu/ && !/cpuset/) || /memory/ {print $3}' /proc/$$/cgroup | uniq | wc -l) -eq "2" ]] &&
+ ! grep -e "runtime-cgroups" $SNAP_DATA/args/kubelet &> /dev/null &&
+ ! grep -e "kubelet-cgroups" $SNAP_DATA/args/kubelet &> /dev/null &&
+ [ -e  /sys/fs/cgroup/systemd/system.slice ]
+then
+  refresh_opt_in_local_config "runtime-cgroups" "/systemd/system.slice" kubelet
+  refresh_opt_in_local_config "kubelet-cgroups" "/systemd/system.slice" kubelet
+fi
+
+## Kube-proxy configuration
+# Check if we advertise an address. If we do we do not need to wait for a default network interface.
+if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null
+then
+  # we keep this command to cleanup the file, as it is no longer needed.
+  rm -f ${SNAP_DATA}/external_ip.txt
+  # wait up to two minutes for the default network interface to appear.
+  n=0
+  until [ $n -ge 20 ]
+  do
+    ip route | grep default &> /dev/null && break
+    ip -6 route | grep default &> /dev/null && break
+    echo "Waiting for default route to appear. (attempt $n)"
+    n=$[$n+1]
+    sleep 6
+  done
+fi
+
+if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]
+then
+  ipvs="ipv4 ipv6"
+  for ipv in $ipvs
+  do
+    if [ -e "/proc/sys/net/$ipv/conf/all/forwarding" ] &&
+       ! grep -e "1" "/proc/sys/net/$ipv/conf/all/forwarding"
+    then
+      echo "Enable ip forwarding for $ipv"
+      echo "1" > "/proc/sys/net/$ipv/conf/all/forwarding"
+    fi
+  done
+fi
+
+if [ -f "${SNAP_DATA}/var/lock/host-access-enabled" ] &&
+   ! ip link show lo:microk8s &> /dev/null
+then
+  IP_ADDRESS=$(<"${SNAP_DATA}/var/lock/host-access-enabled")
+  if ! "$SNAP/sbin/ifconfig" lo:microk8s "$IP_ADDRESS" up
+  then
+    echo "Failed to enable host-access"
+  else
+    echo "Host-access enabled [${IP_ADDRESS}]"
+  fi
+fi
+
+if ! [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ]
+then
+  if ! modprobe br_netfilter
+  then
+    refresh_opt_in_local_config "proxy-mode" "userspace" kube-proxy
+  fi
+fi
+if [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ] &&
+   grep 0 /proc/sys/net/bridge/bridge-nf-call-iptables
+then
+  echo "1" > /proc/sys/net/bridge/bridge-nf-call-iptables
+fi
+
+declare -a args="($(cat $SNAP_DATA/args/$app))"
+exec "$SNAP/$app" "${args[@]}"

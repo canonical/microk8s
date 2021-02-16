@@ -46,25 +46,29 @@ do
 
     # every 3 seconds
     sleep 3
+    if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
+      getent group microk8s >/dev/null 2>&1
+    then
+      chmod -R ug+rwX ${SNAP_DATA}/var/kubernetes/backend || true
+      chgrp microk8s -R ${SNAP_DATA}/var/kubernetes/backend || true
+    fi
 
     if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
-       ip route | grep default &> /dev/null &&
-       snapctl services microk8s.daemon-apiserver | grep active &> /dev/null
+       ip route | grep default &> /dev/null
     then
+      if snapctl services microk8s.daemon-kubelite | grep active &> /dev/null
+      then
         csr_modified="$(produce_certs)"
         if [[ "$csr_modified" -eq "1" ]];
         then
             echo "CSR change detected. Reconfiguring the kube-apiserver"
             rm -rf .srl
-            snapctl restart microk8s.daemon-etcd
-            snapctl restart microk8s.daemon-containerd
-            snapctl restart microk8s.daemon-apiserver
-            snapctl restart microk8s.daemon-proxy
-            snapctl restart microk8s.daemon-kubelet
+            snapctl restart microk8s.daemon-kubelite
             restart_attempt=$[$restart_attempt+1]
         else
             restart_attempt=0
         fi
+      fi
     fi
 
     if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
@@ -98,15 +102,18 @@ do
     #
     # Wait until the apiserver is up and is successfully responding to
     # namespace checks before we check for the registry configmap.
-    if [ $installed_registry_help -eq 0 ] &&
-       snapctl services microk8s.daemon-apiserver | grep active &> /dev/null &&
-       "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get namespace kube-public &> /dev/null
+    if snapctl services microk8s.daemon-apiserver | grep active &> /dev/null ||
+       snapctl services microk8s.daemon-kubelite | grep active &> /dev/null
     then
-      if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kube-public &> /dev/null
+      if [ $installed_registry_help -eq 0 ] &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get namespace kube-public &> /dev/null
       then
-        use_manifest registry-help apply
-      fi
+        if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kube-public &> /dev/null
+        then
+          use_manifest registry-help apply
+        fi
       
-      installed_registry_help=1
+        installed_registry_help=1
+      fi
     fi
 done

@@ -80,9 +80,9 @@ def get_kubectl_directory() -> str:
 def get_kubeconfig_path():
     """Return a MicroK8s specific kubeconfig path."""
     if sys.platform == "win32":
-        return os.path.join(os.environ.get('LocalAppData'), "MicroK8s", "config")
+        return os.path.join(os.environ.get("LocalAppData"), "MicroK8s", "config")
     else:
-        return os.path.join(os.path.expanduser('~'), ".microk8s", "config")
+        return os.path.join(os.path.expanduser("~"), ".microk8s", "config")
 
 
 def clear_kubeconfig():

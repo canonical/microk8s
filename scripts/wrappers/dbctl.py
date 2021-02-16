@@ -42,7 +42,7 @@ def run_command(command):
     process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
     while True:
         output = process.stdout.readline()
-        if (not output or output == '') and process.poll() is not None:
+        if (not output or output == "") and process.poll() is not None:
             break
         if output:
             print(output.decode().strip())
@@ -56,18 +56,18 @@ def backup(fname=None, debug=False):
     :param fname_tar: the tar file
     :param debug: show debug output
     """
-    snap_path = os.environ.get('SNAP')
+    snap_path = os.environ.get("SNAP")
     # snap_path = '/snap/microk8s/current'
     # snapdata_path = '/var/snap/microk8s/current'
 
     if not fname:
         fname = generate_backup_name()
-    if fname.endswith('.tar.gz'):
+    if fname.endswith(".tar.gz"):
         fname = fname[:-7]
-    fname_tar = '{}.tar.gz'.format(fname)
+    fname_tar = "{}.tar.gz".format(fname)
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        backup_cmd = '{}/bin/migrator --mode backup-dqlite --db-dir {}'.format(
+        backup_cmd = "{}/bin/migrator --mode backup-dqlite --db-dir {}".format(
             snap_path, "{}/{}".format(tmpdirname, fname)
         )
         if debug:
@@ -95,17 +95,17 @@ def restore(fname_tar, debug=False):
     :param fname_tar: the tar file
     :param debug: show debug output
     """
-    snap_path = os.environ.get('SNAP')
+    snap_path = os.environ.get("SNAP")
     # snap_path = '/snap/microk8s/current'
     with tempfile.TemporaryDirectory() as tmpdirname:
         with tarfile.open(fname_tar, "r:gz") as tar:
             tar.extractall(path=tmpdirname)
-        if fname_tar.endswith('.tar.gz'):
+        if fname_tar.endswith(".tar.gz"):
             fname = fname_tar[:-7]
         else:
             fname = fname_tar
         fname = os.path.basename(fname)
-        restore_cmd = '{}/bin/migrator --mode restore-to-dqlite --db-dir {}'.format(
+        restore_cmd = "{}/bin/migrator --mode restore-to-dqlite --db-dir {}".format(
             snap_path, "{}/{}".format(tmpdirname, fname)
         )
         if debug:
@@ -120,7 +120,7 @@ def restore(fname_tar, debug=False):
             exit(4)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit_if_no_permission()
     is_cluster_locked()
 
@@ -130,22 +130,22 @@ if __name__ == '__main__':
 
     # initiate the parser with a description
     parser = argparse.ArgumentParser(
-        description="backup and restore the Kubernetes datastore.", prog='microk8s dbctl'
+        description="backup and restore the Kubernetes datastore.", prog="microk8s dbctl"
     )
-    parser.add_argument('--debug', action='store_true', help='print debug output')
-    commands = parser.add_subparsers(title='commands', help='backup and restore operations')
+    parser.add_argument("--debug", action="store_true", help="print debug output")
+    commands = parser.add_subparsers(title="commands", help="backup and restore operations")
     restore_parser = commands.add_parser("restore")
-    restore_parser.add_argument('backup-file', help='name of file with the backup')
+    restore_parser.add_argument("backup-file", help="name of file with the backup")
     backup_parser = commands.add_parser("backup")
-    backup_parser.add_argument('-o', metavar='backup-file', help='output filename')
+    backup_parser.add_argument("-o", metavar="backup-file", help="output filename")
     args = parser.parse_args()
 
-    if 'backup-file' in args:
-        fname = vars(args)['backup-file']
+    if "backup-file" in args:
+        fname = vars(args)["backup-file"]
         print("Restoring from {}".format(fname))
         restore(fname, args.debug)
-    elif 'o' in args:
+    elif "o" in args:
         print("Backing up the datastore")
-        backup(vars(args)['o'], args.debug)
+        backup(vars(args)["o"], args.debug)
     else:
         parser.print_help()

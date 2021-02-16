@@ -129,13 +129,6 @@ spec:
             port: 8181
             scheme: HTTP
       dnsPolicy: Default
-      volumes:
-        - name: config-volume
-          configMap:
-            name: coredns
-            items:
-            - key: Corefile
-              path: Corefile
 ---
 apiVersion: v1
 kind: Service

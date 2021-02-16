@@ -96,7 +96,7 @@ function store_kubernetes_info {
   mkdir -p $INSPECT_DUMP/k8s
   sudo -E /snap/bin/microk8s kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
   sudo -E /snap/bin/microk8s kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
-  sudo -E /snap/bin/microk8s kubectl cluster-info dump 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+  sudo -E /snap/bin/microk8s kubectl cluster-info dump -A 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
   sudo -E /snap/bin/microk8s kubectl get all --all-namespaces -o wide 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
   sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
   sudo -E /snap/bin/microk8s kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
@@ -280,13 +280,18 @@ check_certificates
 printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"
 check_service "snap.microk8s.daemon-containerd"
-check_service "snap.microk8s.daemon-apiserver"
 check_service "snap.microk8s.daemon-apiserver-kicker"
-check_service "snap.microk8s.daemon-control-plane-kicker"
-check_service "snap.microk8s.daemon-proxy"
-check_service "snap.microk8s.daemon-kubelet"
-check_service "snap.microk8s.daemon-scheduler"
-check_service "snap.microk8s.daemon-controller-manager"
+if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
+then
+  check_service "snap.microk8s.daemon-kubelite"
+else
+  check_service "snap.microk8s.daemon-apiserver"
+  check_service "snap.microk8s.daemon-proxy"
+  check_service "snap.microk8s.daemon-kubelet"
+  check_service "snap.microk8s.daemon-scheduler"
+  check_service "snap.microk8s.daemon-controller-manager"
+  check_service "snap.microk8s.daemon-control-plane-kicker"
+fi
 if ! [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then
   check_service "snap.microk8s.daemon-flanneld"
