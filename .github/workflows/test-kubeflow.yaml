@@ -201,8 +201,6 @@ jobs:
         run: juju ssh ubuntu/0 sudo microk8s kubectl describe pods -nkubeflow
         if: failure()
 
-<<<<<<< HEAD
-=======
       - name: dex-auth logs
         run: juju ssh ubuntu/0 sudo microk8s kubectl logs -nkubeflow --tail 1000 -l juju-app=dex-auth
         if: failure()
@@ -231,7 +229,6 @@ jobs:
           EOF
         if: failure()
 
->>>>>>> 2f4eb945302775909216ed295082bc2cd701b08d
       - name: Generate inspect tarball
         run: |
           juju ssh ubuntu/0 <<EOF
