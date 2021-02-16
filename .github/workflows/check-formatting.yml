@@ -18,11 +18,10 @@ jobs:
           sudo apt-get install tox
           sudo snap install node --classic
           sudo npm install --save-dev --save-exact -g prettier
-
       - name: Check Python formatting
         run: |
           tox -e lint
-
       - name: Check YAML formatting
         run: |
-          prettier --check $(find . -name "*.yaml" -o -name "*.yml" | grep -v "./microk8s-resources/actions/ingress.yaml")
+          set -eux
+          prettier --check $(find . -name "*.yaml" -o -name "*.yml")
