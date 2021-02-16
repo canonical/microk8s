@@ -5,7 +5,7 @@ on:
     branches:
       - master
   pull_request:
-    branches: 
+    branches:
       - master
 
 jobs:
@@ -18,11 +18,7 @@ jobs:
       uses: actions/checkout@v2
     - name: Install lxd
       run: |
-        sudo snap install lxd
-        sudo /snap/bin/lxd.migrate -yes
-        sudo /snap/bin/lxd waitready
-        sudo /snap/bin/lxd init --auto
-        sudo usermod --append --groups lxd $USER
+        sg lxd -c 'lxc version'
     - name: Install snapcraft
       run: sudo snap install snapcraft --classic
     - name: Build snap
@@ -58,4 +54,4 @@ jobs:
         export UNDER_TIME_PRESSURE="True"
         sudo -E UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade.py
 
-        
+
