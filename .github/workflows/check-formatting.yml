@@ -24,4 +24,4 @@ jobs:
       - name: Check YAML formatting
         run: |
           set -eux
-          prettier --check $(find . -name "*.yaml" -o -name "*.yml")
+          prettier --check $(find . -name "*.yaml" -o -name "*.yml" | grep -v "./microk8s-resources/actions/ingress.yaml")
