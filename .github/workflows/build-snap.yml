@@ -18,6 +18,11 @@ jobs:
         uses: actions/checkout@v2
       - name: Install lxd
         run: |
+          sudo snap refresh lxd
+          sudo /snap/bin/lxd waitready
+          sudo /snap/bin/lxd.migrate -yes
+          sudo /snap/bin/lxd waitready
+          sudo /snap/bin/lxd init --auto
           sudo usermod --append --groups lxd $USER
           sg lxd -c 'lxc version'
       - name: Install snapcraft
