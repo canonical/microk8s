@@ -199,7 +199,8 @@ parts:
     source: build-scripts/
     override-build: |
       . ./set-env-variables.sh
-      curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-$KUBE_ARCH-${CNI_VERSION}.tgz
+      rm -rf cni*
+      curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-$KUBE_ARCH-${CNI_VERSION}.tgz
       mkdir cni
       tar -xzvf cni-*.tgz -C cni/
       snapcraftctl build
