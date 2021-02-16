@@ -9,7 +9,7 @@ exit_if_no_permissions() {
     echo "    sudo usermod -a -G microk8s $USER" >&2
     echo "    sudo chown -f -R $USER ~/.kube" >&2
     echo "" >&2
-    echo "The new group will be available on the user's next login." >&2
+    echo "After this, reload the user groups either via a reboot or by running 'newgrp microk8s'." >&2
     exit 1
   fi
 }
