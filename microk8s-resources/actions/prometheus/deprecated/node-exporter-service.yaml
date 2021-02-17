@@ -8,8 +8,8 @@ metadata:
 spec:
   clusterIP: None
   ports:
-  - name: https
-    port: 9100
-    targetPort: https
+    - name: https
+      port: 9100
+      targetPort: https
   selector:
     app: node-exporter

@@ -27,8 +27,8 @@ spec:
                   fieldPath: spec.nodeName
             - name: PV_DIR
               value: $SNAP_COMMON/default-storage
-#            - name: PV_RECLAIM_POLICY
-#              value: Retain
+          #            - name: PV_RECLAIM_POLICY
+          #              value: Retain
           volumeMounts:
             - name: pv-volume
               mountPath: $SNAP_COMMON/default-storage
@@ -56,37 +56,37 @@ kind: ClusterRole
 metadata:
   name: microk8s-hostpath
 rules:
-- apiGroups: [""]
-  resources:
-  - persistentvolumeclaims
-  verbs:
-  - list
-  - get
-  - watch
-  - update
-- apiGroups: [""]
-  resources:
-  - persistentvolumes
-  verbs:
-  - list
-  - get
-  - update
-  - watch
-  - create
-  - delete
-- apiGroups: [""]
-  resources:
-    - events
-  verbs:
-    - create
-    - list
-    - patch
-- apiGroups: ["storage.k8s.io"]
-  resources:
-    - storageclasses
-  verbs:
-    - list
-    - watch
+  - apiGroups: [""]
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - list
+      - get
+      - watch
+      - update
+  - apiGroups: [""]
+    resources:
+      - persistentvolumes
+    verbs:
+      - list
+      - get
+      - update
+      - watch
+      - create
+      - delete
+  - apiGroups: [""]
+    resources:
+      - events
+    verbs:
+      - create
+      - list
+      - patch
+  - apiGroups: ["storage.k8s.io"]
+    resources:
+      - storageclasses
+    verbs:
+      - list
+      - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

@@ -3,9 +3,9 @@ kind: ClusterRole
 metadata:
   name: resource-metrics-server-resources
 rules:
-- apiGroups:
-  - metrics.k8s.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - "*"
+    verbs:
+      - "*"
