@@ -313,7 +313,7 @@ def join_node_etcd():
     api_port = get_arg("--secure-port", "kube-apiserver")
     proxy_token = get_token("kube-proxy")
     kubelet_token = add_kubelet_token(node_addr)
-    service("restart", "apiservice")
+    service("restart", "apiserver")
     if node_addr != hostname:
         kubelet_args = read_kubelet_args_file(node_addr)
     else:
