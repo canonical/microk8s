@@ -1,7 +1,7 @@
-From 43d97aabd7c927790641b37e0ec2dcb8e59635a9 Mon Sep 17 00:00:00 2001
+From 7136e0646e50d26d40db49ae0f6606775d11a56a Mon Sep 17 00:00:00 2001
 From: Konstantinos <kos.tsakalozos@canonical.com>
 Date: Thu, 24 Sep 2020 21:06:03 +0300
-Subject: [PATCH] kubelite, single binary k8s
+Subject: [PATCH 1/2] kubelite, single binary k8s
 
 ---
  cmd/kube-apiserver/app/server.go    |  9 ++--
@@ -382,6 +382,84 @@ index 00000000000..667b24f68e6
 +	app.Execute()
 +	println("Stopping kubelite")
 +}
+-- 
+2.25.1
+
+
+From 7d9c9921a6c646cb254c3eb312babb56784af952 Mon Sep 17 00:00:00 2001
+From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
+Date: Wed, 17 Feb 2021 11:00:26 +0200
+Subject: [PATCH 2/2] Option to not start the control plane on kubelite
+
+---
+ cmd/kubelite/app/options/options.go |  5 +++--
+ cmd/kubelite/app/server.go          | 20 ++++++++++++--------
+ 2 files changed, 15 insertions(+), 10 deletions(-)
+
+diff --git a/cmd/kubelite/app/options/options.go b/cmd/kubelite/app/options/options.go
+index ca5e7b3d207..80f1d8b09fc 100644
+--- a/cmd/kubelite/app/options/options.go
++++ b/cmd/kubelite/app/options/options.go
+@@ -30,8 +30,8 @@ type Options struct {
+ 	ProxyArgsFile             string
+ 	KubeletArgsFile           string
+ 	APIServerArgsFile         string
+-
+-	KubeconfigFile            string
++	KubeconfigFile    		  string
++	StartControlPlane		  bool
+ }
+ 
+ func NewOptions() (*Options){
+@@ -42,6 +42,7 @@ func NewOptions() (*Options){
+ 		"/var/snap/microk8s/current/args/kubelet",
+ 		"/var/snap/microk8s/current/args/kube-apiserver",
+ 		"/var/snap/microk8s/current/credentials/client.config",
++		true,
+ 	}
+ 	return &o
+ }
+diff --git a/cmd/kubelite/app/server.go b/cmd/kubelite/app/server.go
+index e70f19194a4..e7452a09e3e 100644
+--- a/cmd/kubelite/app/server.go
++++ b/cmd/kubelite/app/server.go
+@@ -36,19 +36,22 @@ var liteCmd = &cobra.Command{
+ 	// has an action associated with it:
+ 	Run: func(cmd *cobra.Command, args []string) {
+ 		ctx := genericapiserver.SetupSignalContext()
+-		apiserverArgs := options.ReadArgsFromFile(opts.APIServerArgsFile)
+-		go daemon.StartAPIServer(apiserverArgs, ctx.Done())
+-		daemon.WaitForAPIServer(opts.KubeconfigFile, 360 * time.Second)
+ 
+-		controllerArgs := options.ReadArgsFromFile(opts.ControllerManagerArgsFile)
+-		go daemon.StartControllerManager(controllerArgs, ctx)
++		if opts.StartControlPlane {
++			apiserverArgs := options.ReadArgsFromFile(opts.APIServerArgsFile)
++			go daemon.StartAPIServer(apiserverArgs, ctx.Done())
++			daemon.WaitForAPIServer(opts.KubeconfigFile, 360 * time.Second)
++
++			controllerArgs := options.ReadArgsFromFile(opts.ControllerManagerArgsFile)
++			go daemon.StartControllerManager(controllerArgs, ctx)
++
++			schedulerArgs := options.ReadArgsFromFile(opts.SchedulerArgsFile)
++			go daemon.StartScheduler(schedulerArgs, ctx)
++		}
+ 
+ 		proxyArgs := options.ReadArgsFromFile(opts.ProxyArgsFile)
+ 		go daemon.StartProxy(proxyArgs)
+ 
+-		schedulerArgs := options.ReadArgsFromFile(opts.SchedulerArgsFile)
+-		go daemon.StartScheduler(schedulerArgs, ctx)
+-
+ 		kubeletArgs := options.ReadArgsFromFile(opts.KubeletArgsFile)
+ 		daemon.StartKubelet(kubeletArgs, ctx)
+ 	},
+@@ -72,4 +75,5 @@ func init() {
+ 	liteCmd.Flags().StringVar(&opts.KubeletArgsFile, "kubelet-args-file", opts.KubeletArgsFile, "file with the arguments for kubelet")
+ 	liteCmd.Flags().StringVar(&opts.APIServerArgsFile, "apiserver-args-file", opts.APIServerArgsFile, "file with the arguments for the API server")
+ 	liteCmd.Flags().StringVar(&opts.KubeconfigFile , "kubeconfig-file", opts.KubeconfigFile, "the kubeconfig file to use to healthcheck the API server")
++	liteCmd.Flags().BoolVar(&opts.StartControlPlane, "start-control-plane", opts.StartControlPlane, "start the control plane (API server, scheduler and controller manager)")
+ }
 -- 
 2.25.1
 
