@@ -12,7 +12,7 @@ metadata:
   namespace: metallb-system
 type: Opaque
 data:
-  secretkey: { { member_list } }
+  secretkey: {{member_list}}
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -22,11 +22,11 @@ metadata:
   name: controller
   namespace: metallb-system
 spec:
-  allowPrivilegeEscalation: { { allow_escalation } }
+  allowPrivilegeEscalation: {{allow_escalation}}
   allowedCapabilities: []
   allowedHostPaths: []
   defaultAddCapabilities: []
-  defaultAllowPrivilegeEscalation: { { allow_escalation } }
+  defaultAllowPrivilegeEscalation: {{allow_escalation}}
   fsGroup:
     ranges:
       - max: 65535
@@ -64,14 +64,14 @@ metadata:
   name: speaker
   namespace: metallb-system
 spec:
-  allowPrivilegeEscalation: { { allow_escalation } }
+  allowPrivilegeEscalation: {{allow_escalation}}
   allowedCapabilities:
     - NET_ADMIN
     - NET_RAW
     - SYS_ADMIN
   allowedHostPaths: []
   defaultAddCapabilities: []
-  defaultAllowPrivilegeEscalation: { { allow_escalation } }
+  defaultAllowPrivilegeEscalation: {{allow_escalation}}
   fsGroup:
     rule: RunAsAny
   hostIPC: false
@@ -337,7 +337,7 @@ spec:
               cpu: 100m
               memory: 100Mi
           securityContext:
-            allowPrivilegeEscalation: { { allow_escalation } }
+            allowPrivilegeEscalation: {{allow_escalation}}
             capabilities:
               add:
                 - NET_ADMIN
@@ -393,7 +393,7 @@ spec:
               cpu: 100m
               memory: 100Mi
           securityContext:
-            allowPrivilegeEscalation: { { allow_escalation } }
+            allowPrivilegeEscalation: {{allow_escalation}}
             capabilities:
               drop:
                 - all
