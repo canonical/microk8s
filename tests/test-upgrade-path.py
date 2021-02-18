@@ -1,6 +1,5 @@
 import pytest
 import os
-import platform
 import time
 import requests
 from utils import (
@@ -27,11 +26,8 @@ class TestUpgradePath(object):
         Deploy an old snap and try to refresh until the current one.
 
         """
-        if platform.machine() == 'x86_64':
-            start_channel = 14
-        else:
-            start_channel = 15
 
+        start_channel = 16
         last_stable_minor = None
         if upgrade_from.startswith('latest') or '/' not in upgrade_from:
             attempt = 0
