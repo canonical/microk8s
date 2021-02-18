@@ -10,7 +10,7 @@ description: |-
 
 grade: stable
 confinement: classic
-base: core
+base: core20
 
 apps:
   microk8s:
@@ -72,7 +72,7 @@ apps:
   ctr:
     command: microk8s-ctr.wrapper
   inspect:
-    command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    command: microk8s-inspect.wrapper
   enable:
     command: microk8s-enable.wrapper
   disable:
@@ -115,7 +115,6 @@ parts:
       include/: usr/include/
     prime:
       - lib/libraft*so*
-      - usr/include/
 
   sqlite:
     source: https://github.com/sqlite/sqlite
@@ -133,14 +132,13 @@ parts:
       cp /usr/share/misc/config.guess .
       cp /usr/share/misc/config.sub .
       autoreconf -f -i
-      set +ex
       snapcraftctl build
     organize:
-      include/: usr/include/
-    prime:
+      usr/local/lib/: lib/
+      usr/local/bin/sqlite3: bin/sqlite3
+    stage:
       - bin/sqlite3
       - lib/libsqlite3*so*
-      - usr/include/
 
   dqlite:
     after:
@@ -157,11 +155,9 @@ parts:
       - pkg-config
     organize:
       usr/lib/: lib/
-      include/: usr/include/
     prime:
       - lib/libdqlite*so*
       - lib/*/libuv*
-      - usr/include/
 
   dqlite-client:
     build-snaps: [go]
@@ -172,15 +168,12 @@ parts:
     go-channel: 1.15/stable
     build-packages:
       - libsqlite3-dev
-    go-importpath: github.com/canonical/go-dqlite
     override-build: |
       set -eux
       snap refresh go --channel=1.15/stable || true
       go version
       export GOPATH=${SNAPCRAFT_STAGE}
-      CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      cp $GOPATH/bin/dqlite $SNAPCRAFT_PART_INSTALL/bin/
+      CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/local/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/usr/local/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
 
   etcd:
     plugin: dump
@@ -200,6 +193,7 @@ parts:
     override-build: |
       . ./set-env-variables.sh
       curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-$KUBE_ARCH-${CNI_VERSION}.tgz
+      rm -rf cni
       mkdir cni
       tar -xzvf cni-*.tgz -C cni/
       snapcraftctl build
@@ -273,13 +267,7 @@ parts:
       - kubectl.bash
       - actions
 
-  libmnl:
-    plugin: autotools
-    source: https://www.netfilter.org/pub/libmnl/libmnl-1.0.4.tar.bz2
-
   libnftnl:
-    after:
-      - libmnl
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
     build-packages:
@@ -293,10 +281,11 @@ parts:
     build-packages:
       - bison
       - flex
+      - libmnl-dev
       - libnfnetlink-dev
       - libnetfilter-conntrack3
       - libnetfilter-conntrack-dev
-    configflags:
+    autotools-configure-parameters:
       - "--disable-shared"
       - "--enable-static"
     prime: [-bin/iptables-xml]
@@ -307,7 +296,6 @@ parts:
     source-type: git
     plugin: go
     go-channel: 1.15/stable
-    go-importpath: github.com/ktsakalozos/go-migrator
     build-packages:
       - gcc
     prime:
@@ -319,7 +307,7 @@ parts:
     source: build-scripts/
     plugin: dump
     build-packages:
-      - btrfs-tools
+      - golang-github-containerd-btrfs-dev
       - libseccomp-dev
     override-build: |
       set -eux
@@ -363,12 +351,13 @@ parts:
       - conntrack
       - curl
       - aufs-tools
+      - btrfs-progs
       - gawk
       - sed
       - socat
       - grep
       - jq
-      - libssl1.0.0
+      - libssl1.1
       - coreutils
       - hostname
       - diffutils
@@ -381,23 +370,27 @@ parts:
 
   cluster-agent:
     plugin: python
-    python-version: python3
     source: .
     python-packages:
       - flask
       - PyYAML
       - netifaces
     stage-packages:
+      - gunicorn
+      - python3
       - python3-openssl
       - openssl
+      - python3-certifi
+      - python3-chardet
+      - python3-idna
+      - ca-certificates
       - python3-requests
-      - gunicorn3
+      - python3-urllib3
+      - python3-requestsexceptions
+      - python3-gunicorn
+      - python3-six
       - python3-click
       - python3-dateutil
-    override-pull: |
-      apt-get install -y python3-pip
-      PYTHONHOME=/usr PYTHONUSERBASE=$SNAPCRAFT_PART_INSTALL $SNAPCRAFT_PART_INSTALL/usr/bin/python3 -m pip install --upgrade 'pip; python_version >= "3.6"' 'pip<21; python_version < "3.6"' --user
-      snapcraftctl pull
 
   microk8s:
     after: [containerd, dqlite, k8s-binaries]
@@ -418,7 +411,6 @@ parts:
       - util-linux
       - zfsutils-linux
       - iproute2
-      - python3-click
     source: .
     prime:
       - -README*

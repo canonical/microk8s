@@ -5,6 +5,9 @@ set -eu
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
 export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+export PYTHONNOUSERSITE=false
+export PYTHONHOME="$SNAP/usr"
+export PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/"
 
 source $SNAP/actions/common/utils.sh
 
@@ -19,7 +22,7 @@ workers=$("$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" ge
 run_with_sudo mkdir -p ${SNAP_DATA}/var/log/
 
 echo "Enabling flanneld and etcd"
-run_with_sudo preserve_env LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/upgrade.py -r 002-switch-to-flannel-etcd 2>&1 | run_with_sudo tee ${SNAP_DATA}/var/log/ha-cluster-disable.log &>/dev/null
+run_with_sudo preserve_env LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/bin/python ${SNAP}/scripts/wrappers/upgrade.py -r 002-switch-to-flannel-etcd 2>&1 | run_with_sudo tee ${SNAP_DATA}/var/log/ha-cluster-disable.log &>/dev/null
 if [ $? -ne 0 ]; then
   echo "Transition to flannel and etcd failed. Please see logs at ${SNAP_DATA}/var/log/ha-cluster-disable.log for more details."
   exit 1
