@@ -101,15 +101,24 @@ apps:
     command: microk8s-dbctl.wrapper
 
 parts:
+  libuv:
+    source: https://github.com/libuv/libuv
+    source-tag: v1.18.0
+    build-attributes: [no-patchelf]
+    source-type: git
+    plugin: autotools
+    organize:
+      usr/lib/: lib/
+    prime:
+      - lib/libuv*so*
+
   raft:
+    after:
+      - libuv
     source: https://github.com/canonical/raft
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
-    configflags:
-      - --enable-debug
-    stage-packages:
-      - libuv1
     organize:
       usr/lib/: lib/
       include/: usr/include/
@@ -146,16 +155,12 @@ parts:
     after:
       - raft
       - sqlite
+      - libuv
     source: https://github.com/canonical/dqlite
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
-    configflags:
-      - --enable-debug
-    stage-packages:
-      - libuv1
     build-packages:
-      - libuv1-dev
       - pkg-config
     organize:
       usr/lib/: lib/
