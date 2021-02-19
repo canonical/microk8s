@@ -34,7 +34,7 @@ from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
 
 
 class TestAddons(object):
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(scope="session", autouse=True)
     def clean_up(self):
         """
         Clean up after a test
@@ -56,6 +56,8 @@ class TestAddons(object):
         validate_ingress()
         print("Disabling ingress")
         microk8s_disable("ingress")
+        print("Enabling metrics-server")
+        microk8s_enable("metrics-server")
         print("Enabling dashboard")
         microk8s_enable("dashboard")
         print("Validating dashboard")
@@ -69,6 +71,10 @@ class TestAddons(object):
         validate_registry()
         print("Validating Port Forward")
         validate_forward()
+        print("Validating the Metrics Server")
+        validate_metrics_server()
+        print("Disabling metrics-server")
+        microk8s_disable("metrics-server")
         print("Disabling registry")
         microk8s_disable("registry")
         print("Disabling dashboard")
@@ -176,6 +182,7 @@ class TestAddons(object):
         validate_prometheus()
         print("Disabling prometheus")
         microk8s_disable("prometheus")
+        microk8s_reset()
 
     @pytest.mark.skipif(
         platform.machine() != 'x86_64', reason="Cilium tests are only relevant in x86 architectures"
@@ -200,18 +207,7 @@ class TestAddons(object):
         validate_cilium()
         print("Disabling Cilium")
         microk8s_disable("cilium")
-
-    def test_metrics_server(self):
-        """
-        Test the metrics server.
-
-        """
-        print("Enabling metrics-server")
-        microk8s_enable("metrics-server")
-        print("Validating the Metrics Server")
-        validate_metrics_server()
-        print("Disabling metrics-server")
-        microk8s_disable("metrics-server")
+        microk8s_reset()
 
     @pytest.mark.skipif(
         platform.machine() != 'x86_64',

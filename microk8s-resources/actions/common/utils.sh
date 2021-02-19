@@ -316,13 +316,14 @@ get_default_ip() {
 
 get_ips() {
     local IP_ADDR="$($SNAP/bin/hostname -I)"
+    local CNI_INTERFACE="vxlan.calico"
     if [[ -z "$IP_ADDR" ]]
     then
         echo "none"
     else
-        if $SNAP/sbin/ifconfig cni0 &> /dev/null
+        if $SNAP/sbin/ifconfig "$CNI_INTERFACE" &> /dev/null
         then
-          CNI_IP="$($SNAP/sbin/ip -o -4 addr list cni0 | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
+          CNI_IP="$($SNAP/sbin/ip -o -4 addr list "$CNI_INTERFACE" | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
           local ips="";
           for ip in $IP_ADDR
           do
