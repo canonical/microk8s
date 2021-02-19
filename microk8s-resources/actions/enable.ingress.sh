@@ -23,7 +23,11 @@ echo "Enabling Ingress"
 
 ARCH=$(arch)
 TAG="v0.35.0"
-EXTRA_ARGS="- --publish-status-address=127.0.0.1"
+HOST_IP=$(get_default_ip)
+if ! valid_ip "${HOST_IP}"; then
+  HOST_IP="127.0.0.1"
+fi
+EXTRA_ARGS="- --publish-status-address=${HOST_IP}"
 DEFAULT_CERT="- ' '"
 
 if [ ! -z "$CERT_SECRET" ]
