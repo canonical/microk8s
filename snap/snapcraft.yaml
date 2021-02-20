@@ -110,11 +110,6 @@ parts:
     plugin: autotools
     stage-packages:
       - libuv1
-    organize:
-      usr/lib/: lib/
-      include/: usr/include/
-    prime:
-      - lib/libraft*so*
 
   sqlite:
     source: https://github.com/sqlite/sqlite
@@ -153,11 +148,6 @@ parts:
     build-packages:
       - libuv1-dev
       - pkg-config
-    organize:
-      usr/lib/: lib/
-    prime:
-      - lib/libdqlite*so*
-      - lib/*/libuv*
 
   dqlite-client:
     build-snaps: [go]
