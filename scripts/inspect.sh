@@ -125,7 +125,8 @@ function store_kubeflow_info {
 function suggest_fixes {
   # Propose fixes
   printf '\n'
-  if ! systemctl status snap.microk8s.daemon-apiserver &> /dev/null
+  if ! systemctl status snap.microk8s.daemon-apiserver &> /dev/null &&
+     ! systemctl status snap.microk8s.daemon-kubelite &> /dev/null
   then
     if lsof -Pi :16443 -sTCP:LISTEN -t &> /dev/null
     then
@@ -161,7 +162,7 @@ function suggest_fixes {
   if [ -d "/etc/docker/" ]; then 
     # if docker/daemon.json file doesn't exist print prompt to create it and mark the registry as insecure
     if [ ! -f "/etc/docker/daemon.json" ]; then
-      printf -- '\033[0;33mWARNING: \033[0m Docker is installed. \n'
+      printf -- '\033[0;33m WARNING: \033[0m Docker is installed. \n'
       printf -- 'File "/etc/docker/daemon.json" does not exist. \n'
       printf -- 'You should create it and add the following lines: \n'
       printf -- '{\n'
@@ -173,7 +174,7 @@ function suggest_fixes {
       # if it doesn't include the registry as insecure, prompt to add the following lines
       if ! grep -qs localhost:32000 /etc/docker/daemon.json
       then
-        printf -- '\033[0;33mWARNING: \033[0m Docker is installed. \n'
+        printf -- '\033[0;33m WARNING: \033[0m Docker is installed. \n'
         printf -- 'Add the following lines to /etc/docker/daemon.json: \n'
         printf -- '{\n'
         printf -- '    "insecure-registries" : ["localhost:32000"] \n'
@@ -184,7 +185,7 @@ function suggest_fixes {
   fi
 
   if ! mount | grep -q 'cgroup/memory'; then
-    printf -- '\033[0;33mWARNING: \033[0m The memory cgroup is not enabled. \n'
+    printf -- '\033[0;33m WARNING: \033[0m The memory cgroup is not enabled. \n'
     printf -- 'The cluster may not be functioning properly. Please ensure cgroups are enabled \n'
     printf -- 'See for example: https://microk8s.io/docs/install-alternatives#heading--arm \n'
   fi
@@ -216,7 +217,7 @@ function suggest_fixes {
     # make sure the /dev/kmsg is available, indicating a potential missing profile
     if [ ! -c "/dev/kmsg" ]  # kmsg is a character device
     then
-      printf -- '\033[0;33mWARNING: \033[0m the lxc profile for MicroK8s might be missing. \n'
+      printf -- '\033[0;33m WARNING: \033[0m the lxc profile for MicroK8s might be missing. \n'
       printf -- '\t  Refer to this help document to get MicroK8s working in with LXD: \n'
       printf -- '\t  https://microk8s.io/docs/lxd \n'
     fi
@@ -226,7 +227,7 @@ function suggest_fixes {
   nodename="$(hostname)"
   if [[ "$nodename" =~ [A-Z|_] ]] && ! grep -e "hostname-override" /var/snap/microk8s/current/args/kubelet &> /dev/null
   then
-    printf -- "\033[0;33mWARNING: \033[0m This machine's hostname contains capital letters and/or underscores. \n"
+    printf -- "\033[0;33m WARNING: \033[0m This machine's hostname contains capital letters and/or underscores. \n"
     printf -- "\t  This is not a valid name for a Kubernetes node, causing node registration to fail.\n"
     printf -- "\t  Please change the machine's hostname or refer to the documentation for more details: \n"
     printf -- "\t  https://microk8s.io/docs/troubleshooting#heading--common-issues \n"

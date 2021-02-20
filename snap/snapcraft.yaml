@@ -384,6 +384,7 @@ parts:
       - python3-chardet
       - python3-idna
       - ca-certificates
+      - python3-distutils
       - python3-requests
       - python3-urllib3
       - python3-requestsexceptions

@@ -76,17 +76,17 @@ run_with_sudo() {
     if [ "$1" == "preserve_env" ]
     then
       shift
-      sudo -E PYTHONNOUSERSITE=false PYTHONHOME="$SNAP/usr" PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/" LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+      sudo -E PATH=$PATH PYTHONNOUSERSITE=false PYTHONHOME="$SNAP/usr" PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/" LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
     else
-      sudo LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+      sudo PATH=$PATH LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
     fi
   else
     if [ "$1" == "preserve_env" ]
     then
       shift
-      sudo -E PYTHONNOUSERSITE=false PYTHONHOME="$SNAP/usr" PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/" "$@"
+      sudo -E PATH=$PATH  PYTHONNOUSERSITE=false PYTHONHOME="$SNAP/usr" PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/" "$@"
     else
-      sudo "$@"
+      sudo PATH=$PATH "$@"
     fi
   fi
 }
