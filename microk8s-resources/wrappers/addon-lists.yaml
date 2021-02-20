@@ -95,7 +95,7 @@ microk8s-addons:
 
     - name: "jaeger"
       description: "Kubernetes Jaeger operator with its simple config"
-      version: "1.14.0"
+      version: "1.21.3"
       check_status: "pod/jaeger-operator"
       supported_architectures:
         - amd64
@@ -110,7 +110,7 @@ microk8s-addons:
 
     - name: "cilium"
       description: "SDN, fast with full network policy"
-      version: "1.6"
+      version: "1.8"
       check_status: "pod/cilium"
       supported_architectures:
         - amd64
