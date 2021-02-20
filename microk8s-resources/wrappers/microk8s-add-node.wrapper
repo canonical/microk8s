@@ -3,10 +3,7 @@
 set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
-export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export PYTHONNOUSERSITE=false
 export PYTHONHOME="$SNAP/usr"
 export PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/"
@@ -21,7 +18,7 @@ fi
 
 if echo "$*" | grep -q -- 'help'; then
   # Call add_token.py help
-  LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/bin/python ${SNAP}/scripts/cluster/add_token.py --help
+  ${SNAP}/bin/python ${SNAP}/scripts/cluster/add_token.py --help
   exit 0
 fi
 
@@ -47,7 +44,7 @@ then
 fi
 
 # Use python's built-in (3.6+) secrets generator to produce the token.
-LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/bin/python ${SNAP}/scripts/cluster/add_token.py $@
+${SNAP}/bin/python ${SNAP}/scripts/cluster/add_token.py $@
 
 # Get the generated token and display it, so users can use it to join the cluster.
 OIFS=$IFS

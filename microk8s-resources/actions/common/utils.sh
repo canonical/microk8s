@@ -46,7 +46,7 @@ is_service_expected_to_start() {
 set_service_not_expected_to_start() {
   # mark service as not starting
   local service="$1"
-  run_with_sudo touch ${SNAP_DATA}/var/lock/no-${service}
+  run_with_sudo $SNAP/bin/touch ${SNAP_DATA}/var/lock/no-${service}
 }
 
 set_service_expected_to_start() {
