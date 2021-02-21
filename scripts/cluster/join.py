@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/bin/python
 import base64
 import random
 import string

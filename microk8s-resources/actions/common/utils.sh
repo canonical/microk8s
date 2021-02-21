@@ -46,7 +46,7 @@ is_service_expected_to_start() {
 set_service_not_expected_to_start() {
   # mark service as not starting
   local service="$1"
-  run_with_sudo touch ${SNAP_DATA}/var/lock/no-${service}
+  run_with_sudo $SNAP/bin/touch ${SNAP_DATA}/var/lock/no-${service}
 }
 
 set_service_expected_to_start() {
@@ -76,17 +76,17 @@ run_with_sudo() {
     if [ "$1" == "preserve_env" ]
     then
       shift
-      sudo -E LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+      sudo -E PATH=$PATH PYTHONNOUSERSITE=false PYTHONHOME="$SNAP/usr" PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/" LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
     else
-      sudo LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+      sudo PATH=$PATH LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
     fi
   else
     if [ "$1" == "preserve_env" ]
     then
       shift
-      sudo -E "$@"
+      sudo -E PATH=$PATH  PYTHONNOUSERSITE=false PYTHONHOME="$SNAP/usr" PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/" "$@"
     else
-      sudo "$@"
+      sudo PATH=$PATH "$@"
     fi
   fi
 }
@@ -128,9 +128,13 @@ refresh_opt_in_config() {
     local config_file="$SNAP_DATA/args/$3"
     local replace_line="$opt=$value"
 
+    export PYTHONNOUSERSITE=false
+    export PYTHONHOME="$SNAP/usr"
+    export PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/"
+
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
-        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+        run_with_sudo preserve_env "$SNAP/bin/python" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
@@ -138,7 +142,7 @@ refresh_opt_in_config() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+            run_with_sudo preserve_env "$SNAP/bin/python" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
         fi
     fi
 }
@@ -150,9 +154,13 @@ nodes_addon() {
     local addon="$1"
     local state="$2"
 
+    export PYTHONNOUSERSITE=false
+    export PYTHONHOME="$SNAP/usr"
+    export PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/"
+
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
-        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+        run_with_sudo preserve_env "$SNAP/bin/python" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
@@ -160,7 +168,7 @@ nodes_addon() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+            run_with_sudo preserve_env "$SNAP/bin/python" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
         fi
     fi
 }
@@ -174,9 +182,13 @@ skip_opt_in_config() {
     local config_file="$SNAP_DATA/args/$2"
     run_with_sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
 
+    export PYTHONNOUSERSITE=false
+    export PYTHONHOME="$SNAP/usr"
+    export PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/"
+
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
-        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+        run_with_sudo preserve_env "$SNAP/bin/python" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
@@ -184,7 +196,7 @@ skip_opt_in_config() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+            run_with_sudo preserve_env "$SNAP/bin/python" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
         fi
     fi
 }
@@ -193,6 +205,9 @@ skip_opt_in_config() {
 restart_service() {
     # restart a systemd service
     # argument $1 is the service name
+    export PYTHONNOUSERSITE=false
+    export PYTHONHOME="$SNAP/usr"
+    export PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/"
 
     if [ "$1" == "apiserver" ] || [ "$1" == "proxy" ] || [ "$1" == "kubelet" ] || [ "$1" == "scheduler" ] || [ "$1" == "controller-manager" ]
     then
@@ -208,7 +223,7 @@ restart_service() {
 
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
-        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+        run_with_sudo preserve_env "$SNAP/bin/python" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
@@ -216,7 +231,7 @@ restart_service() {
         tokens=$(run_with_sudo "$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+            run_with_sudo preserve_env "$SNAP/bin/python" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
         fi
     fi
 }

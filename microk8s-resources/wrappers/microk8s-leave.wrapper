@@ -3,10 +3,10 @@
 set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export SNAP_NAME
 export PYTHONNOUSERSITE=false
+export PYTHONHOME="$SNAP/usr"
+export PYTHONPATH="$SNAP/usr/lib/python3/dist-packages/"
 
 source $SNAP/actions/common/utils.sh
 
@@ -33,4 +33,4 @@ then
   exit 1
 fi
 
-run_with_sudo preserve_env ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset
+run_with_sudo preserve_env ${SNAP}/bin/python ${SNAP}/scripts/cluster/join.py reset

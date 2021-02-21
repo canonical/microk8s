@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/bin/python
 from subprocess import check_output
 
 
