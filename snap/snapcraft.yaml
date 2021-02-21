@@ -110,6 +110,14 @@ parts:
     plugin: autotools
     stage-packages:
       - libuv1
+    organize:
+      usr/local/lib/: usr/lib/
+      usr/local/include: usr/include
+    stage:
+      - usr/lib/
+      - usr/include/
+    prime:
+      - usr/lib
 
   sqlite:
     source: https://github.com/sqlite/sqlite
@@ -148,6 +156,14 @@ parts:
     build-packages:
       - libuv1-dev
       - pkg-config
+    organize:
+      usr/local/lib/: usr/lib/
+      usr/local/include: usr/include
+    stage:
+      - usr/lib/
+      - usr/include/
+    prime:
+      - usr/lib
 
   dqlite-client:
     build-snaps: [go]
@@ -163,7 +179,7 @@ parts:
       snap refresh go --channel=1.15/stable || true
       go version
       export GOPATH=${SNAPCRAFT_STAGE}
-      CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/local/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/usr/local/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
+      CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/usr/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
 
   etcd:
     plugin: dump
