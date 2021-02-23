@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: Create snap package
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checking out repo
@@ -21,7 +21,6 @@ jobs:
           sudo lxd init --auto
           sudo usermod --append --groups lxd $USER
           sg lxd -c 'lxc version'
-          sudo snap install lxd
       - name: Install snapcraft
         run: sudo snap install snapcraft --classic
       - name: Build snap
