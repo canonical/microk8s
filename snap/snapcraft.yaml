@@ -206,8 +206,8 @@ parts:
     organize:
       ./cni/*: opt/cni/bin/
     filesets:
-      bins: [ ./opt/cni/bin/* ]
-    stage: [ $bins ]
+      bins: [./opt/cni/bin/*]
+    stage: [$bins]
 
   flanneld:
     plugin: dump
