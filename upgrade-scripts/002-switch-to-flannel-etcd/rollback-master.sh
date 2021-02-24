@@ -4,7 +4,7 @@ set -ex
 echo "Rolling back flannel-etcd upgrade on master"
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
+CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/002-switch-to-flannel-etcd"
 
 ${SNAP}/microk8s-stop.wrapper
