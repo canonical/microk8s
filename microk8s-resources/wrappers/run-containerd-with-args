@@ -28,12 +28,8 @@ fi
 
 app=containerd
 
-if [ -e "${SNAP_DATA}/var/lock/gpu" ]; then
-  RUNTIME="nvidia-container-runtime"
-else
-  RUNTIME="runc"
-fi
 
+RUNTIME="runc"
 SNAPSHOTTER=$(snapshotter)
 
 sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${SNAPSHOTTER}@'"${SNAPSHOTTER}"'@g;s@${RUNTIME}@'"${RUNTIME}"'@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml
