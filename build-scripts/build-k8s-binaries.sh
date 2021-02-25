@@ -2,8 +2,8 @@
 set -eux
 
 echo "Building k8s binaries from $KUBERNETES_REPOSITORY tag $KUBERNETES_TAG"
-apps="kubectl kube-apiserver kube-controller-manager kube-scheduler kubelet kube-proxy"
-path_apps="cmd/kubectl cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-scheduler cmd/kubelet cmd/kube-proxy"
+apps="kubelite kubectl"
+path_apps="cmd/kubelite cmd/kubectl"
 export KUBE_SNAP_BINS="build/kube_bins/$KUBE_VERSION"
 mkdir -p $KUBE_SNAP_BINS/$KUBE_ARCH
 echo $KUBE_VERSION > $KUBE_SNAP_BINS/version
@@ -25,7 +25,7 @@ git clone --depth 1 https://github.com/kubernetes/kubernetes $GOPATH/src/github.
     PATCHES="pre-patches"
   fi
 
-  for patch in "${SNAPCRAFT_PROJECT_DIR}"/build-scripts/"$PATCHES"/*.patch
+  for patch in "${SNAPCRAFT_PART_SRC}"/"$PATCHES"/*.patch
   do
     echo "Applying patch $patch"
     git am < "$patch"
@@ -35,9 +35,9 @@ git clone --depth 1 https://github.com/kubernetes/kubernetes $GOPATH/src/github.
   make clean
   for app in ${path_apps}
   do
-    if [ "$app" = "cmd/kube-apiserver" ]
+    if [ "$app" = "cmd/kubelite" ]
     then
-      make WHAT="${app}" GOFLAGS=-tags=libsqlite3,dqlite CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" KUBE_CGO_OVERRIDES=kube-apiserver
+      make WHAT="${app}" GOFLAGS=-tags=libsqlite3,dqlite CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" KUBE_CGO_OVERRIDES=kubelite
     else
       make WHAT="${app}"
     fi

@@ -7,6 +7,6 @@ roleRef:
   kind: ClusterRole
   name: node-exporter
 subjects:
-- kind: ServiceAccount
-  name: node-exporter
-  namespace: monitoring
+  - kind: ServiceAccount
+    name: node-exporter
+    namespace: monitoring

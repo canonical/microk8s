@@ -24,46 +24,46 @@ spec:
         name: traefik-ingress-lb
     spec:
       tolerations:
-      - effect: NoSchedule
-        operator: Exists
+        - effect: NoSchedule
+          operator: Exists
       serviceAccountName: traefik-ingress-controller
       terminationGracePeriodSeconds: 60
       hostNetwork: true
       containers:
-      - image: traefik:2.3
-        name: traefik-ingress-lb
-        ports:
-        - name: http
-          containerPort: 8080
-          hostPort: 8080
-          # - name: admin
-          # containerPort: 8090
-          #hostPort: 8090
-        securityContext:
-          capabilities:
-            drop:
-            - ALL
-            add:
-            - NET_BIND_SERVICE
-        args:
-        - --providers.kubernetesingress=true
-        # you need to manually set this IP to the incoming public IP
-        # that your ingress resources would use. Note it only affects
-        # status and kubectl UI, and doesn't really do anything
-        # It could even be left out https://github.com/containous/traefik/issues/6303
-        - --providers.kubernetesingress.ingressendpoint.ip=127.0.0.1
-        ## uncomment these and the ports above and below to enable
-        ## the web UI on the host NIC port 8080 in **insecure** mode
-        # - --api.dashboard=true
-        # - --api.insecure=true
-        - --log=true
-        - --log.level=INFO
-        - --accesslog=true
-         # write logs into container STDOUT
-        - --accesslog.filepath=/dev/stdout
-        - --accesslog.format=json
-        - --entrypoints.web.address=:8080
-        - --entrypoints.websecure.address=:8443  
+        - image: traefik:2.3
+          name: traefik-ingress-lb
+          ports:
+            - name: http
+              containerPort: 8080
+              hostPort: 8080
+              # - name: admin
+              # containerPort: 8090
+              #hostPort: 8090
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
+          args:
+            - --providers.kubernetesingress=true
+            # you need to manually set this IP to the incoming public IP
+            # that your ingress resources would use. Note it only affects
+            # status and kubectl UI, and doesn't really do anything
+            # It could even be left out https://github.com/containous/traefik/issues/6303
+            - --providers.kubernetesingress.ingressendpoint.ip=127.0.0.1
+            ## uncomment these and the ports above and below to enable
+            ## the web UI on the host NIC port 8080 in **insecure** mode
+            # - --api.dashboard=true
+            # - --api.insecure=true
+            - --log=true
+            - --log.level=INFO
+            - --accesslog=true
+              # write logs into container STDOUT
+            - --accesslog.filepath=/dev/stdout
+            - --accesslog.format=json
+            - --entrypoints.web.address=:8080
+            - --entrypoints.websecure.address=:8443
 ---
 kind: Service
 apiVersion: v1
@@ -80,7 +80,7 @@ spec:
       # - protocol: TCP
       # port: 8090
       # name: admin
-  type: NodePort  
+  type: NodePort
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -99,12 +99,20 @@ rules:
       - watch
   - apiGroups:
       - extensions
+      - networking.k8s.io
     resources:
       - ingresses
+      - ingressclasses
     verbs:
       - get
       - list
       - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses/status
+    verbs:
+      - update
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -115,9 +123,9 @@ roleRef:
   kind: ClusterRole
   name: traefik-ingress-controller
 subjects:
-- kind: ServiceAccount
-  name: traefik-ingress-controller
-  namespace: traefik
+  - kind: ServiceAccount
+    name: traefik-ingress-controller
+    namespace: traefik
 ---
 apiVersion: v1
 kind: Service
@@ -128,9 +136,9 @@ spec:
   selector:
     k8s-app: traefik-ingress-lb
   ports:
-  - name: web
-    port: 8080
-    targetPort: 8080
+    - name: web
+      port: 8080
+      targetPort: 8080
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -139,14 +147,13 @@ metadata:
   namespace: traefik
 spec:
   rules:
-  - host: traefik-ui.microk8s
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-           service:
-             name: traefik-web-ui
-             port: 
-              number: 8080
-
+    - host: traefik-ui.microk8s
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: traefik-web-ui
+                port:
+                  number: 8080

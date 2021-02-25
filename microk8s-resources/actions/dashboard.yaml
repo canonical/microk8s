@@ -7,7 +7,6 @@ metadata:
   namespace: kube-system
 
 ---
-
 kind: Service
 apiVersion: v1
 metadata:
@@ -23,7 +22,6 @@ spec:
     k8s-app: kubernetes-dashboard
 
 ---
-
 apiVersion: v1
 kind: Secret
 metadata:
@@ -34,7 +32,6 @@ metadata:
 type: Opaque
 
 ---
-
 apiVersion: v1
 kind: Secret
 metadata:
@@ -47,7 +44,6 @@ data:
   csrf: ""
 
 ---
-
 apiVersion: v1
 kind: Secret
 metadata:
@@ -58,7 +54,6 @@ metadata:
 type: Opaque
 
 ---
-
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -68,7 +63,6 @@ metadata:
   namespace: kube-system
 
 ---
-
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -80,7 +74,12 @@ rules:
   # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
   - apiGroups: [""]
     resources: ["secrets"]
-    resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs", "kubernetes-dashboard-csrf"]
+    resourceNames:
+      [
+        "kubernetes-dashboard-key-holder",
+        "kubernetes-dashboard-certs",
+        "kubernetes-dashboard-csrf",
+      ]
     verbs: ["get", "update", "delete"]
     # Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.
   - apiGroups: [""]
@@ -94,11 +93,17 @@ rules:
     verbs: ["proxy"]
   - apiGroups: [""]
     resources: ["services/proxy"]
-    resourceNames: ["heapster", "http:heapster:", "https:heapster:", "dashboard-metrics-scraper", "http:dashboard-metrics-scraper"]
+    resourceNames:
+      [
+        "heapster",
+        "http:heapster:",
+        "https:heapster:",
+        "dashboard-metrics-scraper",
+        "http:dashboard-metrics-scraper",
+      ]
     verbs: ["get"]
 
 ---
-
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -112,7 +117,6 @@ rules:
     verbs: ["get", "list", "watch"]
 
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -130,7 +134,6 @@ subjects:
     namespace: kube-system
 
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -146,7 +149,6 @@ subjects:
     namespace: kube-system
 
 ---
-
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -192,13 +194,15 @@ spec:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             runAsUser: 1001
-            runAsGroup: 2001            
+            runAsGroup: 2001
       volumes:
         - name: kubernetes-dashboard-certs
           secret:
             secretName: kubernetes-dashboard-certs
         - name: tmp-volume
           emptyDir: {}
+      nodeSelector:
+        beta.kubernetes.io/os: linux
       serviceAccountName: kubernetes-dashboard
       # Comment the following tolerations if Dashboard must not be deployed on master
       tolerations:
@@ -206,7 +210,6 @@ spec:
           effect: NoSchedule
 
 ---
-
 kind: Service
 apiVersion: v1
 metadata:
@@ -222,7 +225,6 @@ spec:
     k8s-app: dashboard-metrics-scraper
 
 ---
-
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -255,13 +257,13 @@ spec:
             initialDelaySeconds: 30
             timeoutSeconds: 30
           volumeMounts:
-          - mountPath: /tmp
-            name: tmp-volume
+            - mountPath: /tmp
+              name: tmp-volume
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             runAsUser: 1001
-            runAsGroup: 2001            
+            runAsGroup: 2001
       serviceAccountName: kubernetes-dashboard
       # Comment the following tolerations if Dashboard must not be deployed on master
       tolerations:
@@ -270,5 +272,8 @@ spec:
       volumes:
         - name: tmp-volume
           emptyDir: {}
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 
----    
+---
+

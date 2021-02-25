@@ -54,21 +54,21 @@ class TestAddons(object):
             sh.microk8s.enable.foo()
 
     def test_help_text(self):
-        status = yaml.load(sh.microk8s.status(format='yaml').stdout)
-        expected = {a['name']: 'disabled' for a in status['addons']}
-        expected['ha-cluster'] = 'enabled'
+        status = yaml.load(sh.microk8s.status(format="yaml").stdout)
+        expected = {a["name"]: "disabled" for a in status["addons"]}
+        expected["ha-cluster"] = "enabled"
 
-        assert expected == {a['name']: a['status'] for a in status['addons']}
+        assert expected == {a["name"]: a["status"] for a in status["addons"]}
 
-        for addon in status['addons']:
-            sh.microk8s.enable(addon['name'], '--', '--help')
+        for addon in status["addons"]:
+            sh.microk8s.enable(addon["name"], "--", "--help")
 
-        assert expected == {a['name']: a['status'] for a in status['addons']}
+        assert expected == {a["name"]: a["status"] for a in status["addons"]}
 
-        for addon in status['addons']:
-            sh.microk8s.disable(addon['name'], '--', '--help')
+        for addon in status["addons"]:
+            sh.microk8s.disable(addon["name"], "--", "--help")
 
-        assert expected == {a['name']: a['status'] for a in status['addons']}
+        assert expected == {a["name"]: a["status"] for a in status["addons"]}
 
     def test_basic(self):
         """
@@ -112,19 +112,19 @@ class TestAddons(object):
         microk8s_disable("dashboard")
         print("Disabling storage")
         microk8s_disable("storage:destroy-storage")
-        '''
+        """
         We would disable DNS here but this freezes any terminating pods.
         We let microk8s reset to do the cleanup.
         print("Disabling DNS")
         microk8s_disable("dns")
-        '''
+        """
 
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping GPU tests as we are under time pressure",
     )
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="GPU tests are only relevant in x86 architectures"
+        platform.machine() != "x86_64", reason="GPU tests are only relevant in x86 architectures"
     )
     def test_gpu(self):
         """
@@ -143,10 +143,10 @@ class TestAddons(object):
         microk8s_disable("gpu")
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="Istio tests are only relevant in x86 architectures"
+        platform.machine() != "x86_64", reason="Istio tests are only relevant in x86 architectures"
     )
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping istio and knative tests as we are under time pressure",
     )
     def test_knative_istio(self):
@@ -168,11 +168,11 @@ class TestAddons(object):
         microk8s_disable("istio")
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
+        platform.machine() != "x86_64",
         reason="Fluentd, prometheus, jaeger tests are only relevant in x86 architectures",
     )
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping jaeger, prometheus and fluentd tests as we are under time pressure",
     )
     def test_monitoring_addons(self):
@@ -195,11 +195,11 @@ class TestAddons(object):
         microk8s_disable("fluentd")
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
+        platform.machine() != "x86_64",
         reason="Prometheus is only relevant in x86 architectures",
     )
     @pytest.mark.skipif(
-        os.environ.get('SKIP_PROMETHEUS') == 'True',
+        os.environ.get("SKIP_PROMETHEUS") == "True",
         reason="Skipping prometheus if it crash loops on lxd",
     )
     def test_prometheus(self):
@@ -216,10 +216,10 @@ class TestAddons(object):
         microk8s_reset()
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="Cilium tests are only relevant in x86 architectures"
+        platform.machine() != "x86_64", reason="Cilium tests are only relevant in x86 architectures"
     )
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping cilium tests as we are under time pressure",
     )
     def test_cilium(self):
@@ -230,7 +230,7 @@ class TestAddons(object):
         run(
             "/snap/bin/microk8s.enable cilium".split(),
             stdout=PIPE,
-            input=b'N\n',
+            input=b"N\n",
             stderr=STDOUT,
             check=True,
         )
@@ -242,7 +242,7 @@ class TestAddons(object):
 
     @pytest.mark.skip("disabling the test while we work on a 1.20 release")
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping Linkerd tests as we are under time pressure",
     )
     def test_linkerd(self):
@@ -271,11 +271,11 @@ class TestAddons(object):
 
     @pytest.mark.skip("disabling the kubelfow addon until the new bundle becomes available")
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
+        platform.machine() != "x86_64",
         reason="Kubeflow tests are only relevant in x86 architectures",
     )
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping kubeflow test as we are under time pressure",
     )
     def test_kubeflow_addon(self):
@@ -292,11 +292,11 @@ class TestAddons(object):
         microk8s_disable("kubeflow")
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
+        platform.machine() != "x86_64",
         reason="Metallb tests are only relevant in x86 architectures",
     )
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping metallb test as we are under time pressure",
     )
     def test_metallb_addon(self):
@@ -310,11 +310,11 @@ class TestAddons(object):
 
     @pytest.mark.skip("disabling the test while we work on a 1.20 release")
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64',
+        platform.machine() != "x86_64",
         reason="Ambassador tests are only relevant in x86 architectures",
     )
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping ambassador tests as we are under time pressure",
     )
     def test_ambassador(self):
@@ -330,10 +330,10 @@ class TestAddons(object):
         microk8s_disable("ambassador")
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="Multus tests are only relevant in x86 architectures"
+        platform.machine() != "x86_64", reason="Multus tests are only relevant in x86 architectures"
     )
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping multus tests as we are under time pressure",
     )
     def test_multus(self):
@@ -381,10 +381,10 @@ class TestAddons(object):
         microk8s_disable("traefik")
 
     @pytest.mark.skipif(
-        platform.machine() != 'x86_64', reason="KEDA tests are only relevant in x86 architectures"
+        platform.machine() != "x86_64", reason="KEDA tests are only relevant in x86 architectures"
     )
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping KEDA tests as we are under time pressure",
     )
     def test_keda(self):
@@ -402,8 +402,8 @@ class TestAddons(object):
         """
         Test backup and restore commands.
         """
-        print('Checking dbctl backup and restore')
-        if os.path.exists('backupfile.tar.gz'):
-            os.remove('backupfile.tar.gz')
+        print("Checking dbctl backup and restore")
+        if os.path.exists("backupfile.tar.gz"):
+            os.remove("backupfile.tar.gz")
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())

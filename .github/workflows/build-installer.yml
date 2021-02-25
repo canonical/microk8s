@@ -3,10 +3,10 @@ name: Build MicroK8s Installers
 on:
   push:
     branches:
-      - '**install**'
+      - "**install**"
   pull_request:
     branches:
-      - '**install**'
+      - "**install**"
 
 jobs:
   windows:
@@ -15,38 +15,44 @@ jobs:
       run:
         working-directory: ${{ github.workspace }}/installer/windows
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2.1.4
-      with:
-        python-version: 3.8
-    - name: Install Python requirements
-      run: python -m pip install -r ../requirements.txt
-    - name: Build exe
-      working-directory: ${{ github.workspace }}/installer
-      run: pyinstaller.exe --onefile ./microk8s.spec
-    - name: Move exe to installer build directory
-      working-directory: ${{ github.workspace }}/installer
-      run: move microk8s.exe ./windows/microk8s.exe
-    - name: Download EnVar plugin for NSIS
-      uses: carlosperate/download-file-action@v1.0.3
-      with:
-        file-url: https://nsis.sourceforge.io/mediawiki/images/7/7f/EnVar_plugin.zip
-        file-name: envar_plugin.zip
-        location: ${{ github.workspace }}
-    - name: Extract EnVar plugin
-      run: 7z x -o"C:/Program Files (x86)/NSIS" "${{ github.workspace }}/envar_plugin.zip"
-    - name: Download Multipass installer
-      uses: carlosperate/download-file-action@v1.0.3
-      with:
-        file-url: https://github.com/canonical/multipass/releases/download/v1.5.0/multipass-1.5.0+win-win64.exe
-        file-name: multipass.exe
-        location: ${{ github.workspace }}/installer/windows
-    - name: Create installer
-      run: makensis.exe ${{ github.workspace }}/installer/windows/microk8s.nsi
-    - name: Upload installer
-      uses: actions/upload-artifact@v2
-      with:
-        name: Windows installer
-        path: ${{ github.workspace }}/installer/windows/microk8s-installer.exe
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2.2.1
+        with:
+          python-version: 3.8
+      - name: Install Python requirements
+        run: python -m pip install -r ../requirements.txt
+      - name: Build exe
+        working-directory: ${{ github.workspace }}/installer
+        run: pyinstaller.exe --onefile ./microk8s.spec
+      - name: Move exe to installer build directory
+        working-directory: ${{ github.workspace }}/installer
+        run: move microk8s.exe ./windows/microk8s.exe
+      - name: Download EnVar plugin for NSIS
+        uses: carlosperate/download-file-action@v1.0.3
+        with:
+          file-url: https://nsis.sourceforge.io/mediawiki/images/7/7f/EnVar_plugin.zip
+          file-name: envar_plugin.zip
+          location: ${{ github.workspace }}
+      - name: Extract EnVar plugin
+        run: 7z x -o"C:/Program Files (x86)/NSIS" "${{ github.workspace }}/envar_plugin.zip"
+      - name: Download Multipass installer
+        uses: carlosperate/download-file-action@v1.0.3
+        with:
+          file-url: https://github.com/canonical/multipass/releases/download/v1.5.0/multipass-1.5.0+win-win64.exe
+          file-name: multipass.exe
+          location: ${{ github.workspace }}/installer/windows
+      - name: Download kubectl
+        uses: carlosperate/download-file-action@v1.0.3
+        with:
+          file-url: https://storage.googleapis.com/kubernetes-release/release/v1.20.0/bin/windows/amd64/kubectl.exe
+          file-name: kubectl.exe
+          location: ${{ github.workspace }}/installer/windows
+      - name: Create installer
+        run: makensis.exe ${{ github.workspace }}/installer/windows/microk8s.nsi
+      - name: Upload installer
+        uses: actions/upload-artifact@v2
+        with:
+          name: Windows installer
+          path: ${{ github.workspace }}/installer/windows/microk8s-installer.exe

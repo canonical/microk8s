@@ -13,8 +13,8 @@ from common.utils import (
 from status import get_available_addons, get_current_arch, get_status
 
 
-@click.command(context_settings={'ignore_unknown_options': True})
-@click.argument('addons', nargs=-1, required=True)
+@click.command(context_settings={"ignore_unknown_options": True})
+@click.argument("addons", nargs=-1, required=True)
 def enable(addons):
     """Enables a MicroK8s addon.
 
@@ -34,10 +34,10 @@ def enable(addons):
     wait_for_ready(timeout=30)
 
     enabled_addons, _ = get_status(get_available_addons(get_current_arch()), True)
-    enabled_addons = {a['name'] for a in enabled_addons}
+    enabled_addons = {a["name"] for a in enabled_addons}
 
-    xable('enable', addons, enabled_addons)
+    xable("enable", addons, enabled_addons)
 
 
-if __name__ == '__main__':
-    enable(prog_name='microk8s enable')
+if __name__ == "__main__":
+    enable(prog_name="microk8s enable")

@@ -4,7 +4,7 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
-CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
+CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 ARCH=$(arch)
 if ! [ "${ARCH}" = "amd64" ]; then
@@ -16,12 +16,12 @@ fi
 
 echo "Restarting kube-apiserver"
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-apiserver"
+restart_service apiserver
 
 # Reconfigure kubelet/containerd to pick up the new CNI config and binary.
 echo "Restarting kubelet"
 refresh_opt_in_config "cni-bin-dir" "\${SNAP_DATA}/opt/cni/bin/" kubelet
-run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-kubelet"
+restart_service kubelet
 
 set_service_not_expected_to_start flanneld
 run_with_sudo preserve_env snapctl stop "${SNAP_NAME}.daemon-flanneld"

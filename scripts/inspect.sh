@@ -96,7 +96,7 @@ function store_kubernetes_info {
   mkdir -p $INSPECT_DUMP/k8s
   sudo -E /snap/bin/microk8s kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
   sudo -E /snap/bin/microk8s kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
-  sudo -E /snap/bin/microk8s kubectl cluster-info dump 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+  sudo -E /snap/bin/microk8s kubectl cluster-info dump -A 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
   sudo -E /snap/bin/microk8s kubectl get all --all-namespaces -o wide 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
   sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
   sudo -E /snap/bin/microk8s kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
@@ -140,13 +140,13 @@ function suggest_fixes {
     printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
   fi
 
-  if /snap/core/current/usr/bin/which ufw &> /dev/null
+  if /snap/core18/current/usr/bin/which ufw &> /dev/null
   then
     ufw=$(ufw status)
-    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cni0 &> /dev/null
+    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep vxlan.calico &> /dev/null
     then
       printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-      printf -- 'with: sudo ufw allow in on cni0 && sudo ufw allow out on cni0\n'
+      printf -- 'with: sudo ufw allow in on vxlan.calico && sudo ufw allow out on vxlan.calico\n'
     fi
   fi
 
@@ -280,13 +280,18 @@ check_certificates
 printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"
 check_service "snap.microk8s.daemon-containerd"
-check_service "snap.microk8s.daemon-apiserver"
 check_service "snap.microk8s.daemon-apiserver-kicker"
-check_service "snap.microk8s.daemon-control-plane-kicker"
-check_service "snap.microk8s.daemon-proxy"
-check_service "snap.microk8s.daemon-kubelet"
-check_service "snap.microk8s.daemon-scheduler"
-check_service "snap.microk8s.daemon-controller-manager"
+if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
+then
+  check_service "snap.microk8s.daemon-kubelite"
+else
+  check_service "snap.microk8s.daemon-apiserver"
+  check_service "snap.microk8s.daemon-proxy"
+  check_service "snap.microk8s.daemon-kubelet"
+  check_service "snap.microk8s.daemon-scheduler"
+  check_service "snap.microk8s.daemon-controller-manager"
+  check_service "snap.microk8s.daemon-control-plane-kicker"
+fi
 if ! [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then
   check_service "snap.microk8s.daemon-flanneld"

@@ -8,5 +8,5 @@ roleRef:
   kind: Role
   name: kube-state-metrics
 subjects:
-- kind: ServiceAccount
-  name: kube-state-metrics
+  - kind: ServiceAccount
+    name: kube-state-metrics

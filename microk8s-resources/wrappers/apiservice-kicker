@@ -17,6 +17,25 @@ fi
 
 restart_attempt=0
 installed_registry_help=0
+nic_name="vxlan.calico"
+
+is_nic_available() {
+  ip a show dev $nic_name > /dev/null 2>&1
+}
+
+deactivate_offloading() {
+  ethtool --offload $nic_name rx off tx off
+}
+
+check_offloading() {
+  # Return an error if at least one offload is enabled (rx or tx)
+  if ethtool --show-offload $nic_name 2>&1 | grep -E '^.x-checksumming:' | grep -q  ': on'; then
+    return 1
+  else
+    return 0
+  fi
+}
+
 while true
 do
     if [ $restart_attempt -ge 5 ]
@@ -27,24 +46,29 @@ do
 
     # every 3 seconds
     sleep 3
-    if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
-       ip route | grep default &> /dev/null &&
-       snapctl services microk8s.daemon-apiserver | grep active &> /dev/null
+    if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
+      getent group microk8s >/dev/null 2>&1
     then
+      chmod -R ug+rwX ${SNAP_DATA}/var/kubernetes/backend || true
+      chgrp microk8s -R ${SNAP_DATA}/var/kubernetes/backend || true
+    fi
+
+    if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
+       ip route | grep default &> /dev/null
+    then
+      if snapctl services microk8s.daemon-kubelite | grep active &> /dev/null
+      then
         csr_modified="$(produce_certs)"
         if [[ "$csr_modified" -eq "1" ]];
         then
             echo "CSR change detected. Reconfiguring the kube-apiserver"
             rm -rf .srl
-            snapctl restart microk8s.daemon-etcd
-            snapctl restart microk8s.daemon-containerd
-            snapctl restart microk8s.daemon-apiserver
-            snapctl restart microk8s.daemon-proxy
-            snapctl restart microk8s.daemon-kubelet
+            snapctl restart microk8s.daemon-kubelite
             restart_attempt=$[$restart_attempt+1]
         else
             restart_attempt=0
         fi
+      fi
     fi
 
     if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
@@ -52,10 +76,24 @@ do
        ! [ -e "${SNAP_DATA}/var/lock/cni-loaded" ]
     then
       echo "Setting up the CNI"
-      if (${SNAP}/usr/bin/curl -L --cert ${SNAP_DATA}/certs/server.crt --key ${SNAP_DATA}/certs/server.key --cacert ${SNAP_DATA}/certs/ca.crt https://127.0.0.1:16443/readyz | grep -z "ok") &&
+      if (is_apiserver_ready)  &&
          "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
       then
         touch "${SNAP_DATA}/var/lock/cni-loaded"
+      fi
+    fi
+
+    if [ -e "${SNAP_DATA}/var/lock/cni-loaded" ] &&
+      is_nic_available &&
+      ! check_offloading
+    then
+      echo "Network interface $nic_name found! Disabling offloading on it..."
+      deactivate_offloading
+      sleep 2
+      if check_offloading; then
+        echo "Offloading successfully disabled on interface $nic_name"
+      else
+        echo "Offloading has not been disabled correctly on interface $nic_name. Please check what happened"
       fi
     fi
 
@@ -64,15 +102,18 @@ do
     #
     # Wait until the apiserver is up and is successfully responding to
     # namespace checks before we check for the registry configmap.
-    if [ $installed_registry_help -eq 0 ] &&
-       snapctl services microk8s.daemon-apiserver | grep active &> /dev/null &&
-       "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get namespace kube-public &> /dev/null
+    if snapctl services microk8s.daemon-apiserver | grep active &> /dev/null ||
+       snapctl services microk8s.daemon-kubelite | grep active &> /dev/null
     then
-      if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kube-public &> /dev/null
+      if [ $installed_registry_help -eq 0 ] &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get namespace kube-public &> /dev/null
       then
-        use_manifest registry-help apply
-      fi
+        if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kube-public &> /dev/null
+        then
+          use_manifest registry-help apply
+        fi
       
-      installed_registry_help=1
+        installed_registry_help=1
+      fi
     fi
 done

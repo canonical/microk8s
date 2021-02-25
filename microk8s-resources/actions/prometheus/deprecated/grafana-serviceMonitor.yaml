@@ -5,8 +5,8 @@ metadata:
   namespace: monitoring
 spec:
   endpoints:
-  - interval: 15s
-    port: http
+    - interval: 15s
+      port: http
   selector:
     matchLabels:
       app: grafana

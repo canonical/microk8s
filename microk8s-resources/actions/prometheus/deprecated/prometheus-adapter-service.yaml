@@ -7,8 +7,8 @@ metadata:
   namespace: monitoring
 spec:
   ports:
-  - name: https
-    port: 443
-    targetPort: 6443
+    - name: https
+      port: 443
+      targetPort: 6443
   selector:
     name: prometheus-adapter

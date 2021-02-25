@@ -9,8 +9,8 @@ metadata:
   namespace: monitoring
 spec:
   endpoints:
-  - honorLabels: true
-    port: http
+    - honorLabels: true
+      port: http
   selector:
     matchLabels:
       app.kubernetes.io/component: controller

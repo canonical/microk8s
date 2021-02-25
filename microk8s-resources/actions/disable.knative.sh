@@ -6,7 +6,7 @@ source $SNAP/actions/common/utils.sh
 
 echo "Disabling Knative"
 
-# || true is there to handle race conditions in deleteing resources
+# || true is there to handle race conditions in deleting resources
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 $KUBECTL delete -f "$SNAP/actions/knative/" || true
 
