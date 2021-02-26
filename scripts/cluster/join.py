@@ -22,7 +22,6 @@ import json
 from common.utils import (
     try_set_file_permissions,
     is_node_running_dqlite,
-    get_dqlite_port,
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
     service,
@@ -30,8 +29,8 @@ from common.utils import (
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
-snapdata_path = os.environ.get('SNAP_DATA')
-snap_path = os.environ.get('SNAP')
+snapdata_path = os.environ.get("SNAP_DATA")
+snap_path = os.environ.get("SNAP")
 ca_cert_file_via_env = "${SNAP_DATA}/certs/ca.remote.crt"
 ca_cert_file = "{}/certs/ca.remote.crt".format(snapdata_path)
 callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
@@ -48,13 +47,13 @@ cluster_key_file = "{}/cluster.key".format(cluster_dir)
 
 def join_request(conn, api_version, req_data):
     json_params = json.dumps(req_data)
-    headers = {'Content-type': 'application/json', "Accept": "application/json"}
+    headers = {"Content-type": "application/json", "Accept": "application/json"}
 
     try:
         conn.request("POST", "/{}/join".format(api_version), json_params, headers)
         response = conn.getresponse()
         if not response.status == 200:
-            print("Connection failed (). {}.".format(response.status, response.reason))
+            print("Connection failed ({}). {}.".format(response.status, response.reason))
             exit(6)
 
         body = response.read()
@@ -131,7 +130,8 @@ def usage():
     print("")
     print("Options:")
     print(
-        "--skip-verify  skip the certificate verification of the node we are joining to (default: false)."
+        "--skip-verify  skip the certificate verification of the node we are"
+        " joining to (default: false)."
     )
 
 
@@ -183,7 +183,7 @@ def get_etcd_client_cert(master_ip, master_port, token):
     subprocess.check_call(cmd_cert.split())
     with open(cer_req_file) as fp:
         csr = fp.read()
-        req_data = {'token': token, 'request': csr}
+        req_data = {"token": token, "request": csr}
         # TODO: enable ssl verification
         signed = requests.post(
             "https://{}:{}/{}/sign-cert".format(master_ip, master_port, CLUSTER_API),
@@ -443,11 +443,11 @@ def reset_current_dqlite_installation():
         )
 
     # We reset to the default port and address
-    init_data = {'Address': '127.0.0.1:19001'}  # type: Dict[str, str]
-    with open("{}/init.yaml".format(cluster_dir), 'w') as f:
+    init_data = {"Address": "127.0.0.1:19001"}
+    with open("{}/init.yaml".format(cluster_dir), "w") as f:
         yaml.dump(init_data, f)
 
-    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
+    service("start", "apiserver")
 
     waits = 10  # type: int
     print("Waiting for node to start.", end=" ", flush=True)
@@ -558,11 +558,10 @@ def is_leader_without_successor():
         if netifaces.AF_INET not in netifaces.ifaddresses(interface):
             continue
         for link in netifaces.ifaddresses(interface)[netifaces.AF_INET]:
-            local_ips.append(link['addr'])
+            local_ips.append(link["addr"])
 
     is_voter = False
     for ep in ep_addresses:
-        found = False
         for ip in local_ips:
             if "{}:".format(ip) in ep[0]:
                 # ep[1] == ep[Role] == 0 means we are voters
@@ -672,9 +671,9 @@ def remove_dqlite_node(node, force=False):
         )
         info = json.loads(node_info.decode())
         node_address = None
-        for a in info['status']['addresses']:
-            if a['type'] == 'InternalIP':
-                node_address = a['address']
+        for a in info["status"]["addresses"]:
+            if a["type"] == "InternalIP":
+                node_address = a["address"]
                 break
 
         if not node_address:
@@ -734,7 +733,7 @@ def store_cert(filename, payload):
     backup_file_with_path = "{}.backup".format(file_with_path)
     shutil.copyfile(file_with_path, backup_file_with_path)
     try_set_file_permissions(backup_file_with_path)
-    with open(file_with_path, 'w+') as fp:
+    with open(file_with_path, "w+") as fp:
         fp.write(payload)
     try_set_file_permissions(file_with_path)
 
@@ -843,14 +842,14 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     port = 19001
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
-    if 'Address' in data:
-        port = data['Address'].split(':')[1]
+    if "Address" in data:
+        port = data["Address"].split(":")[1]
 
-    init_data = {'Cluster': voters, 'Address': "{}:{}".format(host, port)}
-    with open("{}/init.yaml".format(cluster_dir), 'w') as f:
+    init_data = {"Cluster": voters, "Address": "{}:{}".format(host, port)}
+    with open("{}/init.yaml".format(cluster_dir), "w") as f:
         yaml.dump(init_data, f)
 
-    subprocess.check_call("snapctl start microk8s.daemon-apiserver".split())
+    service("start", "apiserver")
 
     waits = 10
     print("Waiting for this node to finish joining the cluster.", end=" ", flush=True)
@@ -892,7 +891,7 @@ def join_dqlite(connection_parts, verify=True):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
-    fingerpring = connection_parts[2] if len(connection_parts) else None
+    fingerprint = connection_parts[2] if len(connection_parts) else None
 
     print("Contacting cluster at {}".format(master_ip))
 
@@ -902,7 +901,7 @@ def join_dqlite(connection_parts, verify=True):
         token,
         cluster_type="dqlite",
         verify_peer=verify,
-        fingerprint=fingerpring,
+        fingerprint=fingerprint,
     )
 
     hostname_override = info["hostname_override"]
@@ -948,13 +947,12 @@ def join_etcd(connection_parts, verify=True):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
-
     callback_token = generate_callback_token()
     info = get_connection_info(master_ip, master_port, token, callback_token=callback_token)
     store_base_kubelet_args(info["kubelet_args"])
     hostname_override = None
-    if 'hostname_override' in info:
-        hostname_override = info['hostname_override']
+    if "hostname_override" in info:
+        hostname_override = info["hostname_override"]
     store_remote_ca(info["ca"])
     update_flannel(info["etcd"], master_ip, master_port, token)
     update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override)
