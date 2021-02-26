@@ -409,7 +409,7 @@ def reset_current_dqlite_installation():
             "{0}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes "
             "-keyout {1}/var/kubernetes/backend/cluster.key "
             "-out {1}/var/kubernetes/backend/cluster.crt "
-            '-subj "/CN=k8s" -config {1}/var/tmp/csr-dqlite.conf -extensions v3_ext'.format(
+            "-subj /CN=k8s -config {1}/var/tmp/csr-dqlite.conf -extensions v3_ext".format(
                 snap_path, snapdata_path
             ).split(),
             stdout=subprocess.DEVNULL,

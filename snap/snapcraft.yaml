@@ -10,7 +10,7 @@ description: |-
 
 grade: stable
 confinement: classic
-base: core
+base: core18
 
 apps:
   microk8s:
@@ -185,10 +185,25 @@ parts:
   etcd:
     plugin: dump
     source: build-scripts/
+    build-snaps: [go]
     override-build: |
       . ./set-env-variables.sh
-      curl -LO https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
-      tar -xzvf etcd-*.tar.gz --strip-components=1
+      case ${SNAPCRAFT_ARCH_TRIPLET%%-*} in
+      x86_64|aarch64)
+        echo "Supported arch by etcd - use official binary"
+        curl -LO https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
+        tar -xzvf etcd-*.tar.gz --strip-components=1
+        ;;
+      *)
+        echo "Unsupported arch by etcd - build from sources"
+        curl -LO https://github.com/etcd-io/etcd/archive/${ETCD_VERSION}.tar.gz
+        tar -xzf *.tar.gz
+        cd etcd-*
+        go mod vendor
+        ./build
+        cp -av bin/* ../
+        echo "End of build"
+      esac
       snapcraftctl build
     stage:
       - etcd
@@ -316,6 +331,7 @@ parts:
   containerd:
     build-snaps: [go]
     after: [iptables]
+    build-attributes: [no-patchelf]
     source: build-scripts/
     plugin: dump
     build-packages:
@@ -361,6 +377,17 @@ parts:
       - libnss-resolve
       - libnss-mymachines
       - conntrack
+      - libssl1.0.0
+      - coreutils
+    stage:
+      - -sbin/xtables-multi
+      - -sbin/iptables*
+      - -lib/xtables
+
+  bash-utils:
+    source: snap
+    plugin: dump
+    stage-packages:
       - curl
       - aufs-tools
       - gawk
@@ -368,25 +395,19 @@ parts:
       - socat
       - grep
       - jq
-      - libssl1.0.0
-      - coreutils
       - hostname
-      - diffutils
       - squashfs-tools
       - tar
-    stage:
-      - -sbin/xtables-multi
-      - -sbin/iptables*
-      - -lib/xtables
+      - diffutils
 
   cluster-agent:
     plugin: python
     python-version: python3
     source: .
     python-packages:
-      - flask
-      - PyYAML
-      - netifaces
+      - flask == 1.1.2
+      - PyYAML == 5.3.1
+      - netifaces == 0.10.9
     stage-packages:
       - python3-openssl
       - openssl
@@ -394,10 +415,6 @@ parts:
       - gunicorn3
       - python3-click
       - python3-dateutil
-    override-pull: |
-      apt-get install -y python3-pip
-      PYTHONHOME=/usr PYTHONUSERBASE=$SNAPCRAFT_PART_INSTALL $SNAPCRAFT_PART_INSTALL/usr/bin/python3 -m pip install --upgrade 'pip; python_version >= "3.6"' 'pip<21; python_version < "3.6"' --user
-      snapcraftctl pull
 
   microk8s:
     after: [containerd, dqlite, k8s-binaries]
@@ -452,9 +469,9 @@ parts:
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
 
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
-      if [ "${ARCH}" = "arm64" ]
+      if [ "${ARCH}" != "amd64" ]
       then
-        # Some actions are not available on arm64
+        # Some actions are only available on amd64
         # Nvidia support
         rm "actions/enable.gpu.sh"
         rm "actions/disable.gpu.sh"
@@ -492,71 +509,6 @@ parts:
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
       snapcraftctl build
-
-  # Unfortunately we cannot add package repositories to our snaps
-  # https://forum.snapcraft.io/t/proposal-additional-package-sources/2199
-  # We handpick the debs we need.
-  # To update these debs add the repository
-  # Follow the instructions in https://github.com/NVIDIA/nvidia-docker and
-  # install the https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list repo.
-  # Use apt-cache show <package> to make sure
-  # a) the dockerd we ship in this snap is supported by nvidia-container-runtime
-  # b) the version dependencies of each package is met.
-  nvidia-runtime:
-    plugin: dump
-    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime_2.0.0+docker18.06.1-1_amd64.deb
-    source-type: deb
-    override-build: |
-      set -eu
-      ARCH=$(dpkg --print-architecture)
-      if ! [ "${ARCH}" = "arm64" ]
-      then
-        snapcraftctl build
-      else
-        echo "Skipped"
-      fi
-
-  nvidia-runtime-hook:
-    plugin: dump
-    source: https://nvidia.github.io/nvidia-container-runtime/ubuntu16.04/amd64/nvidia-container-runtime-hook_1.4.0-1_amd64.deb
-    source-type: deb
-    override-build: |
-      set -eu
-      ARCH=$(dpkg --print-architecture)
-      if ! [ "${ARCH}" = "arm64" ]
-      then
-        snapcraftctl build
-      else
-        echo "Skipped"
-      fi
-
-  libnvidia:
-    plugin: dump
-    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container1_1.0.0-1_amd64.deb
-    source-type: deb
-    override-build: |
-      set -eu
-      ARCH=$(dpkg --print-architecture)
-      if ! [ "${ARCH}" = "arm64" ]
-      then
-        snapcraftctl build
-      else
-        echo "Skipped"
-      fi
-
-  libnvidia-tools:
-    plugin: dump
-    source: https://nvidia.github.io/libnvidia-container/ubuntu16.04/amd64/libnvidia-container-tools_1.0.0-1_amd64.deb
-    source-type: deb
-    override-build: |
-      set -eu
-      ARCH=$(dpkg --print-architecture)
-      if ! [ "${ARCH}" = "arm64" ]
-      then
-        snapcraftctl build
-      else
-        echo "Skipped"
-      fi
 
   juju:
     plugin: dump

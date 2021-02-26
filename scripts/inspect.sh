@@ -140,7 +140,7 @@ function suggest_fixes {
     printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
   fi
 
-  if /snap/core/current/usr/bin/which ufw &> /dev/null
+  if /snap/core18/current/usr/bin/which ufw &> /dev/null
   then
     ufw=$(ufw status)
     if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep vxlan.calico &> /dev/null
