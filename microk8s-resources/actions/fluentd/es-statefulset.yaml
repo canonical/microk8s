@@ -97,7 +97,7 @@ spec:
               port: transport
             initialDelaySeconds: 5
             timeoutSeconds: 20
-            failureThreshold: 10            
+            failureThreshold: 10
           volumeMounts:
             - name: elasticsearch-logging
               mountPath: /data
