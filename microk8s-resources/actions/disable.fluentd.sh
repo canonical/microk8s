@@ -11,8 +11,8 @@ KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 NODENAME="$($KUBECTL get no -o yaml | grep " name:"| awk '{print $2}')"
 
 # This one deletes the old fluentd configmap.
-$KUBECTL -n kube-system delete cm fluentd-es-config-v0.1.5 || true
-$KUBECTL -n kube-system delete daemonset fluentd-es-v2.2.0 || true
+$KUBECTL -n kube-system delete cm fluentd-es-config-v0.1.5  > /dev/null 2>&1 || true
+$KUBECTL -n kube-system delete daemonset fluentd-es-v2.2.0  > /dev/null 2>&1 || true
 
 $KUBECTL label nodes "$NODENAME" beta.kubernetes.io/fluentd-ds-ready- || true
 
