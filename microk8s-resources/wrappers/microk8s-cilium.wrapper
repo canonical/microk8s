@@ -13,6 +13,4 @@ fi
 
 source $SNAP/actions/common/utils.sh
 exit_if_stopped
-export CILIUM_MONITOR_SOCK="$SNAP_DATA/var/run/cilium/monitor1_2.sock"
-export CILIUM_HEALTH_SOCK="$SNAP_DATA/var/run/cilium/health.sock"
-"${SNAP_DATA}/bin/cilium" -H "unix:///var/snap/microk8s/current/var/run/cilium/cilium.sock" "$@"
+KUBECONFIG="$SNAP_DATA/credentials/client.config" "${SNAP_DATA}/bin/cilium" "$@"
