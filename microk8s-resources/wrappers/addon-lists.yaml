@@ -80,7 +80,7 @@ microk8s-addons:
 
     - name: "prometheus"
       description: "Prometheus operator for monitoring and logging"
-      version: "v0.6.0"
+      version: "v0.7.0"
       check_status: "pod/prometheus-k8s-0"
       supported_architectures:
         - amd64
