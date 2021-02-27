@@ -21,7 +21,7 @@ do_prerequisites() {
 get_kube_prometheus () {
   if [  ! -d "${SNAP_DATA}/kube-prometheus" ]
   then
-    KUBE_PROMETHEUS_VERSION="v0.6.0"
+    KUBE_PROMETHEUS_VERSION="v0.7.0"
     KUBE_PROMETHEUS_ERSION=$(echo $KUBE_PROMETHEUS_VERSION | sed 's/v//g')
     echo "Fetching kube-prometheus version $KUBE_PROMETHEUS_VERSION."
     run_with_sudo mkdir -p "${SNAP_DATA}/kube-prometheus"
