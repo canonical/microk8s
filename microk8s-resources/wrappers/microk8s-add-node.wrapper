@@ -65,7 +65,7 @@ fi
 default_ip="$(get_default_ip)"
 all_ips="$(get_ips)"
 
-check=$(openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1)
+check=$(openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1 | cut -c1-12)
 
 echo "From the node you wish to join to this cluster, run the following:"
 echo "microk8s join ${default_ip}:$port/${token}/${check}"

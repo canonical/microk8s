@@ -44,23 +44,49 @@ cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
 cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
 cluster_key_file = "{}/cluster.key".format(cluster_dir)
 
+FINGERPRINT_MIN_LEN = 12
 
-def join_request(conn, api_version, req_data):
+
+def join_request(conn, api_version, req_data, master_ip, verify_peer, fingerprint):
     json_params = json.dumps(req_data)
     headers = {"Content-type": "application/json", "Accept": "application/json"}
 
     try:
+        if verify_peer and fingerprint:
+            if len(fingerprint) < FINGERPRINT_MIN_LEN:
+                print(
+                    "Joining cluster failed. Fingerprint too short."
+                    " Use '--skip-verify' to skip server certificate check."
+                )
+                exit(4)
+
+            # Do the peer certificate verification
+            der_cert_bin = conn.sock.getpeercert(True)
+            peer_cert_hash = hashlib.sha256(der_cert_bin).hexdigest()
+            if not peer_cert_hash.startswith(fingerprint):
+                print(
+                    "Joining cluster failed. Could not verify the identity of {}."
+                    " Use '--skip-verify' to skip server certificate check.".format(master_ip)
+                )
+                exit(4)
+
         conn.request("POST", "/{}/join".format(api_version), json_params, headers)
         response = conn.getresponse()
         if not response.status == 200:
-            print("Connection failed ({}). {}.".format(response.status, response.reason))
+            message = "Connection failed"
+            res_data = response.read().decode()
+            if "error" in res_data:
+                message = "{} {}".format(message, res_data["error"])
+            print("{} ({}). {}.".format(message, response.status, response.reason))
             exit(6)
-
         body = response.read()
         return json.loads(body)
     except http.client.HTTPException as e:
         print("Please ensure the master node is reachable. {}".format(e))
         exit(1)
+    except ssl.SSLError as e:
+        print("Peer node verification failed ({}).".format(e))
+        exit(4)
 
 
 def get_connection_info(
@@ -78,6 +104,7 @@ def get_connection_info(
     :param master_ip: the master IP
     :param master_port: the master port
     :param token: the token to contact the master with
+    :param callback_token: callback token for etcd based clusters
     :param cluster_type: the type of cluster we want to join, etcd or dqlite
     :param verify_peer: flag indicating if we should verify peers certificate
     :param fingerprint: the certificate fingerprint we expect from the peer
@@ -85,44 +112,32 @@ def get_connection_info(
     :return: the json response of the master
     """
     cluster_agent_port = get_cluster_agent_port()
-    conn = None
     try:
         context = ssl._create_unverified_context()
         conn = http.client.HTTPSConnection("{}:{}".format(master_ip, master_port), context=context)
-        if verify_peer and fingerprint:
-            # Do the peer certificate verification
-            conn.request("GET", "/")
-            der_cert_bin = conn.sock.getpeercert(True)
-            peer_cert_hash = hashlib.sha256(der_cert_bin).hexdigest()
-            if peer_cert_hash != fingerprint:
-                print(
-                    "Joining cluster failed. Could not verify the identity of {}."
-                    " Use '--skip-verify' to skip server certificate check.".format(master_ip)
-                )
-                exit(4)
+        conn.connect()
+        if cluster_type == "dqlite":
+            req_data = {
+                "token": token,
+                "hostname": socket.gethostname(),
+                "port": cluster_agent_port,
+            }
+
+            return join_request(conn, CLUSTER_API_V2, req_data, master_ip, verify_peer, fingerprint)
+        else:
+            req_data = {
+                "token": token,
+                "hostname": socket.gethostname(),
+                "port": cluster_agent_port,
+                "callback": callback_token,
+            }
+            return join_request(conn, CLUSTER_API, req_data, master_ip, verify_peer=False, fingerprint=None)
     except http.client.HTTPException as e:
         print("Connecting to cluster failed with {}.".format(e))
         exit(5)
     except ssl.SSLError as e:
         print("Peer node verification failed with {}.".format(e))
         exit(4)
-
-    if cluster_type == "dqlite":
-        req_data = {
-            "token": token,
-            "hostname": socket.gethostname(),
-            "port": cluster_agent_port,
-        }
-
-        return join_request(conn, CLUSTER_API_V2, req_data)
-    else:
-        req_data = {
-            "token": token,
-            "hostname": socket.gethostname(),
-            "port": cluster_agent_port,
-            "callback": callback_token,
-        }
-        return join_request(conn, CLUSTER_API, req_data)
 
 
 def usage():
@@ -803,11 +818,18 @@ def restart_all_services():
     """
     Restart all services
     """
-    subprocess.check_call(
-        "{}/microk8s-stop.wrapper".format(snap_path).split(),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    waits = 10
+    while waits > 0:
+        try:
+            subprocess.check_call(
+                "{}/microk8s-stop.wrapper".format(snap_path).split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+            waits -= 1
     waits = 10
     while waits > 0:
         try:
@@ -831,7 +853,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     :param voters: the dqlite voters
     :param host: the hostname others see of this node
     """
-    subprocess.check_call("snapctl stop microk8s.daemon-apiserver".split())
+    service("stop", "apiserver")
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
     shutil.move(cluster_dir, cluster_backup_dir)
@@ -891,7 +913,10 @@ def join_dqlite(connection_parts, verify=True):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
-    fingerprint = connection_parts[2] if len(connection_parts) else None
+    fingerprint = None
+    if len(connection_parts) > 2:
+        fingerprint = connection_parts[2]
+        verify = False
 
     print("Contacting cluster at {}".format(master_ip))
 
