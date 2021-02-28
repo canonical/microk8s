@@ -16,7 +16,7 @@ echo ""
 echo "Enabling OpenFaaS"
 
 OPERATOR=false
-AUTH=false
+AUTH=true
 VALUES=""
 
 for i in "$@"
@@ -26,8 +26,8 @@ case $i in
     OPERATOR=true
     shift # past argument
     ;;
-    --auth)
-    AUTH=true
+    --no-auth)
+    AUTH=false
     shift # past argument
     ;;
     -f=*|--values=*)
@@ -77,4 +77,3 @@ fi
 
 # print a final help message
 echo "OpenFaaS has been installed"
-
