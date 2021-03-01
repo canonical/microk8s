@@ -131,7 +131,9 @@ def get_connection_info(
                 "port": cluster_agent_port,
                 "callback": callback_token,
             }
-            return join_request(conn, CLUSTER_API, req_data, master_ip, verify_peer=False, fingerprint=None)
+            return join_request(
+                conn, CLUSTER_API, req_data, master_ip, verify_peer=False, fingerprint=None
+            )
     except http.client.HTTPException as e:
         print("Connecting to cluster failed with {}.".format(e))
         exit(5)
