@@ -83,7 +83,7 @@ spec:
             - name: varlog
               mountPath: /var/log
             - name: varlibdockercontainers
-              mountPath: /var/lib/docker/containers
+              mountPath: /var/snap/microk8s/common/var/lib/containerd
               readOnly: true
             - name: config-volume
               mountPath: /etc/fluent/config.d
