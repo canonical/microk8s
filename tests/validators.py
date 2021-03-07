@@ -515,6 +515,7 @@ def validate_keda():
     assert "stan-scaledobject" in scaledObject
     kubectl("delete -f {}".format(manifest))
 
+
 def validate_traefik():
     """
     Validate traefik
@@ -534,6 +535,7 @@ def validate_openfaas():
     Validate openfaas
     """
     wait_for_pod_state("", "openfaas", "running", label="app=gateway")
+
 
 def validate_openebs():
     """
