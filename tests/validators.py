@@ -515,7 +515,6 @@ def validate_keda():
     assert "stan-scaledobject" in scaledObject
     kubectl("delete -f {}".format(manifest))
 
-
 def validate_traefik():
     """
     Validate traefik
@@ -535,3 +534,18 @@ def validate_openfaas():
     Validate openfaas
     """
     wait_for_pod_state("", "openfaas", "running", label="app=gateway")
+
+def validate_openebs():
+    """
+    Validate OpenEBS
+    """
+    wait_for_installation()
+    wait_for_pod_state("", "openebs", "running", label="openebs.io/component-name=maya-apiserver")
+    print("OpenEBS is up and running.")
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "openebs-test.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=openebs-test-busybox")
+    output = kubectl("exec openebs-test-busybox -- ls /", timeout_insec=900, err_out="no")
+    assert "my-data" in output
+    kubectl("delete -f {}".format(manifest))
