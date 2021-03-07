@@ -43,6 +43,7 @@ jobs:
       - name: Running addons tests
         run: |
           set -x
+          sudo apt-get -y install open-iscsi
           sudo snap install *.snap --classic --dangerous
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"

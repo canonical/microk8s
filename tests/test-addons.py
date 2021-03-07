@@ -38,7 +38,7 @@ from utils import (
     microk8s_disable,
     microk8s_reset,
 )
-from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
+from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run, check_output
 
 
 class TestAddons(object):
@@ -414,8 +414,13 @@ class TestAddons(object):
         Sets up and validates openebs.
         """
         print("Enabling OpenEBS")
-        microk8s_enable("openebs")
-        print("Validating OpenEBS")
-        validate_openebs()
-        print("Disabling OpenEBS")
-        microk8s_disable("openebs:force")
+        output = check_output("systemctl is-enabled iscsid".split()).strip().decode("utf8")
+        if "enabled" in output:
+            microk8s_enable("openebs")
+            print("Validating OpenEBS")
+            validate_openebs()
+            print("Disabling OpenEBS")
+            microk8s_disable("openebs:force")
+        else:
+            print("Nothing to do, since iscsid is not available")
+            return
