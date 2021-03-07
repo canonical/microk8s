@@ -414,13 +414,13 @@ class TestAddons(object):
         Sets up and validates openebs.
         """
         print("Enabling OpenEBS")
-        output = check_output("systemctl is-enabled iscsid".split()).strip().decode("utf8")
-        if "enabled" in output:
+        try:
+            check_output("systemctl is-enabled iscsid".split()).strip().decode("utf8")
             microk8s_enable("openebs")
             print("Validating OpenEBS")
             validate_openebs()
             print("Disabling OpenEBS")
             microk8s_disable("openebs:force")
-        else:
+        except CalledProcessError as err:
             print("Nothing to do, since iscsid is not available")
             return
