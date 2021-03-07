@@ -547,7 +547,7 @@ def validate_openebs():
         "openebs",
         "running",
         label="openebs.io/component-name=maya-apiserver",
-        timeout_insec=1800,
+        timeout_insec=900,
     )
     print("OpenEBS is up and running.")
     here = os.path.dirname(os.path.abspath(__file__))
