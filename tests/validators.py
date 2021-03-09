@@ -446,25 +446,11 @@ def validate_cilium():
 
 def validate_multus():
     """
-    Validate multus by deploying alpine pod with 3 interfaces.
+    Validate multus by making sure the multus pod is running.
     """
 
     wait_for_installation()
-
-    here = os.path.dirname(os.path.abspath(__file__))
-    shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
-    networks = os.path.join(here, "templates", "multus-networks.yaml")
-    kubectl("create -f {}".format(networks))
-    manifest = os.path.join(here, "templates", "multus-alpine.yaml")
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=multus-alpine")
-    output = kubectl("exec multus-alpine -- ifconfig eth1", timeout_insec=900, err_out="no")
-    assert "10.111.111.111" in output
-    output = kubectl("exec multus-alpine -- ifconfig eth2", timeout_insec=900, err_out="no")
-    assert "10.222.222.222" in output
-    kubectl("delete -f {}".format(manifest))
-    kubectl("delete -f {}".format(networks))
-    shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
+    wait_for_pod_state("", "kube-system", "running", label="app=multus")
 
 
 def validate_kubeflow():
