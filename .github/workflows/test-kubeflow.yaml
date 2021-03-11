@@ -70,6 +70,7 @@ jobs:
           sudo apt install -y libssl-dev python3-setuptools firefox-geckodriver
           git clone https://github.com/juju-solutions/bundle-kubeflow.git
           cd bundle-kubeflow
+          git reset --hard f037616
           sudo pip3 install -r requirements.txt -r test-requirements.txt
           sudo microk8s status --wait-ready
           sudo microk8s kubectl -n kube-system rollout status ds/calico-node
@@ -183,6 +184,7 @@ jobs:
             sudo apt install -y libssl-dev python3-setuptools firefox-geckodriver
             git clone https://github.com/juju-solutions/bundle-kubeflow.git
             cd bundle-kubeflow
+            git reset --hard f037616
             sudo pip3 install -r requirements.txt -r test-requirements.txt
             sudo microk8s status --wait-ready
             sudo microk8s kubectl -n kube-system rollout status ds/calico-node
