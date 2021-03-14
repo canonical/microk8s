@@ -8,7 +8,10 @@ export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gn
 
 source $SNAP/actions/common/utils.sh
 
-exit_if_no_permissions
+NODES_NUM=$($KUBECTL get no -o name | wc -l)
+if [ $NODES_NUM == 1 ] && [[ \ $*\  != *\ --force\ * || \ $*\  != *\ -f\ * ]]; then
+  exit_if_no_permissions
+fi
 
 echo "Reverting to a non-HA setup"
 "${SNAP}/microk8s-leave.wrapper"
