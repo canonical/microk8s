@@ -505,6 +505,9 @@ parts:
         # KEDA support
         rm "actions/enable.keda.sh"
         rm "actions/disable.keda.sh"
+        # OpenEBS support
+        rm "actions/enable.openebs.sh"
+        rm "actions/disable.openebs.sh"        
       fi
 
       echo "Creating inspect hook"
