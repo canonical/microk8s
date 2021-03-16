@@ -17,7 +17,7 @@ if ! test -d /var/lib/kubelet
 then
   ln -s $SNAP_COMMON/var/lib/kubelet /var/lib/kubelet
 else
-  echo "\`/var/lib/kubectl\` already exists.  This might cause odd behaviour."
+  echo "\`/var/lib/kubelet\` already exists.  This might cause odd behaviour."
 fi
 
 # Create the certificates
