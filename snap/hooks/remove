@@ -48,5 +48,3 @@ if $SNAP/sbin/ip link show cni0
 then
   $SNAP/sbin/ip link delete cni0
 fi
-
-kill_all_container_shims
