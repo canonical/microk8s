@@ -13,6 +13,13 @@ else
 fi
 snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
 
+# Sym link the host's /var/lib/kubelet to the Snap's.  This will be fixed with layouts when
+# this Snap is strictly confined.
+if test -L /var/lib/kubelet
+do
+  unlink /var/lib/kubelet
+done
+
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
 if [ -z "$pod_cidr" ]
 then

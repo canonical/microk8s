@@ -11,6 +11,15 @@ source $SNAP/actions/common/utils.sh
 
 cp -r ${SNAP}/default-args ${SNAP_DATA}/args
 
+# Sym link the host's /var/lib/kubelet to the Snap's.  This will be fixed with layouts when
+# this Snap is strictly confined.  Warn if there's already a directory.
+if ! test -d /var/lib/kubelet
+do
+  ln -s $SNAP_COMMON/var/lib/kubelet /var/lib/kubelet
+else
+  echo "\`/var/lib/kubectl\` already exists.  This might cause odd behaviour."
+done
+
 # Create the certificates
 mkdir ${SNAP_DATA}/certs
 # Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
@@ -107,4 +116,3 @@ rm -rf "$SNAP_DATA"/args/cni-network/*
 cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
 mkdir -p "$SNAP_DATA/opt/cni/bin/"
 cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
-
