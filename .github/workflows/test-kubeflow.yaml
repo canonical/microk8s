@@ -67,9 +67,10 @@ jobs:
           set -eux
           export JUJU_DATA=/var/snap/microk8s/current/juju/share/juju
           sudo apt update
-          sudo apt install -y libssl-dev python3-setuptools firefox-geckodriver
+          sudo apt install -y libssl-dev python3-pip firefox-geckodriver
           git clone https://github.com/juju-solutions/bundle-kubeflow.git
           cd bundle-kubeflow
+          git reset --hard 5e0b6fcb
           sudo pip3 install -r requirements.txt -r test-requirements.txt
           sudo microk8s status --wait-ready
           sudo microk8s kubectl -n kube-system rollout status ds/calico-node
@@ -180,9 +181,10 @@ jobs:
             set -eux
             export JUJU_DATA=/var/snap/microk8s/current/juju/share/juju
             sudo apt update
-            sudo apt install -y libssl-dev python3-setuptools firefox-geckodriver
+            sudo apt install -y libssl-dev python3-pip firefox-geckodriver
             git clone https://github.com/juju-solutions/bundle-kubeflow.git
             cd bundle-kubeflow
+            git reset --hard 5e0b6fcb
             sudo pip3 install -r requirements.txt -r test-requirements.txt
             sudo microk8s status --wait-ready
             sudo microk8s kubectl -n kube-system rollout status ds/calico-node
