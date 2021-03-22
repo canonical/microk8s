@@ -96,6 +96,14 @@ then
   refresh_opt_in_local_config "kubelet-cgroups" "/systemd/system.slice" kubelet
 fi
 
+if [ -L /var/lib/kubelet ]
+then
+  echo "\`/var/lib/kubelet\` is a symbolic link"
+  ls -l /var/lib/kubelet
+else
+  echo "\`/var/lib/kubelet\` already exists. CSI add-ons have to point to $SNAP_COMMON for kubelet."
+fi
+
 ## Kube-proxy configuration
 # Check if we advertise an address. If we do we do not need to wait for a default network interface.
 if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null
