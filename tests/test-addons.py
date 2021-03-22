@@ -29,6 +29,7 @@ from validators import (
     validate_coredns_config,
     validate_portainer,
     validate_openfaas,
+    validate_openebs,
 )
 from utils import (
     microk8s_enable,
@@ -37,7 +38,7 @@ from utils import (
     microk8s_disable,
     microk8s_reset,
 )
-from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
+from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run, check_output
 
 
 class TestAddons(object):
@@ -407,3 +408,19 @@ class TestAddons(object):
             os.remove("backupfile.tar.gz")
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
+
+    def test_openebs(self):
+        """
+        Sets up and validates openebs.
+        """
+        print("Enabling OpenEBS")
+        try:
+            check_output("systemctl is-enabled iscsid".split()).strip().decode("utf8")
+            microk8s_enable("openebs")
+            print("Validating OpenEBS")
+            validate_openebs()
+            print("Disabling OpenEBS")
+            microk8s_disable("openebs:force")
+        except CalledProcessError as err:
+            print("Nothing to do, since iscsid is not available")
+            return

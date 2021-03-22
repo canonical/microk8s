@@ -41,7 +41,7 @@ echo "New CNI plugins can be installed in ${CUR_DATA}/opt/cni/bin/"
 echo
 echo "For information on configuration please refer to the multus documentation."
 echo "  First you need to create network definitions:"
-echo "    https://github.com/intel/multus-cni/blob/master/doc/how-to-use.md#create-network-attachment-definition"
+echo "    https://github.com/intel/multus-cni/blob/v3.4.2/doc/how-to-use.md#create-network-attachment-definition"
 echo "  Then you need to tell your pods to use those networks via annotations"
-echo "    https://github.com/intel/multus-cni/blob/master/doc/how-to-use.md#run-pod-with-network-annotation"
+echo "    https://github.com/intel/multus-cni/blob/v3.4.2/doc/how-to-use.md#run-pod-with-network-annotation"
 echo
