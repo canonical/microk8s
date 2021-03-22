@@ -13,11 +13,12 @@ cp -r ${SNAP}/default-args ${SNAP_DATA}/args
 
 # Sym link the host's /var/lib/kubelet to the Snap's.  This will be fixed with layouts when
 # this Snap is strictly confined.  Warn if there's already a directory.
-if ! test -d /var/lib/kubelet
+if ! [ -e /var/lib/kubelet ] &&
+   ln -s $SNAP_COMMON/var/lib/kubelet /var/lib/kubelet
 then
-  ln -s $SNAP_COMMON/var/lib/kubelet /var/lib/kubelet
+  echo "\`/var/lib/kubelet\` linked to $SNAP_COMMON"
 else
-  echo "\`/var/lib/kubelet\` already exists.  This might cause odd behaviour."
+  echo "\`/var/lib/kubelet\` already exists.  Will not be linking to $SNAP_COMMON"
 fi
 
 # Create the certificates

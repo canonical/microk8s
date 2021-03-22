@@ -17,7 +17,7 @@ snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
 # this Snap is strictly confined.
 if test -L /var/lib/kubelet
 then
-  unlink /var/lib/kubelet
+  unlink /var/lib/kubelet || true
 fi
 
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
