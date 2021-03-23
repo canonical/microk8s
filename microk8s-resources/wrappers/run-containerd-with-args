@@ -46,6 +46,14 @@ set -a
 . "${SNAP_DATA}/args/${app}-env"
 set +a
 
+# clean leftover container state if we just booted
+if (is_first_boot "${SNAP_COMMON}/run/containerd")
+then
+  rm -rf "${SNAP_COMMON}/run/containerd" || true
+fi
+mkdir -p "${SNAP_COMMON}/run/containerd"
+mark_boot_time "${SNAP_COMMON}/run/containerd"
+
 # wait up to two minutes for the default network interface to appear.
 n=0
 until [ $n -ge 20 ]

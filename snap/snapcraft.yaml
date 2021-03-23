@@ -23,9 +23,8 @@ apps:
     daemon: simple
   daemon-containerd:
     command: run-containerd-with-args
-    daemon: notify
+    daemon: simple
     stop-mode: sigterm
-    restart-condition: always
     plugs: [kubernetes-support]
   daemon-kubelite:
     command: run-kubelite-with-args

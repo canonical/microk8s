@@ -13,6 +13,8 @@ then
     exit 0
 fi
 
+exit_if_no_permissions
+
 FORCE=false
 PARSED=$(getopt --options=lho: --longoptions=force,help,output: --name "$@" -- "$@")
 eval set -- "$PARSED"

@@ -12,6 +12,8 @@ then
     exit 0
 fi
 
+exit_if_no_permissions
+
 PARSED=$(getopt --options=lho: --longoptions=help,output: --name "$@" -- "$@")
 eval set -- "$PARSED"
 while true; do
