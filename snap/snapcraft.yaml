@@ -472,10 +472,6 @@ parts:
       if [ "${ARCH}" != "amd64" ]
       then
         # Some actions are only available on amd64
-        # Nvidia support
-        rm "actions/enable.gpu.sh"
-        rm "actions/disable.gpu.sh"
-        rm "actions/gpu.yaml"
         # Istio support
         rm "actions/enable.istio.sh"
         rm "actions/disable.istio.sh"

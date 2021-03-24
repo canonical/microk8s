@@ -77,6 +77,7 @@ microk8s-addons:
       check_status: "daemonset.apps/nvidia-device-plugin-daemonset"
       supported_architectures:
         - amd64
+        - arm64
 
     - name: "prometheus"
       description: "Prometheus operator for monitoring and logging"
