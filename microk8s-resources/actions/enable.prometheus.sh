@@ -36,7 +36,7 @@ get_kube_prometheus () {
 }
 
 use_multiarch_images() {
-  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-state-metrics:v1.9.5@gcr.io/k8s-staging-kube-state-metrics/kube-state-metrics:v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
+  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-state-metrics:v1.9.7@gcr.io/k8s-staging-kube-state-metrics/kube-state-metrics:v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
 
 }
 
