@@ -2,9 +2,9 @@ name: cla-check
 
 on: 
   push:
-    branches: [ master, default]
+    branches: [master, default]
   pull_request:
-    branches: [ master, default]
+    branches: [master, default]
 
 jobs:
   cla-check:
