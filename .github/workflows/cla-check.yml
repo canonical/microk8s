@@ -1,6 +1,6 @@
 name: cla-check
 
-on: 
+on:
   push:
     branches: [master, default]
   pull_request:
