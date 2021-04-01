@@ -36,10 +36,9 @@ get_kube_prometheus () {
 }
 
 use_multiarch_images() {
-  # Use multi-arch kube-state-metrics
-  # According to this comment https://github.com/prometheus-community/helm-charts/issues/373#issuecomment-784031428, kube-state-metrics v1.9.8 in quay.io is multi-arch
-  # so upgrading it to 1.9.8 for now.
-  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-state-metrics:v1.9.7@quay.io/coreos/kube-state-metrics:v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
+  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-state-metrics:v1.9.7@gcr.io/k8s-staging-kube-state-metrics/kube-state-metrics:v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
+  run_with_sudo $SNAP/bin/sed -i 's@app.kubernetes.io/version: v1.9.7@app.kubernetes.io/version: v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
+
 }
 
 
