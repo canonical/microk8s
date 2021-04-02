@@ -360,7 +360,8 @@ class TestAddons(object):
         microk8s_disable("portainer")
 
     @pytest.mark.skipif(
-        platform.machine() != "x86_64", reason="OpenFaaS tests are only relevant in x86 architectures"
+        platform.machine() != "x86_64",
+        reason="OpenFaaS tests are only relevant in x86 architectures",
     )
     def test_openfaas(self):
         """
@@ -412,6 +413,10 @@ class TestAddons(object):
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
 
+    @pytest.mark.skipif(
+        platform.machine() != "x86_64",
+        reason="OpenEBS tests are only relevant in x86 architectures",
+    )
     def test_openebs(self):
         """
         Sets up and validates openebs.
