@@ -3,7 +3,7 @@ microk8s-addons:
   addons:
     - name: "dns"
       description: "CoreDNS"
-      version: "1.6.6"
+      version: "1.8.0"
       check_status: "pod/coredns"
       supported_architectures:
         - amd64
