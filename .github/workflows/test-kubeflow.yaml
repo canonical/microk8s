@@ -20,11 +20,9 @@ jobs:
     - name: Install lxd
       run: |
         set -eux
-        sudo snap install lxd
-        sudo lxd.migrate -yes
-        sudo lxd waitready
         sudo lxd init --auto
         sudo usermod --append --groups lxd $USER
+        sg lxd -c 'lxc version'
 
     - name: Install snapcraft
       run: sudo snap install snapcraft --classic
