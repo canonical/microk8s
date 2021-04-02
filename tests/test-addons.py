@@ -359,6 +359,9 @@ class TestAddons(object):
         print("Disabling Portainer")
         microk8s_disable("portainer")
 
+    @pytest.mark.skipif(
+        platform.machine() != "x86_64", reason="OpenFaaS tests are only relevant in x86 architectures"
+    )
     def test_openfaas(self):
         """
         Sets up and validates OpenFaaS.
