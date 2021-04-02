@@ -506,6 +506,9 @@ parts:
         # OpenEBS support
         rm "actions/enable.openebs.sh"
         rm "actions/disable.openebs.sh"        
+        # OpenFaaS support
+        rm "actions/enable.openfaas.sh"
+        rm "actions/disable.openfaas.sh"
       fi
 
       echo "Creating inspect hook"

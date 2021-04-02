@@ -204,7 +204,6 @@ microk8s-addons:
       version: "6.2.2"
       check_status: "pod/gateway"
       supported_architectures:
-        - arm64
         - amd64
 
     - name: "openebs"
