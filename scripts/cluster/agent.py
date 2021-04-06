@@ -585,16 +585,16 @@ def join_node_dqlite():
     node_addr = request.remote_addr
     if host_addr == node_addr:
         error_msg = {
-            "error": "The joining node has the same IP ({}) as the node we contact.".format(host_addr)
+            "error": "The joining node has the same IP ({}) as the node we contact.".format(
+                host_addr
+            )
         }
         return Response(json.dumps(error_msg), mimetype="application/json", status=503)
 
     voters, non_voters = get_dqlite_nodes()
     matching_nodes = [i for i in voters + non_voters if i.startswith("{}:".format(node_addr))]
     if len(matching_nodes) > 0:
-        error_msg = {
-            "error": "The joining node ({}) is already known to dqlite.".format(node_addr)
-        }
+        error_msg = {"error": "The joining node ({}) is already known to dqlite.".format(node_addr)}
         return Response(json.dumps(error_msg), mimetype="application/json", status=504)
 
     # Check if we need to set dqlite with external IP
