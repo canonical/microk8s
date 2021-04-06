@@ -73,11 +73,8 @@ def join_request(conn, api_version, req_data, master_ip, verify_peer, fingerprin
         conn.request("POST", "/{}/join".format(api_version), json_params, headers)
         response = conn.getresponse()
         if not response.status == 200:
-            message = "Connection failed"
-            res_data = response.read().decode()
-            if "error" in res_data:
-                message = "{} {}".format(message, res_data["error"])
-            print("{} ({}). {}.".format(message, response.status, response.reason))
+            message = extract_error(response)
+            print("{} ({}).".format(message, response.status))
             exit(6)
         body = response.read()
         return json.loads(body)
@@ -87,6 +84,19 @@ def join_request(conn, api_version, req_data, master_ip, verify_peer, fingerprin
     except ssl.SSLError as e:
         print("Peer node verification failed ({}).".format(e))
         exit(4)
+
+
+def extract_error(response):
+    message = "Connection failed."
+    try:
+        resp = response.read().decode()
+        if resp:
+            res_data = json.loads(resp)
+            if "error" in res_data:
+                message = "{} {}".format(message, res_data["error"])
+    except ValueError:
+        pass
+    return message
 
 
 def get_connection_info(
@@ -694,7 +704,7 @@ def remove_dqlite_node(node, force=False):
                 break
 
         if not node_address:
-            print("Could nod detect the IP of {}.".format(node))
+            print("Node {} is not part of the cluster.".format(node))
             exit(1)
 
         node_ep = None
@@ -717,6 +727,15 @@ def remove_dqlite_node(node, force=False):
 
     except subprocess.CalledProcessError:
         print("Node {} does not exist in Kubernetes.".format(node))
+        if force:
+            print("Attempting to remove {} from dqlite.".format(node))
+            # Make sure we do not have the node in dqlite.
+            # We assume the IP is provided to denote the
+            my_ep, other_ep = get_dqlite_endpoints()
+            for ep in other_ep:
+                if ep.startswith("{}:".format(node)):
+                    print("Removing node entry found in dqlite.")
+                    delete_dqlite_node([ep], my_ep)
         exit(1)
 
     remove_node(node)
@@ -905,7 +924,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     restart_all_services()
 
 
-def join_dqlite(connection_parts, verify=True):
+def join_dqlite(connection_parts, verify=False):
     """
     Configure node to join a dqlite cluster.
 
@@ -918,7 +937,7 @@ def join_dqlite(connection_parts, verify=True):
     fingerprint = None
     if len(connection_parts) > 2:
         fingerprint = connection_parts[2]
-        verify = False
+        verify = True
 
     print("Contacting cluster at {}".format(master_ip))
 

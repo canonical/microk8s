@@ -450,7 +450,7 @@ def configure():
     return resp
 
 
-def get_dqlite_voters():
+def get_dqlite_nodes():
     """
     Get the voting members of the dqlite cluster
 
@@ -488,10 +488,13 @@ def get_dqlite_voters():
 
     nodes = json.loads(out.decode())
     voters = []
+    non_voters = []
     for n in nodes:
         if n["Role"] == 0:
             voters.append(n["Address"])
-    return voters
+        else:
+            non_voters.append(n["Address"])
+    return voters, non_voters
 
 
 def update_dqlite_ip(host):
@@ -513,7 +516,7 @@ def update_dqlite_ip(host):
     time.sleep(10)
     attempts = 12
     while True:
-        voters = get_dqlite_voters()
+        voters, non_voters = get_dqlite_nodes()
         if len(voters) > 0 and not voters[0].startswith("127.0.0.1"):
             break
         else:
@@ -578,14 +581,28 @@ def join_node_dqlite():
         }
         return Response(json.dumps(error_msg), mimetype="application/json", status=502)
 
-    voters = get_dqlite_voters()  # type: List[str]
+    host_addr = request.host.split(":")[0]
+    node_addr = request.remote_addr
+    if host_addr == node_addr:
+        error_msg = {
+            "error": "The joining node has the same IP ({}) as the node we contact.".format(host_addr)
+        }
+        return Response(json.dumps(error_msg), mimetype="application/json", status=503)
+
+    voters, non_voters = get_dqlite_nodes()
+    matching_nodes = [i for i in voters + non_voters if i.startswith("{}:".format(node_addr))]
+    if len(matching_nodes) > 0:
+        error_msg = {
+            "error": "The joining node ({}) is already known to dqlite.".format(node_addr)
+        }
+        return Response(json.dumps(error_msg), mimetype="application/json", status=504)
+
     # Check if we need to set dqlite with external IP
     if len(voters) == 1 and voters[0].startswith("127.0.0.1"):
-        update_dqlite_ip(request.host.split(":")[0])
-        voters = get_dqlite_voters()
+        update_dqlite_ip(host_addr)
+        voters, non_voters = get_dqlite_nodes()
     callback_token = get_callback_token()
     remove_token_from_file(token, cluster_tokens_file)
-    node_addr = request.remote_addr
     api_port = get_arg("--secure-port", "kube-apiserver")
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
