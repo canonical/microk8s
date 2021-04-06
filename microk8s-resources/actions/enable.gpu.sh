@@ -9,10 +9,25 @@ readonly SOCKET="$SNAP_COMMON/run/containerd.sock"
 
 echo "Enabling NVIDIA GPU"
 
-if lsmod | grep "nvidia" &> /dev/null ; then
+read -ra ARGUMENTS <<< "$1"
+
+if [[ "$ARGUMENTS" == "force-system-driver" ]]
+  then
+  echo "Using host driver"
   readonly ENABLE_INTERNAL_DRIVER="false"
-else
+elif [[ "$ARGUMENTS" == "force-operator-driver" ]]
+  then
+  echo "Using operator driver"
   readonly ENABLE_INTERNAL_DRIVER="true"
+else
+  if lsmod | grep "nvidia" &> /dev/null
+    then
+    echo "Using host driver"
+    readonly ENABLE_INTERNAL_DRIVER="false"
+  else
+    echo "Using operator driver"
+    readonly ENABLE_INTERNAL_DRIVER="true"
+  fi
 fi
 
 sudo mkdir -p ${SNAP_DATA}/var/lock
