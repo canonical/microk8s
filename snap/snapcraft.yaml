@@ -258,8 +258,6 @@ parts:
         if [ -z "${KUBE_SNAP_BINS}" ]; then
           . ./set-env-binaries-location.sh
         fi
-        echo "Downloading binaries"
-        . ./fetch-other-binaries.sh
         echo "Building k8s binaries"
         . ./build-k8s-binaries.sh
       else
@@ -272,13 +270,6 @@ parts:
       bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
       bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
 
-      mkdir -p ./actions/
-      if [ "${ARCH}" = "amd64" ]
-      then
-        # Knative support
-        echo "Preparing knative"
-        cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
-      fi
       snapcraftctl build
     organize:
       bins/*: .
@@ -286,7 +277,6 @@ parts:
       - kubelite
       - kubectl
       - kubectl.bash
-      - actions
 
   libmnl:
     plugin: autotools

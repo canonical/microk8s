@@ -66,8 +66,8 @@ microk8s-addons:
 
     - name: "knative"
       description: "The Knative framework on Kubernetes."
-      version: "0.13.0"
-      check_status: "clusterrole.rbac.authorization.k8s.io/knative"
+      version: "0.21.0"
+      check_status: "deployment.apps/eventing-webhook"
       supported_architectures:
         - amd64
 
