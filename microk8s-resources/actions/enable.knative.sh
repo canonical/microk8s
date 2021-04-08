@@ -6,49 +6,28 @@ source $SNAP/actions/common/utils.sh
 
 echo "Enabling Knative"
 
-# Knative require istio
 "$SNAP/microk8s-enable.wrapper" istio
 
-echo "Waiting for Istio to be ready"
-JSONPATH='{range .items[*]}{range @.status.readyReplicas}{@}{"\n"}{end}{end}'
-
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-# Wait for all 12 Istio deployments to be ready.
-while ! [ $($KUBECTL get deployments -n istio-system -o jsonpath="$JSONPATH" | grep 1 | wc -l) -eq 12 ]
+
+declare -a yamls=("https://github.com/knative/serving/releases/download/v0.21.0/serving-crds.yaml"
+                  "https://github.com/knative/eventing/releases/download/v0.21.0/eventing-crds.yaml"
+                  "https://github.com/knative/serving/releases/download/v0.21.0/serving-core.yaml"
+                  "https://github.com/knative/net-istio/releases/download/v0.21.0/net-istio.yaml"
+                  "https://github.com/knative/serving/releases/download/v0.21.0/serving-default-domain.yaml"
+                  "https://github.com/knative/eventing/releases/download/v0.21.0/eventing-core.yaml"
+                  "https://github.com/knative/eventing/releases/download/v0.21.0/in-memory-channel.yaml"
+                  "https://github.com/knative/eventing/releases/download/v0.21.0/mt-channel-broker.yaml"
+                 )
+
+for yaml in "${yamls[@]}"
 do
-    echo -n "."
-    sleep 2
+   $KUBECTL apply -f "$yaml"
+   sleep 3
 done
 
-echo
-echo "Installing Knative CRDs"
-n=0
-until [ $n -ge 10 ]
-do
-  sleep 3
-  ($KUBECTL apply -f ${SNAP}/actions/knative/setup/) && break
-  n=$[$n+1]
-  if [ $n -ge 10 ]; then
-    echo "Knative failed to install"
-    exit 1
-  fi
-done
-
-echo "Installing Knative dependencies"
-n=0
-until [ $n -ge 10 ]
-do
-  sleep 3
-  ($KUBECTL apply -f ${SNAP}/actions/knative/eventing-core.yaml) && \
-  ($KUBECTL apply -f ${SNAP}/actions/knative/serving-core.yaml) &&  \
-  ($KUBECTL apply -f ${SNAP}/actions/knative/channel-broker.yaml) && \
-  ($KUBECTL apply -f ${SNAP}/actions/knative/in-memory-channel.yaml) && \
-  ($KUBECTL apply -f ${SNAP}/actions/knative/monitoring-core.yaml) && break
-  n=$[$n+1]
-  if [ $n -ge 10 ]; then
-    echo "Knative failed to install"
-    exit 1
-  fi
-done
-
-echo "Knative is starting"
+echo ""
+echo ""
+echo "Visit https://knative.dev/docs/install/any-kubernetes-cluster/ to customize which broker channel"
+echo "implementation is used and to specify which configurations are used for which namespaces."
+echo ""
