@@ -23,9 +23,7 @@ apps:
     daemon: simple
   daemon-containerd:
     command: run-containerd-with-args
-    daemon: notify
-    stop-mode: sigterm
-    restart-condition: always
+    daemon: simple
     plugs: [kubernetes-support]
   daemon-kubelite:
     command: run-kubelite-with-args
@@ -214,7 +212,8 @@ parts:
     source: build-scripts/
     override-build: |
       . ./set-env-variables.sh
-      curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-$KUBE_ARCH-${CNI_VERSION}.tgz
+      rm -rf cni*
+      curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-$KUBE_ARCH-${CNI_VERSION}.tgz
       mkdir cni
       tar -xzvf cni-*.tgz -C cni/
       snapcraftctl build
@@ -249,6 +248,7 @@ parts:
       - git
     override-build: |
       set -eux
+      snap refresh go --channel=1.16/stable || true
       . ./set-env-variables.sh
 
       # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
@@ -503,6 +503,12 @@ parts:
         # KEDA support
         rm "actions/enable.keda.sh"
         rm "actions/disable.keda.sh"
+        # OpenEBS support
+        rm "actions/enable.openebs.sh"
+        rm "actions/disable.openebs.sh"        
+        # OpenFaaS support
+        rm "actions/enable.openfaas.sh"
+        rm "actions/disable.openfaas.sh"
       fi
 
       echo "Creating inspect hook"

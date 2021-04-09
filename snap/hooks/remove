@@ -13,6 +13,13 @@ else
 fi
 snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
 
+# Sym link the host's /var/lib/kubelet to the Snap's.  This will be fixed with layouts when
+# this Snap is strictly confined.
+if test -L /var/lib/kubelet
+then
+  unlink /var/lib/kubelet || true
+fi
+
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
 if [ -z "$pod_cidr" ]
 then
@@ -48,5 +55,3 @@ if $SNAP/sbin/ip link show cni0
 then
   $SNAP/sbin/ip link delete cni0
 fi
-
-kill_all_container_shims

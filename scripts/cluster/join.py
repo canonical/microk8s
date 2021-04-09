@@ -5,9 +5,11 @@ import string
 import subprocess
 import os
 import getopt
+import ssl
 import sys
 import time
-from typing import Dict
+import hashlib
+import http
 
 import netifaces
 import requests
@@ -42,71 +44,122 @@ cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
 cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
 cluster_key_file = "{}/cluster.key".format(cluster_dir)
 
+FINGERPRINT_MIN_LEN = 12
 
-def get_connection_info(master_ip, master_port, token, callback_token=None, cluster_type="etcd"):
+
+def join_request(conn, api_version, req_data, master_ip, verify_peer, fingerprint):
+    json_params = json.dumps(req_data)
+    headers = {"Content-type": "application/json", "Accept": "application/json"}
+
+    try:
+        if verify_peer and fingerprint:
+            if len(fingerprint) < FINGERPRINT_MIN_LEN:
+                print(
+                    "Joining cluster failed. Fingerprint too short."
+                    " Use '--skip-verify' to skip server certificate check."
+                )
+                exit(4)
+
+            # Do the peer certificate verification
+            der_cert_bin = conn.sock.getpeercert(True)
+            peer_cert_hash = hashlib.sha256(der_cert_bin).hexdigest()
+            if not peer_cert_hash.startswith(fingerprint):
+                print(
+                    "Joining cluster failed. Could not verify the identity of {}."
+                    " Use '--skip-verify' to skip server certificate check.".format(master_ip)
+                )
+                exit(4)
+
+        conn.request("POST", "/{}/join".format(api_version), json_params, headers)
+        response = conn.getresponse()
+        if not response.status == 200:
+            message = extract_error(response)
+            print("{} ({}).".format(message, response.status))
+            exit(6)
+        body = response.read()
+        return json.loads(body)
+    except http.client.HTTPException as e:
+        print("Please ensure the master node is reachable. {}".format(e))
+        exit(1)
+    except ssl.SSLError as e:
+        print("Peer node verification failed ({}).".format(e))
+        exit(4)
+
+
+def extract_error(response):
+    message = "Connection failed."
+    try:
+        resp = response.read().decode()
+        if resp:
+            res_data = json.loads(resp)
+            if "error" in res_data:
+                message = "{} {}".format(message, res_data["error"])
+    except ValueError:
+        pass
+    return message
+
+
+def get_connection_info(
+    master_ip,
+    master_port,
+    token,
+    callback_token=None,
+    cluster_type="etcd",
+    verify_peer=False,
+    fingerprint=None,
+):
     """
     Contact the master and get all connection information
 
     :param master_ip: the master IP
     :param master_port: the master port
     :param token: the token to contact the master with
+    :param callback_token: callback token for etcd based clusters
     :param cluster_type: the type of cluster we want to join, etcd or dqlite
+    :param verify_peer: flag indicating if we should verify peers certificate
+    :param fingerprint: the certificate fingerprint we expect from the peer
 
     :return: the json response of the master
     """
     cluster_agent_port = get_cluster_agent_port()
+    try:
+        context = ssl._create_unverified_context()
+        conn = http.client.HTTPSConnection("{}:{}".format(master_ip, master_port), context=context)
+        conn.connect()
+        if cluster_type == "dqlite":
+            req_data = {
+                "token": token,
+                "hostname": socket.gethostname(),
+                "port": cluster_agent_port,
+            }
 
-    if cluster_type == "dqlite":
-        req_data = {
-            "token": token,
-            "hostname": socket.gethostname(),
-            "port": cluster_agent_port,
-        }
-
-        # TODO: enable ssl verification
-        try:
-            connection_info = requests.post(
-                "https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API_V2),
-                json=req_data,
-                verify=False,
-            )  # type: requests.models.Response
-        except requests.exceptions.ConnectionError:
-            print("Please ensure the master node is reachable.")
-            usage()
-            exit(1)
-    else:
-        req_data = {
-            "token": token,
-            "hostname": socket.gethostname(),
-            "port": cluster_agent_port,
-            "callback": callback_token,
-        }
-
-        # TODO: enable ssl verification
-        try:
-            connection_info = requests.post(
-                "https://{}:{}/{}/join".format(master_ip, master_port, CLUSTER_API),
-                json=req_data,
-                verify=False,
+            return join_request(conn, CLUSTER_API_V2, req_data, master_ip, verify_peer, fingerprint)
+        else:
+            req_data = {
+                "token": token,
+                "hostname": socket.gethostname(),
+                "port": cluster_agent_port,
+                "callback": callback_token,
+            }
+            return join_request(
+                conn, CLUSTER_API, req_data, master_ip, verify_peer=False, fingerprint=None
             )
-        except requests.exceptions.ConnectionError:
-            print("Please ensure the master node is reachable.")
-            usage()
-            exit(1)
-
-    if connection_info.status_code != 200:
-        message = "Error code {}.".format(connection_info.status_code)  # type: str
-        if connection_info.headers.get("content-type") == "application/json":
-            res_data = connection_info.json()  # type: Dict[str, str]
-            if "error" in res_data:
-                message = "{} {}".format(message, res_data["error"])
-        print("Failed to join cluster. {}".format(message))
-        exit(1)
-    return connection_info.json()
+    except http.client.HTTPException as e:
+        print("Connecting to cluster failed with {}.".format(e))
+        exit(5)
+    except ssl.SSLError as e:
+        print("Peer node verification failed with {}.".format(e))
+        exit(4)
 
 
 def usage():
-    print("Join a cluster: microk8s join <master>:<port>/<token>")
+    print("Join a cluster: microk8s join <master>:<port>/<token> [options]")
+    print("")
+    print("Options:")
+    print(
+        "--skip-verify  skip the certificate verification of the node we are"
+        " joining to (default: false)."
+    )
 
 
 def set_arg(key, value, file):
@@ -417,7 +470,7 @@ def reset_current_dqlite_installation():
         )
 
     # We reset to the default port and address
-    init_data = {"Address": "127.0.0.1:19001"}  # type: Dict[str, str]
+    init_data = {"Address": "127.0.0.1:19001"}
     with open("{}/init.yaml".format(cluster_dir), "w") as f:
         yaml.dump(init_data, f)
 
@@ -651,7 +704,7 @@ def remove_dqlite_node(node, force=False):
                 break
 
         if not node_address:
-            print("Could nod detect the IP of {}.".format(node))
+            print("Node {} is not part of the cluster.".format(node))
             exit(1)
 
         node_ep = None
@@ -674,6 +727,15 @@ def remove_dqlite_node(node, force=False):
 
     except subprocess.CalledProcessError:
         print("Node {} does not exist in Kubernetes.".format(node))
+        if force:
+            print("Attempting to remove {} from dqlite.".format(node))
+            # Make sure we do not have the node in dqlite.
+            # We assume the IP is provided to denote the
+            my_ep, other_ep = get_dqlite_endpoints()
+            for ep in other_ep:
+                if ep.startswith("{}:".format(node)):
+                    print("Removing node entry found in dqlite.")
+                    delete_dqlite_node([ep], my_ep)
         exit(1)
 
     remove_node(node)
@@ -777,11 +839,18 @@ def restart_all_services():
     """
     Restart all services
     """
-    subprocess.check_call(
-        "{}/microk8s-stop.wrapper".format(snap_path).split(),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    waits = 10
+    while waits > 0:
+        try:
+            subprocess.check_call(
+                "{}/microk8s-stop.wrapper".format(snap_path).split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+            waits -= 1
     waits = 10
     while waits > 0:
         try:
@@ -855,7 +924,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     restart_all_services()
 
 
-def join_dqlite(connection_parts):
+def join_dqlite(connection_parts, verify=False):
     """
     Configure node to join a dqlite cluster.
 
@@ -865,9 +934,21 @@ def join_dqlite(connection_parts):
     master_ep = connection_parts[0].split(":")
     master_ip = master_ep[0]
     master_port = master_ep[1]
+    fingerprint = None
+    if len(connection_parts) > 2:
+        fingerprint = connection_parts[2]
+        verify = True
 
     print("Contacting cluster at {}".format(master_ip))
-    info = get_connection_info(master_ip, master_port, token, cluster_type="dqlite")
+
+    info = get_connection_info(
+        master_ip,
+        master_port,
+        token,
+        cluster_type="dqlite",
+        verify_peer=verify,
+        fingerprint=fingerprint,
+    )
 
     hostname_override = info["hostname_override"]
 
@@ -902,7 +983,7 @@ def join_dqlite(connection_parts):
     try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
 
 
-def join_etcd(connection_parts):
+def join_etcd(connection_parts, verify=True):
     """
     Configure node to join an etcd cluster.
 
@@ -927,19 +1008,22 @@ def join_etcd(connection_parts):
 
 if __name__ == "__main__":
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "hf", ["help", "force"])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "hfs", ["help", "force", "skip-verify"])
     except getopt.GetoptError as err:
         print(err)  # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
 
     force = False
+    verify = True
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
             sys.exit(1)
         elif o in ("-f", "--force"):
             force = True
+        elif o in ("-s", "--skip-verify"):
+            verify = False
         else:
             print("Unhandled option")
             sys.exit(1)
@@ -963,8 +1047,8 @@ if __name__ == "__main__":
     else:
         connection_parts = args[0].split("/")
         if is_node_running_dqlite():
-            join_dqlite(connection_parts)
+            join_dqlite(connection_parts, verify)
         else:
-            join_etcd(connection_parts)
+            join_etcd(connection_parts, verify)
 
     sys.exit(0)

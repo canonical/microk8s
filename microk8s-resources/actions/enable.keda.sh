@@ -16,13 +16,10 @@ do_prerequisites() {
 
 
 get_keda () {
-  if [  ! -d "${SNAP_DATA}/kube-prometheus" ]
-  then
-    KEDA_VERSION="v2.0.0"
-    KEDA_ERSION=$(echo $KEDA_VERSION | sed 's/v//g')
-    echo "Fetching keda version $KEDA_ERSION."
-    run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/kedacore/keda/releases/download/${KEDA_VERSION}/keda-${KEDA_ERSION}.yaml -o "$SNAP_DATA/keda/keda.yaml"
-  fi
+  KEDA_VERSION="v2.1.0"
+  KEDA_ERSION=$(echo $KEDA_VERSION | sed 's/v//g')
+  echo "Fetching keda version $KEDA_ERSION."
+  run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/kedacore/keda/releases/download/${KEDA_VERSION}/keda-${KEDA_ERSION}.yaml -o "$SNAP_DATA/keda/keda.yaml"
 }
 
 

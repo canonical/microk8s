@@ -125,7 +125,7 @@ function store_kubeflow_info {
 function suggest_fixes {
   # Propose fixes
   printf '\n'
-  if ! systemctl status snap.microk8s.daemon-apiserver &> /dev/null
+  if ! systemctl status snap.microk8s.daemon-kubelite &> /dev/null
   then
     if lsof -Pi :16443 -sTCP:LISTEN -t &> /dev/null
     then
