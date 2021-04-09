@@ -1,4 +1,4 @@
-apiVersion: serving.knative.dev/v1alpha1 # Current version of Knative
+apiVersion: serving.knative.dev/v1 # Current version of Knative
 kind: Service
 metadata:
   name: helloworld-go # The name of the app
