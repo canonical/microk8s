@@ -545,3 +545,15 @@ def validate_openebs():
     output = kubectl("exec openebs-test-busybox -- ls /", timeout_insec=900, err_out="no")
     assert "my-data" in output
     kubectl("delete -f {}".format(manifest))
+
+
+def validate_kata():
+    """
+    Validate Kata
+    """
+    wait_for_installation()
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "nginx-kata.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=kata")
+    kubectl("delete -f {}".format(manifest))

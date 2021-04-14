@@ -10,6 +10,9 @@ from os import fdopen, remove
 
 
 def mark_kata_disabled():
+    """
+    Mark the kata addon as enabled by removing the kata.enabled lock
+    """
     try:
         snapdata_path = os.environ.get("SNAP_DATA")
         lock_fname = "{}/var/lock/kata.enabled".format(snapdata_path)
@@ -22,7 +25,7 @@ def delete_runtime_manifest():
     try:
         snap_path = os.environ.get("SNAP")
         manifest = "{}/actions/kata/runtime.yaml".format(snap_path)
-        subprocess.call(["microk8s-kubectl.wrapper", "delete", "-f", manifest])
+        subprocess.call(["{}/microk8s-kubectl.wrapper".format(snap_path), "delete", "-f", manifest])
     except (subprocess.CalledProcessError):
         print("Failed to apply the runtime manifest." )
         sys.exit(5)
@@ -37,7 +40,10 @@ def restart_containerd():
         sys.exit(3)
 
 
-def configure_containerd(kata_path):
+def configure_containerd():
+    """
+    Configure the containerd PATH by removing the kata runtime binary
+    """
     snapdata_path = os.environ.get("SNAP_DATA")
     containerd_env_file = "{}/args/containerd-env".format(snapdata_path)
     #Create temp file
@@ -56,9 +62,12 @@ def configure_containerd(kata_path):
 
 @click.command()
 def kata():
-
+    """
+    Disable the kata runtime. Mark it as disabled, delete the runtimeClassName but do not remove the
+    kata runtime because we do not know if it is used by any other application.
+    """
     print("Configuring containerd")
-    configure_containerd(kata_path)
+    configure_containerd()
     restart_containerd()
     print("Deleting kata runtime manifest")
     delete_runtime_manifest()

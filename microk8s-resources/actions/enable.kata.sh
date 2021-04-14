@@ -10,6 +10,9 @@ from os import fdopen, remove
 
 
 def mark_kata_enabled():
+    """
+    Mark the kata addon as enabled by creating the kata.enabled
+    """
     try:
         snapdata_path = os.environ.get("SNAP_DATA")
         lock_fname = "{}/var/lock/kata.enabled".format(snapdata_path)
@@ -19,16 +22,22 @@ def mark_kata_enabled():
         sys.exit(4)
 
 def apply_runtime_manifest():
+    """
+    Apply the manifest containing the definition of the kata runtimeClassName
+    """
     try:
         snap_path = os.environ.get("SNAP")
         manifest = "{}/actions/kata/runtime.yaml".format(snap_path)
-        subprocess.call(["microk8s-kubectl.wrapper", "apply", "-f", manifest])
+        subprocess.call(["{}/microk8s-kubectl.wrapper".format(snap_path), "apply", "-f", manifest])
     except (subprocess.CalledProcessError):
         print("Failed to apply the runtime manifest." )
         sys.exit(5)
 
 
 def restart_containerd():
+    """
+    Restart the containerd service
+    """
     try:
         print("Restarting containerd")
         subprocess.call(['sudo', 'systemctl', 'restart', 'snap.microk8s.daemon-containerd'])
@@ -38,6 +47,9 @@ def restart_containerd():
 
 
 def configure_containerd(kata_path):
+    """
+    Configure the containerd PATH so it finds the kata runtime binary
+    """
     snapdata_path = os.environ.get("SNAP_DATA")
     containerd_env_file = "{}/args/containerd-env".format(snapdata_path)
     #Create temp file
@@ -54,6 +66,22 @@ def configure_containerd(kata_path):
     move(abs_path, containerd_env_file)
 
 
+def print_next_steps():
+    print()
+    print()
+    print("To use the kata runtime set the 'kata' runtimeClassName, eg:")
+    print()
+    print("kind: Pod")
+    print("metadata:")
+    print("  name: nginx-kata")
+    print("spec:")
+    print("  runtimeClassName: kata")
+    print("  containers:")
+    print("  - name: nginx")
+    print("    image: nginx")
+    print()
+
+
 @click.command()
 @click.option(
     "--runtime-path",
@@ -61,7 +89,10 @@ def configure_containerd(kata_path):
     help="The path to the kata container runtime binaries.",
 )
 def kata(runtime_path):
-
+    """
+    Enable the kata runtime. Either snap install the kata binaries or use a path to already deployed
+    kata binaries. Note the kata binary must be called kata-runtime
+    """
     if not runtime_path:
         try:
             print("Installing kata-containers snap")
@@ -74,7 +105,7 @@ def kata(runtime_path):
     else:
         kata_path = runtime_path
 
-    if not os.path.exists("{}/kata-containers.runtime".format(kata_path)):
+    if not os.path.exists("{}/kata-runtime".format(kata_path)):
         print("Kata runtime binaries was not found under {}.".format(kata_path))
         print("Use the --runtime-path argument to point to the right location.")
         sys.exit(2)
@@ -83,6 +114,7 @@ def kata(runtime_path):
     restart_containerd()
     apply_runtime_manifest()
     mark_kata_enabled()
+    print_next_steps()
 
 
 

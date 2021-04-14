@@ -30,6 +30,7 @@ from validators import (
     validate_portainer,
     validate_openfaas,
     validate_openebs,
+    validate_kata,
 )
 from utils import (
     microk8s_enable,
@@ -37,6 +38,7 @@ from utils import (
     wait_for_namespace_termination,
     microk8s_disable,
     microk8s_reset,
+    is_container,
 )
 from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run, check_output
 
@@ -417,6 +419,10 @@ class TestAddons(object):
         platform.machine() != "x86_64",
         reason="OpenEBS tests are only relevant in x86 architectures",
     )
+    @pytest.mark.skipif(
+        platform.machine() != "x86_64",
+        reason="OpenEBS tests are only relevant in x86 architectures",
+    )
     def test_openebs(self):
         """
         Sets up and validates openebs.
@@ -432,3 +438,22 @@ class TestAddons(object):
         except CalledProcessError as err:
             print("Nothing to do, since iscsid is not available")
             return
+
+    @pytest.mark.skipif(
+        platform.machine() != "x86_64",
+        reason="Kata tests are only relevant in x86 architectures",
+    )
+    @pytest.mark.skipif(
+        is_container(),
+        reason="Kata tests are only possible on real hardware",
+    )
+    def test_kata(self):
+        """
+        Sets up and validates kata.
+        """
+        print("Enabling kata")
+        microk8s_enable("kata")
+        print("Validating Kata")
+        validate_kata()
+        print("Disabling kata")
+        microk8s_disable("kata")
