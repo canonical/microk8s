@@ -499,6 +499,10 @@ parts:
         # OpenFaaS support
         rm "actions/enable.openfaas.sh"
         rm "actions/disable.openfaas.sh"
+        # Kata support
+        rm -rf "actions/kata"
+        rm "actions/enable.kata.sh"
+        rm "actions/disable.kata.sh"
       fi
 
       echo "Creating inspect hook"
