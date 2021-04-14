@@ -36,7 +36,7 @@ def restart_containerd():
         print("Restarting containerd")
         subprocess.call(['sudo', 'systemctl', 'restart', 'snap.microk8s.daemon-containerd'])
     except (subprocess.CalledProcessError):
-        print("Failed to restart containerd. Please, yry to 'microk8s stop' and 'microk8s start' manualy." )
+        print("Failed to restart containerd. Please, yry to 'microk8s stop' and 'microk8s start' manually." )
         sys.exit(3)
 
 
