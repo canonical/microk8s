@@ -7,6 +7,6 @@ metadata:
 spec:
   runtimeClassName: kata
   containers:
-  - name: nginx
-    image: nginx
+    - name: nginx
+      image: nginx
 
