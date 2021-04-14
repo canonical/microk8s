@@ -532,3 +532,28 @@ then
   fi
 fi
 
+# Add option to support kata containers
+if [ -e "${SNAP_DATA}/args/containerd-env" ] &&
+   ! grep -e "KATA_PATH" ${SNAP_DATA}/args/containerd-env
+then
+  echo "" >> "${SNAP_DATA}/args/containerd-env"" >> "${SNAP_DATA}/args/containerd-env"
+  echo "# You can set the of the kata containers runtime here." >> "${SNAP_DATA}/args/containerd-env"
+  echo "#" >> "${SNAP_DATA}/args/containerd-env"
+  echo "# KATA_PATH=" >> "${SNAP_DATA}/args/containerd-env"
+  echo "#" >> "${SNAP_DATA}/args/containerd-env"
+  echo "PATH=\$PATH:\$KATA_PATH" >> "${SNAP_DATA}/args/containerd-env"
+fi
+
+# Add option to support kata containers
+if [ -e "${SNAP_DATA}/args/containerd-template.toml" ] &&
+   ! grep -e "io.containerd.kata.v2" ${SNAP_DATA}/args/containerd-template.toml
+then
+  export KATA_HANDLER_BEFORE='[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia-container-runtime]'
+  export KATA_HANDLER_AFTER='
+   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
+      runtime_type = "io.containerd.kata.v2"
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata.options]
+        BinaryName = "kata-containers.runtime"
+        '
+    "$SNAP/bin/sed" -i "@$KATA_HANDLER_BEFORE@$KATA_HANDLER_AFTER@i" ${SNAP_DATA}/args/containerd-template.toml
+fi

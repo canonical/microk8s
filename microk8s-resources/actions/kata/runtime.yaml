@@ -1,0 +1,5 @@
+apiVersion: node.k8s.io/v1beta1
+kind: RuntimeClass
+metadata:
+  name: kata
+handler: kata
