@@ -16,10 +16,11 @@ def mark_kata_enabled():
     try:
         snapdata_path = os.environ.get("SNAP_DATA")
         lock_fname = "{}/var/lock/kata.enabled".format(snapdata_path)
-        subprocess.call(['sudo', 'touch', lock_fname])
+        subprocess.call(["sudo", "touch", lock_fname])
     except (subprocess.CalledProcessError):
-        print("Failed to mark the kata addon as enabled." )
+        print("Failed to mark the kata addon as enabled.")
         sys.exit(4)
+
 
 def apply_runtime_manifest():
     """
@@ -30,7 +31,7 @@ def apply_runtime_manifest():
         manifest = "{}/actions/kata/runtime.yaml".format(snap_path)
         subprocess.call(["{}/microk8s-kubectl.wrapper".format(snap_path), "apply", "-f", manifest])
     except (subprocess.CalledProcessError):
-        print("Failed to apply the runtime manifest." )
+        print("Failed to apply the runtime manifest.")
         sys.exit(5)
 
 
@@ -40,9 +41,11 @@ def restart_containerd():
     """
     try:
         print("Restarting containerd")
-        subprocess.call(['sudo', 'systemctl', 'restart', 'snap.microk8s.daemon-containerd'])
+        subprocess.call(["sudo", "systemctl", "restart", "snap.microk8s.daemon-containerd"])
     except (subprocess.CalledProcessError):
-        print("Failed to restart containerd. Please, yry to 'microk8s stop' and 'microk8s start' manually." )
+        print(
+            "Failed to restart containerd. Please, yry to 'microk8s stop' and 'microk8s start' manually."
+        )
         sys.exit(3)
 
 
@@ -52,18 +55,29 @@ def configure_containerd(kata_path):
     """
     snapdata_path = os.environ.get("SNAP_DATA")
     containerd_env_file = "{}/args/containerd-env".format(snapdata_path)
-    #Create temp file
+    # Create temp file
     fh, abs_path = mkstemp()
-    with fdopen(fh,'w') as tmp_file:
+    with fdopen(fh, "w") as tmp_file:
         with open(containerd_env_file) as conf_file:
             for line in conf_file:
                 if "KATA_PATH=" in line:
-                  line = "KATA_PATH=\"{}\"\n".format(kata_path)
+                    line = 'KATA_PATH="{}"\n'.format(kata_path)
                 tmp_file.write(line)
 
     copymode(containerd_env_file, abs_path)
     remove(containerd_env_file)
     move(abs_path, containerd_env_file)
+
+
+def is_kvm_supported():
+    """
+    Check if the CPU supports virtualisation needed for Kata.
+    """
+    with open("/proc/cpuinfo") as f:
+        for line in f.readlines():
+            if "vmx" in line or "svm" in line:
+                return True
+    return False
 
 
 def print_next_steps():
@@ -93,14 +107,20 @@ def kata(runtime_path):
     Enable the kata runtime. Either snap install the kata binaries or use a path to already deployed
     kata binaries. Note the kata binary must be called kata-runtime
     """
+    if not is_kvm_supported():
+        print("Virtualisation is not supported on this CPU, exiting.")
+        sys.exit(6)
+
     if not runtime_path:
         try:
             print("Installing kata-containers snap")
-            subprocess.call(['sudo', 'snap', 'install', 'kata-containers', '--classic'])
+            subprocess.call(["sudo", "snap", "install", "kata-containers", "--classic"])
             kata_path = "/snap/kata-containers/current/usr/bin/"
         except (subprocess.CalledProcessError):
             print("Failed to install kata-containers snap.")
-            print("Use the --runtime-path argument to point to the kata containers runtime binaries.")
+            print(
+                "Use the --runtime-path argument to point to the kata containers runtime binaries."
+            )
             sys.exit(1)
     else:
         kata_path = runtime_path
@@ -115,7 +135,6 @@ def kata(runtime_path):
     apply_runtime_manifest()
     mark_kata_enabled()
     print_next_steps()
-
 
 
 if __name__ == "__main__":
