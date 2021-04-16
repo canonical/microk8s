@@ -119,8 +119,6 @@ jobs:
   test-aws:
     name: AWS
     runs-on: ubuntu-latest
-    needs: [build]
-    if: github.event.pull_request.head.repo.full_name == github.repository
     strategy:
       fail-fast: false
       matrix:
