@@ -14,16 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        bundle: [full, lite]
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-
-      - name: Download built snap
-        uses: actions/download-artifact@v2
-        with:
-          name: microk8s.snap
 
       - name: Install dependencies
         run: |
