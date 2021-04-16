@@ -52,9 +52,6 @@ jobs:
           sudo systemctl enable iscsid
           sudo snap install *.snap --classic --dangerous
           ./tests/smoke-test.sh
-          echo "--kubelet-preferred-address-types=\"InternalIP,Hostname,InternalDNS,ExternalDNS,ExternalIP\"" | sudo tee /var/snap/microk8s/current/args/kube-apiserver
-          sudo microk8s.stop
-          sudo microk8s.start
           export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
           (cd tests; pytest -s verify-branches.py)
