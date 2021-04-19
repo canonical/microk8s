@@ -321,7 +321,6 @@ parts:
   containerd:
     build-snaps: [go]
     after: [iptables]
-    build-attributes: [no-patchelf]
     source: build-scripts/
     plugin: dump
     build-packages:
@@ -368,7 +367,6 @@ parts:
       - libnss-mymachines
       - conntrack
       - libssl1.0.0
-      - coreutils
     stage:
       - -sbin/xtables-multi
       - -sbin/iptables*
@@ -388,7 +386,14 @@ parts:
       - hostname
       - squashfs-tools
       - tar
+      - coreutils
       - diffutils
+      - iproute2
+      - ethtool
+      - libatm1
+      - net-tools
+      - util-linux
+      - zfsutils-linux
 
   cluster-agent:
     plugin: python
@@ -418,14 +423,6 @@ parts:
       - openssl
       - file
       - dpkg
-    stage-packages:
-      - ethtool
-      - libatm1
-      - net-tools
-      - util-linux
-      - zfsutils-linux
-      - iproute2
-      - python3-click
     source: .
     prime:
       - -README*

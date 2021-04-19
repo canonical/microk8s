@@ -33,7 +33,7 @@ then
   echo "Disabling HA will reset your cluster in a clean state."
   echo "Any running workloads will be stopped and any cluster configuration will be lost."
   echo "As this is a single node cluster and this is a destructive operation,"
-  echo "please use the \'--force\' flag."
+  echo "please use the '--force' flag."
   exit 2
 fi
 
