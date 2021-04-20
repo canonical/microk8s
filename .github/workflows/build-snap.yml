@@ -36,6 +36,9 @@ jobs:
         run: |
           set -x
           sudo snap install *.snap --classic --dangerous
+          sudo apt-get install python3-setuptools
+          sudo pip3 install --upgrade pip
+          sudo pip3 install -U pytest sh
           export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
           (cd tests; sudo -E pytest -s -ra test-addons.py)
