@@ -321,6 +321,7 @@ parts:
   containerd:
     build-snaps: [go]
     after: [iptables]
+    build-attributes: [no-patchelf]
     source: build-scripts/
     plugin: dump
     build-packages:
