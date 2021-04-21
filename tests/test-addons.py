@@ -71,7 +71,7 @@ class TestAddons(object):
 
         assert expected == {a["name"]: a["status"] for a in status["addons"]}
 
-    def _test_basic(self):
+    def test_basic(self):
         """
         Sets up and tests dashboard, dns, storage, registry, ingress, metrics server.
 
