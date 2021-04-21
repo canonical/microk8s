@@ -51,9 +51,6 @@ clean_cluster() {
   echo "Calling clean_cluster"
   # Clean the cluster
 
-  echo "Calling clean_cluster"
-  # Clean the cluster
-
   NSES=$($KUBECTL get ns -o=name | awk -F/ '{print $2}' | paste -s --delimiters=' ')
   for NS in $NSES
   do
