@@ -36,7 +36,7 @@ jobs:
       - name: Add the current IP address, long hostname and short hostname record to /etc/hosts file
         run: |
           echo -e "$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)\t$(hostname -f) $(hostname -s)" | sudo tee -a /etc/hosts
-      # DONT'T FORGET TO REMOVE CODE ABOVE WHEN ISSUE IS ADRESSED!
+      # DO NOT FORGET TO REMOVE CODE ABOVE WHEN ISSUE IS ADDRESSED!
       - name: Running upgrade path test
         run: |
           set -x

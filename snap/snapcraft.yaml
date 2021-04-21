@@ -396,7 +396,6 @@ parts:
       - -sbin/iptables*
       - -lib/xtables
 
-
   bash-utils:
     source: snap
     plugin: dump
