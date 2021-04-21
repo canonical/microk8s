@@ -321,7 +321,7 @@ parts:
   containerd:
     build-snaps: [go]
     after: [iptables]
-    build-attributes: [no-patchelf]
+    # build-attributes: [no-patchelf]
     source: build-scripts/
     plugin: dump
     build-packages:
@@ -391,9 +391,9 @@ parts:
       - diffutils
       - iproute2
       - ethtool
-      - libatm1
       - net-tools
       - util-linux
+      - libatm1
       - zfsutils-linux
 
   cluster-agent:
