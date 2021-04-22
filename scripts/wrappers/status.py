@@ -98,7 +98,7 @@ def print_short_yaml(isReady, enabled_addons, disabled_addons):
             print("  {}: disabled".format(disabled["name"]))
     else:
         print(
-            "{:>2} {} {}".format(
+            "{:>2}{} {}".format(
                 "",
                 "message:",
                 "microk8s is not running. Use microk8s inspect for a deeper inspection.",
@@ -135,7 +135,7 @@ def print_yaml(isReady, enabled_addons, disabled_addons):
             print("{:>4}status: disabled".format(""))
     else:
         print(
-            "{:>2} {} {}".format(
+            "{:>2}{} {}".format(
                 "",
                 "message:",
                 "microk8s is not running. Use microk8s inspect for a deeper inspection.",
