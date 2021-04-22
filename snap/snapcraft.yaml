@@ -320,7 +320,7 @@ parts:
 
   containerd:
     build-snaps: [go]
-    after: [iptables]
+    after: [iptables, runc]
     build-attributes: [no-patchelf]
     source: build-scripts/
     plugin: dump
@@ -334,15 +334,6 @@ parts:
       go version
       export GOPATH=$(realpath ../go)
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-
-      # Build runc
-      go get -d github.com/opencontainers/runc
-      (
-        cd $GOPATH/src/github.com/opencontainers/runc
-        git checkout ${RUNC_COMMIT}
-        make BUILDTAGS='seccomp apparmor'
-      )
-      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
 
       # Build containerd
       rm -rf $GOPATH
@@ -368,7 +359,38 @@ parts:
       - libnss-mymachines
       - conntrack
       - libssl1.0.0
-      - coreutils
+    stage:
+      - -sbin/xtables-multi
+      - -sbin/iptables*
+      - -lib/xtables
+
+  runc:
+    build-snaps: [go]
+    after: [iptables]
+    source: build-scripts/
+    plugin: dump
+    build-packages:
+      - btrfs-tools
+      - libseccomp-dev
+    override-build: |
+      set -eux
+      . $SNAPCRAFT_PART_SRC/set-env-variables.sh
+      snap refresh go --channel=1.15/stable || true
+      go version
+      export GOPATH=$(realpath ../go)
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+
+      # Build runc
+      go get -d github.com/opencontainers/runc
+      (
+        cd $GOPATH/src/github.com/opencontainers/runc
+        git checkout ${RUNC_COMMIT}
+        make BUILDTAGS='seccomp apparmor'
+      )
+      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
+
+      # Assemble the snap
+      snapcraftctl build
     stage:
       - -sbin/xtables-multi
       - -sbin/iptables*
@@ -388,7 +410,14 @@ parts:
       - hostname
       - squashfs-tools
       - tar
+      - coreutils
       - diffutils
+      - iproute2
+      - ethtool
+      - net-tools
+      - util-linux
+      - libatm1
+      - zfsutils-linux
 
   cluster-agent:
     plugin: python
@@ -418,14 +447,6 @@ parts:
       - openssl
       - file
       - dpkg
-    stage-packages:
-      - ethtool
-      - libatm1
-      - net-tools
-      - util-linux
-      - zfsutils-linux
-      - iproute2
-      - python3-click
     source: .
     prime:
       - -README*
