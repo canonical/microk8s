@@ -680,7 +680,13 @@ is_first_boot() {
     return 1
   else
     last_start=$("$SNAP/bin/cat" "$1/last-start-date")
-    boot_time=$(date -r  /proc/1 +%s)
+    if [ -e /proc/stat ] &&
+       grep btime /proc/stat
+    then
+      boot_time=$(grep btime /proc/stat | cut -d' ' -f2)
+    else
+      boot_time=$(date -r  /proc/1 +%s)
+    fi
     echo "Last time service started was $last_start and the host booted at $boot_time"
     if [ "$last_start" -le "$boot_time" ]
     then
