@@ -91,7 +91,7 @@ class Snap(Executor):
         self.run_until_success(cmd)
 
     def restart(self, snap):
-        """ Restart a snap """
+        """Restart a snap """
         cmd = ["restart", f"{snap}"]
 
         self.run_until_success(cmd)

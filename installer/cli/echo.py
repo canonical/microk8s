@@ -29,7 +29,7 @@ from common.definitions import MAX_CHARACTERS_WRAP
 class Echo:
     @staticmethod
     def is_tty_connected() -> bool:
-        """ Check to see if running under TTY. """
+        """Check to see if running under TTY. """
         return sys.stdin.isatty()
 
     @staticmethod
