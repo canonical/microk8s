@@ -95,7 +95,9 @@ class VM:
         cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
         cmd = ["rm -rf /var/tmp/microk8s.snap"]
         subprocess.check_output(cmd_prefix + cmd)
-        cmd = "lxc file push {} {}/var/tmp/microk8s.snap".format(channel_or_snap, self.vm_name).split()
+        cmd = "lxc file push {} {}/var/tmp/microk8s.snap".format(
+            channel_or_snap, self.vm_name
+        ).split()
         subprocess.check_output(cmd)
         cmd = ["snap install /var/tmp/microk8s.snap --classic --dangerous"]
         subprocess.check_output(cmd_prefix + cmd)
@@ -135,9 +137,7 @@ class VM:
         )
         subprocess.check_call(
             "/snap/bin/multipass exec {}  -- sudo "
-            "snap install /var/tmp/microk8s.snap --classic --dangerous".format(
-                self.vm_name
-            ).split()
+            "snap install /var/tmp/microk8s.snap --classic --dangerous".format(self.vm_name).split()
         )
 
     def run(self, cmd):

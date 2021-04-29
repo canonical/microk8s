@@ -113,7 +113,7 @@ clean_cluster() {
   fi
 
   if [ -e "${SNAP_DATA}/var/lock/no-cert-reissue" ]
-    rm -rf "${SNAP_DATA}/var/lock/no-cert-reissue"
+    run_with_sudo rm -rf "${SNAP_DATA}/var/lock/no-cert-reissue"
   fi
 }
 

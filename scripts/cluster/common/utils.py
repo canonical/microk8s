@@ -298,5 +298,3 @@ def unmark_no_cert_reissue():
     lock_file = "{}/var/lock/no-cert-reissue".format(snap_data)
     if os.path.exists(lock_file):
         os.unlink(lock_file)
-
-

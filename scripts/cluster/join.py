@@ -989,6 +989,7 @@ def join_dqlite(connection_parts, verify=False):
     try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
     mark_no_cert_reissue()
 
+
 def join_etcd(connection_parts, verify=True):
     """
     Configure node to join an etcd cluster.
