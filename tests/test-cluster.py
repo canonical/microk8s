@@ -11,7 +11,9 @@ from os import path
 # the test will attempt a refresh to the channel requested for testing
 # reuse_vms = ['vm-ldzcjb', 'vm-nfpgea', 'vm-pkgbtw']
 reuse_vms = None
-channel_to_test = os.environ.get("CHANNEL_TO_TEST", "edge/ha-preview")
+
+# Channel we want to test. A full path to a local snap can be used for local builds
+channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/edge")
 backend = os.environ.get("BACKEND", None)
 
 
@@ -20,71 +22,123 @@ class VM:
     This class abstracts the backend we are using. It could be either multipass or lxc.
     """
 
-    def __init__(self, attach_vm=None):
+    def __init__(self, backend=None, attach_vm=None):
         """Detect the available backends and instantiate a VM.
 
         If `attach_vm` is provided we just make sure the right MicroK8s is deployed.
+        :param backend: either multipass of lxc
         :param attach_vm: the name of the VM we want to reuse
         """
         rnd_letters = "".join(random.choice(string.ascii_lowercase) for i in range(6))
-        self.backend = "none"
+        self.backend = backend
         self.vm_name = "vm-{}".format(rnd_letters)
+        self.attached = False
         if attach_vm:
+            self.attached = True
             self.vm_name = attach_vm
 
-        if path.exists("/snap/bin/multipass") or backend == "multipass":
+    def setup(self, channel_or_snap):
+        """Setup the VM with the right snap.
+
+        :param channel_or_snap: the snap channel or the path to the local snap build
+        """
+        if (path.exists("/snap/bin/multipass") and not self.backend) or self.backend == "multipass":
             print("Creating mulitpass VM")
             self.backend = "multipass"
-            if not attach_vm:
-                subprocess.check_call(
-                    "/snap/bin/multipass launch 18.04 -n {} -m 2G".format(self.vm_name).split()
-                )
+            self._setup_multipass(channel_or_snap)
+
+        elif (path.exists("/snap/bin/lxc") and not self.backend) or self.backend == "lxc":
+            print("Creating lxc VM")
+            self.backend = "lxc"
+            self._setup_lxc(channel_or_snap)
+        else:
+            raise Exception("Need to install multipass of lxc")
+
+    def _setup_lxc(self, channel_or_snap):
+        if not self.attached:
+            profiles = subprocess.check_output("/snap/bin/lxc profile list".split())
+            if "microk8s" not in profiles.decode():
+                subprocess.check_call("/snap/bin/lxc profile copy default microk8s".split())
+                with open("lxc/microk8s-zfs.profile", "r+") as fp:
+                    profile_string = fp.read()
+                    process = subprocess.Popen(
+                        "/snap/bin/lxc profile edit microk8s".split(),
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                    )
+                    process.stdin.write(profile_string.encode())
+                    process.stdin.close()
+
+            subprocess.check_call(
+                "/snap/bin/lxc launch -p default -p microk8s ubuntu:18.04 {}".format(
+                    self.vm_name
+                ).split()
+            )
+            time.sleep(20)
+            if channel_or_snap.startswith("/"):
+                self._transfer_install_local_snap_lxc(channel_or_snap)
+            else:
+                cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
+                cmd = ["snap install microk8s --classic --channel {}".format(channel_or_snap)]
+                time.sleep(20)
+                subprocess.check_output(cmd_prefix + cmd)
+        else:
+            if channel_or_snap.startswith("/"):
+                self._transfer_install_local_snap_lxc(channel_or_snap)
+            else:
+                cmd = "/snap/bin/lxc exec {}  -- ".format(self.vm_name).split()
+                cmd.append("sudo snap refresh microk8s --channel {}".format(channel_or_snap))
+                subprocess.check_call(cmd)
+
+    def _transfer_install_local_snap_lxc(self, channel_or_snap):
+        print("Installing snap from {}".format(channel_or_snap))
+        cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
+        cmd = ["rm -rf /var/tmp/microk8s.snap"]
+        subprocess.check_output(cmd_prefix + cmd)
+        cmd = "lxc file push {} {}/var/tmp/microk8s.snap".format(channel_or_snap, self.vm_name).split()
+        subprocess.check_output(cmd)
+        cmd = ["snap install /var/tmp/microk8s.snap --classic --dangerous"]
+        subprocess.check_output(cmd_prefix + cmd)
+        time.sleep(20)
+
+    def _setup_multipass(self, channel_or_snap):
+        if not self.attached:
+            subprocess.check_call(
+                "/snap/bin/multipass launch 18.04 -n {} -m 2G".format(self.vm_name).split()
+            )
+            if channel_or_snap.startswith("/"):
+                self._transfer_install_local_snap_multipass(channel_or_snap)
+            else:
                 subprocess.check_call(
                     "/snap/bin/multipass exec {}  -- sudo "
                     "snap install microk8s --classic --channel {}".format(
-                        self.vm_name, channel_to_test
+                        self.vm_name, channel_or_snap
                     ).split()
                 )
+        else:
+            if channel_or_snap.startswith("/"):
+                self._transfer_install_local_snap_multipass(channel_or_snap)
             else:
                 subprocess.check_call(
                     "/snap/bin/multipass exec {}  -- sudo "
                     "snap refresh microk8s --channel {}".format(
-                        self.vm_name, channel_to_test
+                        self.vm_name, channel_or_snap
                     ).split()
                 )
 
-        elif path.exists("/snap/bin/lxc") or backend == "lxc":
-            self.backend = "lxc"
-            if not attach_vm:
-                profiles = subprocess.check_output("/snap/bin/lxc profile list".split())
-                if "microk8s" not in profiles.decode():
-                    subprocess.check_call("/snap/bin/lxc profile copy default microk8s".split())
-                    with open("lxc/microk8s-zfs.profile", "r+") as fp:
-                        profile_string = fp.read()
-                        process = subprocess.Popen(
-                            "/snap/bin/lxc profile edit microk8s".split(),
-                            stdin=subprocess.PIPE,
-                            stdout=subprocess.PIPE,
-                        )
-                        process.stdin.write(profile_string.encode())
-                        process.stdin.close()
-
-                subprocess.check_call(
-                    "/snap/bin/lxc launch -p default -p microk8s ubuntu:18.04 {}".format(
-                        self.vm_name
-                    ).split()
-                )
-                cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
-                cmd = ["snap install microk8s --classic --channel {}".format(channel_to_test)]
-                time.sleep(20)
-                subprocess.check_output(cmd_prefix + cmd)
-            else:
-                cmd = "/snap/bin/lxc exec {}  -- ".format(self.vm_name).split()
-                cmd.append("sudo snap refresh microk8s --channel {}".format(channel_to_test))
-                subprocess.check_call(cmd)
-
-        else:
-            raise Exception("Need to install multipass of lxc")
+    def _transfer_install_local_snap_multipass(self, channel_or_snap):
+        print("Installing snap from {}".format(channel_or_snap))
+        subprocess.check_call(
+            "/snap/bin/multipass transfer {} {}:/var/tmp/microk8s.snap".format(
+                channel_or_snap, self.vm_name
+            ).split()
+        )
+        subprocess.check_call(
+            "/snap/bin/multipass exec {}  -- sudo "
+            "snap install /var/tmp/microk8s.snap --classic --dangerous".format(
+                self.vm_name
+            ).split()
+        )
 
     def run(self, cmd):
         """
@@ -131,13 +185,16 @@ class TestCluster(object):
                 size = 3
                 for i in range(0, size):
                     print("Creating machine {}".format(i))
-                    vm = VM()
+                    vm = VM(backend)
+                    vm.setup(channel_to_test)
                     print("Waiting for machine {}".format(i))
                     vm.run("/snap/bin/microk8s.status --wait-ready --timeout 120")
                     self.VM.append(vm)
             else:
                 for vm_name in reuse_vms:
-                    self.VM.append(VM(vm_name))
+                    vm = VM(backend, vm_name)
+                    vm.setup(channel_to_test)
+                    self.VM.append(vm)
 
             # Form cluster
             vm_master = self.VM[0]
@@ -296,3 +353,12 @@ class TestCluster(object):
                     time.sleep(2)
                     continue
             break
+
+    def test_no_cert_reissue_in_nodes(self):
+        """
+        Test that each node has the cert no-reissue lock.
+        """
+        print("Checking for the no re-issue lock")
+        for vm in self.VM:
+            lock_files = vm.run("ls /var/snap/microk8s/current/var/lock/")
+            assert "no-cert-reissue" in lock_files.decode()

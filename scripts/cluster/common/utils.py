@@ -276,3 +276,27 @@ def service(operation, service_name):
         subprocess.check_call(
             "snapctl {} microk8s.daemon-{}".format(operation, service_name).split()
         )
+
+
+def mark_no_cert_reissue():
+    """
+    Mark a node as being part of a cluster that should not re-issue certs
+    on network changes
+    """
+    snap_data = os.environ.get("SNAP_DATA")
+    lock_file = "{}/var/lock/no-cert-reissue".format(snap_data)
+    open(lock_file, "a").close()
+    os.chmod(lock_file, 0o700)
+
+
+def unmark_no_cert_reissue():
+    """
+    Unmark a node as being part of a cluster. The node should now re-issue certs
+    on network changes
+    """
+    snap_data = os.environ.get("SNAP_DATA")
+    lock_file = "{}/var/lock/no-cert-reissue".format(snap_data)
+    if os.path.exists(lock_file):
+        os.unlink(lock_file)
+
+

@@ -111,6 +111,10 @@ clean_cluster() {
   then
     run_with_sudo rm -rf "$SNAP_DATA/bin/"
   fi
+
+  if [ -e "${SNAP_DATA}/var/lock/no-cert-reissue" ]
+    rm -rf "${SNAP_DATA}/var/lock/no-cert-reissue"
+  fi
 }
 
 apply_cni() {

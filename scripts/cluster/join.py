@@ -25,6 +25,8 @@ from common.utils import (
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
     service,
+    mark_no_cert_reissue,
+    unmark_no_cert_reissue,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -324,9 +326,10 @@ def store_remote_ca(ca):
     try_set_file_permissions(ca_cert_file)
 
 
-def mark_cluster_node():
+def mark_worker_node():
     """
-    Mark a node as being part of a cluster by creating a var/lock/clustered.lock
+    Mark a node as being part of a cluster not running the control plane
+    by creating a var/lock/clustered.lock
     """
     lock_file = "{}/var/lock/clustered.lock".format(snapdata_path)
     open(lock_file, "a").close()
@@ -396,6 +399,8 @@ def reset_current_etcd_installation():
             print("Services not ready to start. Waiting...")
             time.sleep(5)
             waits -= 1
+
+    unmark_no_cert_reissue()
 
 
 def reset_current_dqlite_installation():
@@ -499,6 +504,7 @@ def reset_current_dqlite_installation():
             time.sleep(5)
             waits -= 1
     print(" ")
+    unmark_no_cert_reissue()
     restart_all_services()
 
 
@@ -981,7 +987,7 @@ def join_dqlite(connection_parts, verify=False):
     # We want to update the local CNI yaml but we do not want to apply it.
     # The cni is applied already in the cluster we join
     try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
-
+    mark_no_cert_reissue()
 
 def join_etcd(connection_parts, verify=True):
     """
@@ -1003,7 +1009,8 @@ def join_etcd(connection_parts, verify=True):
     update_flannel(info["etcd"], master_ip, master_port, token)
     update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override)
     update_kubelet(info["kubelet"], info["ca"], master_ip, info["apiport"])
-    mark_cluster_node()
+    mark_worker_node()
+    mark_no_cert_reissue()
 
 
 if __name__ == "__main__":
