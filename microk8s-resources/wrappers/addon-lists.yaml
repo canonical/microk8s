@@ -59,9 +59,10 @@ microk8s-addons:
 
     - name: "istio"
       description: "Core Istio service mesh services"
-      version: "1.5.1"
+      version: "1.9.4"
       check_status: "pod/istio"
       supported_architectures:
+        - arm64
         - amd64
 
     - name: "knative"
