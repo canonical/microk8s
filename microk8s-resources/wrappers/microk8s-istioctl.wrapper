@@ -23,7 +23,11 @@ if echo "$*" | grep -v -q -- '--kubeconfig'; then
   exit_if_no_permissions
 fi
 
-
-exit_if_stopped
-"${SNAP_DATA}/bin/istioctl" --kubeconfig=${SNAP_DATA}/credentials/client.config "$@"
-
+ARCH=$(arch)
+if ! [ "${ARCH}" = "amd64" ]
+then
+  echo "Istio is not available for ${ARCH}"
+else
+  exit_if_stopped
+  "${SNAP_DATA}/bin/istioctl" --kubeconfig=${SNAP_DATA}/credentials/client.config "$@"
+fi

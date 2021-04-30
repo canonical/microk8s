@@ -62,7 +62,6 @@ microk8s-addons:
       version: "1.9.4"
       check_status: "pod/istio"
       supported_architectures:
-        - arm64
         - amd64
 
     - name: "knative"
