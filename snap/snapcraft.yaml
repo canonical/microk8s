@@ -516,7 +516,7 @@ parts:
         rm "actions/disable.keda.sh"
         # OpenEBS support
         rm "actions/enable.openebs.sh"
-        rm "actions/disable.openebs.sh"        
+        rm "actions/disable.openebs.sh"
         # OpenFaaS support
         rm "actions/enable.openfaas.sh"
         rm "actions/disable.openfaas.sh"
@@ -529,7 +529,7 @@ parts:
 
   juju:
     plugin: dump
-    source: https://launchpad.net/juju/2.8/2.8.6/+download/juju-2.8.6-k8s.tar.xz
+    source: https://launchpad.net/juju/2.9/2.9.0/+download/juju-2.9.0-k8s.tar.xz
     source-type: tar
     organize:
       juju: bin/juju
