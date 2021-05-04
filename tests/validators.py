@@ -81,14 +81,6 @@ def common_ingress():
     attempt = 50
     while attempt >= 0:
         output = kubectl("get ing")
-        if "microbot.127.0.0.1.xip.io" in output:
-            break
-        time.sleep(5)
-        attempt -= 1
-    assert "microbot.127.0.0.1.xip.io" in output
-    attempt = 50
-    while attempt >= 0:
-        output = kubectl("get ing")
         if "microbot.127.0.0.1.nip.io" in output:
             break
         time.sleep(5)
@@ -99,24 +91,13 @@ def common_ingress():
     attempt = 50
     while attempt >= 0:
         try:
-            resp = requests.get("http://microbot.127.0.0.1.xip.io/")
+            resp = requests.get("http://microbot.127.0.0.1.nip.io/")
             if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                 service_ok = True
                 break
         except requests.RequestException:
             time.sleep(5)
             attempt -= 1
-    if resp.status_code != 200 or "microbot.png" not in resp.content.decode("utf-8"):
-        attempt = 50
-        while attempt >= 0:
-            try:
-                resp = requests.get("http://microbot.127.0.0.1.nip.io/")
-                if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
-                    service_ok = True
-                    break
-            except requests.RequestException:
-                time.sleep(5)
-                attempt -= 1
 
     assert service_ok
 
