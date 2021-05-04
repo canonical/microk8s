@@ -51,20 +51,6 @@ spec:
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
- name: microbot-ingress-xip
-spec:
- rules:
-   - host: microbot.127.0.0.1.xip.io
-     http:
-       paths:
-         - path: /
-           backend:
-             serviceName: microbot
-             servicePort: 80
----
-apiVersion: networking.k8s.io/v1beta1
-kind: Ingress
-metadata:
  name: microbot-ingress-nip
 spec:
  rules:
