@@ -109,25 +109,12 @@ class Ingress(Addon):
 
         self.node.kubernetes.wait_containers_ready("default", label="app=microbot")
         nip_addresses = self.node.kubernetes.wait_ingress_ready("microbot-ingress-nip", "default")
-        xip_addresses = self.node.kubernetes.wait_ingress_ready("microbot-ingress-xip", "default")
         assert "127.0.0.1" in nip_addresses[0].ip
-        assert "127.0.0.1" in xip_addresses[0].ip
 
         deadline = datetime.datetime.now() + datetime.timedelta(seconds=30)
 
         while True:
             resp = requests.get(f"http://microbot.{context['address']}.nip.io/")
-
-            if resp.status_code == 200 or datetime.datetime.now() > deadline:
-                break
-            time.sleep(1)
-        assert resp.status_code == 200
-        assert "microbot.png" in resp.content.decode("utf8")
-
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=30)
-
-        while True:
-            resp = requests.get(f"http://microbot.{context['address']}.xip.io/")
 
             if resp.status_code == 200 or datetime.datetime.now() > deadline:
                 break
