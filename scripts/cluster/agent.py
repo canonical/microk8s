@@ -24,6 +24,7 @@ from .common.utils import (
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
     service,
+    mark_no_cert_reissue,
 )
 
 from flask import Flask, jsonify, request, Response
@@ -319,6 +320,8 @@ def join_node_etcd():
     else:
         kubelet_args = read_kubelet_args_file()
 
+    mark_no_cert_reissue()
+
     return jsonify(
         ca=ca,
         etcd=etcd_ep,
@@ -608,6 +611,7 @@ def join_node_dqlite():
     cluster_cert, cluster_key = get_cluster_certs()
     # Make sure calico can autodetect the right interface for packet routing
     try_initialise_cni_autodetect_for_clustering(node_addr, apply_cni=True)
+    mark_no_cert_reissue()
 
     return jsonify(
         ca=get_cert("ca.crt"),
