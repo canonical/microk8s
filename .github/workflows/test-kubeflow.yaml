@@ -70,15 +70,19 @@ jobs:
           sudo apt install -y libssl-dev python3-pip firefox-geckodriver
           git clone https://github.com/juju-solutions/bundle-kubeflow.git
           cd bundle-kubeflow
-          git reset --hard 5e0b6fcb
+          git reset --hard 369c5eb
           sudo pip3 install -r requirements.txt -r test-requirements.txt
           sudo microk8s status --wait-ready
           sudo microk8s kubectl -n kube-system rollout status ds/calico-node
-          trap 'sudo pkill -f svc/pipelines-api' SIGINT SIGTERM EXIT
-          sudo microk8s kubectl -n kubeflow port-forward svc/pipelines-api 8888:8888 &
+          trap 'sudo pkill -f svc/kfp-api' SIGINT SIGTERM EXIT
+          sudo microk8s kubectl -n kubeflow port-forward svc/kfp-api 8888:8888 &
           (i=30; while ! curl localhost:8888 ; do ((--i)) || exit; sleep 1; done)
           sudo -E pytest -vvs -m edge -k 'not kubectl'
           sudo -E pytest -vvs -m edge -k 'kubectl'
+
+      - name: Juju status
+        run: sg microk8s -c 'microk8s juju status'
+        if: failure()
 
       - name: Get MicroK8s pods
         run: sudo microk8s kubectl get pods -A
@@ -188,12 +192,17 @@ jobs:
             sudo pip3 install -r requirements.txt -r test-requirements.txt
             sudo microk8s status --wait-ready
             sudo microk8s kubectl -n kube-system rollout status ds/calico-node
-            trap 'sudo pkill -f svc/pipelines-api' SIGINT SIGTERM EXIT
-            microk8s kubectl -n kubeflow port-forward svc/pipelines-api 8888:8888 &
+            trap 'sudo pkill -f svc/kfp-api' SIGINT SIGTERM EXIT
+            microk8s kubectl -n kubeflow port-forward svc/kfp-api 8888:8888 &
             (i=30; while ! curl localhost:8888 ; do ((--i)) || exit; sleep 1; done)
-            pytest -vvs -m ${{ matrix.bundle }} -k 'not kubectl'
-            pytest -vvs -m ${{ matrix.bundle }} -k 'kubectl'
+            pytest -vvs -m ${{ matrix.bundle }} -k 'not kubectl and not selenium'
+            pytest -vvs -m ${{ matrix.bundle }} -k kubectl
+            pytest -vvs -m ${{ matrix.bundle }} -k selenium
           EOF
+
+      - name: Juju status
+        run: juju ssh ubuntu/0 microk8s juju status
+        if: failure()
 
       - name: Get MicroK8s pods
         run: juju ssh ubuntu/0 sudo microk8s kubectl get pods -A --sort-by=.metadata.name

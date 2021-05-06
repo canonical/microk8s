@@ -118,7 +118,7 @@ clear_cni() {
   if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ]
   then
     echo "Deleting CNI"
-    $KUBECTL delete -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+    $KUBECTL delete -f "${SNAP_DATA}/args/cni-network/cni.yaml" || true
   fi
 }
 
