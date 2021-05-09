@@ -500,7 +500,6 @@ parts:
         rm actions/*.multus.sh
         rm "actions/multus.yaml"
         rm actions/*.keda.sh
-        rm actions/*.openebs.sh
         rm actions/*.openfaas.sh
         rm -rf "actions/kata"
         rm actions/*.kata.sh
