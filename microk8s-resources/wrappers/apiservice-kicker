@@ -53,7 +53,8 @@ do
       chgrp microk8s -R ${SNAP_DATA}/var/kubernetes/backend || true
     fi
 
-    if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
+    if ! [ -e "${SNAP_DATA}/var/lock/no-cert-reissue" ] &&
+       ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
        ip route | grep default &> /dev/null
     then
       if snapctl services microk8s.daemon-kubelite | grep active &> /dev/null

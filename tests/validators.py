@@ -143,7 +143,6 @@ def validate_ambassador():
 
     # `Ingress`es must be annotatated for being recognized by Ambassador
     kubectl("annotate ingress microbot-ingress-nip kubernetes.io/ingress.class=ambassador")
-    kubectl("annotate ingress microbot-ingress-xip kubernetes.io/ingress.class=ambassador")
 
     common_ingress()
 

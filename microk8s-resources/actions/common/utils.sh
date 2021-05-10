@@ -702,4 +702,3 @@ mark_boot_time() {
   now=$(date +%s)
   echo "$now" > "$1"/last-start-date
 }
-
