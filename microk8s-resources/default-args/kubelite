@@ -1,0 +1,7 @@
+--scheduler-args-file=$SNAP_DATA/args/kube-scheduler
+--controller-manager-args-file=$SNAP_DATA/args/kube-controller-manager
+--proxy-args-file=$SNAP_DATA/args/kube-proxy
+--kubelet-args-file=$SNAP_DATA/args/kubelet
+--apiserver-args-file=$SNAP_DATA/args/kube-apiserver
+--kubeconfig-file=$SNAP_DATA/credentials/client.config
+--start-control-plane=true

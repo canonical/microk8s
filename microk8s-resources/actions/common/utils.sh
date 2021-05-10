@@ -9,7 +9,7 @@ exit_if_no_permissions() {
     echo "    sudo usermod -a -G microk8s $USER" >&2
     echo "    sudo chown -f -R $USER ~/.kube" >&2
     echo "" >&2
-    echo "The new group will be available on the user's next login." >&2
+    echo "After this, reload the user groups either via a reboot or by running 'newgrp microk8s'." >&2
     exit 1
   fi
 }
@@ -46,7 +46,7 @@ is_service_expected_to_start() {
 set_service_not_expected_to_start() {
   # mark service as not starting
   local service="$1"
-  touch ${SNAP_DATA}/var/lock/no-${service}
+  run_with_sudo touch ${SNAP_DATA}/var/lock/no-${service}
 }
 
 set_service_expected_to_start() {
@@ -67,8 +67,21 @@ remove_vxlan_interfaces() {
   done
 }
 
-refresh_opt_in_config() {
-    # add or replace an option inside the config file.
+get_opt_in_config() {
+    # return the value of an option in a configuration file or ""
+    local opt="$1"
+    local config_file="$SNAP_DATA/args/$2"
+    val=""
+    if $(grep -qE "^$opt=" $config_file); then
+      val="$(grep -E "^$opt" "$config_file" | cut -d'=' -f2)"
+    elif $(grep -qE "^$opt " $config_file); then
+      val="$(grep -E "^$opt" "$config_file" | cut -d' ' -f2)"
+    fi
+    echo "$val"
+}
+
+refresh_opt_in_local_config() {
+    # add or replace an option inside the local config file.
     # Create the file if doesn't exist
     local opt="--$1"
     local value="$2"
@@ -79,6 +92,17 @@ refresh_opt_in_config() {
     else
         "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
+}
+
+refresh_opt_in_config() {
+    # add or replace an option inside the config file and propagate change.
+    # Create the file if doesn't exist
+    refresh_opt_in_local_config "$1" "$2" "$3"
+
+    local opt="--$1"
+    local value="$2"
+    local config_file="$SNAP_DATA/args/$3"
+    local replace_line="$opt=$value"
 
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
@@ -145,11 +169,22 @@ skip_opt_in_config() {
 restart_service() {
     # restart a systemd service
     # argument $1 is the service name
-    snapctl restart "microk8s.daemon-$1"
+
+    if [ "$1" == "apiserver" ] || [ "$1" == "proxy" ] || [ "$1" == "kubelet" ] || [ "$1" == "scheduler" ] || [ "$1" == "controller-manager" ]
+    then
+      if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
+      then
+        snapctl restart "microk8s.daemon-kubelit"
+      else
+        snapctl restart "microk8s.daemon-$1"
+      fi
+    else
+      snapctl restart "microk8s.daemon-$1"
+    fi
 
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
-        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+        preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
@@ -244,6 +279,14 @@ wait_for_service() {
     # Wait for a service to start
     # Return fail if the service did not start in 30 seconds
     local service_name="$1"
+    if [ "$1" == "apiserver" ] || [ "$1" == "proxy" ] || [ "$1" == "kubelet" ] || [ "$1" == "scheduler" ] || [ "$1" == "controller-manager" ]
+    then
+      if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
+      then
+        service_name="kubelite"
+      fi
+    fi
+
     local TRY_ATTEMPT=0
     while ! (snapctl services ${SNAP_NAME}.daemon-${service_name} | grep active) &&
           ! [ ${TRY_ATTEMPT} -eq 30 ]
@@ -292,13 +335,14 @@ get_default_ip() {
 
 get_ips() {
     local IP_ADDR="$($SNAP/bin/hostname -I)"
+    local CNI_INTERFACE="vxlan.calico"
     if [[ -z "$IP_ADDR" ]]
     then
         echo "none"
     else
-        if $SNAP/sbin/ifconfig cni0 &> /dev/null
+        if $SNAP/sbin/ifconfig "$CNI_INTERFACE" &> /dev/null
         then
-          CNI_IP="$($SNAP/sbin/ip -o -4 addr list cni0 | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
+          CNI_IP="$($SNAP/sbin/ip -o -4 addr list "$CNI_INTERFACE" | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
           local ips="";
           for ip in $IP_ADDR
           do
@@ -551,4 +595,86 @@ function update_configs {
   $SNAP/bin/sed -i 's/PASSWORD/'"${proxy_token}"'/g' ${SNAP_DATA}/credentials/proxy.config
   $SNAP/microk8s-stop.wrapper || true
   $SNAP/microk8s-start.wrapper
+}
+
+is_apiserver_ready() {
+  if (${SNAP}/usr/bin/curl -L --cert ${SNAP_DATA}/certs/server.crt --key ${SNAP_DATA}/certs/server.key --cacert ${SNAP_DATA}/certs/ca.crt https://127.0.0.1:16443/readyz | grep -z "ok") &> /dev/null
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
+start_all_containers() {
+    for task in $("${SNAP}/microk8s-ctr.wrapper" task ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" task resume $task &>/dev/null || true
+    done
+}
+
+stop_all_containers() {
+    for task in $("${SNAP}/microk8s-ctr.wrapper" task ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" task pause $task &>/dev/null || true
+        "${SNAP}/microk8s-ctr.wrapper" task kill -s SIGKILL $task &>/dev/null || true
+    done
+}
+
+remove_all_containers() {
+    stop_all_containers
+    for task in $("${SNAP}/microk8s-ctr.wrapper" task ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" task delete --force $task &>/dev/null || true
+    done
+
+    for container in $("${SNAP}/microk8s-ctr.wrapper" containers ls | sed -n '1!p' | awk '{print $1}')
+    do
+        "${SNAP}/microk8s-ctr.wrapper" container delete --force $container &>/dev/null || true
+    done
+}
+
+get_container_shim_pids() {
+    ps -e -o pid= -o args= | grep -v 'grep' | sed -e 's/^ *//; s/\s\s*/\t/;' | grep -w '/snap/microk8s/.*/bin/containerd-shim' | cut -f1
+}
+
+kill_all_container_shims() {
+    run_with_sudo systemctl kill snap.microk8s.daemon-kubelite.service --signal=SIGKILL &>/dev/null || true
+    run_with_sudo systemctl kill snap.microk8s.daemon-kubelet.service --signal=SIGKILL &>/dev/null || true
+    run_with_sudo systemctl kill snap.microk8s.daemon-containerd.service --signal=SIGKILL &>/dev/null || true
+}
+
+is_first_boot() {
+  # Return 0 if this is the first start after the host booted.
+  # The argument $1 is a directory that may contain a last-start-date file
+  # The last-start-date file contains a date in seconds
+  # if that date is prior to the creation date of /proc/1 we assume this is the first
+  # time after the host booted
+  if ! [ -e "$1/last-start-date" ] ||
+     ! [ -e /proc/1 ]
+  then
+    return 1
+  else
+    last_start=$("$SNAP/bin/cat" "$1/last-start-date")
+    if [ -e /proc/stat ] &&
+       grep btime /proc/stat
+    then
+      boot_time=$(grep btime /proc/stat | cut -d' ' -f2)
+    else
+      boot_time=$(date -r  /proc/1 +%s)
+    fi
+    echo "Last time service started was $last_start and the host booted at $boot_time"
+    if [ "$last_start" -le "$boot_time" ]
+    then
+      return 0
+    else
+      return 1
+    fi
+  fi
+}
+
+mark_boot_time() {
+  # place the current time in the "$1"/last-start-date file
+  now=$(date +%s)
+  echo "$now" > "$1"/last-start-date
 }

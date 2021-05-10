@@ -7,6 +7,6 @@ metadata:
   namespace: default
 spec:
   containers:
-  - name: nginx
-    image: nginx:latest
+    - name: nginx
+      image: nginx:latest
   restartPolicy: Always

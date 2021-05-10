@@ -1,10 +1,10 @@
 #!/bin/bash
 set -ex
 
-echo "Switching master to dqlite"
+echo "Switching master to flannel-etcd"
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/var/lib/snapd/hostfs//snap/core/current/etc/ssl/certs/ca-certificates.crt
+CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/002-switch-to-flannel-etcd"
 DB_DIR="$BACKUP_DIR/db"

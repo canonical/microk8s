@@ -4,38 +4,27 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
+readonly CONFIG="$SNAP_DATA/args/containerd-template.toml"
+readonly SOCKET="$SNAP_COMMON/run/containerd.sock"
+
 echo "Enabling NVIDIA GPU"
-if lsmod | grep "nvidia" &> /dev/null ; then
-  echo "NVIDIA kernel module detected"
-else
-  echo "Aborting: NVIDIA kernel module not loaded."
-  echo "Please ensure you have CUDA capable hardware and the NVIDIA drivers installed."
-  exit 1
-fi
 
 mkdir -p ${SNAP_DATA}/var/lock
 touch ${SNAP_DATA}/var/lock/gpu
 
-# Copy Nvidia drivers into the correct place.
-cp /var/lib/snapd/lib/gl/libnv* /lib/x86_64-linux-gnu/
-cp /var/lib/snapd/lib/gl/libcuda* /lib/x86_64-linux-gnu/
-cp /var/lib/snapd/lib/gl/libEGL_nvidia.so* /lib/x86_64-linux-gnu/
-cp /var/lib/snapd/lib/gl/libGLX_nvidia.so* /lib/x86_64-linux-gnu/
-cp /var/lib/snapd/lib/gl/libGLESv*_nvidia.so* /lib/x86_64-linux-gnu/
+"$SNAP/microk8s-enable.wrapper" dns
+"$SNAP/microk8s-enable.wrapper" helm3
 
-snapctl restart "${SNAP_NAME}.daemon-containerd"
-containerd_up=$(wait_for_service containerd)
-if [[ $containerd_up == fail ]]
-then
-  echo "Containerd did not start on time. Proceeding."
-fi
+echo "Installing NVIDIA Operator"
 
-if ! [ -e "$SNAP_DATA/var/lock/clustered.lock" ]
-then
-  # Allow for some seconds for containerd processes to start
-  sleep 10
-  "$SNAP/microk8s-enable.wrapper" dns
-  echo "Applying manifest"
-  use_manifest gpu apply
-  echo "NVIDIA is enabled"
-fi
+"$SNAP/microk8s-helm3.wrapper" repo add nvidia https://nvidia.github.io/gpu-operator
+"$SNAP/microk8s-helm3.wrapper" repo update
+"$SNAP/microk8s-helm3.wrapper" install gpu-operator nvidia/gpu-operator \
+  --set operator.defaultRuntime=containerd \
+  --set toolkit.version=1.4.4-ubuntu18.04 \
+  --set toolkit.env[0].name=CONTAINERD_CONFIG \
+  --set toolkit.env[0].value=$CONFIG \
+  --set toolkit.env[1].name=CONTAINERD_SOCKET \
+  --set toolkit.env[1].value=$SOCKET
+
+echo "NVIDIA is enabled"

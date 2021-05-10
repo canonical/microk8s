@@ -1,0 +1,38 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: local-hostpath-pvc
+spec:
+  storageClassName: openebs-hostpath
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5G
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: openebs-test-busybox
+  name: openebs-test-busybox
+spec:
+  terminationGracePeriodSeconds: 5
+  containers:
+    - resources:
+        limits:
+          cpu: 0.5
+      name: openebs-test-busybox
+      image: busybox
+      command: ["sh", "-c", "echo Container 1 is Running ; sleep 3600"]
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 3306
+          name: busybox
+      volumeMounts:
+        - mountPath: /my-data
+          name: my-data-volume
+  volumes:
+    - name: my-data-volume
+      persistentVolumeClaim:
+        claimName: local-hostpath-pvc

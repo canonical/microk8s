@@ -10,6 +10,33 @@ source $SNAP/actions/common/utils.sh
 
 exit_if_no_permissions
 
+FORCE=false
+PARSED=$(getopt --options=f --longoptions=force --name "$@" -- "$@")
+eval set -- "$PARSED"
+while true; do
+    case "$1" in
+        -f|--force)
+            FORCE=true
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+    esac
+done
+
+KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
+NODES_NUM=$($KUBECTL get no -o name | wc -l)
+if [ "$NODES_NUM" == 1 ] && [ "$FORCE" = false ];
+then
+  echo "Disabling HA will reset your cluster in a clean state."
+  echo "Any running workloads will be stopped and any cluster configuration will be lost."
+  echo "As this is a single node cluster and this is a destructive operation,"
+  echo "please use the '--force' flag."
+  exit 2
+fi
+
 echo "Reverting to a non-HA setup"
 "${SNAP}/microk8s-leave.wrapper"
 ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 &>/dev/null

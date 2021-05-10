@@ -8,9 +8,9 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
-- apiGroups: ["metrics.k8s.io"]
-  resources: ["pods", "nodes"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -21,9 +21,9 @@ roleRef:
   kind: ClusterRole
   name: system:auth-delegator
 subjects:
-- kind: ServiceAccount
-  name: metrics-server
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: metrics-server
+    namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -35,9 +35,9 @@ roleRef:
   kind: Role
   name: extension-apiserver-authentication-reader
 subjects:
-- kind: ServiceAccount
-  name: metrics-server
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: metrics-server
+    namespace: kube-system
 ---
 apiVersion: apiregistration.k8s.io/v1beta1
 kind: APIService
@@ -78,29 +78,29 @@ spec:
     spec:
       serviceAccountName: metrics-server
       volumes:
-      # mount in tmp so we can safely use from-scratch images and/or read-only containers
-      - name: tmp-dir
-        emptyDir: {}
-      containers:
-      - name: metrics-server
-        image: k8s.gcr.io/metrics-server-$ARCH:v0.3.6
-        imagePullPolicy: IfNotPresent
-        args:
-          - --cert-dir=/tmp
-          - --secure-port=4443
-          - --kubelet-insecure-tls
-          - --kubelet-preferred-address-types=InternalIP
-        ports:
-        - name: main-port
-          containerPort: 4443
-          protocol: TCP
-        securityContext:
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          runAsUser: 1000
-        volumeMounts:
+        # mount in tmp so we can safely use from-scratch images and/or read-only containers
         - name: tmp-dir
-          mountPath: /tmp
+          emptyDir: {}
+      containers:
+        - name: metrics-server
+          image: k8s.gcr.io/metrics-server-$ARCH:v0.3.6
+          imagePullPolicy: IfNotPresent
+          args:
+            - --cert-dir=/tmp
+            - --secure-port=4443
+            - --kubelet-insecure-tls
+            - --kubelet-preferred-address-types=InternalIP
+          ports:
+            - name: main-port
+              containerPort: 4443
+              protocol: TCP
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - name: tmp-dir
+              mountPath: /tmp
       nodeSelector:
         kubernetes.io/os: linux
         kubernetes.io/arch: "$ARCH"
@@ -117,27 +117,27 @@ spec:
   selector:
     k8s-app: metrics-server
   ports:
-  - port: 443
-    protocol: TCP
-    targetPort: main-port
+    - port: 443
+      protocol: TCP
+      targetPort: main-port
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: system:metrics-server
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - nodes
-  - nodes/stats
-  - namespaces
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - nodes
+      - nodes/stats
+      - namespaces
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -148,9 +148,9 @@ roleRef:
   kind: ClusterRole
   name: system:metrics-server
 subjects:
-- kind: ServiceAccount
-  name: metrics-server
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: metrics-server
+    namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -161,6 +161,6 @@ roleRef:
   kind: ClusterRole
   name: admin
 subjects:
-- apiGroup: rbac.authorization.k8s.io
-  kind: User
-  name: front-proxy-client  
+  - apiGroup: rbac.authorization.k8s.io
+    kind: User
+    name: front-proxy-client

@@ -1,4 +1,4 @@
-apiVersion: serving.knative.dev/v1alpha1 # Current version of Knative
+apiVersion: serving.knative.dev/v1 # Current version of Knative
 kind: Service
 metadata:
   name: helloworld-go # The name of the app
@@ -10,4 +10,4 @@ spec:
         - image: gcr.io/knative-samples/helloworld-go # The URL to the image of the app
           env:
             - name: TARGET # The environment variable printed out by the sample app
-              value: "Go Sample v1"             
+              value: "Go Sample v1"

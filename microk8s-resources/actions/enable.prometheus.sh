@@ -3,7 +3,7 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core/current/etc/ssl/certs/ca-certificates.crt
+CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
@@ -21,7 +21,7 @@ do_prerequisites() {
 get_kube_prometheus () {
   if [  ! -d "${SNAP_DATA}/kube-prometheus" ]
   then
-    KUBE_PROMETHEUS_VERSION="v0.6.0"
+    KUBE_PROMETHEUS_VERSION="v0.7.0"
     KUBE_PROMETHEUS_ERSION=$(echo $KUBE_PROMETHEUS_VERSION | sed 's/v//g')
     echo "Fetching kube-prometheus version $KUBE_PROMETHEUS_VERSION."
     run_with_sudo mkdir -p "${SNAP_DATA}/kube-prometheus"
@@ -34,6 +34,13 @@ get_kube_prometheus () {
     run_with_sudo rm -rf "$SNAP_DATA/tmp/kube-prometheus"
   fi
 }
+
+use_multiarch_images() {
+  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-state-metrics:v1.9.7@gcr.io/k8s-staging-kube-state-metrics/kube-state-metrics:v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
+  run_with_sudo $SNAP/bin/sed -i 's@app.kubernetes.io/version: v1.9.7@app.kubernetes.io/version: v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
+
+}
+
 
 set_replicas_to_one() {
   # alert manager must be set to 1 replica
@@ -62,6 +69,7 @@ done
 do_prerequisites
 get_kube_prometheus
 set_replicas_to_one
+use_multiarch_images
 enable_prometheus
 
 echo "The Prometheus operator is enabled (user/pass: admin/admin)"

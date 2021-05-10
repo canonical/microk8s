@@ -3,6 +3,7 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
+CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 echo "Enabling Istio"
 
@@ -42,8 +43,12 @@ done
 $KUBECTL apply -f "${SNAP_DATA}/actions/istio/istio-demo.yaml"
 touch "$SNAP_USER_COMMON/istio.lock"
 
-refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-restart_service apiserver
+if ! grep -e "\-\-allow-privileged" ${SNAP_DATA}/args/kube-apiserver
+then
+  refresh_opt_in_config "allow-privileged" "true" kube-apiserver
+  restart_service apiserver
+  sleep 5
+fi
 
 echo "Istio is starting"
 echo ""

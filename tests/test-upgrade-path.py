@@ -1,6 +1,5 @@
 import pytest
 import os
-import platform
 import time
 import requests
 from utils import (
@@ -8,9 +7,9 @@ from utils import (
     run_until_success,
 )
 
-upgrade_from = os.environ.get('UPGRADE_MICROK8S_FROM', 'beta')
+upgrade_from = os.environ.get("UPGRADE_MICROK8S_FROM", "beta")
 # Have UPGRADE_MICROK8S_TO point to a file to upgrade to that file
-upgrade_to = os.environ.get('UPGRADE_MICROK8S_TO', 'edge')
+upgrade_to = os.environ.get("UPGRADE_MICROK8S_TO", "edge")
 
 
 class TestUpgradePath(object):
@@ -19,21 +18,17 @@ class TestUpgradePath(object):
     """
 
     @pytest.mark.skipif(
-        os.environ.get('UNDER_TIME_PRESSURE') == 'True',
-        reason="Skipping refresh path tast as we are under time pressure",
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
+        reason="Skipping refresh path test as we are under time pressure",
     )
     def test_refresh_path(self):
         """
         Deploy an old snap and try to refresh until the current one.
 
         """
-        if platform.machine() == 'x86_64':
-            start_channel = 14
-        else:
-            start_channel = 15
-
+        start_channel = 16
         last_stable_minor = None
-        if upgrade_from.startswith('latest') or '/' not in upgrade_from:
+        if upgrade_from.startswith("latest") or "/" not in upgrade_from:
             attempt = 0
             release_url = "https://dl.k8s.io/release/stable.txt"
             while attempt < 10 and not last_stable_minor:
@@ -41,14 +36,14 @@ class TestUpgradePath(object):
                 if r.status_code == 200:
                     last_stable_str = r.content.decode().strip()
                     # We have "v1.18.4" and we need the "18"
-                    last_stable_parts = last_stable_str.split('.')
+                    last_stable_parts = last_stable_str.split(".")
                     last_stable_minor = int(last_stable_parts[1])
                 else:
                     time.sleep(3)
                     attempt += 1
         else:
-            channel_parts = upgrade_from.split('.')
-            channel_parts = channel_parts[1].split('/')
+            channel_parts = upgrade_from.split(".")
+            channel_parts = channel_parts[1].split("/")
             print(channel_parts)
             last_stable_minor = int(channel_parts[0])
 
@@ -79,11 +74,11 @@ class TestUpgradePath(object):
             channel_minor += 1
 
         print("Installing {}".format(upgrade_to))
-        if upgrade_to.endswith('.snap'):
+        if upgrade_to.endswith(".snap"):
             cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to)
         else:
             cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to)
-        run_until_success(cmd, timeout_insec=300)
+        run_until_success(cmd, timeout_insec=600)
         # Allow for the refresh to be processed
         time.sleep(20)
-        wait_for_installation(timeout_insec=600)
+        wait_for_installation(timeout_insec=1200)

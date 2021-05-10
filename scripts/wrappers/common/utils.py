@@ -1,20 +1,30 @@
-import yaml
+import getpass
 import json
 import os
+import platform
 import subprocess
 import sys
 import time
-import platform
-import getpass
+from pathlib import Path
+
+import click
+import yaml
 
 kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/client.config")
 
 
 def get_current_arch():
     # architecture mapping
-    arch_mapping = {'aarch64': 'arm64', 'x86_64': 'amd64'}
+    arch_mapping = {"aarch64": "arm64", "armv7l": "armhf", "x86_64": "amd64"}
 
     return arch_mapping[platform.machine()]
+
+
+def snap_data() -> Path:
+    try:
+        return Path(os.environ["SNAP_DATA"])
+    except KeyError:
+        return Path("/var/snap/microk8s/current")
 
 
 def run(*args, die=True):
@@ -59,7 +69,7 @@ def is_ha_enabled():
 
 def get_dqlite_info():
     cluster_dir = os.path.expandvars("${SNAP_DATA}/var/kubernetes/backend")
-    snap_path = os.environ.get('SNAP')
+    snap_path = os.environ.get("SNAP")
 
     info = []
 
@@ -69,7 +79,7 @@ def get_dqlite_info():
     waits = 10
     while waits > 0:
         try:
-            with open("{}/info.yaml".format(cluster_dir), mode='r') as f:
+            with open("{}/info.yaml".format(cluster_dir), mode="r") as f:
                 data = yaml.load(f, Loader=yaml.FullLoader)
                 out = subprocess.check_output(
                     "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
@@ -78,7 +88,7 @@ def get_dqlite_info():
                     ).split(),
                     timeout=4,
                 )
-                if data['Address'] in out.decode():
+                if data["Address"] in out.decode():
                     break
                 else:
                     time.sleep(5)
@@ -102,28 +112,29 @@ def get_dqlite_info():
 
 
 def is_cluster_locked():
-    clusterLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
-    if os.path.isfile(clusterLockFile):
-        print(
-            "This MicroK8s deployment is acting as a node in a cluster. "
-            "Please use the microk8s status on the master."
-        )
-        exit(0)
+    if (snap_data() / "var/lock/clustered.lock").exists():
+        click.echo("This MicroK8s deployment is acting as a node in a cluster.")
+        click.echo("Please use the master node.")
+        sys.exit(1)
 
 
-def wait_for_ready(wait_ready, timeout):
+def wait_for_ready(timeout):
     start_time = time.time()
-    isReady = False
 
     while True:
-        if (timeout > 0 and (time.time() > (start_time + timeout))) or isReady:
-            break
-        try:
-            isReady = is_cluster_ready()
-        except Exception:
+        if is_cluster_ready():
+            return True
+        elif timeout and time.time() > start_time + timeout:
+            return False
+        else:
             time.sleep(2)
 
-    return isReady
+
+def exit_if_stopped():
+    stoppedLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/stopped.lock")
+    if os.path.isfile(stoppedLockFile):
+        print("microk8s is not running, try microk8s start")
+        exit(0)
 
 
 def exit_if_no_permission():
@@ -139,9 +150,18 @@ def exit_if_no_permission():
         )
         print("")
         print("    sudo usermod -a -G microk8s {}".format(user))
+        print("    sudo chown -f -R $USER ~/.kube")
         print("")
-        print("The new group will be available on the user's next login.")
+        print(
+            "After this, reload the user groups either via a reboot or by running 'newgrp microk8s'."
+        )
         exit(1)
+
+
+def ensure_started():
+    if (snap_data() / "var/lock/stopped.lock").exists():
+        click.echo("microk8s is not running, try microk8s start", err=True)
+        sys.exit(1)
 
 
 def kubectl_get(cmd, namespace="--all-namespaces"):
@@ -160,7 +180,7 @@ def kubectl_get_clusterroles():
 def get_available_addons(arch):
     addon_dataset = os.path.expandvars("${SNAP}/addon-lists.yaml")
     available = []
-    with open(addon_dataset, 'r') as file:
+    with open(addon_dataset, "r") as file:
         # The FullLoader parameter handles the conversion from YAML
         # scalar values to Python the dictionary format
         addons = yaml.load(file, Loader=yaml.FullLoader)
@@ -168,7 +188,7 @@ def get_available_addons(arch):
             if arch in addon["supported_architectures"]:
                 available.append(addon)
 
-    available = sorted(available, key=lambda k: k['name'])
+    available = sorted(available, key=lambda k: k["name"])
     return available
 
 
@@ -204,3 +224,77 @@ def set_service_expected_to_start(service, start=True):
     else:
         fd = os.open(lock, os.O_CREAT, mode=0o700)
         os.close(fd)
+
+
+def check_help_flag(addons: list) -> bool:
+    """Checks to see if a help message needs to be printed for an addon.
+
+    Not all addons check for help flags themselves. Until they do, intercept
+    calls to print help text and print out a generic message to that effect.
+    """
+    addon = addons[0]
+    if any(arg in addons for arg in ("-h", "--help")) and addon != "kubeflow":
+        print("Addon %s does not yet have a help message." % addon)
+        print("For more information about it, visit https://microk8s.io/docs/addons")
+        return True
+    return False
+
+
+def xable(action: str, addons: list, xabled_addons: list):
+    """Enables or disables the given addons.
+
+    Collated into a single function since the logic is identical other than
+    the script names.
+    """
+    actions = Path(__file__).absolute().parent / "../../../actions"
+    existing_addons = {sh.with_suffix("").name[7:] for sh in actions.glob("enable.*.sh")}
+
+    # Backwards compatibility with enabling multiple addons at once, e.g.
+    # `microk8s.enable foo bar:"baz"`
+    if all(a.split(":")[0] in existing_addons for a in addons) and len(addons) > 1:
+        for addon in addons:
+            if addon in xabled_addons and addon != "kubeflow":
+                click.echo("Addon %s is already %sd." % (addon, action))
+            else:
+                addon, *args = addon.split(":")
+                wait_for_ready(timeout=30)
+                p = subprocess.run([str(actions / ("%s.%s.sh" % (action, addon)))] + args)
+                if p.returncode:
+                    sys.exit(p.returncode)
+                wait_for_ready(timeout=30)
+
+    # The new way of xabling addons, that allows for unix-style argument passing,
+    # such as `microk8s.enable foo --bar`.
+    else:
+        addon, *args = addons[0].split(":")
+
+        if addon in xabled_addons and addon != "kubeflow":
+            click.echo("Addon %s is already %sd." % (addon, action))
+            sys.exit(0)
+
+        if addon not in existing_addons:
+            click.echo("Nothing to do for `%s`." % addon, err=True)
+            sys.exit(1)
+
+        if args and addons[1:]:
+            click.echo(
+                "Can't pass string arguments and flag arguments simultaneously!\n"
+                "{0} an addon with only one argument style at a time:\n"
+                "\n"
+                "    microk8s {1} foo:'bar'\n"
+                "or\n"
+                "    microk8s {1} foo --bar\n".format(action.title(), action)
+            )
+            sys.exit(1)
+
+        wait_for_ready(timeout=30)
+        script = [str(actions / ("%s.%s.sh" % (action, addon)))]
+        if args:
+            p = subprocess.run(script + args)
+        else:
+            p = subprocess.run(script + list(addons[1:]))
+
+        if p.returncode:
+            sys.exit(p.returncode)
+
+        wait_for_ready(timeout=30)

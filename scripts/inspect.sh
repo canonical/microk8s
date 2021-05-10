@@ -96,17 +96,36 @@ function store_kubernetes_info {
   mkdir -p $INSPECT_DUMP/k8s
   sudo -E /snap/bin/microk8s kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
   sudo -E /snap/bin/microk8s kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
-  sudo -E /snap/bin/microk8s kubectl cluster-info dump 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+  sudo -E /snap/bin/microk8s kubectl cluster-info dump -A 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
   sudo -E /snap/bin/microk8s kubectl get all --all-namespaces -o wide 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
   sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
   sudo -E /snap/bin/microk8s kubectl get pvc 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
 
 
+function store_juju_info {
+  # Collect some juju details
+  printf -- '  Inspect Juju\n'
+  mkdir -p $INSPECT_DUMP/juju
+  sudo -E /snap/bin/microk8s juju status 2>&1 | sudo tee $INSPECT_DUMP/juju/status > /dev/null
+  sudo -E /snap/bin/microk8s juju debug-log 2>&1 | sudo tee $INSPECT_DUMP/juju/debug.log > /dev/null
+  sudo -E /snap/bin/microk8s kubectl logs -n controller-uk8s --tail 10000 -c api-server controller-0 2>&1 | sudo tee $INSPECT_DUMP/juju/controller.log > /dev/null
+}
+
+
+function store_kubeflow_info {
+  # Collect some kubeflow details
+  printf -- '  Inspect Kubeflow\n'
+  mkdir -p $INSPECT_DUMP/kubeflow
+  sudo -E /snap/bin/microk8s kubectl get pods -nkubeflow -oyaml 2>&1 | sudo tee $INSPECT_DUMP/kubeflow/pods.yaml > /dev/null
+  sudo -E /snap/bin/microk8s kubectl describe pods -nkubeflow 2>&1 | sudo tee $INSPECT_DUMP/kubeflow/pods.describe > /dev/null
+}
+
+
 function suggest_fixes {
   # Propose fixes
   printf '\n'
-  if ! systemctl status snap.microk8s.daemon-apiserver &> /dev/null
+  if ! systemctl status snap.microk8s.daemon-kubelite &> /dev/null
   then
     if lsof -Pi :16443 -sTCP:LISTEN -t &> /dev/null
     then
@@ -121,13 +140,13 @@ function suggest_fixes {
     printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
   fi
 
-  if /snap/core/current/usr/bin/which ufw &> /dev/null
+  if /snap/core18/current/usr/bin/which ufw &> /dev/null
   then
     ufw=$(ufw status)
-    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep cni0 &> /dev/null
+    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep vxlan.calico &> /dev/null
     then
       printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-      printf -- 'with: sudo ufw allow in on cni0 && sudo ufw allow out on cni0\n'
+      printf -- 'with: sudo ufw allow in on vxlan.calico && sudo ufw allow out on vxlan.calico\n'
     fi
   fi
 
@@ -247,7 +266,7 @@ function check_certificates {
 }
 
 
-if [ ${#@} -ne 0 ] && [ "${@#"--help"}" = "" ]; then
+if [ ${#@} -ne 0 ] && [ "$*" == "--help" ]; then
   print_help
   exit 0;
 fi;
@@ -261,13 +280,18 @@ check_certificates
 printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"
 check_service "snap.microk8s.daemon-containerd"
-check_service "snap.microk8s.daemon-apiserver"
 check_service "snap.microk8s.daemon-apiserver-kicker"
-check_service "snap.microk8s.daemon-control-plane-kicker"
-check_service "snap.microk8s.daemon-proxy"
-check_service "snap.microk8s.daemon-kubelet"
-check_service "snap.microk8s.daemon-scheduler"
-check_service "snap.microk8s.daemon-controller-manager"
+if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
+then
+  check_service "snap.microk8s.daemon-kubelite"
+else
+  check_service "snap.microk8s.daemon-apiserver"
+  check_service "snap.microk8s.daemon-proxy"
+  check_service "snap.microk8s.daemon-kubelet"
+  check_service "snap.microk8s.daemon-scheduler"
+  check_service "snap.microk8s.daemon-controller-manager"
+  check_service "snap.microk8s.daemon-control-plane-kicker"
+fi
 if ! [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then
   check_service "snap.microk8s.daemon-flanneld"
@@ -285,6 +309,12 @@ store_network
 
 printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info
+
+printf -- 'Inspecting juju\n'
+store_juju_info
+
+printf -- 'Inspecting kubeflow\n'
+store_kubeflow_info
 
 suggest_fixes
 

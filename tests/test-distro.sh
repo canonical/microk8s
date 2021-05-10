@@ -26,7 +26,8 @@ function create_machine() {
   # Allow for the machine to boot and get an IP
   sleep 20
   tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /var/tmp
-  DISTRO_DEPS="${DISTRO//:/_}"
+  DISTRO_DEPS_TMP="${DISTRO//:/_}"
+  DISTRO_DEPS="${DISTRO_DEPS_TMP////-}"
   lxc exec $NAME -- /bin/bash "/var/tmp/tests/lxc/install-deps/$DISTRO_DEPS"
   lxc exec $NAME -- reboot
   sleep 20
@@ -78,6 +79,7 @@ else
   lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL} --classic
 fi
 lxc exec $NAME -- /var/tmp/tests/patch-kube-proxy.sh
+lxc exec $NAME -- /var/tmp/tests/smoke-test.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
 lxc exec $NAME -- script -e -c "pytest -s /var/tmp/tests/test-addons.py"
 lxc exec $NAME -- microk8s reset

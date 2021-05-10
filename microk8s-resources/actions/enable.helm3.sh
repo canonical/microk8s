@@ -3,13 +3,14 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
+CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 echo "Enabling Helm 3"
 
 if [ ! -f "${SNAP_DATA}/bin/helm3" ]
 then
   SOURCE_URI="https://get.helm.sh"
-  HELM_VERSION="v3.0.2"
+  HELM_VERSION="v3.5.0"
 
   echo "Fetching helm version $HELM_VERSION."
   mkdir -p "${SNAP_DATA}/tmp/helm"

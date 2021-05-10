@@ -4,6 +4,8 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
+CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
+
 ARCH=$(arch)
 if ! [ "${ARCH}" = "amd64" ]; then
   echo "Cilium is not available for ${ARCH}" >&2
@@ -14,12 +16,12 @@ fi
 
 echo "Restarting kube-apiserver"
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-snapctl restart "${SNAP_NAME}.daemon-apiserver"
+restart_service apiserver
 
 # Reconfigure kubelet/containerd to pick up the new CNI config and binary.
 echo "Restarting kubelet"
 refresh_opt_in_config "cni-bin-dir" "\${SNAP_DATA}/opt/cni/bin/" kubelet
-run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-kubelet"
+restart_service kubelet
 
 set_service_not_expected_to_start flanneld
 snapctl stop "${SNAP_NAME}.daemon-flanneld"
@@ -35,7 +37,7 @@ echo "Enabling Cilium"
 
 read -ra CILIUM_VERSION <<< "$1"
 if [ -z "$CILIUM_VERSION" ]; then
-  CILIUM_VERSION="v1.7.6"
+  CILIUM_VERSION="v1.8"
 fi
 CILIUM_ERSION=$(echo $CILIUM_VERSION | sed 's/v//g')
 
@@ -63,6 +65,8 @@ else
   mv "$SNAP_DATA/args/cni-network/flannel.conflist" "$SNAP_DATA/args/cni-network/20-flanneld.conflist" 2>/dev/null || true
   cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF" "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
 
+  run_with_sudo mkdir -p "$SNAP_DATA/actions/cilium/"
+
   # Generate the YAMLs for Cilium and apply them
   (cd "${SNAP_DATA}/tmp/cilium/$CILIUM_DIR/install/kubernetes"
   ${SNAP_DATA}/bin/helm3 template cilium \
@@ -72,11 +76,10 @@ else
       --set global.cni.customConf=true \
       --set global.containerRuntime.integration="containerd" \
       --set global.containerRuntime.socketPath="$SNAP_COMMON/run/containerd.sock" \
-      | tee cilium.yaml >/dev/null)
-
-  mkdir -p "$SNAP_DATA/actions/cilium/"
-  cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/install/kubernetes/cilium.yaml" "$SNAP_DATA/actions/cilium.yaml"
-  sed -i 's;path: \(/var/run/cilium\);path: '"$SNAP_DATA"'\1;g' "$SNAP_DATA/actions/cilium.yaml"
+      --set global.daemon.runPath="$SNAP_DATA/var/run/cilium" \
+      --set operator.numReplicas=1 \
+      --set agent.keepDeprecatedLabels=true \
+      | run_with_sudo tee "$SNAP_DATA/actions/cilium.yaml" >/dev/null)
 
   ${SNAP}/microk8s-status.wrapper --wait-ready >/dev/null
   echo "Deploying $SNAP_DATA/actions/cilium.yaml. This may take several minutes."
@@ -86,6 +89,8 @@ else
   if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]
   then
     "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" delete -f "$SNAP_DATA/args/cni-network/cni.yaml"
+    # give a bit slack before moving the file out, sometimes it gives out this error "rpc error: code = Unknown desc = checkpoint in progress".
+    sleep 2s
     run_with_sudo mv "$SNAP_DATA/args/cni-network/cni.yaml" "$SNAP_DATA/args/cni-network/cni.yaml.disabled"
   fi
 

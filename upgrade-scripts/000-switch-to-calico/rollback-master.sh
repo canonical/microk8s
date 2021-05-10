@@ -4,7 +4,7 @@ set -ex
 echo "Rolling back calico upgrade on master"
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/var/lib/snapd/hostfs//snap/core/current/etc/ssl/certs/ca-certificates.crt
+CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 
 if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]; then
@@ -22,19 +22,25 @@ fi
 echo "Restarting kubelet"
 if [ -e "$BACKUP_DIR/args/kubelet" ]; then
   cp "$BACKUP_DIR"/args/kubelet "$SNAP_DATA/args/"
-  snapctl restart ${SNAP_NAME}.daemon-kubelet
 fi
 
 echo "Restarting kube-proxy"
 if [ -e "$BACKUP_DIR/args/kube-proxy" ]; then
   cp "$BACKUP_DIR"/args/kube-proxy "$SNAP_DATA/args/"
-  snapctl restart ${SNAP_NAME}.daemon-proxy
 fi
 
 echo "Restarting kube-apiserver"
 if [ -e "$BACKUP_DIR/args/kube-apiserver" ]; then
   cp "$BACKUP_DIR"/args/kube-apiserver "$SNAP_DATA/args/"
+fi
+
+if [ -e "$SNAP_DATA"/var/lock/lite.lock ]
+then
+  snapctl restart ${SNAP_NAME}.daemon-kubelite
+else
   snapctl restart ${SNAP_NAME}.daemon-apiserver
+  snapctl restart ${SNAP_NAME}.daemon-kubelet
+  snapctl restart ${SNAP_NAME}.daemon-proxy
 fi
 
 ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30

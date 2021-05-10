@@ -24,10 +24,5 @@ if echo "$*" | grep -v -q -- '--kubeconfig'; then
   exit_if_no_permissions
 fi
 
-if ! [ "${ARCH}" = "amd64" ]
-then
-  echo "Linkerd is not available for ${ARCH}"
-else
-  exit_if_stopped
-  "${SNAP_DATA}/bin/linkerd" --kubeconfig="${SNAP_DATA}"/credentials/client.config "$@"
-fi
+exit_if_stopped
+"${SNAP_DATA}/bin/linkerd" --kubeconfig="${SNAP_DATA}"/credentials/client.config "$@"

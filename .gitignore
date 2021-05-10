@@ -14,3 +14,6 @@ tests/__pycache__
 /installer/**/__pycache__
 /installer/dist/
 /installer/build/
+.tox_env/
+__pycache__/
+microk8s_*.txt #Remote build log

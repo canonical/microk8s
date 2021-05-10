@@ -19,10 +19,12 @@ done
 "$SNAP/microk8s-enable.wrapper" dns
 sleep 5
 
-refresh_opt_in_config "allow-privileged" "true" kube-apiserver
-snapctl restart "${SNAP_NAME}.daemon-apiserver"
-
-sleep 5
+if ! grep -e "\-\-allow-privileged" ${SNAP_DATA}/args/kube-apiserver
+then
+  refresh_opt_in_config "allow-privileged" "true" kube-apiserver
+  restart_service apiserver
+  sleep 5
+fi
 
 $KUBECTL apply -f "${SNAP}/actions/fluentd"
 

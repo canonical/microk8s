@@ -20,12 +20,8 @@ apparmor_parser -r $SNAP/containerd-profile
 
 app=containerd
 
-if [ -e "${SNAP_DATA}/var/lock/gpu" ]; then
-  RUNTIME="nvidia-container-runtime"
-else
-  RUNTIME="runc"
-fi
 
+RUNTIME="runc"
 SNAPSHOTTER=$(snapshotter)
 
 sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${SNAPSHOTTER}@'"${SNAPSHOTTER}"'@g;s@${RUNTIME}@'"${RUNTIME}"'@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml
@@ -36,7 +32,15 @@ then
   sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${SNAP_COMMON}@'"${SNAP_COMMON}"'@g' $SNAP_DATA/args/flannel-template.conflist > $SNAP_DATA/args/cni-network/flannel.conflist
 fi
 
-# This is really the only way I could find to get the args passed in correctly. WTF
+# clean leftover container state if we just booted
+if (is_first_boot "${SNAP_COMMON}/run/containerd")
+then
+  rm -rf "${SNAP_COMMON}/run/containerd" || true
+fi
+mkdir -p "${SNAP_COMMON}/run/containerd"
+mark_boot_time "${SNAP_COMMON}/run/containerd"
+
+# This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/$app))"
 set -a
 . "${SNAP_DATA}/args/${app}-env"

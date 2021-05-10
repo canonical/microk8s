@@ -4,7 +4,7 @@ set -ex
 echo "Rolling back dqlite upgrade on master"
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/var/lib/snapd/hostfs//snap/core/current/etc/ssl/certs/ca-certificates.crt
+CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/001-switch-to-dqlite"
 
 echo "Restarting etcd"
@@ -17,6 +17,13 @@ fi
 echo "Restarting kube-apiserver"
 if [ -e "$BACKUP_DIR/args/kube-apiserver" ]; then
   cp "$BACKUP_DIR"/args/kube-apiserver "$SNAP_DATA/args/"
+  snapctl restart ${SNAP_NAME}.daemon-apiserver
+fi
+
+if [ -e "$SNAP_DATA"/var/lock/lite.lock ]
+then
+  snapctl restart ${SNAP_NAME}.daemon-kubelite
+else
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
