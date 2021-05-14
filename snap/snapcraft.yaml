@@ -194,10 +194,24 @@ apps:
     - cifs-mount
     - fuse-support
     - kernel-crypto-api
-    plugs: [kubernetes-support]
   daemon-kubelite:
     command: run-kubelite-with-args
     daemon: simple
+    plugs:
+    - dot-kube
+    - docker-support
+    - docker-privileged
+    - firewall-control
+    - hardware-observe
+    - kubernetes-support
+    - mount-observe
+    - network-bind
+    - network-observe
+    - network-control
+    - process-control
+    - system-observe
+    - opengl
+    - kernel-module-observe
   daemon-apiserver:
     command: run-null-daemon
     daemon: simple
@@ -558,15 +572,6 @@ parts:
     - "--disable-shared"
     - "--enable-static"
     prime: [ -bin/iptables-xml ]
-  libco:
-    source: https://github.com/canonical/libco
-    build-attributes: [no-patchelf]
-    source-type: git
-    plugin: make
-    organize:
-      usr/lib/: lib/
-    prime:
-      - lib/libco*so*
 
   raft:
     source: https://github.com/canonical/raft

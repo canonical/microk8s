@@ -44,6 +44,6 @@ else
   echo "Restarting flanneld"
   set_service_expected_to_start flanneld
 
-  preserve_env snapctl start "${SNAP_NAME}.daemon-flanneld"
+  snapctl start "${SNAP_NAME}.daemon-flanneld"
 fi
 echo "Cilium is terminating"

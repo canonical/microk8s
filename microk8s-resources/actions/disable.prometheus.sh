@@ -19,7 +19,7 @@ disable_kube_prometheus() {
     echo "Disabling Prometheus"
     $KUBECTL delete -f "${SNAP_DATA}/kube-prometheus/manifests/" || true
     $KUBECTL delete -f "${SNAP_DATA}/kube-prometheus/manifests/setup" || true
-    run_with_sudo rm -rf "${SNAP_DATA}/kube-prometheus"
+    rm -rf "${SNAP_DATA}/kube-prometheus"
   else
     disable_old_prometheus
   fi

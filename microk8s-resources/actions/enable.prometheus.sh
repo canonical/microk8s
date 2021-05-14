@@ -24,29 +24,29 @@ get_kube_prometheus () {
     KUBE_PROMETHEUS_VERSION="v0.7.0"
     KUBE_PROMETHEUS_ERSION=$(echo $KUBE_PROMETHEUS_VERSION | sed 's/v//g')
     echo "Fetching kube-prometheus version $KUBE_PROMETHEUS_VERSION."
-    run_with_sudo mkdir -p "${SNAP_DATA}/kube-prometheus"
-    run_with_sudo mkdir -p "${SNAP_DATA}/tmp/kube-prometheus"
+    mkdir -p "${SNAP_DATA}/kube-prometheus"
+    mkdir -p "${SNAP_DATA}/tmp/kube-prometheus"
 
-    run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/prometheus-operator/kube-prometheus/archive/${KUBE_PROMETHEUS_VERSION}.tar.gz -o "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz"
-    run_with_sudo tar -xzvf "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz" -C "$SNAP_DATA/tmp/kube-prometheus/"
-    run_with_sudo cp -R "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus-${KUBE_PROMETHEUS_ERSION}/manifests/" "${SNAP_DATA}/kube-prometheus"
+    "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/prometheus-operator/kube-prometheus/archive/${KUBE_PROMETHEUS_VERSION}.tar.gz -o "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz"
+    tar -xzvf "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz" -C "$SNAP_DATA/tmp/kube-prometheus/"
+    cp -R "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus-${KUBE_PROMETHEUS_ERSION}/manifests/" "${SNAP_DATA}/kube-prometheus"
 
-    run_with_sudo rm -rf "$SNAP_DATA/tmp/kube-prometheus"
+    rm -rf "$SNAP_DATA/tmp/kube-prometheus"
   fi
 }
 
 use_multiarch_images() {
-  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-state-metrics:v1.9.7@gcr.io/k8s-staging-kube-state-metrics/kube-state-metrics:v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
-  run_with_sudo $SNAP/bin/sed -i 's@app.kubernetes.io/version: v1.9.7@app.kubernetes.io/version: v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
+  $SNAP/bin/sed -i 's@quay.io/coreos/kube-state-metrics:v1.9.7@gcr.io/k8s-staging-kube-state-metrics/kube-state-metrics:v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
+  $SNAP/bin/sed -i 's@app.kubernetes.io/version: v1.9.7@app.kubernetes.io/version: v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
 
 }
 
 
 set_replicas_to_one() {
   # alert manager must be set to 1 replica
-  run_with_sudo $SNAP/bin/sed -i 's@replicas: .@replicas: 1@g' ${SNAP_DATA}/kube-prometheus/manifests/alertmanager-alertmanager.yaml
+  $SNAP/bin/sed -i 's@replicas: .@replicas: 1@g' ${SNAP_DATA}/kube-prometheus/manifests/alertmanager-alertmanager.yaml
   # prometheus must be set to 1 replica
-  run_with_sudo $SNAP/bin/sed -i 's@replicas: .@replicas: 1@g' ${SNAP_DATA}/kube-prometheus/manifests/prometheus-prometheus.yaml
+  $SNAP/bin/sed -i 's@replicas: .@replicas: 1@g' ${SNAP_DATA}/kube-prometheus/manifests/prometheus-prometheus.yaml
 
 }
 
@@ -63,7 +63,7 @@ enable_prometheus() {
       echo "The Prometheus operator failed to install"
       exit 1
     fi
-done 
+done
 }
 
 do_prerequisites

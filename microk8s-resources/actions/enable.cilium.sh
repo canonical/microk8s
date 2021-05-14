@@ -29,8 +29,8 @@ remove_vxlan_interfaces
 
 if grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
   echo "Restarting containerd"
-  run_with_sudo "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP}/opt;bin_dir = "${SNAP_DATA}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
-  run_with_sudo preserve_env snapctl restart "${SNAP_NAME}.daemon-containerd"
+  "${SNAP}/bin/sed" -i 's;bin_dir = "${SNAP}/opt;bin_dir = "${SNAP_DATA}/opt;g' "$SNAP_DATA/args/containerd-template.toml"
+  snapctl restart "${SNAP_NAME}.daemon-containerd"
 fi
 
 echo "Enabling Cilium"
@@ -65,7 +65,7 @@ else
   mv "$SNAP_DATA/args/cni-network/flannel.conflist" "$SNAP_DATA/args/cni-network/20-flanneld.conflist" 2>/dev/null || true
   cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF" "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
 
-  run_with_sudo mkdir -p "$SNAP_DATA/actions/cilium/"
+  mkdir -p "$SNAP_DATA/actions/cilium/"
 
   # Generate the YAMLs for Cilium and apply them
   (cd "${SNAP_DATA}/tmp/cilium/$CILIUM_DIR/install/kubernetes"
@@ -79,7 +79,7 @@ else
       --set global.daemon.runPath="$SNAP_DATA/var/run/cilium" \
       --set operator.numReplicas=1 \
       --set agent.keepDeprecatedLabels=true \
-      | run_with_sudo tee "$SNAP_DATA/actions/cilium.yaml" >/dev/null)
+      | tee "$SNAP_DATA/actions/cilium.yaml" >/dev/null)
 
   ${SNAP}/microk8s-status.wrapper --wait-ready >/dev/null
   echo "Deploying $SNAP_DATA/actions/cilium.yaml. This may take several minutes."
@@ -91,7 +91,7 @@ else
     "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" delete -f "$SNAP_DATA/args/cni-network/cni.yaml"
     # give a bit slack before moving the file out, sometimes it gives out this error "rpc error: code = Unknown desc = checkpoint in progress".
     sleep 2s
-    run_with_sudo mv "$SNAP_DATA/args/cni-network/cni.yaml" "$SNAP_DATA/args/cni-network/cni.yaml.disabled"
+    mv "$SNAP_DATA/args/cni-network/cni.yaml" "$SNAP_DATA/args/cni-network/cni.yaml.disabled"
   fi
 
   # Fetch the Cilium CLI binary and install

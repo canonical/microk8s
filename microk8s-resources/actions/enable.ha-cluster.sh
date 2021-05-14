@@ -12,10 +12,10 @@ exit_if_no_permissions
 
 workers=$("$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get no | grep " Ready" | wc -l)
 
-run_with_sudo mkdir -p ${SNAP_DATA}/var/log/
+mkdir -p ${SNAP_DATA}/var/log/
 echo "Enabling HA"
 echo "Upgrading the network CNI"
-run_with_sudo preserve_env LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/upgrade.py -r 000-switch-to-calico 2>&1 | run_with_sudo tee ${SNAP_DATA}/var/log/ha-cluster-upgrade.log &>/dev/null
+LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/upgrade.py -r 000-switch-to-calico 2>&1 | tee ${SNAP_DATA}/var/log/ha-cluster-upgrade.log &>/dev/null
 if [ $? -ne 0 ]; then
   echo "CNI upgrade failed. Please see logs at ${SNAP_DATA}/var/log/ha-cluster-upgrade.log for more details."
   echo "HA configuration aborted"
@@ -30,7 +30,7 @@ echo "Waiting for the CNI to deploy"
 "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" -n kube-system rollout status deployment/calico-kube-controllers
 
 echo "Configuring the datastore"
-run_with_sudo preserve_env LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/upgrade.py -r 001-switch-to-dqlite 2>&1 | run_with_sudo tee -a ${SNAP_DATA}/var/log/ha-cluster-upgrade.log &>/dev/null
+LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/upgrade.py -r 001-switch-to-dqlite 2>&1 | tee -a ${SNAP_DATA}/var/log/ha-cluster-upgrade.log &>/dev/null
 if [ $? -ne 0 ]; then
   echo "Datastore upgrade failed. Please see logs at ${SNAP_DATA}/var/log/ha-cluster-upgrade.log for more details."
   echo "HA configuration aborted"

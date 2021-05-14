@@ -12,7 +12,7 @@ disable_keda() {
   then
     echo "Disabling KEDA"
     $KUBECTL delete -f "${SNAP_DATA}/keda/keda.yaml" || true
-    run_with_sudo rm -rf "${SNAP_DATA}/keda"
+    rm -rf "${SNAP_DATA}/keda"
   fi
 }
 

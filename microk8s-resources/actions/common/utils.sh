@@ -46,7 +46,7 @@ is_service_expected_to_start() {
 set_service_not_expected_to_start() {
   # mark service as not starting
   local service="$1"
-  run_with_sudo touch ${SNAP_DATA}/var/lock/no-${service}
+  touch ${SNAP_DATA}/var/lock/no-${service}
 }
 
 set_service_expected_to_start() {
@@ -106,7 +106,7 @@ refresh_opt_in_config() {
 
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
-        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+        "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
@@ -114,7 +114,7 @@ refresh_opt_in_config() {
         tokens=$("$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
+            "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" update_argument "$3" "$opt" "$value"
         fi
     fi
 }
@@ -128,7 +128,7 @@ nodes_addon() {
 
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
-        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+        "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
@@ -136,7 +136,7 @@ nodes_addon() {
         tokens=$("$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
+            "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" set_addon "$addon" "$state"
         fi
     fi
 }
@@ -152,7 +152,7 @@ skip_opt_in_config() {
 
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
-        run_with_sudo preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+        "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
@@ -160,7 +160,7 @@ skip_opt_in_config() {
         tokens=$("$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
+            "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" remove_argument "$2" "$opt"
         fi
     fi
 }
@@ -174,7 +174,7 @@ restart_service() {
     then
       if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
       then
-        snapctl restart "microk8s.daemon-kubelit"
+        snapctl restart "microk8s.daemon-kubelite"
       else
         snapctl restart "microk8s.daemon-$1"
       fi
@@ -184,7 +184,7 @@ restart_service() {
 
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
-        preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+        "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
     fi
 
     if [ -e "${SNAP_DATA}/credentials/callback-tokens.txt" ]
@@ -192,7 +192,7 @@ restart_service() {
         tokens=$("$SNAP/bin/cat" "${SNAP_DATA}/credentials/callback-tokens.txt" | "$SNAP/usr/bin/wc" -l)
         if [[ "$tokens" -ge "0" ]]
         then
-            preserve_env "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
+            "$SNAP/usr/bin/python3" "$SNAP/scripts/cluster/distributed_op.py" restart "$1"
         fi
     fi
 }
@@ -547,7 +547,7 @@ function update_configs {
   # Create the basic tokens
   ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
   # Create the client kubeconfig
-  run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
   $SNAP/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
   if grep admin ${SNAP_DATA}/credentials/known_tokens.csv 2>&1 > /dev/null
@@ -567,27 +567,27 @@ function update_configs {
   controller_token=`grep kube-controller-manager ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
   scheduler_token=`grep kube-scheduler ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
   # Create the client kubeconfig for the controller
-  run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/controller.config
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/controller.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/controller.config
   $SNAP/bin/sed -i 's/NAME/controller/g' ${SNAP_DATA}/credentials/controller.config
   $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/controller.config
   $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/controller.config
   $SNAP/bin/sed -i 's/PASSWORD/'"${controller_token}"'/g' ${SNAP_DATA}/credentials/controller.config
   # Create the client kubeconfig for the scheduler
-  run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/scheduler.config
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/scheduler.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/scheduler.config
   $SNAP/bin/sed -i 's/NAME/scheduler/g' ${SNAP_DATA}/credentials/scheduler.config
   $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/scheduler.config
   $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/scheduler.config
   $SNAP/bin/sed -i 's/PASSWORD/'"${scheduler_token}"'/g' ${SNAP_DATA}/credentials/scheduler.config
   # Create the proxy and kubelet kubeconfig
-  run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/kubelet.config
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/kubelet.config
   $SNAP/bin/sed -i 's/NAME/kubelet/g' ${SNAP_DATA}/credentials/kubelet.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/kubelet.config
   $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/kubelet.config
   $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/kubelet.config
   $SNAP/bin/sed -i 's/PASSWORD/'"${kubelet_token}"'/g' ${SNAP_DATA}/credentials/kubelet.config
-  run_with_sudo cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/proxy.config
+  cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/proxy.config
   $SNAP/bin/sed -i 's/NAME/kubeproxy/g' ${SNAP_DATA}/credentials/proxy.config
   $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/proxy.config
   $SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/proxy.config
@@ -639,9 +639,9 @@ get_container_shim_pids() {
 }
 
 kill_all_container_shims() {
-    run_with_sudo systemctl kill snap.microk8s.daemon-kubelite.service --signal=SIGKILL &>/dev/null || true
-    run_with_sudo systemctl kill snap.microk8s.daemon-kubelet.service --signal=SIGKILL &>/dev/null || true
-    run_with_sudo systemctl kill snap.microk8s.daemon-containerd.service --signal=SIGKILL &>/dev/null || true
+    systemctl kill snap.microk8s.daemon-kubelite.service --signal=SIGKILL &>/dev/null || true
+    systemctl kill snap.microk8s.daemon-kubelet.service --signal=SIGKILL &>/dev/null || true
+    systemctl kill snap.microk8s.daemon-containerd.service --signal=SIGKILL &>/dev/null || true
 }
 
 is_first_boot() {
