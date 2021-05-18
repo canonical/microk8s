@@ -50,7 +50,7 @@ jobs:
           set -x
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
-          sudo snap install *.snap --classic --dangerous
+          sudo snap install microk8s.snap --devmode --dangerous
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
