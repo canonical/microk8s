@@ -9,7 +9,6 @@ import string
 import subprocess
 import sys
 import time
-from typing import List
 
 import yaml
 
