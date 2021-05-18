@@ -429,6 +429,6 @@ class TestAddons(object):
             validate_openebs()
             print("Disabling OpenEBS")
             microk8s_disable("openebs:force")
-        except CalledProcessError as err:
+        except CalledProcessError:
             print("Nothing to do, since iscsid is not available")
             return
