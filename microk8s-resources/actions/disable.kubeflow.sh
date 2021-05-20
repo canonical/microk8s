@@ -49,7 +49,7 @@ def kubeflow():
     ]
 
     for resource, selector in resources:
-        click.echo(f"Destroying Kubeflow {resource}...")
+        click.echo("Destroying Kubeflow {}...".format(resource))
         try:
             subprocess.check_call(
                 ["microk8s-kubectl.wrapper", "delete", resource, "-ljuju-app" + selector],
