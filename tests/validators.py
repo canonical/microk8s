@@ -1,6 +1,5 @@
 import time
 import os
-import shutil
 import re
 import requests
 import platform
