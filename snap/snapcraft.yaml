@@ -453,28 +453,6 @@ parts:
     plugin: dump
     source: patches/
     prime: ["-*"]
-  libnftnl:
-    plugin: autotools
-    source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
-    build-packages:
-    - libjansson-dev
-    - libmnl-dev
-  iptables:
-    after:
-    - libnftnl
-    source: https://www.netfilter.org/projects/iptables/files/iptables-1.6.1.tar.bz2
-    plugin: autotools
-    build-packages:
-    - bison
-    - flex
-    - libmnl-dev
-    - libnfnetlink-dev
-    - libnetfilter-conntrack3
-    - libnetfilter-conntrack-dev
-    configflags:
-    - "--disable-shared"
-    - "--enable-static"
-    prime: [ -bin/iptables-xml ]
 
   raft:
     source: https://github.com/canonical/raft
