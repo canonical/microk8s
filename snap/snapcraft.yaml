@@ -115,10 +115,13 @@ parts:
   raft:
     after:
       - libuv
-    source: https://github.com/canonical/raft
+    source: https://github.com/MathieuBordere/raft
     build-attributes: [no-patchelf]
     source-type: git
+    source-branch: compress-snapshots
     plugin: autotools
+    build-packages:
+      - liblz4-dev
     organize:
       usr/lib/: lib/
       include/: usr/include/
