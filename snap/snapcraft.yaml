@@ -449,11 +449,6 @@ passthrough:
       bind-file: $SNAP_COMMON/etc/service/enabled/felix/supervise/lock
 
 parts:
-  patches:
-    plugin: dump
-    source: patches/
-    prime: ["-*"]
-
   raft:
     source: https://github.com/canonical/raft
     build-attributes: [no-patchelf]
