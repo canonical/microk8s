@@ -9,6 +9,7 @@ from subprocess import check_output, CalledProcessError
 
 import yaml
 import socket
+import warnings
 
 
 def try_set_file_permissions(file):
@@ -205,11 +206,15 @@ def cni_is_patched():
     :return: True if calico knows where the rest of the nodes are.
     """
     yaml = "{}/args/cni-network/cni.yaml".format(os.environ.get("SNAP_DATA"))
-    with open(yaml) as f:
-        if "can-reach" in f.read():
-            return True
-        else:
-            return False
+    try:
+        with open(yaml) as f:
+            if "can-reach" in f.read():
+                return True
+            else:
+                return False
+    except IOError as err:
+        print("File not found. Error message is {err}")
+        warnings.warn("Cilium add on may be enabled and this does not port well with multi node clusters")
 
 
 def patch_cni(ip):
