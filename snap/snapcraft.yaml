@@ -23,6 +23,9 @@ plugs:
   docker-privileged:
     interface: docker-support
     privileged-containers: true
+  docker-unprivileged:
+    interface: docker-support
+    privileged-containers: false
   k8s-kubelet:
     interface: kubernetes-support
     flavor: kubelet
@@ -308,6 +311,7 @@ apps:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
     plugs:
+    - docker-unprivileged
     - dot-kube
     - home-read-all
     - firewall-control
