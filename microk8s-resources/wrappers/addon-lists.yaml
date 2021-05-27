@@ -133,6 +133,7 @@ microk8s-addons:
       supported_architectures:
         - amd64
         - arm64
+        - s390x
 
     - name: "helm3"
       description: "Helm 3 - Kubernetes package manager"
@@ -141,6 +142,7 @@ microk8s-addons:
       supported_architectures:
         - amd64
         - arm64
+        - s390x
 
     - name: "kubeflow"
       description: "Kubeflow for easy ML deployments"
@@ -156,6 +158,7 @@ microk8s-addons:
       supported_architectures:
         - amd64
         - arm64
+        - s390x
 
     - name: "host-access"
       description: "Allow Pods connecting to Host services smoothly"
@@ -164,6 +167,7 @@ microk8s-addons:
       supported_architectures:
         - amd64
         - arm64
+        - s390x
 
     - name: "ambassador"
       description: "Ambassador API Gateway and Ingress"
