@@ -482,53 +482,53 @@ parts:
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
 
       # Remove addons that do not work on arm64
-      if [ "${ARCH}" == "arm64" ]
+      if [ "${ARCH}" = "arm64" ]
       then
         # Some actions are only available on amd64
-        rm "actions/*.gpu.sh"
+        rm actions/*.gpu.sh
         rm "actions/gpu.yaml"
-        rm "actions/*.istio.sh"
-        rm "actions/*.knative.sh"
-        rm "actions/*.fluentd.sh"
+        rm actions/*.istio.sh
+        rm actions/*.knative.sh
+        rm actions/*.fluentd.sh
         rm -rf "actions/fluentd"
-        rm "actions/*.jaeger.sh"
+        rm actions/*.jaeger.sh
         rm -rf "actions/jaeger"
-        rm "actions/*.juju.sh"
-        rm "actions/*.kubeflow.sh"
-        rm "actions/*.multus.sh"
+        rm actions/*.juju.sh
+        rm actions/*.kubeflow.sh
+        rm actions/*.multus.sh
         rm "actions/multus.yaml"
-        rm "actions/*.keda.sh"
-        rm "actions/*.openebs.sh"
-        rm "actions/*.openfaas.sh"
+        rm actions/*.keda.sh
+        rm actions/*.openebs.sh
+        rm actions/*.openfaas.sh
       fi
 
       # Remove addons that do not work on s390x
-      if [ "${ARCH}" == "s390x" ]
+      if [ "${ARCH}" = "s390x" ]
       then
-        rm "actions/*.gpu.sh"
-        rm "actions/gpu.yaml"
-        rm "actions/*.istio.sh"
-        rm "actions/*.knative.sh"
-        rm "actions/*.fluentd.sh"
+        rm actions/*.gpu.sh
+        rm actions/gpu.yaml
+        rm actions/*.istio.sh
+        rm actions/*.knative.sh
+        rm actions/*.fluentd.sh
         rm -rf "actions/fluentd"
-        rm "actions/*.jaeger.sh"
+        rm actions/*.jaeger.sh
         rm -rf "actions/jaeger"
-        rm "actions/*.juju.sh"
-        rm "actions/*.kubeflow.sh"
-        rm "actions/*.multus.sh"
-        rm "actions/multus.yaml"
-        rm "actions/*.keda.sh"
-        rm "actions/*.openebs.sh"
-        rm "actions/*.openfaas.sh"
-        rm "actions/*.prometheus.sh"
+        rm actions/*.juju.sh
+        rm actions/*.kubeflow.sh
+        rm actions/*.multus.sh
+        rm actions/multus.yaml
+        rm actions/*.keda.sh
+        rm actions/*.openebs.sh
+        rm actions/*.openfaas.sh
+        rm actions/*.prometheus.sh
         rm -rf "actions/prometheus"
-        rm "actions/*.ambassador.sh"
-        rm "actions/*.cilium.sh"
-        rm "actions/*.traefik.sh"
-        rm "actions/*.registry.sh"
-        rm "actions/*.storage.sh"
-        rm "actions/*.portainer.sh"
-        rm "actions/*.linkerd.sh"
+        rm actions/*.ambassador.sh
+        rm actions/*.cilium.sh
+        rm actions/*.traefik.sh
+        rm actions/*.registry.sh
+        rm actions/*.storage.sh
+        rm actions/*.portainer.sh
+        rm actions/*.linkerd.sh
       fi
 
       echo "Creating inspect hook"
