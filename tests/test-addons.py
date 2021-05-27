@@ -100,10 +100,7 @@ class TestAddons(object):
         print("Disabling dashboard")
         microk8s_disable("dashboard")
 
-
-    @pytest.mark.skipif(
-        platform.machine() == "s390x", reason="Not available on s390x"
-    )
+    @pytest.mark.skipif(platform.machine() == "s390x", reason="Not available on s390x")
     def test_basic(self):
         """
         Sets up and tests dashboard, dns, storage, registry, ingress, metrics server.
@@ -381,9 +378,7 @@ class TestAddons(object):
         print("Disabling Multus")
         microk8s_disable("multus")
 
-    @pytest.mark.skipif(
-        platform.machine() == "s390x", reason="Not available on s390x"
-    )
+    @pytest.mark.skipif(platform.machine() == "s390x", reason="Not available on s390x")
     def test_portainer(self):
         """
         Sets up and validates Portainer.
@@ -410,9 +405,7 @@ class TestAddons(object):
         print("Disabling openfaas")
         microk8s_disable("openfaas")
 
-    @pytest.mark.skipif(
-        platform.machine() == "s390x", reason="Not available on s390x"
-    )
+    @pytest.mark.skipif(platform.machine() == "s390x", reason="Not available on s390x")
     def test_traefik(self):
         """
         Sets up and validates traefik.
