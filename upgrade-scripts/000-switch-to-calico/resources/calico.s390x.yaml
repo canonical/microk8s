@@ -2119,7 +2119,7 @@ spec:
               vxlanMode:
                 description: Contains configuration for VXLAN tunneling for this pool.
                   If not specified, then this is defaulted to "Never" (i.e. VXLAN
-                  tunelling is disabled).
+                  tunneling is disabled).
                 type: string
             required:
             - cidr
