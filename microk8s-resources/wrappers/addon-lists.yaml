@@ -8,6 +8,7 @@ microk8s-addons:
       supported_architectures:
         - amd64
         - arm64
+        - s390x
 
     - name: "rbac"
       description: "Role-Based Access Control for authorisation"
@@ -16,6 +17,7 @@ microk8s-addons:
       supported_architectures:
         - arm64
         - amd64
+        - s390x
 
     - name: "dashboard"
       description: "The Kubernetes dashboard"
@@ -24,6 +26,7 @@ microk8s-addons:
       supported_architectures:
         - arm64
         - amd64
+        - s390x
 
     - name: "ingress"
       description: "Ingress controller for external access"
@@ -56,6 +59,7 @@ microk8s-addons:
       supported_architectures:
         - arm64
         - amd64
+        - s390x
 
     - name: "istio"
       description: "Core Istio service mesh services"
