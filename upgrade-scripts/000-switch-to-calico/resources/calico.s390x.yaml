@@ -2099,7 +2099,7 @@ spec:
                 type: object
               ipipMode:
                 description: Contains configuration for IPIP tunneling for this pool.
-                  If not specified, then this is defaulted to "Never" (i.e. IPIP tunelling
+                  If not specified, then this is defaulted to "Never" (i.e. IPIP tunneling
                   is disabled).
                 type: string
               nat-outgoing:
