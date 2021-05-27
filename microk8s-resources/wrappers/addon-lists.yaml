@@ -183,6 +183,7 @@ microk8s-addons:
       supported_architectures:
         - arm64
         - amd64
+        - s390x
 
     - name: "portainer"
       description: "Portainer UI for your Kubernetes cluster"
