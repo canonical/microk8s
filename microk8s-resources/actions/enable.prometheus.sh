@@ -35,12 +35,6 @@ get_kube_prometheus () {
   fi
 }
 
-#use_multiarch_images() {
-#  run_with_sudo $SNAP/bin/sed -i 's@quay.io/coreos/kube-state-metrics:v1.9.7@gcr.io/k8s-staging-kube-state-metrics/kube-state-metrics:v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
-#  run_with_sudo $SNAP/bin/sed -i 's@app.kubernetes.io/version: v1.9.7@app.kubernetes.io/version: v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
-#
-#}
-
 
 set_replicas_to_one() {
   # alert manager must be set to 1 replica
@@ -94,7 +88,6 @@ add_loki_datasource() {
 EOF
 
 return $?
-
 }
 
 update_grafana_datasource() {
@@ -106,7 +99,6 @@ update_grafana_datasource() {
 do_prerequisites
 get_kube_prometheus
 set_replicas_to_one
-#use_multiarch_images
 update_grafana_datasource
 enable_prometheus
 
