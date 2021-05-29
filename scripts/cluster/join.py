@@ -27,6 +27,7 @@ from common.utils import (
     service,
     mark_no_cert_reissue,
     unmark_no_cert_reissue,
+    is_enabled_addon
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -52,7 +53,6 @@ FINGERPRINT_MIN_LEN = 12
 def join_request(conn, api_version, req_data, master_ip, verify_peer, fingerprint):
     json_params = json.dumps(req_data)
     headers = {"Content-type": "application/json", "Accept": "application/json"}
-
     try:
         if verify_peer and fingerprint:
             if len(fingerprint) < FINGERPRINT_MIN_LEN:
@@ -1054,6 +1054,12 @@ if __name__ == "__main__":
                 reset_current_etcd_installation()
     else:
         connection_parts = args[0].split("/")
+        """ 
+        I am not totally sure of what part of the code to add this warning.
+        Also after the join request, I noticed that connection to kubectl fails.
+        """
+        if is_enabled_addon("cilium"):
+            print("Cilium add on is enabled and this does not port well with multi node clusters")
         if is_node_running_dqlite():
             join_dqlite(connection_parts, verify)
         else:

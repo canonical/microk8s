@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import subprocess
 import time
@@ -213,8 +214,8 @@ def cni_is_patched():
             else:
                 return False
     except IOError as err:
-        print("File not found. Error message is {err}")
-        warnings.warn("Cilium add on may be enabled and this does not port well with multi node clusters")
+        print(f"File not found. Error message is: {err}")
+        sys.exit(1)
 
 
 def patch_cni(ip):
@@ -303,3 +304,47 @@ def unmark_no_cert_reissue():
     lock_file = "{}/var/lock/no-cert-reissue".format(snap_data)
     if os.path.exists(lock_file):
         os.unlink(lock_file)
+
+def is_enabled_addon(addon):
+    """
+    This function checks if an addon is enabled.
+
+    Parameters
+    ----------
+    :param addon: string of the addon name
+
+    Returns
+    ----------
+    :return: boolean
+    """
+    kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/client.config")
+    kube_output = run("kubectl", kubeconfig, "get", "all", "--all-namespaces")
+    cluster_output = run("kubectl", kubeconfig, "get", "clusterroles", "--all-namespaces")
+    kube_output = kube_output + cluster_output
+
+    for row in kube_output.split("\n"):
+        isAddon = False
+        if addon in row:
+            isAddon = True
+            break
+    return isAddon
+
+def run(*args,die=True):
+    # Add wrappers to $PATH
+    env = os.environ.copy()
+    env["PATH"] += ":%s" % os.environ["SNAP"]
+    result = subprocess.run(
+        args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
+    )
+    try:
+        result.check_returncode()
+    except subprocess.CalledProcessError as err:
+        if die:
+            if result.stderr:
+                print(result.stderr.decode("utf-8"))
+            print(err)
+            sys.exit(1)
+        else:
+            raise
+
+    return result.stdout.decode("utf-8")
