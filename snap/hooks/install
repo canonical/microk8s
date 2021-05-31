@@ -114,6 +114,11 @@ mkdir -p "$BACKUP_DIR"
 mkdir -p "$BACKUP_DIR/args/cni-network/"
 cp "$SNAP_DATA"/args/cni-network/* "$BACKUP_DIR/args/cni-network/" 2>/dev/null || true
 rm -rf "$SNAP_DATA"/args/cni-network/*
-cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
+if [ "$ARCH" == "s390x" ]
+then
+  cp "$RESOURCES/calico.s390x.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
+else
+  cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
+fi
 mkdir -p "$SNAP_DATA/opt/cni/bin/"
 cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
