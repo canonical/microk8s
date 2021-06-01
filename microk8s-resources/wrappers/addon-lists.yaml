@@ -221,3 +221,10 @@ microk8s-addons:
       check_status: "pod/openebs-apiserver"
       supported_architectures:
         - amd64
+
+    - name: "kata"
+      description: "Kata Containers is a secure runtime with lightweight VMS"
+      version: "latest/stable"
+      check_status: "${SNAP_DATA}/var/lock/kata.enabled"
+      supported_architectures:
+        - amd64

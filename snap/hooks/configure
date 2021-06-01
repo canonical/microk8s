@@ -283,6 +283,35 @@ then
   need_controller_restart=true
 fi
 
+# Add option to support kata containers
+if [ -e "${SNAP_DATA}/args/containerd-env" ] &&
+   ! grep -e "KATA_PATH" ${SNAP_DATA}/args/containerd-env
+then
+  echo "" >> "${SNAP_DATA}/args/containerd-env"
+  echo "# You can set the of the kata containers runtime here." >> "${SNAP_DATA}/args/containerd-env"
+  echo "#" >> "${SNAP_DATA}/args/containerd-env"
+  echo "# KATA_PATH=" >> "${SNAP_DATA}/args/containerd-env"
+  echo "#" >> "${SNAP_DATA}/args/containerd-env"
+  echo "PATH=\$PATH:\$KATA_PATH" >> "${SNAP_DATA}/args/containerd-env"
+fi
+
+# Add option to support kata containers
+if [ -e "${SNAP_DATA}/args/containerd-template.toml" ] &&
+   ! grep -e "io.containerd.kata.v2" ${SNAP_DATA}/args/containerd-template.toml
+then
+  KATA_HANDLER_BEFORE='\[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia-container-runtime\]'
+  KATA_HANDLER_AFTER='    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
+      runtime_type = "io.containerd.kata.v2"
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata.options]
+        BinaryName = "kata-runtime"
+        '
+  CD_TOML="${SNAP_DATA}/args/containerd-template.toml"
+  CD_TOML_TMP="${SNAP_DATA}/args/containerd-template.toml.tmp"
+
+  "$SNAP/usr/bin/gawk" -v kata="${KATA_HANDLER_AFTER}" '/'${KATA_HANDLER_BEFORE}'/{print kata }1' ${CD_TOML} > ${CD_TOML_TMP}
+  mv ${CD_TOML_TMP} ${CD_TOML}
+fi
+
 # Securing important directories
 for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock
 do
@@ -531,4 +560,3 @@ then
     fi
   fi
 fi
-

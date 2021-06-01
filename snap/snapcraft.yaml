@@ -500,6 +500,8 @@ parts:
         rm actions/*.keda.sh
         rm actions/*.openebs.sh
         rm actions/*.openfaas.sh
+        rm -rf "actions/kata"
+        rm actions/*.kata.sh
       fi
 
       # Remove addons that do not work on s390x
@@ -529,6 +531,8 @@ parts:
         rm actions/*.storage.sh
         rm actions/*.portainer.sh
         rm actions/*.linkerd.sh
+        rm -rf "actions/kata"
+        rm actions/*.kata.sh
       fi
 
       echo "Creating inspect hook"
