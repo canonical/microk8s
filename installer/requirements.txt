@@ -1,4 +1,4 @@
-urllib3==1.24.2
+urllib3==1.26.5
 click~=7.0
 progressbar33==2.4
 requests==2.20.0
