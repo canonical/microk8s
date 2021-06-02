@@ -171,6 +171,9 @@ hooks:
 apps:
   microk8s:
     command: microk8s.wrapper
+    plugs:
+    - docker-unprivileged
+    - network-control
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
