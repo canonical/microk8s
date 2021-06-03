@@ -461,6 +461,8 @@ parts:
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
+    build-packages:
+      - liblz4-dev
     stage-packages:
       - libuv1
     organize:
