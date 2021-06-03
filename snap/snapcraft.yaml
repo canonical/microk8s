@@ -108,6 +108,8 @@ parts:
     plugin: autotools
     stage-packages:
       - libuv1
+    build-packages:
+      - liblz4-dev
     organize:
       usr/lib/: lib/
       include/: usr/include/
