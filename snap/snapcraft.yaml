@@ -234,6 +234,7 @@ apps:
     command: apiservice-kicker
     daemon: simple
     plugs:
+    - kernel-module-control
     - network-bind
     - network-observe
     - network-control
