@@ -659,3 +659,11 @@ is_first_boot() {
     return 0
   fi
 }
+
+is_apparmor_enabled() {
+  if [ grep Y /sys/module/apparmor/parameters/enabled > /dev/null 2>&1 ]; then
+    return 1
+  else
+    return 0
+  fi
+}
