@@ -1,3 +1,8 @@
+# Remember to restart MicroK8s after editing this file:
+#
+# sudo microk8s stop; sudo microk8s start
+#
+
 # To start containerd behind a proxy you need to add an HTTPS_PROXY
 # environment variable in this file. HTTPS_PROXY is of the following form:
 # HTTPS_PROXY=http://username:password@proxy:port/
@@ -11,11 +16,12 @@
 #
 # NO_PROXY=10.1.0.0/16,10.152.183.0/24
 #
-# Remember to restart MicroK8s after editing this file:
+
+# You can set the of the kata containers runtime here.
 #
-# sudo microk8s stop; sudo microk8s start
+# KATA_PATH=
 #
-#
+PATH=$PATH:$KATA_PATH
 
 # Attempt to change the maximum number of open file descriptors
 # this get inherited to the running containers
@@ -26,3 +32,4 @@ ulimit -n 65536 || true
 # this get inherited to the running containers
 #
 ulimit -l 16384 || true
+

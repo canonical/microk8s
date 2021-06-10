@@ -45,16 +45,7 @@ then
 fi
 
 # Use python's built-in (3.6+) secrets generator to produce the token.
-LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/add_token.py $@
-
-# Get the generated token and display it, so users can use it to join the cluster.
-OIFS=$IFS
-TOKEN_IN_LINE=$(tail -1 $SNAP_DATA/credentials/cluster-tokens.txt)
-
-IFS='|'
-read -ra ADDR <<< "$TOKEN_IN_LINE" # str is read into an array as tokens separated by IFS
-token=${ADDR[0]}
-IFS=$OIFS
+token="$(LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/add_token.py $@)"
 
 port="25000"
 if grep -e port "${SNAP_DATA}"/args/cluster-agent &> /dev/null

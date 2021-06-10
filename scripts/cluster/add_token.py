@@ -74,3 +74,4 @@ if __name__ == "__main__":
         exit(1)
 
     add_token_with_expiry(token, cluster_tokens_file, ttl)
+    print(token)

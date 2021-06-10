@@ -3,7 +3,7 @@ import datetime
 import time
 import yaml
 import platform
-from subprocess import check_output, CalledProcessError
+from subprocess import check_output, CalledProcessError, check_call
 
 
 arch_translate = {"aarch64": "arm64", "x86_64": "amd64"}
@@ -223,3 +223,29 @@ def update_yaml_with_arch(manifest_file):
     with open(manifest_file, "w") as f:
         s = s.replace("$ARCH", arch)
         f.write(s)
+
+
+def is_container():
+    """
+    Returns: True if the deployment is in a VM/container.
+
+    """
+    try:
+        if os.path.isdir("/run/systemd/system"):
+            container = check_output("sudo systemd-detect-virt --container".split())
+            print("Tests are running in {}".format(container))
+            return True
+    except CalledProcessError:
+        print("systemd-detect-virt did not detect a container")
+
+    if os.path.exists("/run/container_type"):
+        return True
+
+    try:
+        check_call("sudo grep -E (lxc|hypervisor) /proc/1/environ /proc/cpuinfo".split())
+        print("Tests are running in an undetectable container")
+        return True
+    except CalledProcessError:
+        print("no indication of a container in /proc")
+
+    return False

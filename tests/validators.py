@@ -1,6 +1,5 @@
 import time
 import os
-import shutil
 import re
 import requests
 import platform
@@ -81,14 +80,6 @@ def common_ingress():
     attempt = 50
     while attempt >= 0:
         output = kubectl("get ing")
-        if "microbot.127.0.0.1.xip.io" in output:
-            break
-        time.sleep(5)
-        attempt -= 1
-    assert "microbot.127.0.0.1.xip.io" in output
-    attempt = 50
-    while attempt >= 0:
-        output = kubectl("get ing")
         if "microbot.127.0.0.1.nip.io" in output:
             break
         time.sleep(5)
@@ -99,24 +90,13 @@ def common_ingress():
     attempt = 50
     while attempt >= 0:
         try:
-            resp = requests.get("http://microbot.127.0.0.1.xip.io/")
+            resp = requests.get("http://microbot.127.0.0.1.nip.io/")
             if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                 service_ok = True
                 break
         except requests.RequestException:
             time.sleep(5)
             attempt -= 1
-    if resp.status_code != 200 or "microbot.png" not in resp.content.decode("utf-8"):
-        attempt = 50
-        while attempt >= 0:
-            try:
-                resp = requests.get("http://microbot.127.0.0.1.nip.io/")
-                if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
-                    service_ok = True
-                    break
-            except requests.RequestException:
-                time.sleep(5)
-                attempt -= 1
 
     assert service_ok
 
@@ -162,7 +142,6 @@ def validate_ambassador():
 
     # `Ingress`es must be annotatated for being recognized by Ambassador
     kubectl("annotate ingress microbot-ingress-nip kubernetes.io/ingress.class=ambassador")
-    kubectl("annotate ingress microbot-ingress-xip kubernetes.io/ingress.class=ambassador")
 
     common_ingress()
 
@@ -544,4 +523,16 @@ def validate_openebs():
     )
     output = kubectl("exec openebs-test-busybox -- ls /", timeout_insec=900, err_out="no")
     assert "my-data" in output
+    kubectl("delete -f {}".format(manifest))
+
+
+def validate_kata():
+    """
+    Validate Kata
+    """
+    wait_for_installation()
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "nginx-kata.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=kata")
     kubectl("delete -f {}".format(manifest))

@@ -25,6 +25,8 @@ from common.utils import (
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
     service,
+    mark_no_cert_reissue,
+    unmark_no_cert_reissue,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -73,11 +75,8 @@ def join_request(conn, api_version, req_data, master_ip, verify_peer, fingerprin
         conn.request("POST", "/{}/join".format(api_version), json_params, headers)
         response = conn.getresponse()
         if not response.status == 200:
-            message = "Connection failed"
-            res_data = response.read().decode()
-            if "error" in res_data:
-                message = "{} {}".format(message, res_data["error"])
-            print("{} ({}). {}.".format(message, response.status, response.reason))
+            message = extract_error(response)
+            print("{} ({}).".format(message, response.status))
             exit(6)
         body = response.read()
         return json.loads(body)
@@ -87,6 +86,19 @@ def join_request(conn, api_version, req_data, master_ip, verify_peer, fingerprin
     except ssl.SSLError as e:
         print("Peer node verification failed ({}).".format(e))
         exit(4)
+
+
+def extract_error(response):
+    message = "Connection failed."
+    try:
+        resp = response.read().decode()
+        if resp:
+            res_data = json.loads(resp)
+            if "error" in res_data:
+                message = "{} {}".format(message, res_data["error"])
+    except ValueError:
+        pass
+    return message
 
 
 def get_connection_info(
@@ -314,9 +326,10 @@ def store_remote_ca(ca):
     try_set_file_permissions(ca_cert_file)
 
 
-def mark_cluster_node():
+def mark_worker_node():
     """
-    Mark a node as being part of a cluster by creating a var/lock/clustered.lock
+    Mark a node as being part of a cluster not running the control plane
+    by creating a var/lock/clustered.lock
     """
     lock_file = "{}/var/lock/clustered.lock".format(snapdata_path)
     open(lock_file, "a").close()
@@ -386,6 +399,8 @@ def reset_current_etcd_installation():
             print("Services not ready to start. Waiting...")
             time.sleep(5)
             waits -= 1
+
+    unmark_no_cert_reissue()
 
 
 def reset_current_dqlite_installation():
@@ -489,6 +504,7 @@ def reset_current_dqlite_installation():
             time.sleep(5)
             waits -= 1
     print(" ")
+    unmark_no_cert_reissue()
     restart_all_services()
 
 
@@ -694,7 +710,7 @@ def remove_dqlite_node(node, force=False):
                 break
 
         if not node_address:
-            print("Could nod detect the IP of {}.".format(node))
+            print("Node {} is not part of the cluster.".format(node))
             exit(1)
 
         node_ep = None
@@ -717,6 +733,15 @@ def remove_dqlite_node(node, force=False):
 
     except subprocess.CalledProcessError:
         print("Node {} does not exist in Kubernetes.".format(node))
+        if force:
+            print("Attempting to remove {} from dqlite.".format(node))
+            # Make sure we do not have the node in dqlite.
+            # We assume the IP is provided to denote the
+            my_ep, other_ep = get_dqlite_endpoints()
+            for ep in other_ep:
+                if ep.startswith("{}:".format(node)):
+                    print("Removing node entry found in dqlite.")
+                    delete_dqlite_node([ep], my_ep)
         exit(1)
 
     remove_node(node)
@@ -905,7 +930,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     restart_all_services()
 
 
-def join_dqlite(connection_parts, verify=True):
+def join_dqlite(connection_parts, verify=False):
     """
     Configure node to join a dqlite cluster.
 
@@ -918,7 +943,7 @@ def join_dqlite(connection_parts, verify=True):
     fingerprint = None
     if len(connection_parts) > 2:
         fingerprint = connection_parts[2]
-        verify = False
+        verify = True
 
     print("Contacting cluster at {}".format(master_ip))
 
@@ -962,6 +987,7 @@ def join_dqlite(connection_parts, verify=True):
     # We want to update the local CNI yaml but we do not want to apply it.
     # The cni is applied already in the cluster we join
     try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
+    mark_no_cert_reissue()
 
 
 def join_etcd(connection_parts, verify=True):
@@ -984,7 +1010,8 @@ def join_etcd(connection_parts, verify=True):
     update_flannel(info["etcd"], master_ip, master_port, token)
     update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override)
     update_kubelet(info["kubelet"], info["ca"], master_ip, info["apiport"])
-    mark_cluster_node()
+    mark_worker_node()
+    mark_no_cert_reissue()
 
 
 if __name__ == "__main__":

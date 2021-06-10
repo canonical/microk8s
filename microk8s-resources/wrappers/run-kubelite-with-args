@@ -26,6 +26,13 @@ else
   refresh_opt_in_local_config "start-control-plane" "true" kubelite
 fi
 
+if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
+then
+  # Mark the cluster as starting. This is needed in case you
+  # microk8s stop and then snap start microk8s
+  rm -f ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+fi
+
 ## API server configuration
 # wait up to two minutes for the default network interface to appear.
 n=0

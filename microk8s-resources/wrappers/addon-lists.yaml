@@ -8,6 +8,7 @@ microk8s-addons:
       supported_architectures:
         - amd64
         - arm64
+        - s390x
 
     - name: "rbac"
       description: "Role-Based Access Control for authorisation"
@@ -16,6 +17,7 @@ microk8s-addons:
       supported_architectures:
         - arm64
         - amd64
+        - s390x
 
     - name: "dashboard"
       description: "The Kubernetes dashboard"
@@ -24,6 +26,7 @@ microk8s-addons:
       supported_architectures:
         - arm64
         - amd64
+        - s390x
 
     - name: "ingress"
       description: "Ingress controller for external access"
@@ -56,6 +59,7 @@ microk8s-addons:
       supported_architectures:
         - arm64
         - amd64
+        - s390x
 
     - name: "istio"
       description: "Core Istio service mesh services"
@@ -66,8 +70,8 @@ microk8s-addons:
 
     - name: "knative"
       description: "The Knative framework on Kubernetes."
-      version: "0.13.0"
-      check_status: "clusterrole.rbac.authorization.k8s.io/knative"
+      version: "0.21.0"
+      check_status: "deployment.apps/eventing-webhook"
       supported_architectures:
         - amd64
 
@@ -129,6 +133,7 @@ microk8s-addons:
       supported_architectures:
         - amd64
         - arm64
+        - s390x
 
     - name: "helm3"
       description: "Helm 3 - Kubernetes package manager"
@@ -137,6 +142,7 @@ microk8s-addons:
       supported_architectures:
         - amd64
         - arm64
+        - s390x
 
     - name: "kubeflow"
       description: "Kubeflow for easy ML deployments"
@@ -152,6 +158,7 @@ microk8s-addons:
       supported_architectures:
         - amd64
         - arm64
+        - s390x
 
     - name: "host-access"
       description: "Allow Pods connecting to Host services smoothly"
@@ -160,6 +167,7 @@ microk8s-addons:
       supported_architectures:
         - amd64
         - arm64
+        - s390x
 
     - name: "ambassador"
       description: "Ambassador API Gateway and Ingress"
@@ -175,6 +183,7 @@ microk8s-addons:
       supported_architectures:
         - arm64
         - amd64
+        - s390x
 
     - name: "portainer"
       description: "Portainer UI for your Kubernetes cluster"
@@ -210,5 +219,12 @@ microk8s-addons:
       description: "OpenEBS is the open-source storage solution for Kubernetes"
       version: "2.6.0"
       check_status: "pod/openebs-apiserver"
+      supported_architectures:
+        - amd64
+
+    - name: "kata"
+      description: "Kata Containers is a secure runtime with lightweight VMS"
+      version: "latest/stable"
+      check_status: "${SNAP_DATA}/var/lock/kata.enabled"
       supported_architectures:
         - amd64
