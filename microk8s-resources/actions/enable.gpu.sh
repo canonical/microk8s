@@ -42,7 +42,7 @@ echo "Installing NVIDIA Operator"
 "$SNAP/microk8s-helm3.wrapper" repo update
 "$SNAP/microk8s-helm3.wrapper" install gpu-operator nvidia/gpu-operator \
   --set operator.defaultRuntime=containerd \
-  --set toolkit.version=1.4.8-ubuntu18.04 \
+  --set toolkit.version=1.5.0-ubuntu18.04 \
   --set driver.enabled=$ENABLE_INTERNAL_DRIVER \
   --set toolkit.env[0].name=CONTAINERD_CONFIG \
   --set toolkit.env[0].value=$CONFIG \
