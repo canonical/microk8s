@@ -448,7 +448,7 @@ class TestAddons(object):
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
 
     @pytest.mark.skipif(
-        platform.machine() == " "s390x",
+        platform.machine() == "s390x",
         reason="OpenEBS is not available on s390x",
     )
     def test_openebs(self):
