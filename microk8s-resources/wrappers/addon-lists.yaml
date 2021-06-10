@@ -220,6 +220,7 @@ microk8s-addons:
       version: "2.6.0"
       check_status: "pod/openebs-apiserver"
       supported_architectures:
+        - arm64
         - amd64
 
     - name: "kata"
