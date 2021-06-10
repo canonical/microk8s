@@ -22,7 +22,7 @@ disable_openebs() {
     $KUBECTL -n openebs delete --all cvr --timeout=60s || true
     $KUBECTL -n openebs delete --all cstorvolume  --timeout=60s || true
 
-    OPENEBS_SCS=$(kubectl get storageclasses -o=name | awk -F/ '{if ($2 ~ /^(openebs-.*)$/) print}' | paste -s --delimiters=' ')
+    OPENEBS_SCS="$($KUBECTL get storageclasses -o=name | awk -F/ '{if ($2 ~ /^(openebs-.*)$/) print}' | paste -s --delimiters=' ')"
     if [ -n "$OPENEBS_SCS" ]
     then
       echo "Deleting OpenEBS storage classes $OPENEBS_SCS"
