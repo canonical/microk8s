@@ -448,12 +448,8 @@ class TestAddons(object):
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
 
     @pytest.mark.skipif(
-        platform.machine() != "x86_64",
-        reason="OpenEBS tests are only relevant in x86 architectures",
-    )
-    @pytest.mark.skipif(
-        platform.machine() != "x86_64",
-        reason="OpenEBS tests are only relevant in x86 architectures",
+        platform.machine() == " "s390x",
+        reason="OpenEBS is not available on s390x",
     )
     def test_openebs(self):
         """
