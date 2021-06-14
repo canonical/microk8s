@@ -18,8 +18,8 @@ export KNATIVE_EVENTING_VERSION="${KNATIVE_EVENTING_VERSION:-v0.13.0}"
 # RUNC commit matching the containerd release commit
 # Tag 1.5.2
 export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-36cc874494a56a253cd181a1a685b44b58a2e34a}"
-# Release v1.0.0-rc92
-export RUNC_COMMIT="${RUNC_COMMIT:-ff819c7e9184c13b7c2607fe6c30ae19403a7aff}"
+# Release v1.0.0-rc95
+export RUNC_COMMIT="${RUNC_COMMIT:-b9ee9c6314599f1b4a7f497e1f1f856fe433d3b7}"
 # Set this to the kubernetes fork you want to build binaries from
 export KUBERNETES_REPOSITORY="${KUBERNETES_REPOSITORY:-github.com/kubernetes/kubernetes}"
 
