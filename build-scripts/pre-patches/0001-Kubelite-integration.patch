@@ -1,27 +1,28 @@
-From cc7275754ef842ad9ab827f691b670c856edc613 Mon Sep 17 00:00:00 2001
+From 7122b1a57670d1526f69f1336a047bf598fcc966 Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
 
 ---
  cmd/kube-apiserver/app/server.go    |  9 ++--
+ cmd/kube-scheduler/app/server.go    |  6 ++-
  cmd/kubelet/app/server.go           | 11 ++--
  cmd/kubelite/app/daemons/daemon.go  | 84 +++++++++++++++++++++++++++++
  cmd/kubelite/app/options/options.go | 79 +++++++++++++++++++++++++++
  cmd/kubelite/app/server.go          | 79 +++++++++++++++++++++++++++
  cmd/kubelite/kubelite.go            | 28 ++++++++++
  pkg/volume/csi/csi_plugin.go        | 10 ++--
- 7 files changed, 291 insertions(+), 9 deletions(-)
+ 8 files changed, 296 insertions(+), 10 deletions(-)
  create mode 100644 cmd/kubelite/app/daemons/daemon.go
  create mode 100644 cmd/kubelite/app/options/options.go
  create mode 100644 cmd/kubelite/app/server.go
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index 962991cdf09..e34700c0a53 100644
+index 776389f93e4..ca39da8a4c0 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
-@@ -103,7 +103,7 @@ func checkNonZeroInsecurePort(fs *pflag.FlagSet) error {
+@@ -102,7 +102,7 @@ func checkNonZeroInsecurePort(fs *pflag.FlagSet) error {
  }
  
  // NewAPIServerCommand creates a *cobra.Command object with default parameters
@@ -30,7 +31,7 @@ index 962991cdf09..e34700c0a53 100644
  	s := options.NewServerRunOptions()
  	cmd := &cobra.Command{
  		Use: "kube-apiserver",
-@@ -139,8 +139,11 @@ cluster's shared state through which all other components interact.`,
+@@ -138,8 +138,11 @@ cluster's shared state through which all other components interact.`,
  			if errs := completedOptions.Validate(); len(errs) != 0 {
  				return utilerrors.NewAggregate(errs)
  			}
@@ -44,6 +45,23 @@ index 962991cdf09..e34700c0a53 100644
  		},
  		Args: func(cmd *cobra.Command, args []string) error {
  			for _, arg := range args {
+diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
+index 1593f564624..01d05159a1c 100644
+--- a/cmd/kube-scheduler/app/server.go
++++ b/cmd/kube-scheduler/app/server.go
+@@ -117,7 +117,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
+ 	ctx, cancel := context.WithCancel(context.Background())
+ 	defer cancel()
+ 	go func() {
+-		stopCh := server.SetupSignalHandler()
++                c := cmd.Context()
++                if c == nil {
++                        c = server.SetupSignalContext()
++                }
++                stopCh := c.Done()
+ 		<-stopCh
+ 		cancel()
+ 	}()
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
 index bb52d49cf4c..f219259505f 100644
 --- a/cmd/kubelet/app/server.go
