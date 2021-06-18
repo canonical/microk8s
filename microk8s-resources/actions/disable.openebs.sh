@@ -114,7 +114,7 @@ openebs-snapshot-promoter \
 --timeout=60s || true
 
     KUBECTL_DELETE_ARGS="--wait=true --timeout=180s --ignore-not-found=true"
-    $KUBECTL delete $KUBECTL_DELETE_ARGS namespace $OPENEBS_NS --timeout=60s || true
+    $KUBECTL delete $KUBECTL_DELETE_ARGS namespace $OPENEBS_NS || true
 
     echo "OpenEBS disabled"
     echo "Manually clean up the directory $SNAP_COMMON/var/openebs/"
