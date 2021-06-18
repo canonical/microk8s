@@ -13,6 +13,8 @@ then
     exit 0
 fi
 
+exit_if_no_permissions
+
 FORCE=false
 PARSED=$(getopt --options=lho: --longoptions=force,help,output: --name "$@" -- "$@")
 eval set -- "$PARSED"
@@ -42,5 +44,6 @@ then
     echo 'Failed to stop microk8s services. Check snapd logs with "journalctl -u snapd.service"'
     exit 1
 else
+    kill_all_container_shims
     run_with_sudo touch ${SNAP_DATA}/var/lock/stopped.lock
 fi
