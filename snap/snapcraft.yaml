@@ -24,7 +24,10 @@ apps:
   daemon-containerd:
     command: run-containerd-with-args
     daemon: notify
+    # when stopped send only sigterm
+    # https://forum.snapcraft.io/t/process-lifecycle-on-snap-refresh/140/37
     stop-mode: sigterm
+    restart-condition: always
     plugs: [kubernetes-support]
   daemon-kubelite:
     command: run-kubelite-with-args
@@ -501,7 +504,6 @@ parts:
         rm actions/*.multus.sh
         rm "actions/multus.yaml"
         rm actions/*.keda.sh
-        rm actions/*.openebs.sh
         rm actions/*.openfaas.sh
         rm -rf "actions/kata"
         rm actions/*.kata.sh

@@ -1,4 +1,4 @@
-From 181019ffd07c6b398595eeb755bc0615b13890b9 Mon Sep 17 00:00:00 2001
+From a9238826fb0d2c00d77ce98d9eaaabac4e5720e5 Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 17 Feb 2021 18:50:40 +0200
 Subject: [PATCH] Handle disconnected leader in three node cluster
@@ -253,7 +253,7 @@ index 72040f0d886..5e43efd93d7 100644
 -sigs.k8s.io/yaml v1.1.0 h1:4A07+ZFc2wgJwo8YNlQpr1rVlgUDlxXHhPJciaPY5gs=
  sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
 diff --git a/vendor/github.com/canonical/kvsql-dqlite/server/server.go b/vendor/github.com/canonical/kvsql-dqlite/server/server.go
-index 78bfa54375d..cc2c0df8264 100644
+index 701c161e3ad..f9dbbb19836 100644
 --- a/vendor/github.com/canonical/kvsql-dqlite/server/server.go
 +++ b/vendor/github.com/canonical/kvsql-dqlite/server/server.go
 @@ -94,7 +94,29 @@ func New(dir string) (*Server, error) {
