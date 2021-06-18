@@ -13,12 +13,15 @@ read -ra ARGUMENTS <<< "$1"
 
 forceful_bdc_delete() {
     
+    MESSAGE="Deleting BDC forcefully"
+    
     if [ $1 = "spc" ]
     then
       EXTRA_LABELS="-l openebs.io/storage-pool-claim"
+      MESSAGE="Deleting BDCs from SPCs forcefully"
     fi
 
-    echo "Deleting BDC forcefully"
+    echo $MESSAGE
     OBJ_LIST=`$KUBECTL -n $OPENEBS_NS get blockdeviceclaims.openebs.io $EXTRA_LABELS -o=jsonpath='{.items[*].metadata.name}'` || true
     $KUBECTL -n $OPENEBS_NS patch blockdeviceclaims.openebs.io ${OBJ_LIST} --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
     $KUBECTL -n $OPENEBS_NS delete blockdeviceclaims.openebs.io ${OBJ_LIST} --timeout=60s || true
@@ -80,6 +83,7 @@ disable_openebs() {
     BD_WITH_FINALIZER=`$KUBECTL -n $OPENEBS_NS get blockdevice.openebs.io -o=jsonpath='{.items[?(@.status.claimState!="Unclaimed")].metadata.name}'` || true
     if [ -n "$BD_WITH_FINALIZER" ]
     then
+      forceful_bdc_delete
       bd_remove_finalizer
     fi
     
