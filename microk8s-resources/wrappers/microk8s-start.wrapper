@@ -12,6 +12,8 @@ then
     exit 0
 fi
 
+exit_if_no_permissions
+
 PARSED=$(getopt --options=lho: --longoptions=help,output: --name "$@" -- "$@")
 eval set -- "$PARSED"
 while true; do
@@ -41,6 +43,7 @@ then
     echo 'Failed to start microk8s services. Check snapd logs with "journalctl -u snapd.service"'
     exit 1
 else
+    start_all_containers
     if run_with_sudo test -e ${SNAP_DATA}/var/lock/stopped.lock
     then
         # Mark the api server as starting

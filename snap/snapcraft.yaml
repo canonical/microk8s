@@ -23,7 +23,11 @@ apps:
     daemon: simple
   daemon-containerd:
     command: run-containerd-with-args
-    daemon: simple
+    daemon: notify
+    # when stopped send only sigterm
+    # https://forum.snapcraft.io/t/process-lifecycle-on-snap-refresh/140/37
+    stop-mode: sigterm
+    restart-condition: always
     plugs: [kubernetes-support]
   daemon-kubelite:
     command: run-kubelite-with-args
