@@ -23,7 +23,11 @@ apps:
     daemon: simple
   daemon-containerd:
     command: run-containerd-with-args
-    daemon: simple
+    daemon: notify
+    # when stopped send only sigterm
+    # https://forum.snapcraft.io/t/process-lifecycle-on-snap-refresh/140/37
+    stop-mode: sigterm
+    restart-condition: always
     plugs: [kubernetes-support]
   daemon-kubelite:
     command: run-kubelite-with-args
@@ -108,6 +112,8 @@ parts:
     plugin: autotools
     stage-packages:
       - libuv1
+    build-packages:
+      - liblz4-dev
     organize:
       usr/lib/: lib/
       include/: usr/include/
@@ -480,46 +486,58 @@ parts:
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
 
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
-      if [ "${ARCH}" != "amd64" ]
+
+      # Remove addons that do not work on arm64
+      if [ "${ARCH}" = "arm64" ]
       then
         # Some actions are only available on amd64
-        # Nvidia support
-        rm "actions/enable.gpu.sh"
-        rm "actions/disable.gpu.sh"
+        rm actions/*.gpu.sh
         rm "actions/gpu.yaml"
-        # Istio support
-        rm "actions/enable.istio.sh"
-        rm "actions/disable.istio.sh"
-        # Knative support
-        rm "actions/enable.knative.sh"
-        rm "actions/disable.knative.sh"
-        # Fluentd support
-        rm "actions/enable.fluentd.sh"
-        rm "actions/disable.fluentd.sh"
+        rm actions/*.istio.sh
+        rm actions/*.knative.sh
+        rm actions/*.fluentd.sh
         rm -rf "actions/fluentd"
-        # Jeager support
-        rm "actions/enable.jaeger.sh"
-        rm "actions/disable.jaeger.sh"
+        rm actions/*.jaeger.sh
         rm -rf "actions/jaeger"
-        # Juju support
-        rm "actions/enable.juju.sh"
-        rm "actions/disable.juju.sh"
-        # Kubeflow support
-        rm "actions/enable.kubeflow.sh"
-        rm "actions/disable.kubeflow.sh"
-        # Kubeflow support
-        rm "actions/enable.multus.sh"
-        rm "actions/disable.multus.sh"
+        rm actions/*.juju.sh
+        rm actions/*.kubeflow.sh
+        rm actions/*.multus.sh
         rm "actions/multus.yaml"
-        # KEDA support
-        rm "actions/enable.keda.sh"
-        rm "actions/disable.keda.sh"
-        # OpenEBS support
-        rm "actions/enable.openebs.sh"
-        rm "actions/disable.openebs.sh"        
-        # OpenFaaS support
-        rm "actions/enable.openfaas.sh"
-        rm "actions/disable.openfaas.sh"
+        rm actions/*.keda.sh
+        rm actions/*.openfaas.sh
+        rm -rf "actions/kata"
+        rm actions/*.kata.sh
+      fi
+
+      # Remove addons that do not work on s390x
+      if [ "${ARCH}" = "s390x" ]
+      then
+        rm actions/*.gpu.sh
+        rm actions/gpu.yaml
+        rm actions/*.istio.sh
+        rm actions/*.knative.sh
+        rm actions/*.fluentd.sh
+        rm -rf "actions/fluentd"
+        rm actions/*.jaeger.sh
+        rm -rf "actions/jaeger"
+        rm actions/*.juju.sh
+        rm actions/*.kubeflow.sh
+        rm actions/*.multus.sh
+        rm actions/multus.yaml
+        rm actions/*.keda.sh
+        rm actions/*.openebs.sh
+        rm actions/*.openfaas.sh
+        rm actions/*.prometheus.sh
+        rm -rf "actions/prometheus"
+        rm actions/*.ambassador.sh
+        rm actions/*.cilium.sh
+        rm actions/*.traefik.sh
+        rm actions/*.registry.sh
+        rm actions/*.storage.sh
+        rm actions/*.portainer.sh
+        rm actions/*.linkerd.sh
+        rm -rf "actions/kata"
+        rm actions/*.kata.sh
       fi
 
       echo "Creating inspect hook"
@@ -529,7 +547,7 @@ parts:
 
   juju:
     plugin: dump
-    source: https://launchpad.net/juju/2.8/2.8.10/+download/juju-2.8.10-k8s.tar.xz
+    source: https://launchpad.net/juju/2.9/2.9.0/+download/juju-2.9.0-k8s.tar.xz
     source-type: tar
     organize:
       juju: bin/juju

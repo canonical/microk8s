@@ -59,6 +59,11 @@ oom_score = 0
       [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia-container-runtime.options]
         BinaryName = "nvidia-container-runtime"
 
+   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
+      runtime_type = "io.containerd.kata.v2"
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata.options]
+        BinaryName = "kata-runtime"
+
   # 'plugins."io.containerd.grpc.v1.cri".cni' contains config related to cni
   [plugins."io.containerd.grpc.v1.cri".cni]
     # bin_dir is the directory in which the binaries for the plugin is kept.
