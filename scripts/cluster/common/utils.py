@@ -1,5 +1,4 @@
 import os
-import sys
 import shutil
 import subprocess
 import time
@@ -10,7 +9,6 @@ from subprocess import check_output, CalledProcessError
 
 import yaml
 import socket
-import warnings
 
 
 def try_set_file_permissions(file):
@@ -207,15 +205,11 @@ def cni_is_patched():
     :return: True if calico knows where the rest of the nodes are.
     """
     yaml = "{}/args/cni-network/cni.yaml".format(os.environ.get("SNAP_DATA"))
-    try:
-        with open(yaml) as f:
-            if "can-reach" in f.read():
-                return True
-            else:
-                return False
-    except IOError as err:
-        print(f"File not found. Error message is: {err}")
-        sys.exit(1)
+    with open(yaml) as f:
+        if "can-reach" in f.read():
+            return True
+        else:
+            return False
 
 
 def patch_cni(ip):
@@ -304,47 +298,3 @@ def unmark_no_cert_reissue():
     lock_file = "{}/var/lock/no-cert-reissue".format(snap_data)
     if os.path.exists(lock_file):
         os.unlink(lock_file)
-
-def is_enabled_addon(addon):
-    """
-    This function checks if an addon is enabled.
-
-    Parameters
-    ----------
-    :param addon: string of the addon name
-
-    Returns
-    ----------
-    :return: boolean
-    """
-    kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/client.config")
-    kube_output = run("kubectl", kubeconfig, "get", "all", "--all-namespaces")
-    cluster_output = run("kubectl", kubeconfig, "get", "clusterroles", "--all-namespaces")
-    kube_output = kube_output + cluster_output
-
-    for row in kube_output.split("\n"):
-        isAddon = False
-        if addon in row:
-            isAddon = True
-            break
-    return isAddon
-
-def run(*args,die=True):
-    # Add wrappers to $PATH
-    env = os.environ.copy()
-    env["PATH"] += ":%s" % os.environ["SNAP"]
-    result = subprocess.run(
-        args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
-    )
-    try:
-        result.check_returncode()
-    except subprocess.CalledProcessError as err:
-        if die:
-            if result.stderr:
-                print(result.stderr.decode("utf-8"))
-            print(err)
-            sys.exit(1)
-        else:
-            raise
-
-    return result.stdout.decode("utf-8")

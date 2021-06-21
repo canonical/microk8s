@@ -17,6 +17,11 @@ then
   exit 1
 fi
 
+if [ -e  "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ] && [ -e "$SNAP_DATA/args/cni-network/05-cilium-cni.conf" ] ; then 
+  echo "Cilium is enabled and is not suitable for multi node clusters."
+  exit 1
+fi
+
 if echo "$*" | grep -q -- 'help'; then
   # Call add_token.py help
   LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/add_token.py --help

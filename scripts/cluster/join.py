@@ -26,8 +26,7 @@ from common.utils import (
     try_initialise_cni_autodetect_for_clustering,
     service,
     mark_no_cert_reissue,
-    unmark_no_cert_reissue,
-    is_enabled_addon
+    unmark_no_cert_reissue
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -1054,12 +1053,6 @@ if __name__ == "__main__":
                 reset_current_etcd_installation()
     else:
         connection_parts = args[0].split("/")
-        """ 
-        I am not totally sure of what part of the code to add this warning.
-        Also after the join request, I noticed that connection to kubectl fails.
-        """
-        if is_enabled_addon("cilium"):
-            print("Cilium add on is enabled and this does not port well with multi node clusters")
         if is_node_running_dqlite():
             join_dqlite(connection_parts, verify)
         else:
