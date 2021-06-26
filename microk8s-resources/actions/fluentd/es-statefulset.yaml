@@ -68,7 +68,7 @@ spec:
     spec:
       serviceAccountName: elasticsearch-logging
       containers:
-        - image: quay.io/fluentd_elasticsearch/elasticsearch:v7.4.3
+        - image: quay.io/fluentd_elasticsearch/elasticsearch:v7.10.2
           name: elasticsearch-logging
           imagePullPolicy: Always
           resources:
