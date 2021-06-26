@@ -16,15 +16,15 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
   name: system:aggregated-metrics-reader
 rules:
-- apiGroups:
-  - metrics.k8s.io
-  resources:
-  - pods
-  - nodes
-  verbs:
-  - get
-  - list
-  - watch
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - pods
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -33,18 +33,18 @@ metadata:
     k8s-app: metrics-server
   name: system:metrics-server
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - nodes
-  - nodes/stats
-  - namespaces
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - nodes
+      - nodes/stats
+      - namespaces
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -58,9 +58,9 @@ roleRef:
   kind: Role
   name: extension-apiserver-authentication-reader
 subjects:
-- kind: ServiceAccount
-  name: metrics-server
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: metrics-server
+    namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -73,9 +73,9 @@ roleRef:
   kind: ClusterRole
   name: system:auth-delegator
 subjects:
-- kind: ServiceAccount
-  name: metrics-server
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: metrics-server
+    namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -88,9 +88,9 @@ roleRef:
   kind: ClusterRole
   name: system:metrics-server
 subjects:
-- kind: ServiceAccount
-  name: metrics-server
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: metrics-server
+    namespace: kube-system
 ---
 apiVersion: v1
 kind: Service
@@ -101,10 +101,10 @@ metadata:
   namespace: kube-system
 spec:
   ports:
-  - name: https
-    port: 443
-    protocol: TCP
-    targetPort: https
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: https
   selector:
     k8s-app: metrics-server
 ---
@@ -128,55 +128,55 @@ spec:
         k8s-app: metrics-server
     spec:
       containers:
-      - args:
-        - --cert-dir=/tmp
-        - --secure-port=443
-        - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
-        - --kubelet-use-node-status-port
-        - --metric-resolution=15s
-        - --kubelet-insecure-tls # ignore kubelet cert        
-        image: k8s.gcr.io/metrics-server/metrics-server:v0.5.0
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /livez
-            port: https
-            scheme: HTTPS
-          periodSeconds: 10
-        name: metrics-server
-        ports:
-        - containerPort: 443
-          name: https
-          protocol: TCP
-        readinessProbe:
-          failureThreshold: 3
-          httpGet:
-            path: /readyz
-            port: https
-            scheme: HTTPS
-          initialDelaySeconds: 20
-          periodSeconds: 10
-        resources:
-          requests:
-            cpu: 100m
-            memory: 200Mi
-        securityContext:
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          runAsUser: 1000
-        volumeMounts:
-        - mountPath: /tmp
-          name: tmp-dir
+        - args:
+            - --cert-dir=/tmp
+            - --secure-port=443
+            - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+            - --kubelet-use-node-status-port
+            - --metric-resolution=15s
+            - --kubelet-insecure-tls # ignore kubelet cert
+          image: k8s.gcr.io/metrics-server/metrics-server:v0.5.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /livez
+              port: https
+              scheme: HTTPS
+            periodSeconds: 10
+          name: metrics-server
+          ports:
+            - containerPort: 443
+              name: https
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /readyz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 200Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp-dir
       nodeSelector:
         kubernetes.io/os: linux
-        kubernetes.io/arch: "$ARCH"          
+        kubernetes.io/arch: "$ARCH"
       priorityClassName: system-cluster-critical
       serviceAccountName: metrics-server
       volumes:
-      - emptyDir: {}
-        name: tmp-dir
-      
+        - emptyDir: {}
+          name: tmp-dir
+
 ---
 apiVersion: apiregistration.k8s.io/v1
 kind: APIService
