@@ -1,4 +1,4 @@
-From a9238826fb0d2c00d77ce98d9eaaabac4e5720e5 Mon Sep 17 00:00:00 2001
+From 5db0dda64f18b5174c5b7c10ff6bfd401fff44ca Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 17 Feb 2021 18:50:40 +0200
 Subject: [PATCH] Handle disconnected leader in three node cluster
