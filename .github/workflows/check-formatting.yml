@@ -15,6 +15,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt-get update
           sudo apt-get install tox
           sudo snap install node --classic
           sudo npm install --save-dev --save-exact -g prettier

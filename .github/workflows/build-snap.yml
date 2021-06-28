@@ -3,10 +3,10 @@ name: Build MicroK8s snap on PR and push to master
 on:
   push:
     branches:
-      - master
+      - 1.21
   pull_request:
     branches:
-      - master
+      - 1.21
 
 jobs:
   build:
