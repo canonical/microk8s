@@ -29,6 +29,7 @@ spec:
       serviceAccountName: traefik-ingress-controller
       terminationGracePeriodSeconds: 60
       hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - image: traefik:2.3
           name: traefik-ingress-lb
