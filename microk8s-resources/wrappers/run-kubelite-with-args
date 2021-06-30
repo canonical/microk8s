@@ -19,6 +19,13 @@ then
   exit 0
 fi
 
+if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  refresh_opt_in_local_config "start-control-plane" "false" kubelite
+else
+  refresh_opt_in_local_config "start-control-plane" "true" kubelite
+fi
+
 ## API server configuration
 # wait up to two minutes for the default network interface to appear.
 n=0

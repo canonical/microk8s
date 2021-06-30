@@ -15,7 +15,7 @@ kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/clie
 
 def get_current_arch():
     # architecture mapping
-    arch_mapping = {"aarch64": "arm64", "x86_64": "amd64"}
+    arch_mapping = {"aarch64": "arm64", "armv7l": "armhf", "x86_64": "amd64"}
 
     return arch_mapping[platform.machine()]
 
@@ -150,8 +150,11 @@ def exit_if_no_permission():
         )
         print("")
         print("    sudo usermod -a -G microk8s {}".format(user))
+        print("    sudo chown -f -R $USER ~/.kube")
         print("")
-        print("The new group will be available on the user's next login.")
+        print(
+            "After this, reload the user groups either via a reboot or by running 'newgrp microk8s'."
+        )
         exit(1)
 
 

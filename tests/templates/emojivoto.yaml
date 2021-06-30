@@ -42,17 +42,17 @@ spec:
     spec:
       serviceAccountName: emoji
       containers:
-      - env:
-        - name: GRPC_PORT
-          value: "8080"
-        image: buoyantio/emojivoto-emoji-svc:v8
-        name: emoji-svc
-        ports:
-        - containerPort: 8080
-          name: grpc
-        resources:
-          requests:
-            cpu: 100m
+        - env:
+            - name: GRPC_PORT
+              value: "8080"
+          image: buoyantio/emojivoto-emoji-svc:v8
+          name: emoji-svc
+          ports:
+            - containerPort: 8080
+              name: grpc
+          resources:
+            requests:
+              cpu: 100m
 status: {}
 ---
 apiVersion: v1
@@ -65,14 +65,13 @@ spec:
     app: emoji-svc
   clusterIP: None
   ports:
-  - name: grpc
-    port: 8080
-    targetPort: 8080
+    - name: grpc
+      port: 8080
+      targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  
   name: voting
   namespace: emojivoto
 spec:
@@ -90,17 +89,17 @@ spec:
     spec:
       serviceAccountName: voting
       containers:
-      - env:
-        - name: GRPC_PORT
-          value: "8080"
-        image: buoyantio/emojivoto-voting-svc:v8
-        name: voting-svc
-        ports:
-        - containerPort: 8080
-          name: grpc
-        resources:
-          requests:
-            cpu: 100m
+        - env:
+            - name: GRPC_PORT
+              value: "8080"
+          image: buoyantio/emojivoto-voting-svc:v8
+          name: voting-svc
+          ports:
+            - containerPort: 8080
+              name: grpc
+          resources:
+            requests:
+              cpu: 100m
 status: {}
 ---
 apiVersion: v1
@@ -113,9 +112,9 @@ spec:
     app: voting-svc
   clusterIP: None
   ports:
-  - name: grpc
-    port: 8080
-    targetPort: 8080
+    - name: grpc
+      port: 8080
+      targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -137,23 +136,23 @@ spec:
     spec:
       serviceAccountName: web
       containers:
-      - env:
-        - name: WEB_PORT
-          value: "80"
-        - name: EMOJISVC_HOST
-          value: emoji-svc.emojivoto:8080
-        - name: VOTINGSVC_HOST
-          value: voting-svc.emojivoto:8080
-        - name: INDEX_BUNDLE
-          value: dist/index_bundle.js
-        image: buoyantio/emojivoto-web:v8
-        name: web-svc
-        ports:
-        - containerPort: 80
-          name: http
-        resources:
-          requests:
-            cpu: 100m
+        - env:
+            - name: WEB_PORT
+              value: "80"
+            - name: EMOJISVC_HOST
+              value: emoji-svc.emojivoto:8080
+            - name: VOTINGSVC_HOST
+              value: voting-svc.emojivoto:8080
+            - name: INDEX_BUNDLE
+              value: dist/index_bundle.js
+          image: buoyantio/emojivoto-web:v8
+          name: web-svc
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              cpu: 100m
 status: {}
 ---
 apiVersion: v1
@@ -166,9 +165,9 @@ spec:
   selector:
     app: web-svc
   ports:
-  - name: http
-    port: 80
-    targetPort: 80
+    - name: http
+      port: 80
+      targetPort: 80
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -184,20 +183,21 @@ spec:
   template:
     metadata:
       annotations:
-        linkerd.io/inject: enabled    
+        linkerd.io/inject: enabled
       labels:
         app: vote-bot
     spec:
       containers:
-      - command:
-        - emojivoto-vote-bot
-        env:
-        - name: WEB_HOST
-          value: web-svc.emojivoto:80
-        image: buoyantio/emojivoto-web:v8
-        name: vote-bot
-        resources:
-          requests:
-            cpu: 10m
+        - command:
+            - emojivoto-vote-bot
+          env:
+            - name: WEB_HOST
+              value: web-svc.emojivoto:80
+          image: buoyantio/emojivoto-web:v8
+          name: vote-bot
+          resources:
+            requests:
+              cpu: 10m
 status: {}
 ---
+

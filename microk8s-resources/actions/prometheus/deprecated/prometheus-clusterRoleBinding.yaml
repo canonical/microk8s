@@ -7,6 +7,6 @@ roleRef:
   kind: ClusterRole
   name: prometheus-k8s
 subjects:
-- kind: ServiceAccount
-  name: prometheus-k8s
-  namespace: monitoring
+  - kind: ServiceAccount
+    name: prometheus-k8s
+    namespace: monitoring

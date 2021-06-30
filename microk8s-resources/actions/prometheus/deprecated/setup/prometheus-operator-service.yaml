@@ -10,9 +10,9 @@ metadata:
 spec:
   clusterIP: None
   ports:
-  - name: http
-    port: 8080
-    targetPort: http
+    - name: http
+      port: 8080
+      targetPort: http
   selector:
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator

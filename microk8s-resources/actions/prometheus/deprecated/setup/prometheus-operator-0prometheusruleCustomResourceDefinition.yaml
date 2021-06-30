@@ -13,51 +13,60 @@ spec:
     openAPIV3Schema:
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
+          description:
+            "APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources"
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this
+          description:
+            "Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
           type: string
         metadata:
-          description: ObjectMeta is metadata that all persisted resources must have,
+          description:
+            ObjectMeta is metadata that all persisted resources must have,
             which includes all objects users must create.
           properties:
             annotations:
-              description: 'Annotations is an unstructured key value map stored with
+              description:
+                "Annotations is an unstructured key value map stored with
                 a resource that may be set by external tools to store and retrieve
                 arbitrary metadata. They are not queryable and should be preserved
-                when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations'
+                when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations"
               type: object
             clusterName:
-              description: The name of the cluster which the object belongs to. This
+              description:
+                The name of the cluster which the object belongs to. This
                 is used to distinguish resources with same name and namespace in different
                 clusters. This field is not set anywhere right now and apiserver is
                 going to ignore it if set in create or update request.
               type: string
             creationTimestamp:
-              description: Time is a wrapper around time.Time which supports correct
+              description:
+                Time is a wrapper around time.Time which supports correct
                 marshaling to YAML and JSON.  Wrappers are provided for many of the
                 factory methods that the time package offers.
               format: date-time
               type: string
             deletionGracePeriodSeconds:
-              description: Number of seconds allowed for this object to gracefully
+              description:
+                Number of seconds allowed for this object to gracefully
                 terminate before it will be removed from the system. Only set when
                 deletionTimestamp is also set. May only be shortened. Read-only.
               format: int64
               type: integer
             deletionTimestamp:
-              description: Time is a wrapper around time.Time which supports correct
+              description:
+                Time is a wrapper around time.Time which supports correct
                 marshaling to YAML and JSON.  Wrappers are provided for many of the
                 factory methods that the time package offers.
               format: date-time
               type: string
             finalizers:
-              description: Must be empty before the object is deleted from the registry.
+              description:
+                Must be empty before the object is deleted from the registry.
                 Each entry is an identifier for the responsible component that will
                 remove the entry from the list. If the deletionTimestamp of the object
                 is non-nil, entries in this list can only be removed.
@@ -73,17 +82,20 @@ spec:
                 Applied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency
               type: string
             generation:
-              description: A sequence number representing a specific generation of
+              description:
+                A sequence number representing a specific generation of
                 the desired state. Populated by the system. Read-only.
               format: int64
               type: integer
             labels:
-              description: 'Map of string keys and values that can be used to organize
+              description:
+                "Map of string keys and values that can be used to organize
                 and categorize (scope and select) objects. May match selectors of
-                replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels'
+                replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels"
               type: object
             managedFields:
-              description: ManagedFields maps workflow-id and version to the set of
+              description:
+                ManagedFields maps workflow-id and version to the set of
                 fields that are managed by that workflow. This is mostly for internal
                 housekeeping, and users typically shouldn't need to set or understand
                 this field. A workflow can be the user's name, a controller's name,
@@ -91,18 +103,21 @@ spec:
                 is always in the version that the workflow used when modifying the
                 object.
               items:
-                description: ManagedFieldsEntry is a workflow-id, a FieldSet and the
+                description:
+                  ManagedFieldsEntry is a workflow-id, a FieldSet and the
                   group version of the resource that the fieldset applies to.
                 properties:
                   apiVersion:
-                    description: APIVersion defines the version of this resource that
+                    description:
+                      APIVersion defines the version of this resource that
                       this field set applies to. The format is "group/version" just
                       like the top-level APIVersion field. It is necessary to track
                       the version of a field set because it cannot be automatically
                       converted.
                     type: string
                   fieldsType:
-                    description: 'FieldsType is the discriminator for the different
+                    description:
+                      'FieldsType is the discriminator for the different
                       fields format and version. There is currently only one possible
                       value: "FieldsV1"'
                     type: string
@@ -115,16 +130,19 @@ spec:
                       The exact format is defined in sigs.k8s.io/structured-merge-diff
                     type: object
                   manager:
-                    description: Manager is an identifier of the workflow managing
+                    description:
+                      Manager is an identifier of the workflow managing
                       these fields.
                     type: string
                   operation:
-                    description: Operation is the type of operation which lead to
+                    description:
+                      Operation is the type of operation which lead to
                       this ManagedFieldsEntry being created. The only valid values
                       for this field are 'Apply' and 'Update'.
                     type: string
                   time:
-                    description: Time is a wrapper around time.Time which supports
+                    description:
+                      Time is a wrapper around time.Time which supports
                       correct marshaling to YAML and JSON.  Wrappers are provided
                       for many of the factory methods that the time package offers.
                     format: date-time
@@ -132,11 +150,12 @@ spec:
                 type: object
               type: array
             name:
-              description: 'Name must be unique within a namespace. Is required when
+              description:
+                "Name must be unique within a namespace. Is required when
                 creating resources, although some resources may allow a client to
                 request the generation of an appropriate name automatically. Name
                 is primarily intended for creation idempotence and configuration definition.
-                Cannot be updated. More info: http://kubernetes.io/docs/user-guide/identifiers#names'
+                Cannot be updated. More info: http://kubernetes.io/docs/user-guide/identifiers#names"
               type: string
             namespace:
               description: |-
@@ -145,13 +164,15 @@ spec:
                 Must be a DNS_LABEL. Cannot be updated. More info: http://kubernetes.io/docs/user-guide/namespaces
               type: string
             ownerReferences:
-              description: List of objects depended by this object. If ALL objects
+              description:
+                List of objects depended by this object. If ALL objects
                 in the list have been deleted, this object will be garbage collected.
                 If this object is managed by a controller, then an entry in this list
                 will point to this controller, with the controller field set to true.
                 There cannot be more than one managing controller.
               items:
-                description: OwnerReference contains enough information to let you
+                description:
+                  OwnerReference contains enough information to let you
                   identify an owning object. An owning object must be in the same
                   namespace as the dependent, or be cluster-scoped, so there is no
                   namespace field.
@@ -160,7 +181,8 @@ spec:
                     description: API version of the referent.
                     type: string
                   blockOwnerDeletion:
-                    description: If true, AND if the owner has the "foregroundDeletion"
+                    description:
+                      If true, AND if the owner has the "foregroundDeletion"
                       finalizer, then the owner cannot be deleted from the key-value
                       store until this reference is removed. Defaults to false. To
                       set this field, a user needs "delete" permission of the owner,
@@ -170,19 +192,19 @@ spec:
                     description: If true, this reference points to the managing controller.
                     type: boolean
                   kind:
-                    description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                    description: "Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds"
                     type: string
                   name:
-                    description: 'Name of the referent. More info: http://kubernetes.io/docs/user-guide/identifiers#names'
+                    description: "Name of the referent. More info: http://kubernetes.io/docs/user-guide/identifiers#names"
                     type: string
                   uid:
-                    description: 'UID of the referent. More info: http://kubernetes.io/docs/user-guide/identifiers#uids'
+                    description: "UID of the referent. More info: http://kubernetes.io/docs/user-guide/identifiers#uids"
                     type: string
                 required:
-                - apiVersion
-                - kind
-                - name
-                - uid
+                  - apiVersion
+                  - kind
+                  - name
+                  - uid
                 type: object
               type: array
             resourceVersion:
@@ -205,13 +227,15 @@ spec:
               type: string
           type: object
         spec:
-          description: PrometheusRuleSpec contains specification parameters for a
+          description:
+            PrometheusRuleSpec contains specification parameters for a
             Rule.
           properties:
             groups:
               description: Content of Prometheus rule file
               items:
-                description: RuleGroup is a list of sequentially evaluated recording
+                description:
+                  RuleGroup is a list of sequentially evaluated recording
                   and alerting rules.
                 properties:
                   interval:
@@ -228,8 +252,8 @@ spec:
                           type: object
                         expr:
                           anyOf:
-                          - type: string
-                          - type: integer
+                            - type: string
+                            - type: integer
                         for:
                           type: string
                         labels:
@@ -237,12 +261,12 @@ spec:
                         record:
                           type: string
                       required:
-                      - expr
+                        - expr
                       type: object
                     type: array
                 required:
-                - name
-                - rules
+                  - name
+                  - rules
                 type: object
               type: array
           type: object
