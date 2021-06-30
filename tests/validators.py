@@ -1,6 +1,5 @@
 import time
 import os
-import shutil
 import re
 import requests
 import platform
@@ -81,14 +80,6 @@ def common_ingress():
     attempt = 50
     while attempt >= 0:
         output = kubectl("get ing")
-        if "microbot.127.0.0.1.xip.io" in output:
-            break
-        time.sleep(5)
-        attempt -= 1
-    assert "microbot.127.0.0.1.xip.io" in output
-    attempt = 50
-    while attempt >= 0:
-        output = kubectl("get ing")
         if "microbot.127.0.0.1.nip.io" in output:
             break
         time.sleep(5)
@@ -99,24 +90,13 @@ def common_ingress():
     attempt = 50
     while attempt >= 0:
         try:
-            resp = requests.get("http://microbot.127.0.0.1.xip.io/")
+            resp = requests.get("http://microbot.127.0.0.1.nip.io/")
             if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                 service_ok = True
                 break
         except requests.RequestException:
             time.sleep(5)
             attempt -= 1
-    if resp.status_code != 200 or "microbot.png" not in resp.content.decode("utf-8"):
-        attempt = 50
-        while attempt >= 0:
-            try:
-                resp = requests.get("http://microbot.127.0.0.1.nip.io/")
-                if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
-                    service_ok = True
-                    break
-            except requests.RequestException:
-                time.sleep(5)
-                attempt -= 1
 
     assert service_ok
 
@@ -162,7 +142,6 @@ def validate_ambassador():
 
     # `Ingress`es must be annotatated for being recognized by Ambassador
     kubectl("annotate ingress microbot-ingress-nip kubernetes.io/ingress.class=ambassador")
-    kubectl("annotate ingress microbot-ingress-xip kubernetes.io/ingress.class=ambassador")
 
     common_ingress()
 
@@ -446,25 +425,11 @@ def validate_cilium():
 
 def validate_multus():
     """
-    Validate multus by deploying alpine pod with 3 interfaces.
+    Validate multus by making sure the multus pod is running.
     """
 
     wait_for_installation()
-
-    here = os.path.dirname(os.path.abspath(__file__))
-    shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
-    networks = os.path.join(here, "templates", "multus-networks.yaml")
-    kubectl("create -f {}".format(networks))
-    manifest = os.path.join(here, "templates", "multus-alpine.yaml")
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=multus-alpine")
-    output = kubectl("exec multus-alpine -- ifconfig eth1", timeout_insec=900, err_out="no")
-    assert "10.111.111.111" in output
-    output = kubectl("exec multus-alpine -- ifconfig eth2", timeout_insec=900, err_out="no")
-    assert "10.222.222.222" in output
-    kubectl("delete -f {}".format(manifest))
-    kubectl("delete -f {}".format(networks))
-    shutil.rmtree("/tmp/microk8s-multus-test-nets", ignore_errors=True)
+    wait_for_pod_state("", "kube-system", "running", label="app=multus")
 
 
 def validate_kubeflow():
@@ -543,3 +508,46 @@ def validate_portainer():
     Validate portainer
     """
     wait_for_pod_state("", "portainer", "running", label="app.kubernetes.io/name=portainer")
+
+
+def validate_openfaas():
+    """
+    Validate openfaas
+    """
+    wait_for_pod_state("", "openfaas", "running", label="app=gateway")
+
+
+def validate_openebs():
+    """
+    Validate OpenEBS
+    """
+    wait_for_installation()
+    wait_for_pod_state(
+        "",
+        "openebs",
+        "running",
+        label="openebs.io/component-name=maya-apiserver",
+        timeout_insec=900,
+    )
+    print("OpenEBS is up and running.")
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "openebs-test.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state(
+        "", "default", "running", label="app=openebs-test-busybox", timeout_insec=900
+    )
+    output = kubectl("exec openebs-test-busybox -- ls /", timeout_insec=900, err_out="no")
+    assert "my-data" in output
+    kubectl("delete -f {}".format(manifest))
+
+
+def validate_kata():
+    """
+    Validate Kata
+    """
+    wait_for_installation()
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "nginx-kata.yaml")
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("", "default", "running", label="app=kata")
+    kubectl("delete -f {}".format(manifest))

@@ -12,14 +12,14 @@ fi
 export KUBE_ARCH
 export ETCD_VERSION="${ETCD_VERSION:-v3.4.3}"
 export FLANNELD_VERSION="${FLANNELD_VERSION:-v0.11.0}"
-export CNI_VERSION="${CNI_VERSION:-v0.7.1}"
+export CNI_VERSION="${CNI_VERSION:-v0.8.7}"
 export KNATIVE_SERVING_VERSION="${KNATIVE_SERVING_VERSION:-v0.13.0}"
 export KNATIVE_EVENTING_VERSION="${KNATIVE_EVENTING_VERSION:-v0.13.0}"
 # RUNC commit matching the containerd release commit
-# Tag 1.4.3
-export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-269548fa27e0089a8b8278fc4fc781d7f65a939b}"
-# Release v1.0.0-rc92
-export RUNC_COMMIT="${RUNC_COMMIT:-ff819c7e9184c13b7c2607fe6c30ae19403a7aff}"
+# Tag 1.5.2
+export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-36cc874494a56a253cd181a1a685b44b58a2e34a}"
+# Release v1.0.0-rc95
+export RUNC_COMMIT="${RUNC_COMMIT:-b9ee9c6314599f1b4a7f497e1f1f856fe433d3b7}"
 # Set this to the kubernetes fork you want to build binaries from
 export KUBERNETES_REPOSITORY="${KUBERNETES_REPOSITORY:-github.com/kubernetes/kubernetes}"
 

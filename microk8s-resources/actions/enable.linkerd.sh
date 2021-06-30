@@ -12,7 +12,7 @@ ARCH=$(arch)
 
 # check if linkerd cli is already in the system.  Download if it doesn't exist.
 if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
-  LINKERD_VERSION="${LINKERD_VERSION:-v2.9.2}"
+  LINKERD_VERSION="${LINKERD_VERSION:-v2.10.2}"
   echo "Fetching Linkerd2 version $LINKERD_VERSION."
   run_with_sudo mkdir -p "$SNAP_DATA/bin"
   LINKERD_VERSION=$(echo $LINKERD_VERSION | sed 's/v//g')
@@ -29,6 +29,9 @@ KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 sleep 5
 ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 >/dev/null
 
-
+# Enable linkerd control plane
 "$SNAP_DATA/bin/linkerd" "--kubeconfig=$SNAP_DATA/credentials/client.config" install "${argz[@]}" | $KUBECTL apply -f -
+echo "Installing linkerd viz extension"
+# Enable linkerd visualization extension
+"$SNAP_DATA/bin/linkerd" "--kubeconfig=$SNAP_DATA/credentials/client.config" viz install | $KUBECTL apply -f -
 echo "Linkerd is starting"

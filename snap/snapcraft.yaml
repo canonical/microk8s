@@ -24,6 +24,8 @@ apps:
   daemon-containerd:
     command: run-containerd-with-args
     daemon: notify
+    # when stopped send only sigterm
+    # https://forum.snapcraft.io/t/process-lifecycle-on-snap-refresh/140/37
     stop-mode: sigterm
     restart-condition: always
     plugs: [kubernetes-support]
@@ -110,6 +112,8 @@ parts:
     plugin: autotools
     stage-packages:
       - libuv1
+    build-packages:
+      - liblz4-dev
     organize:
       usr/lib/: lib/
       include/: usr/include/
@@ -178,7 +182,10 @@ parts:
       snap refresh go --channel=1.15/stable || true
       go version
       export GOPATH=${SNAPCRAFT_STAGE}
-      CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
+      export CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" 
+      export CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" 
+      export CGO_LDFLAGS_ALLOW="-Wl,-z,now"
+      go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       cp $GOPATH/bin/dqlite $SNAPCRAFT_PART_INSTALL/bin/
 
@@ -214,7 +221,8 @@ parts:
     source: build-scripts/
     override-build: |
       . ./set-env-variables.sh
-      curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-$KUBE_ARCH-${CNI_VERSION}.tgz
+      rm -rf cni*
+      curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-$KUBE_ARCH-${CNI_VERSION}.tgz
       mkdir cni
       tar -xzvf cni-*.tgz -C cni/
       snapcraftctl build
@@ -249,6 +257,7 @@ parts:
       - git
     override-build: |
       set -eux
+      snap refresh go --channel=1.16/stable || true
       . ./set-env-variables.sh
 
       # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
@@ -258,8 +267,6 @@ parts:
         if [ -z "${KUBE_SNAP_BINS}" ]; then
           . ./set-env-binaries-location.sh
         fi
-        echo "Downloading binaries"
-        . ./fetch-other-binaries.sh
         echo "Building k8s binaries"
         . ./build-k8s-binaries.sh
       else
@@ -272,13 +279,6 @@ parts:
       bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
       bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
 
-      mkdir -p ./actions/
-      if [ "${ARCH}" = "amd64" ]
-      then
-        # Knative support
-        echo "Preparing knative"
-        cp -r $KUBE_SNAP_BINS/knative-yaml ./actions/knative
-      fi
       snapcraftctl build
     organize:
       bins/*: .
@@ -286,7 +286,6 @@ parts:
       - kubelite
       - kubectl
       - kubectl.bash
-      - actions
 
   libmnl:
     plugin: autotools
@@ -330,7 +329,7 @@ parts:
 
   containerd:
     build-snaps: [go]
-    after: [iptables]
+    after: [iptables, runc]
     build-attributes: [no-patchelf]
     source: build-scripts/
     plugin: dump
@@ -344,15 +343,6 @@ parts:
       go version
       export GOPATH=$(realpath ../go)
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-
-      # Build runc
-      go get -d github.com/opencontainers/runc
-      (
-        cd $GOPATH/src/github.com/opencontainers/runc
-        git checkout ${RUNC_COMMIT}
-        make BUILDTAGS='seccomp apparmor'
-      )
-      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
 
       # Build containerd
       rm -rf $GOPATH
@@ -378,7 +368,38 @@ parts:
       - libnss-mymachines
       - conntrack
       - libssl1.0.0
-      - coreutils
+    stage:
+      - -sbin/xtables-multi
+      - -sbin/iptables*
+      - -lib/xtables
+
+  runc:
+    build-snaps: [go]
+    after: [iptables]
+    source: build-scripts/
+    plugin: dump
+    build-packages:
+      - btrfs-tools
+      - libseccomp-dev
+    override-build: |
+      set -eux
+      . $SNAPCRAFT_PART_SRC/set-env-variables.sh
+      snap refresh go --channel=1.15/stable || true
+      go version
+      export GOPATH=$(realpath ../go)
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+
+      # Build runc
+      go get -d github.com/opencontainers/runc
+      (
+        cd $GOPATH/src/github.com/opencontainers/runc
+        git checkout ${RUNC_COMMIT}
+        make BUILDTAGS='seccomp apparmor'
+      )
+      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
+
+      # Assemble the snap
+      snapcraftctl build
     stage:
       - -sbin/xtables-multi
       - -sbin/iptables*
@@ -398,16 +419,23 @@ parts:
       - hostname
       - squashfs-tools
       - tar
+      - coreutils
       - diffutils
+      - iproute2
+      - ethtool
+      - net-tools
+      - util-linux
+      - libatm1
+      - zfsutils-linux
 
   cluster-agent:
     plugin: python
     python-version: python3
     source: .
     python-packages:
-      - flask
-      - PyYAML
-      - netifaces
+      - flask == 1.1.2
+      - PyYAML == 5.3.1
+      - netifaces == 0.10.9
     stage-packages:
       - python3-openssl
       - openssl
@@ -428,14 +456,6 @@ parts:
       - openssl
       - file
       - dpkg
-    stage-packages:
-      - ethtool
-      - libatm1
-      - net-tools
-      - util-linux
-      - zfsutils-linux
-      - iproute2
-      - python3-click
     source: .
     prime:
       - -README*
@@ -469,40 +489,58 @@ parts:
       cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
 
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
-      if [ "${ARCH}" != "amd64" ]
+
+      # Remove addons that do not work on arm64
+      if [ "${ARCH}" = "arm64" ]
       then
         # Some actions are only available on amd64
-        # Nvidia support
-        rm "actions/enable.gpu.sh"
-        rm "actions/disable.gpu.sh"
+        rm actions/*.gpu.sh
         rm "actions/gpu.yaml"
-        # Istio support
-        rm "actions/enable.istio.sh"
-        rm "actions/disable.istio.sh"
-        # Knative support
-        rm "actions/enable.knative.sh"
-        rm "actions/disable.knative.sh"
-        # Fluentd support
-        rm "actions/enable.fluentd.sh"
-        rm "actions/disable.fluentd.sh"
+        rm actions/*.istio.sh
+        rm actions/*.knative.sh
+        rm actions/*.fluentd.sh
         rm -rf "actions/fluentd"
-        # Jeager support
-        rm "actions/enable.jaeger.sh"
-        rm "actions/disable.jaeger.sh"
+        rm actions/*.jaeger.sh
         rm -rf "actions/jaeger"
-        # Juju support
-        rm "actions/enable.juju.sh"
-        rm "actions/disable.juju.sh"
-        # Kubeflow support
-        rm "actions/enable.kubeflow.sh"
-        rm "actions/disable.kubeflow.sh"
-        # Kubeflow support
-        rm "actions/enable.multus.sh"
-        rm "actions/disable.multus.sh"
+        rm actions/*.juju.sh
+        rm actions/*.kubeflow.sh
+        rm actions/*.multus.sh
         rm "actions/multus.yaml"
-        # KEDA support
-        rm "actions/enable.keda.sh"
-        rm "actions/disable.keda.sh"
+        rm actions/*.keda.sh
+        rm actions/*.openfaas.sh
+        rm -rf "actions/kata"
+        rm actions/*.kata.sh
+      fi
+
+      # Remove addons that do not work on s390x
+      if [ "${ARCH}" = "s390x" ]
+      then
+        rm actions/*.gpu.sh
+        rm actions/gpu.yaml
+        rm actions/*.istio.sh
+        rm actions/*.knative.sh
+        rm actions/*.fluentd.sh
+        rm -rf "actions/fluentd"
+        rm actions/*.jaeger.sh
+        rm -rf "actions/jaeger"
+        rm actions/*.juju.sh
+        rm actions/*.kubeflow.sh
+        rm actions/*.multus.sh
+        rm actions/multus.yaml
+        rm actions/*.keda.sh
+        rm actions/*.openebs.sh
+        rm actions/*.openfaas.sh
+        rm actions/*.prometheus.sh
+        rm -rf "actions/prometheus"
+        rm actions/*.ambassador.sh
+        rm actions/*.cilium.sh
+        rm actions/*.traefik.sh
+        rm actions/*.registry.sh
+        rm actions/*.storage.sh
+        rm actions/*.portainer.sh
+        rm actions/*.linkerd.sh
+        rm -rf "actions/kata"
+        rm actions/*.kata.sh
       fi
 
       echo "Creating inspect hook"
@@ -512,7 +550,7 @@ parts:
 
   juju:
     plugin: dump
-    source: https://launchpad.net/juju/2.8/2.8.6/+download/juju-2.8.6-k8s.tar.xz
+    source: https://launchpad.net/juju/2.9/2.9.0/+download/juju-2.9.0-k8s.tar.xz
     source-type: tar
     organize:
       juju: bin/juju

@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Install lxd
         run: |
@@ -42,7 +42,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Download built snap
         uses: actions/download-artifact@v2
@@ -67,17 +67,22 @@ jobs:
           set -eux
           export JUJU_DATA=/var/snap/microk8s/current/juju/share/juju
           sudo apt update
-          sudo apt install -y libssl-dev python3-setuptools firefox-geckodriver
+          sudo apt install -y libssl-dev python3-pip firefox-geckodriver
           git clone https://github.com/juju-solutions/bundle-kubeflow.git
           cd bundle-kubeflow
+          git reset --hard f5c744b9
           sudo pip3 install -r requirements.txt -r test-requirements.txt
           sudo microk8s status --wait-ready
           sudo microk8s kubectl -n kube-system rollout status ds/calico-node
-          trap 'sudo pkill -f svc/pipelines-api' SIGINT SIGTERM EXIT
-          sudo microk8s kubectl -n kubeflow port-forward svc/pipelines-api 8888:8888 &
+          trap 'sudo pkill -f svc/kfp-api' SIGINT SIGTERM EXIT
+          sudo microk8s kubectl -n kubeflow port-forward svc/kfp-api 8888:8888 &
           (i=30; while ! curl localhost:8888 ; do ((--i)) || exit; sleep 1; done)
           sudo -E pytest -vvs -m edge -k 'not kubectl'
           sudo -E pytest -vvs -m edge -k 'kubectl'
+
+      - name: Juju status
+        run: sg microk8s -c 'microk8s juju status'
+        if: failure()
 
       - name: Get MicroK8s pods
         run: sudo microk8s kubectl get pods -A
@@ -126,7 +131,7 @@ jobs:
         bundle: [full, lite]
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Download built snap
         uses: actions/download-artifact@v2
@@ -180,18 +185,24 @@ jobs:
             set -eux
             export JUJU_DATA=/var/snap/microk8s/current/juju/share/juju
             sudo apt update
-            sudo apt install -y libssl-dev python3-setuptools firefox-geckodriver
+            sudo apt install -y libssl-dev python3-pip firefox-geckodriver
             git clone https://github.com/juju-solutions/bundle-kubeflow.git
             cd bundle-kubeflow
+            git reset --hard f5c744b9
             sudo pip3 install -r requirements.txt -r test-requirements.txt
             sudo microk8s status --wait-ready
             sudo microk8s kubectl -n kube-system rollout status ds/calico-node
-            trap 'sudo pkill -f svc/pipelines-api' SIGINT SIGTERM EXIT
-            microk8s kubectl -n kubeflow port-forward svc/pipelines-api 8888:8888 &
+            trap 'sudo pkill -f svc/kfp-api' SIGINT SIGTERM EXIT
+            microk8s kubectl -n kubeflow port-forward svc/kfp-api 8888:8888 &
             (i=30; while ! curl localhost:8888 ; do ((--i)) || exit; sleep 1; done)
-            pytest -vvs -m ${{ matrix.bundle }} -k 'not kubectl'
-            pytest -vvs -m ${{ matrix.bundle }} -k 'kubectl'
+            pytest -vvs -m ${{ matrix.bundle }} -k 'not kubectl and not selenium'
+            pytest -vvs -m ${{ matrix.bundle }} -k kubectl
+            pytest -vvs -m ${{ matrix.bundle }} -k selenium
           EOF
+
+      - name: Juju status
+        run: juju ssh ubuntu/0 microk8s juju status
+        if: failure()
 
       - name: Get MicroK8s pods
         run: juju ssh ubuntu/0 sudo microk8s kubectl get pods -A --sort-by=.metadata.name

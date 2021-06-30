@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
       - name: Install lxd
         run: |
           sudo lxd init --auto
@@ -32,6 +32,11 @@ jobs:
         with:
           name: microk8s.snap
           path: microk8s.snap
+      # TEMPORARY WHILE GITHUB FIXES THIS https://github.com/actions/virtual-environments/issues/3185
+      - name: Add the current IP address, long hostname and short hostname record to /etc/hosts file
+        run: |
+          echo -e "$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)\t$(hostname -f) $(hostname -s)" | sudo tee -a /etc/hosts
+      # DO NOT FORGET TO REMOVE CODE ABOVE WHEN ISSUE IS ADDRESSED!
       - name: Running upgrade path test
         run: |
           set -x
@@ -43,6 +48,8 @@ jobs:
       - name: Running addons tests
         run: |
           set -x
+          sudo apt-get -y install open-iscsi
+          sudo systemctl enable iscsid
           sudo snap install *.snap --classic --dangerous
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"

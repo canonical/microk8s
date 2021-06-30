@@ -11,11 +11,12 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Install dependencies
         run: |
-          sudo apt-get install tox
+          sudo apt-get update
+          sudo apt-get install tox --fix-missing
           sudo snap install node --classic
           sudo npm install --save-dev --save-exact -g prettier
       - name: Check Python formatting

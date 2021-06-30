@@ -13,12 +13,13 @@ from validators import (
     validate_jaeger,
     validate_metallb_config,
 )
-from subprocess import check_call, CalledProcessError, check_output
+from subprocess import check_call, CalledProcessError
 from utils import (
     microk8s_enable,
     wait_for_pod_state,
     wait_for_installation,
     run_until_success,
+    is_container,
 )
 
 upgrade_from = os.environ.get("UPGRADE_MICROK8S_FROM", "beta")
@@ -202,29 +203,3 @@ class TestUpgrade(object):
         if not is_container():
             # On lxc umount docker overlay is not permitted.
             check_call("sudo snap remove microk8s".split())
-
-
-def is_container():
-    """
-    Returns: True if the deployment is in a VM/container.
-
-    """
-    try:
-        if os.path.isdir("/run/systemd/system"):
-            container = check_output("sudo systemd-detect-virt --container".split())
-            print("Tests are running in {}".format(container))
-            return True
-    except CalledProcessError:
-        print("systemd-detect-virt did not detect a container")
-
-    if os.path.exists("/run/container_type"):
-        return True
-
-    try:
-        check_call("sudo grep -E (lxc|hypervisor) /proc/1/environ /proc/cpuinfo".split())
-        print("Tests are running in an undetectable container")
-        return True
-    except CalledProcessError:
-        print("no indication of a container in /proc")
-
-    return False

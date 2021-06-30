@@ -29,6 +29,9 @@ from validators import (
     validate_coredns_config,
     validate_external_dns,
     validate_portainer,
+    validate_openfaas,
+    validate_openebs,
+    validate_kata,
 )
 from utils import (
     microk8s_enable,
@@ -36,8 +39,9 @@ from utils import (
     wait_for_namespace_termination,
     microk8s_disable,
     microk8s_reset,
+    is_container,
 )
-from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run
+from subprocess import PIPE, STDOUT, CalledProcessError, check_call, run, check_output
 
 
 class TestAddons(object):
@@ -70,6 +74,36 @@ class TestAddons(object):
 
         assert expected == {a["name"]: a["status"] for a in status["addons"]}
 
+    @pytest.mark.skipif(
+        platform.machine() != "s390x", reason="This test is for the limited set of addons s390x has"
+    )
+    def test_basic_s390x(self):
+        """
+        Sets up and tests dashboard, dns, storage, registry, ingress, metrics server.
+
+        """
+        ip_ranges = "8.8.8.8,1.1.1.1"
+        print("Enabling DNS")
+        microk8s_enable("{}:{}".format("dns", ip_ranges), timeout_insec=500)
+        wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
+        print("Validating DNS config")
+        validate_coredns_config(ip_ranges)
+        print("Enabling metrics-server")
+        microk8s_enable("metrics-server")
+        print("Enabling dashboard")
+        microk8s_enable("dashboard")
+        print("Validating dashboard")
+        validate_dns_dashboard()
+        print("Validating Port Forward")
+        validate_forward()
+        print("Validating the Metrics Server")
+        validate_metrics_server()
+        print("Disabling metrics-server")
+        microk8s_disable("metrics-server")
+        print("Disabling dashboard")
+        microk8s_disable("dashboard")
+
+    @pytest.mark.skipif(platform.machine() == "s390x", reason="Not available on s390x")
     def test_basic(self):
         """
         Sets up and tests dashboard, dns, storage, registry, ingress, metrics server.
@@ -348,6 +382,7 @@ class TestAddons(object):
         print("Disabling Multus")
         microk8s_disable("multus")
 
+    @pytest.mark.skipif(platform.machine() == "s390x", reason="Not available on s390x")
     def test_portainer(self):
         """
         Sets up and validates Portainer.
@@ -359,6 +394,22 @@ class TestAddons(object):
         print("Disabling Portainer")
         microk8s_disable("portainer")
 
+    @pytest.mark.skipif(
+        platform.machine() != "x86_64",
+        reason="OpenFaaS tests are only relevant in x86 architectures",
+    )
+    def test_openfaas(self):
+        """
+        Sets up and validates OpenFaaS.
+        """
+        print("Enabling openfaas")
+        microk8s_enable("openfaas")
+        print("Validating openfaas")
+        validate_openfaas()
+        print("Disabling openfaas")
+        microk8s_disable("openfaas")
+
+    @pytest.mark.skipif(platform.machine() == "s390x", reason="Not available on s390x")
     def test_traefik(self):
         """
         Sets up and validates traefik.
@@ -397,3 +448,42 @@ class TestAddons(object):
             os.remove("backupfile.tar.gz")
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
+
+    @pytest.mark.skipif(
+        platform.machine() == "s390x",
+        reason="OpenEBS is not available on s390x",
+    )
+    def test_openebs(self):
+        """
+        Sets up and validates openebs.
+        """
+        print("Enabling OpenEBS")
+        try:
+            check_output("systemctl is-enabled iscsid".split()).strip().decode("utf8")
+            microk8s_enable("openebs")
+            print("Validating OpenEBS")
+            validate_openebs()
+            print("Disabling OpenEBS")
+            microk8s_disable("openebs:force")
+        except CalledProcessError:
+            print("Nothing to do, since iscsid is not available")
+            return
+
+    @pytest.mark.skipif(
+        platform.machine() != "x86_64",
+        reason="Kata tests are only relevant in x86 architectures",
+    )
+    @pytest.mark.skipif(
+        is_container(),
+        reason="Kata tests are only possible on real hardware",
+    )
+    def test_kata(self):
+        """
+        Sets up and validates kata.
+        """
+        print("Enabling kata")
+        microk8s_enable("kata")
+        print("Validating Kata")
+        validate_kata()
+        print("Disabling kata")
+        microk8s_disable("kata")

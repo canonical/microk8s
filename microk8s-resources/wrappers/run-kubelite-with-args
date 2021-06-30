@@ -26,6 +26,13 @@ else
   refresh_opt_in_local_config "start-control-plane" "true" kubelite
 fi
 
+if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]
+then
+  # Mark the cluster as starting. This is needed in case you
+  # microk8s stop and then snap start microk8s
+  rm -f ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+fi
+
 ## API server configuration
 # wait up to two minutes for the default network interface to appear.
 n=0
@@ -94,6 +101,14 @@ if [ -e /proc/$$/cgroup ] &&
 then
   refresh_opt_in_local_config "runtime-cgroups" "/systemd/system.slice" kubelet
   refresh_opt_in_local_config "kubelet-cgroups" "/systemd/system.slice" kubelet
+fi
+
+if [ -L /var/lib/kubelet ]
+then
+  echo "\`/var/lib/kubelet\` is a symbolic link"
+  ls -l /var/lib/kubelet
+else
+  echo "\`/var/lib/kubelet\` already exists. CSI add-ons have to point to $SNAP_COMMON for kubelet."
 fi
 
 ## Kube-proxy configuration

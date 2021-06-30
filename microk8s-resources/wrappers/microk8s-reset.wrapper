@@ -51,9 +51,6 @@ clean_cluster() {
   echo "Calling clean_cluster"
   # Clean the cluster
 
-  echo "Calling clean_cluster"
-  # Clean the cluster
-
   NSES=$($KUBECTL get ns -o=name | awk -F/ '{print $2}' | paste -s --delimiters=' ')
   for NS in $NSES
   do
@@ -113,6 +110,11 @@ clean_cluster() {
   if [ -d "$SNAP_DATA/bin/" ]
   then
     run_with_sudo rm -rf "$SNAP_DATA/bin/"
+  fi
+
+  if [ -e "${SNAP_DATA}/var/lock/no-cert-reissue" ]
+  then
+    run_with_sudo rm -rf "${SNAP_DATA}/var/lock/no-cert-reissue"
   fi
 }
 
