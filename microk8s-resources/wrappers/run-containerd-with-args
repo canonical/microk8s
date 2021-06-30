@@ -30,9 +30,16 @@ app=containerd
 
 
 RUNTIME="runc"
+RUNTIME_TYPE="io.containerd.runc.v1"
 SNAPSHOTTER=$(snapshotter)
 
+if mount | grep -q 'cgroup2 on /sys/fs/cgroup'; then
+  RUNTIME_TYPE="io.containerd.runc.v2"
+fi
+
 sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${SNAPSHOTTER}@'"${SNAPSHOTTER}"'@g;s@${RUNTIME}@'"${RUNTIME}"'@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml
+sed -i 's@${RUNTIME_TYPE}@'"${RUNTIME_TYPE}"'@g' $SNAP_DATA/args/containerd.toml
+
 
 run_flanneld="$(is_service_expected_to_start flanneld)"
 if [ "${run_flanneld}" == "1" ]

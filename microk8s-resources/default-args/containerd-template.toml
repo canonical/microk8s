@@ -50,11 +50,11 @@ oom_score = 0
     # In this example, 'runc' is the RuntimeHandler string to match.
     [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
       # runtime_type is the runtime type to use in containerd e.g. io.containerd.runtime.v1.linux
-      runtime_type = "io.containerd.runc.v1"
+      runtime_type = "${RUNTIME_TYPE}"
 
     [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia-container-runtime]
       # runtime_type is the runtime type to use in containerd e.g. io.containerd.runtime.v1.linux
-      runtime_type = "io.containerd.runc.v1"
+      runtime_type = "${RUNTIME_TYPE}"
 
       [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia-container-runtime.options]
         BinaryName = "nvidia-container-runtime"
