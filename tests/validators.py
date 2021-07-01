@@ -14,6 +14,8 @@ from utils import (
     docker,
     update_yaml_with_arch,
     run_until_success,
+    microk8s_enable,
+    microk8s_disable,
 )
 
 
@@ -470,6 +472,9 @@ def validate_external_dns():
     """
     Validate we can lookup external DNS addresses
     """
+    wait_for_installation()
+
+    microk8s_enable("dns")
     kubectl("apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml")
 
     try_addresses = ["canonical.com", "bbc.co.uk", "kubernetes.default"]
@@ -479,6 +484,7 @@ def validate_external_dns():
         assert "no servers could be reached" not in out
 
     kubectl("delete -f https://k8s.io/examples/admin/dns/dnsutils.yaml")
+    microk8s_disable("dns")
 
 
 def validate_keda():
