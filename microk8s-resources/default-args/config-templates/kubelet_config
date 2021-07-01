@@ -1,0 +1,22 @@
+"kind": "KubeletConfiguration"
+"apiVersion": "kubelet.config.k8s.io/v1beta1"
+
+
+"tlsCertFile": "$SNAP_DATA/certs/kubelet.crt"
+"tlsPrivateKeyFile": "$SNAP_DATA/certs/kubelet.key"
+"authentication": 
+  "x509":
+      "clientCAFile": "$SNAP_DATA/certs/ca.crt"
+  "webhook":
+    "enabled": true
+  "anonymous":
+    "enabled": false
+"authorization":
+  "mode": "AlwaysAllow"
+"evictionHard":
+  "imagefs.available": "1Gi"
+  "memory.available": "100Mi"
+  "nodefs.available": "1Gi"
+"featureGates":
+  "DevicePlugins": true
+"failSwapOn": false
