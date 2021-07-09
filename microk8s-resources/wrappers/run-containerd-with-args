@@ -2,11 +2,6 @@
 
 set -ex
 
-# Re-exec outside of apparmor confinement
-if [ -d /sys/kernel/security/apparmor ] && [ "$(cat /proc/self/attr/current)" != "unconfined" ]; then
-    exec aa-exec -p unconfined -- "$0" "$@"
-fi
-
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
@@ -40,12 +35,11 @@ then
 fi
 
 # clean leftover container state if we just booted
-if (is_first_boot "${SNAP_COMMON}/run/containerd")
+if (is_first_boot)
 then
   rm -rf "${SNAP_COMMON}/run/containerd" || true
 fi
 mkdir -p "${SNAP_COMMON}/run/containerd"
-mark_boot_time "${SNAP_COMMON}/run/containerd"
 
 # This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/$app))"

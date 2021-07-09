@@ -23,6 +23,9 @@ plugs:
   docker-privileged:
     interface: docker-support
     privileged-containers: true
+  docker-unprivileged:
+    interface: docker-support
+    privileged-containers: false
   k8s-kubelet:
     interface: kubernetes-support
     flavor: kubelet
@@ -168,6 +171,9 @@ hooks:
 apps:
   microk8s:
     command: microk8s.wrapper
+    plugs:
+    - docker-unprivileged
+    - network-control
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
@@ -231,6 +237,7 @@ apps:
     command: apiservice-kicker
     daemon: simple
     plugs:
+    - kernel-module-control
     - network-bind
     - network-observe
     - network-control
@@ -311,6 +318,7 @@ apps:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
     plugs:
+    - docker-unprivileged
     - dot-kube
     - home-read-all
     - firewall-control
@@ -452,38 +460,13 @@ passthrough:
       bind-file: $SNAP_COMMON/etc/service/enabled/felix/supervise/lock
 
 parts:
-  patches:
-    plugin: dump
-    source: patches/
-    prime: ["-*"]
-  libnftnl:
-    plugin: autotools
-    source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.0.9.tar.bz2
-    build-packages:
-    - libjansson-dev
-    - libmnl-dev
-  iptables:
-    after:
-    - libnftnl
-    source: https://www.netfilter.org/projects/iptables/files/iptables-1.6.1.tar.bz2
-    plugin: autotools
-    build-packages:
-    - bison
-    - flex
-    - libmnl-dev
-    - libnfnetlink-dev
-    - libnetfilter-conntrack3
-    - libnetfilter-conntrack-dev
-    configflags:
-    - "--disable-shared"
-    - "--enable-static"
-    prime: [ -bin/iptables-xml ]
-
   raft:
     source: https://github.com/canonical/raft
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
+    build-packages:
+      - liblz4-dev
     stage-packages:
       - libuv1
     build-packages:

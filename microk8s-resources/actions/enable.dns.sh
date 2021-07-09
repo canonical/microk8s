@@ -39,8 +39,10 @@ fi
 
 echo "Applying manifest"
 ALLOWESCALATION="false"
-if grep  -e ubuntu /proc/version | grep 16.04 &> /dev/null
+if is_apparmor_enabled
 then
+  # the NoNewPrivileges flag is not playing well with AppArmor, which would
+  # prevent profile transitions when the flag is set.
   ALLOWESCALATION="true"
 fi
 declare -A map
