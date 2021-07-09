@@ -17,11 +17,10 @@ do_prerequisites() {
   ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30 >/dev/null
 }
 
-
 get_kube_prometheus () {
   if [  ! -d "${SNAP_DATA}/kube-prometheus" ]
   then
-    KUBE_PROMETHEUS_VERSION="v0.7.0"
+    KUBE_PROMETHEUS_VERSION="v0.8.0"
     KUBE_PROMETHEUS_ERSION=$(echo $KUBE_PROMETHEUS_VERSION | sed 's/v//g')
     echo "Fetching kube-prometheus version $KUBE_PROMETHEUS_VERSION."
     mkdir -p "${SNAP_DATA}/kube-prometheus"
@@ -34,13 +33,6 @@ get_kube_prometheus () {
     rm -rf "$SNAP_DATA/tmp/kube-prometheus"
   fi
 }
-
-use_multiarch_images() {
-  $SNAP/bin/sed -i 's@quay.io/coreos/kube-state-metrics:v1.9.7@gcr.io/k8s-staging-kube-state-metrics/kube-state-metrics:v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
-  $SNAP/bin/sed -i 's@app.kubernetes.io/version: v1.9.7@app.kubernetes.io/version: v1.9.8@g' ${SNAP_DATA}/kube-prometheus/manifests/kube-state-metrics-deployment.yaml
-
-}
-
 
 set_replicas_to_one() {
   # alert manager must be set to 1 replica
@@ -66,10 +58,46 @@ enable_prometheus() {
 done
 }
 
+add_loki_datasource() {
+   cat <<EOF | base64 -w0
+{
+    "apiVersion": 1,
+    "datasources": [
+        {
+            "access": "proxy",
+            "editable": false,
+            "name": "prometheus",
+            "orgId": 1,
+            "type": "prometheus",
+            "url": "http://prometheus-k8s.monitoring.svc:9090",
+            "version": 1
+        },
+        {
+           "name": "loki",
+           "type": "loki",
+           "access": proxy,
+           "url": "http://loki.monitoring.svc:3100",
+           "version": 1,
+           "editable": false,
+           "orgId": 1,
+        }
+    ]
+}
+EOF
+
+return $?
+}
+
+update_grafana_datasource() {
+  DS=$(add_loki_datasource)
+  run_with_sudo $SNAP/bin/sed -i "s@datasources.yaml:.*@datasources.yaml: $DS@g" ${SNAP_DATA}/kube-prometheus/manifests/grafana-dashboardDatasources.yaml
+}
+
+
 do_prerequisites
 get_kube_prometheus
 set_replicas_to_one
-use_multiarch_images
+update_grafana_datasource
 enable_prometheus
 
 echo "The Prometheus operator is enabled (user/pass: admin/admin)"

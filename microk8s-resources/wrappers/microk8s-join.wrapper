@@ -9,6 +9,11 @@ export PYTHONNOUSERSITE=false
 
 source $SNAP/actions/common/utils.sh
 
+if [ -e  "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ] && [ -e "$SNAP_DATA/args/cni-network/05-cilium-cni.conf" ] ; then 
+  echo "Cilium is enabled and is not suitable for multi node clusters."
+  exit 1
+fi
+
 exit_if_no_permissions
 
 LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py $@

@@ -61,3 +61,5 @@ then
     fi
   done
 fi
+
+kill_all_container_shims
