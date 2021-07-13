@@ -2,11 +2,11 @@ name: Build MicroK8s snap on PR and push to master
 
 on:
   push:
-    paths-ignore:
-      - "docs/**"
+    branches:
+      - 1.20
   pull_request:
-    paths-ignore:
-      - "docs/**"
+    branches:
+      - 1.20
 
 jobs:
   build:
