@@ -5,8 +5,8 @@ on:
     branches:
       - 1.19
   pull_request:
-    branches:
-      - 1.19
+    paths-ignore:
+      - "docs/**"
 
 jobs:
   build:
