@@ -12,6 +12,10 @@ grade: stable
 confinement: strict
 base: core18
 
+system-usernames:
+  passthrough:
+    snap_microk8s: shared
+
 plugs:
   home-read-all:
     interface: home
