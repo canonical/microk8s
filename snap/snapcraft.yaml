@@ -12,6 +12,10 @@ grade: stable
 confinement: strict
 base: core18
 
+passthrough:
+  system-usernames:
+    snap_microk8s: shared
+
 plugs:
   home-read-all:
     interface: home
@@ -749,6 +753,9 @@ parts:
       (
         cd $GOPATH/src/github.com/opencontainers/runc
         git checkout ${RUNC_COMMIT}
+        git config user.email "microk8s-builder-bot@ubuntu.com"
+        git config user.name "MicroK8s builder bot"
+        git am $SNAPCRAFT_PART_SRC/patches/runc/*
         make BUILDTAGS='seccomp apparmor'
       )
       cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
