@@ -531,8 +531,6 @@ parts:
     source-type: git
     plugin: go
     go-channel: 1.15/stable
-    build-packages:
-      - libsqlite3-dev
     go-importpath: github.com/canonical/go-dqlite
     override-build: |
       set -eux
