@@ -1,4 +1,4 @@
-From 27a59ff6ea5fb68d524ddeba6be8f2983cee8ff3 Mon Sep 17 00:00:00 2001
+From 728d989c7643a87ca9d57e3135e35c7af833bae0 Mon Sep 17 00:00:00 2001
 From: Alberto Mardegan <mardy@users.sourceforge.net>
 Date: Thu, 17 Jun 2021 14:31:35 +0300
 Subject: [PATCH 3/3] standard_init_linux: change AppArmor profile as late as
@@ -9,10 +9,10 @@ Subject: [PATCH 3/3] standard_init_linux: change AppArmor profile as late as
  1 file changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/libcontainer/standard_init_linux.go b/libcontainer/standard_init_linux.go
-index b20ce148..0732400c 100644
+index d77022ad..6f43da5f 100644
 --- a/libcontainer/standard_init_linux.go
 +++ b/libcontainer/standard_init_linux.go
-@@ -112,10 +112,6 @@ func (l *linuxStandardInit) Init() error {
+@@ -114,10 +114,6 @@ func (l *linuxStandardInit) Init() error {
  			return errors.Wrap(err, "sethostname")
  		}
  	}
@@ -23,7 +23,7 @@ index b20ce148..0732400c 100644
  	for key, value := range l.config.Config.Sysctl {
  		if err := writeSystemProperty(key, value); err != nil {
  			return errors.Wrapf(err, "write sysctl key %s", key)
-@@ -135,17 +131,21 @@ func (l *linuxStandardInit) Init() error {
+@@ -137,17 +133,21 @@ func (l *linuxStandardInit) Init() error {
  	if err != nil {
  		return errors.Wrap(err, "get pdeath signal")
  	}
