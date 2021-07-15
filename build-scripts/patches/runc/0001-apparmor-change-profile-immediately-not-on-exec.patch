@@ -1,31 +1,30 @@
-From ef52797c30f6c2a50e0ba996b41dc8d592a70222 Mon Sep 17 00:00:00 2001
+From 08607d16c6f9ef393e18e0f62fcd967e91c5f7c9 Mon Sep 17 00:00:00 2001
 From: Alberto Mardegan <mardy@users.sourceforge.net>
 Date: Wed, 16 Jun 2021 15:04:16 +0300
 Subject: [PATCH 1/3] apparmor: change profile immediately, not on exec
 
 ---
- libcontainer/apparmor/apparmor.go | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ libcontainer/apparmor/apparmor_linux.go | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/libcontainer/apparmor/apparmor.go b/libcontainer/apparmor/apparmor.go
-index debfc1e4..2929d134 100644
---- a/libcontainer/apparmor/apparmor.go
-+++ b/libcontainer/apparmor/apparmor.go
-@@ -40,10 +40,9 @@ func setProcAttr(attr, value string) error {
+diff --git a/libcontainer/apparmor/apparmor_linux.go b/libcontainer/apparmor/apparmor_linux.go
+index 5da14fb3..93ede183 100644
+--- a/libcontainer/apparmor/apparmor_linux.go
++++ b/libcontainer/apparmor/apparmor_linux.go
+@@ -49,9 +49,9 @@ func setProcAttr(attr, value string) error {
  	return err
  }
  
 -// changeOnExec reimplements aa_change_onexec from libapparmor in Go
 -func changeOnExec(name string) error {
--	value := "exec " + name
--	if err := setProcAttr("exec", value); err != nil {
+-	if err := setProcAttr("exec", "exec "+name); err != nil {
 +// changeProfile reimplements aa_change_profile from libapparmor in Go
 +func changeProfile(name string) error {
 +	if err := setProcAttr("current", "changeprofile "+name); err != nil {
  		return fmt.Errorf("apparmor failed to apply profile: %s", err)
  	}
  	return nil
-@@ -56,5 +55,5 @@ func ApplyProfile(name string) error {
+@@ -64,5 +64,5 @@ func ApplyProfile(name string) error {
  		return nil
  	}
  
