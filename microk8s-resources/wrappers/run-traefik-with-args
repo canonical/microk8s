@@ -1,0 +1,15 @@
+#!/bin/bash
+set -ex
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+ARCH="$($SNAP/bin/uname -m)"
+export LD_LIBRARY_PATH="$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+
+source $SNAP/actions/common/utils.sh
+
+exit_if_service_not_expected_to_start traefik
+
+sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g' $SNAP_DATA/args/traefik/traefik-template.yaml > $SNAP_DATA/args/traefik/traefik.yaml
+
+export CORE_LD_LIBRARY_PATH="$SNAP/../../core18/current/lib/$ARCH-linux-gnu"
+export LD_LIBRARY_PATH="$CORE_LD_LIBRARY_PATH:$LD_LIBRARY_PATH"
+exec "$SNAP/bin/traefik" --configfile "$SNAP_DATA/args/traefik/traefik.yaml"

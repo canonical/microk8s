@@ -109,6 +109,7 @@ def get_connection_info(
     cluster_type="etcd",
     verify_peer=False,
     fingerprint=None,
+    worker=False,
 ):
     """
     Contact the master and get all connection information
@@ -120,6 +121,7 @@ def get_connection_info(
     :param cluster_type: the type of cluster we want to join, etcd or dqlite
     :param verify_peer: flag indicating if we should verify peers certificate
     :param fingerprint: the certificate fingerprint we expect from the peer
+    :param worker: this is a worker only node
 
     :return: the json response of the master
     """
@@ -133,6 +135,7 @@ def get_connection_info(
                 "token": token,
                 "hostname": socket.gethostname(),
                 "port": cluster_agent_port,
+                "worker": worker,
             }
 
             return join_request(conn, CLUSTER_API_V2, req_data, master_ip, verify_peer, fingerprint)
@@ -936,7 +939,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     restart_all_services()
 
 
-def join_dqlite(connection_parts, verify=False):
+def join_dqlite(connection_parts, verify=False, worker=False):
     """
     Configure node to join a dqlite cluster.
 
@@ -960,10 +963,51 @@ def join_dqlite(connection_parts, verify=False):
         cluster_type="dqlite",
         verify_peer=verify,
         fingerprint=fingerprint,
+        worker=worker
     )
 
-    hostname_override = info["hostname_override"]
+    if worker:
+        join_dqlite_worker_node(info, master_ip, token)
+    else:
+        join_dqlite_master_node(info, master_ip, token)
 
+
+def update_traefik(master_ip, api_port):
+    lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
+    lock = "{}/no-traefik".format(lock_path)
+    os.remove(lock)
+
+    traefik_providers = os.path.expandvars("${SNAP_DATA}/args/traefik/provider-template.yaml")
+    traefik_providers_out = os.path.expandvars("${SNAP_DATA}/args/traefik/provider.yaml")
+    with open(traefik_providers) as f:
+        p = yaml.safe_load(f)
+        p['tcp']['services']['kube-apiserver']['loadBalancer']['servers'] = [{'address': '{}:{}'.format(master_ip, api_port)}]
+        with open(traefik_providers_out, 'w') as out_file:
+            yaml.dump(p, out_file)
+    service("restart", "traefik")
+
+
+def join_dqlite_worker_node(info, master_ip, token):
+    hostname_override = info["hostname_override"]
+    store_cert("ca.crt", info["ca"])
+    store_remote_ca(info["ca"])
+    store_cert("ca.key", info["ca_key"])
+    store_cert("serviceaccount.key", info["service_account_key"])
+
+    store_base_kubelet_args(info["kubelet_args"])
+    update_kubeproxy(info["kubeproxy"], info["ca"], "127.0.0.1", info["apiport"], hostname_override)
+    update_kubelet(info["kubelet"], info["ca"], "127.0.0.1", info["apiport"])
+    if "admin_token" in info:
+        replace_admin_token(info["admin_token"])
+    create_admin_kubeconfig(info["ca"], info["admin_token"])
+    store_callback_token(info["callback_token"])
+    update_traefik(master_ip, info["apiport"])
+    mark_worker_node()
+    mark_no_cert_reissue()
+
+
+def join_dqlite_master_node(info, master_ip, token):
+    hostname_override = info["hostname_override"]
     store_cert("ca.crt", info["ca"])
     store_cert("ca.key", info["ca_key"])
     store_cert("serviceaccount.key", info["service_account_key"])
@@ -988,7 +1032,6 @@ def join_dqlite(connection_parts, verify=False):
     create_admin_kubeconfig(info["ca"], info["admin_token"])
     store_base_kubelet_args(info["kubelet_args"])
     store_callback_token(info["callback_token"])
-
     update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
     # We want to update the local CNI yaml but we do not want to apply it.
     # The cni is applied already in the cluster we join
@@ -1022,13 +1065,14 @@ def join_etcd(connection_parts, verify=True):
 
 if __name__ == "__main__":
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "hfs", ["help", "force", "skip-verify"])
+        opts, args = getopt.gnu_getopt(sys.argv[1:], "hfsw", ["help", "force", "skip-verify", "worker"])
     except getopt.GetoptError as err:
         print(err)  # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
 
     force = False
+    worker = False
     verify = True
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -1038,6 +1082,8 @@ if __name__ == "__main__":
             force = True
         elif o in ("-s", "--skip-verify"):
             verify = False
+        elif o in ("-w", "--worker"):
+            worker = True
         else:
             print("Unhandled option")
             sys.exit(1)
@@ -1061,7 +1107,7 @@ if __name__ == "__main__":
     else:
         connection_parts = args[0].split("/")
         if is_node_running_dqlite():
-            join_dqlite(connection_parts, verify)
+            join_dqlite(connection_parts, verify, worker)
         else:
             join_etcd(connection_parts, verify)
 

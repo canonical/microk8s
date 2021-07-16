@@ -1,0 +1,7 @@
+entryPoints:
+  apiserver:
+    address: ":16443"
+providers:
+  file:
+    filename: ${SNAP_DATA}/args/traefik/provider.yaml
+    watch: true

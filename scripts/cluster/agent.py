@@ -568,9 +568,13 @@ def join_node_dqlite():
     if request.headers["Content-Type"] == "application/json":
         token = request.json["token"]
         port = request.json["port"]
+        hostname = request.json["hostname"]
+        worker = request.json["worker"]
     else:
         token = request.form["token"]
         port = request.form["port"]
+        hostname = request.form["hostname"]
+        worker = request.form["worker"]
 
     if not is_valid(token):
         error_msg = {"error": "Invalid token"}
@@ -610,6 +614,15 @@ def join_node_dqlite():
     callback_token = get_callback_token()
     remove_token_from_file(token, cluster_tokens_file)
     api_port = get_arg("--secure-port", "kube-apiserver")
+
+    proxy_token = None
+    kubelet_token = None
+    if worker:
+        proxy_token = get_token("kube-proxy")
+        node_addr = get_node_ep(hostname, request.remote_addr)
+        kubelet_token = add_kubelet_token(node_addr)
+        service("restart", "apiserver")
+
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
     # Make sure calico can autodetect the right interface for packet routing
@@ -628,6 +641,8 @@ def join_node_dqlite():
         kubelet_args=kubelet_args,
         hostname_override=node_addr,
         admin_token=get_token("admin"),
+        kubeproxy=proxy_token,
+        kubelet=kubelet_token,
     )
 
 
