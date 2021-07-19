@@ -238,6 +238,27 @@ function suggest_fixes {
     printf -- "\t  https://microk8s.io/docs/troubleshooting#heading--common-issues \n"
   fi
 
+  msg_containerd=`journalctl -n 1000 -u "snap.microk8s.daemon-containerd" |grep -E 'failed.*error'|awk -F 'error=' '{print $2}'|sort -u`
+  function inspect_containerd {
+      IFS=$'\n'; 
+      pre_msg="";
+      tcps="";
+
+      for line in $1; do
+          msg=`echo $line|awk -F 'dial tcp' '{print $1}'`
+          tcp=`echo $line|awk -F 'dial tcp' '{print $2}'`
+          if [ "$pre_msg" != "$msg" ]; then
+              [ -n "$tcps" ] && ( echo "$pre_msg"|sed 's/":/"\n/g';echo $tcps; )
+              pre_msg="$msg"
+              tcps=""
+          fi
+          tcps="$tcps $tcp"
+      done
+      [ -n "$tcps" ] && ( echo "$pre_msg"|sed 's/":/"\n/g';echo $tcps; )
+  }
+  [ -n "$msg_containerd" ] && \
+    printf -- '\033[0;33mWARNING: \033[0m the containerd for MicroK8s maybe have some fail. \n' && \
+    inspect_containerd "$msg_containerd"
 }
 
 function fedora_release {
