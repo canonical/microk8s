@@ -72,7 +72,7 @@ else
         --set operator.create=$OPERATOR \
         --set basic_auth=$AUTH \
         --set generateBasicAuth=$AUTH \
-        --f "$VALUES"
+        -f "$VALUES"
 fi
 
 # print a final help message
