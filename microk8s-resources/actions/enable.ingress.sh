@@ -22,7 +22,7 @@ fi
 echo "Enabling Ingress"
 
 ARCH=$(arch)
-TAG="v0.44.0"
+TAG="v1.0.0-alpha.2"
 EXTRA_ARGS="- --publish-status-address=127.0.0.1"
 DEFAULT_CERT="- ' '"
 
