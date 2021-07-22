@@ -185,7 +185,7 @@ def validate_istio():
         "pilot",
         "egressgateway",
         "ingressgateway",
-        ]
+    ]
     for service in istio_services:
         wait_for_pod_state("", "istio-system", "running", label="istio={}".format(service))
 
