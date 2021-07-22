@@ -14,7 +14,7 @@ then
   ISTIO_ERSION=$(echo $ISTIO_VERSION | sed 's/v//g')
   run_with_sudo mkdir -p "${SNAP_DATA}/tmp/istio"
   (cd "${SNAP_DATA}/tmp/istio"
-  run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux-amd64.tar.gz -o "$SNAP_DATA/tmp/isti>
+  run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux-amd64.tar.gz -o "$SNAP_DATA/tmp/istio.tar.gz"
   run_with_sudo gzip -q -d "$SNAP_DATA/tmp/istio/istio.tar.gz"
   run_with_sudo tar -xvf "$SNAP_DATA/tmp/istio/istio.tar"
   run_with_sudo chmod 777 "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}")
