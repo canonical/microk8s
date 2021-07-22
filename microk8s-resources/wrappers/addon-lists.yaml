@@ -30,7 +30,7 @@ microk8s-addons:
 
     - name: "ingress"
       description: "Ingress controller for external access"
-      version: "0.25.1"
+      version: "1.0.0-alpha.2"
       check_status: "pod/nginx-ingress-microk8s-controller"
       supported_architectures:
         - arm64
