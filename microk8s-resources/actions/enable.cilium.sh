@@ -37,7 +37,7 @@ echo "Enabling Cilium"
 
 read -ra CILIUM_VERSION <<< "$1"
 if [ -z "$CILIUM_VERSION" ]; then
-  CILIUM_VERSION="v1.8"
+  CILIUM_VERSION="v1.10"
 fi
 CILIUM_ERSION=$(echo $CILIUM_VERSION | sed 's/v//g')
 
@@ -71,14 +71,14 @@ else
   (cd "${SNAP_DATA}/tmp/cilium/$CILIUM_DIR/install/kubernetes"
   ${SNAP_DATA}/bin/helm3 template cilium \
       --namespace $NAMESPACE \
-      --set global.cni.confPath="$SNAP_DATA/args/cni-network" \
-      --set global.cni.binPath="$SNAP_DATA/opt/cni/bin" \
-      --set global.cni.customConf=true \
-      --set global.containerRuntime.integration="containerd" \
+      --set cni.confPath="$SNAP_DATA/args/cni-network" \
+      --set cni.binPath="$SNAP_DATA/opt/cni/bin" \
+      --set cni.customConf=true \
+      --set containerRuntime.integration="containerd" \
       --set global.containerRuntime.socketPath="$SNAP_COMMON/run/containerd.sock" \
-      --set global.daemon.runPath="$SNAP_DATA/var/run/cilium" \
-      --set operator.numReplicas=1 \
-      --set agent.keepDeprecatedLabels=true \
+      --set daemon.runPath="$SNAP_DATA/var/run/cilium" \
+      --set operator.replicas=1 \
+      --set keepDeprecatedLabels=true \
       | run_with_sudo tee "$SNAP_DATA/actions/cilium.yaml" >/dev/null)
 
   ${SNAP}/microk8s-status.wrapper --wait-ready >/dev/null
