@@ -4,8 +4,8 @@ set -e
 
 function help() {
     echo "Available subcommands are:"
-    for i in $(ls ${SNAP}/microk8s-*.wrapper | sed 's/microk8s-//g' | sed 's/.wrapper//g'); do
-        echo -e "\t$(basename ${i})"
+    for i in ${SNAP}/microk8s-*.wrapper; do
+        echo -e "\t$(basename ${i} | sed 's/microk8s-//g' | sed 's/.wrapper//g')"
     done
     echo -e "\tinspect"
 }
