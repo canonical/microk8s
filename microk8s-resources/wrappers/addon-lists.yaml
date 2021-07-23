@@ -21,7 +21,7 @@ microk8s-addons:
 
     - name: "dashboard"
       description: "The Kubernetes dashboard"
-      version: "2.0.0"
+      version: "2.2.0"
       check_status: "pod/kubernetes-dashboard"
       supported_architectures:
         - arm64
@@ -70,21 +70,21 @@ microk8s-addons:
 
     - name: "knative"
       description: "The Knative framework on Kubernetes."
-      version: "0.21.0"
+      version: "0.24.0"
       check_status: "deployment.apps/eventing-webhook"
       supported_architectures:
         - amd64
 
     - name: "gpu"
       description: "Automatic enablement of Nvidia CUDA"
-      version: "1.11"
+      version: "1.7.0"
       check_status: "daemonset.apps/nvidia-device-plugin-daemonset"
       supported_architectures:
         - amd64
 
     - name: "prometheus"
       description: "Prometheus operator for monitoring and logging"
-      version: "v0.7.0"
+      version: "v0.8.0"
       check_status: "pod/prometheus-k8s-0"
       supported_architectures:
         - amd64
@@ -114,7 +114,7 @@ microk8s-addons:
 
     - name: "cilium"
       description: "SDN, fast with full network policy"
-      version: "1.8"
+      version: "1.10"
       check_status: "pod/cilium"
       supported_architectures:
         - amd64
