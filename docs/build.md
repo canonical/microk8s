@@ -110,6 +110,10 @@ At the time of the v3.13.2 release. The `calico.yaml` manifest is a slightly mod
               - name: IP_AUTODETECTION_METHOD
               value: "first-found"
   ```
+- In the `cni_network_config` in the calico manifest we also set:
+
+          "nodename_file_optional": true,
+ 
 
 ## Running the tests locally
 

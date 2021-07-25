@@ -30,7 +30,7 @@ microk8s-addons:
 
     - name: "ingress"
       description: "Ingress controller for external access"
-      version: "0.25.1"
+      version: "1.0.0-alpha.2"
       check_status: "pod/nginx-ingress-microk8s-controller"
       supported_architectures:
         - arm64
@@ -54,7 +54,7 @@ microk8s-addons:
 
     - name: "metrics-server"
       description: "K8s Metrics Server for API access to service metrics"
-      version: "0.3.6"
+      version: "0.5.0"
       check_status: "pod/metrics-server"
       supported_architectures:
         - arm64
@@ -63,8 +63,8 @@ microk8s-addons:
 
     - name: "istio"
       description: "Core Istio service mesh services"
-      version: "1.5.1"
-      check_status: "pod/istio"
+      version: "1.10.3"
+      check_status: "${SNAP_DATA}/bin/istioctl"
       supported_architectures:
         - amd64
 

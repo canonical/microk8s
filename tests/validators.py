@@ -182,20 +182,15 @@ def validate_istio():
 
     wait_for_installation()
     istio_services = [
-        "citadel",
+        "pilot",
         "egressgateway",
-        "galley",
         "ingressgateway",
-        "sidecar-injector",
     ]
     for service in istio_services:
         wait_for_pod_state("", "istio-system", "running", label="istio={}".format(service))
 
-    here = os.path.dirname(os.path.abspath(__file__))
-    manifest = os.path.join(here, "templates", "bookinfo.yaml")
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=details")
-    kubectl("delete -f {}".format(manifest))
+    cmd = "/snap/bin/microk8s.istioctl verify-install"
+    return run_until_success(cmd, timeout_insec=900, err_out="no")
 
 
 def validate_knative():

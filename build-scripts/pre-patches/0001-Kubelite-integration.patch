@@ -1,27 +1,28 @@
-From de618434d4a4168f11bec34c062700b3ad17d2ca Mon Sep 17 00:00:00 2001
+From 77bc6a29c8efcbafc57003e8e89208317b2bec78 Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
 
 ---
  cmd/kube-apiserver/app/server.go    |  9 ++--
+ cmd/kube-scheduler/app/server.go    |  6 ++-
  cmd/kubelet/app/server.go           | 11 ++--
  cmd/kubelite/app/daemons/daemon.go  | 84 +++++++++++++++++++++++++++++
  cmd/kubelite/app/options/options.go | 79 +++++++++++++++++++++++++++
  cmd/kubelite/app/server.go          | 79 +++++++++++++++++++++++++++
  cmd/kubelite/kubelite.go            | 28 ++++++++++
  pkg/volume/csi/csi_plugin.go        | 10 ++--
- 7 files changed, 291 insertions(+), 9 deletions(-)
+ 8 files changed, 296 insertions(+), 10 deletions(-)
  create mode 100644 cmd/kubelite/app/daemons/daemon.go
  create mode 100644 cmd/kubelite/app/options/options.go
  create mode 100644 cmd/kubelite/app/server.go
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index 9fb54ec9a64..ade92c7337b 100644
+index 776389f93e4..ca39da8a4c0 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
-@@ -106,7 +106,7 @@ func checkNonZeroInsecurePort(fs *pflag.FlagSet) error {
+@@ -102,7 +102,7 @@ func checkNonZeroInsecurePort(fs *pflag.FlagSet) error {
  }
  
  // NewAPIServerCommand creates a *cobra.Command object with default parameters
@@ -30,7 +31,7 @@ index 9fb54ec9a64..ade92c7337b 100644
  	s := options.NewServerRunOptions()
  	cmd := &cobra.Command{
  		Use: "kube-apiserver",
-@@ -142,8 +142,11 @@ cluster's shared state through which all other components interact.`,
+@@ -138,8 +138,11 @@ cluster's shared state through which all other components interact.`,
  			if errs := completedOptions.Validate(); len(errs) != 0 {
  				return utilerrors.NewAggregate(errs)
  			}
@@ -44,11 +45,28 @@ index 9fb54ec9a64..ade92c7337b 100644
  		},
  		Args: func(cmd *cobra.Command, args []string) error {
  			for _, arg := range args {
+diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
+index dc6cc055415..d7674db4b01 100644
+--- a/cmd/kube-scheduler/app/server.go
++++ b/cmd/kube-scheduler/app/server.go
+@@ -117,7 +117,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
+ 	ctx, cancel := context.WithCancel(context.Background())
+ 	defer cancel()
+ 	go func() {
+-		stopCh := server.SetupSignalHandler()
++                c := cmd.Context()
++                if c == nil {
++                        c = server.SetupSignalContext()
++                }
++                stopCh := c.Done()
+ 		<-stopCh
+ 		cancel()
+ 	}()
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 2dc10a512b3..40d01f347ce 100644
+index 59662e425bb..c3e4408685a 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
-@@ -110,7 +110,7 @@ const (
+@@ -112,7 +112,7 @@ const (
  )
  
  // NewKubeletCommand creates a *cobra.Command object with default parameters
@@ -57,7 +75,7 @@ index 2dc10a512b3..40d01f347ce 100644
  	cleanFlagSet := pflag.NewFlagSet(componentKubelet, pflag.ContinueOnError)
  	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
  	kubeletFlags := options.NewKubeletFlags()
-@@ -277,7 +277,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -279,7 +279,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
  				klog.ErrorS(err, "kubelet running with insufficient permissions")
  			}
  			// set up signal context here in order to be reused by kubelet and docker shim
@@ -71,7 +89,7 @@ index 2dc10a512b3..40d01f347ce 100644
  
  			// make the kubelet's config safe for logging
  			config := kubeletServer.KubeletConfiguration.DeepCopy()
-@@ -288,7 +293,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -290,7 +295,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
  			klog.V(5).InfoS("KubeletConfiguration", "configuration", kubeletServer.KubeletConfiguration)
  
  			// run the kubelet
@@ -376,7 +394,7 @@ index 00000000000..667b24f68e6
 +	println("Stopping kubelite")
 +}
 diff --git a/pkg/volume/csi/csi_plugin.go b/pkg/volume/csi/csi_plugin.go
-index 85c1c1f3db1..b90c82225f5 100644
+index e48b3d6deb7..a64d9d045e0 100644
 --- a/pkg/volume/csi/csi_plugin.go
 +++ b/pkg/volume/csi/csi_plugin.go
 @@ -237,20 +237,24 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {

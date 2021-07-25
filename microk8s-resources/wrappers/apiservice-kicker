@@ -44,8 +44,8 @@ do
         exit 1
     fi
 
-    # every 3 seconds
-    sleep 3
+    # every 5 seconds
+    sleep 5
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
       getent group microk8s >/dev/null 2>&1
     then
@@ -64,7 +64,12 @@ do
         then
             echo "CSR change detected. Reconfiguring the kube-apiserver"
             rm -rf .srl
-            snapctl restart microk8s.daemon-kubelite
+            snapctl stop microk8s.daemon-kubelite
+            snapctl stop microk8s.daemon-containerd
+            kill_all_container_shims
+            snapctl start microk8s.daemon-containerd
+            snapctl start microk8s.daemon-kubelite
+            start_all_containers
             restart_attempt=$[$restart_attempt+1]
         else
             restart_attempt=0
@@ -78,9 +83,45 @@ do
     then
       echo "Setting up the CNI"
       if (is_apiserver_ready)  &&
-         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
       then
         touch "${SNAP_DATA}/var/lock/cni-loaded"
+      fi
+    fi
+
+    # Calico reload deployment
+    if ! [ -e "${SNAP_DATA}/var/lock/no-cni-reload" ] &&
+       [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
+       [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
+       [ -e "${SNAP_DATA}/var/lock/cni-loaded" ] &&
+       [ -e "${SNAP_DATA}/var/lock/no-flanneld" ] &&
+       [ -e "${SNAP_DATA}/var/lock/cni-needs-reload" ]
+    then
+      echo "Reloading the calico CNI"
+      if (is_apiserver_ready)  &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m describe -n kube-system daemonset.apps/calico-node &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m describe -n kube-system deployment.apps/calico-kube-controllers &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m rollout restart -n kube-system daemonset.apps/calico-node &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m rollout restart -n kube-system deployment.apps/calico-kube-controllers
+      then
+        rm "${SNAP_DATA}/var/lock/cni-needs-reload"
+      fi
+    fi
+
+    # Cilium reload deployment
+    if ! [ -e "${SNAP_DATA}/var/lock/no-cni-reload" ] &&
+       ! [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
+       [ -e "${SNAP_DATA}/var/lock/no-flanneld" ] &&
+       [ -e "${SNAP_DATA}/var/lock/cni-needs-reload" ]
+    then
+      echo "Reloading the cilium CNI"
+      if (is_apiserver_ready)  &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m describe -n kube-system daemonset.apps/cilium &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m describe -n kube-system deployment.apps/cilium-operator &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m rollout restart -n kube-system daemonset.apps/cilium  &&
+         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m rollout restart -n kube-system deployment.apps/cilium-operator
+      then
+        rm "${SNAP_DATA}/var/lock/cni-needs-reload"
       fi
     fi
 

@@ -12,11 +12,11 @@ setup(
     install_requires=[
         "click~=7.0",
         "progressbar33==2.4",
-        "requests==2.20.0",
+        "requests==2.25.1",
         "requests_unixsocket==0.1.5",
         "simplejson==3.8.2",
         "toml==0.10.0",
-        "urllib3==1.24.2",
+        "urllib3==1.26.5",
     ],
     platforms="any",
     entry_points={
