@@ -25,7 +25,7 @@ export KUBERNETES_REPOSITORY="${KUBERNETES_REPOSITORY:-github.com/kubernetes/kub
 
 export KUBE_TRACK="${KUBE_TRACK:-}"
 
-export KUBE_VERSION="${KUBE_VERSION:-}"
+export KUBE_VERSION="v1.22.0-rc.0"
 export KUBE_SNAP_BINS="${KUBE_SNAP_BINS:-}"
 if [ -e "$KUBE_SNAP_BINS/version" ]; then
   export KUBE_VERSION=`cat $KUBE_SNAP_BINS/version`

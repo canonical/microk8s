@@ -99,7 +99,7 @@ microk8s-addons:
 
     - name: "jaeger"
       description: "Kubernetes Jaeger operator with its simple config"
-      version: "1.21.3"
+      version: "1.24.0"
       check_status: "pod/jaeger-operator"
       supported_architectures:
         - amd64

@@ -16,15 +16,26 @@ spec:
       serviceAccountName: jaeger-operator
       containers:
         - name: jaeger-operator
-          image: jaegertracing/jaeger-operator:1.21.3
+          image: jaegertracing/jaeger-operator:1.24.0
           ports:
             - containerPort: 8383
-              name: metrics
+              name: http-metrics
+            - containerPort: 8686
+              name: cr-metrics
           args: ["start"]
           imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
           env:
             - name: WATCH_NAMESPACE
-              value: ""
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: POD_NAME
               valueFrom:
                 fieldRef:
