@@ -20,10 +20,6 @@ plugs:
   home-read-all:
     interface: home
     read: all
-  ca-cert:
-    interface: system-files
-    read:
-    - /etc/ssl/certs/ca-certificates.crt
   docker-privileged:
     interface: docker-support
     privileged-containers: true
@@ -43,10 +39,6 @@ plugs:
     interface: personal-files
     write:
     - $HOME/.kube
-  ld-cache:
-    interface: system-files
-    read:
-    - /etc/ld.so.cache
 
 slots:
   microk8s:
@@ -139,10 +131,6 @@ hooks:
     plugs:
       - dot-kube
       - network-bind
-  connect-plug-ca-cert:
-    plugs:
-      - dot-kube
-      - network-bind
   connect-plug-home:
     plugs:
       - dot-kube
@@ -152,10 +140,6 @@ hooks:
       - dot-kube
       - network-bind
   connect-plug-k8s-journald:
-    plugs:
-      - dot-kube
-      - network-bind
-  connect-plug-ld-cache:
     plugs:
       - dot-kube
       - network-bind
@@ -194,7 +178,6 @@ apps:
     command: run-containerd-with-args
     daemon: simple
     plugs:
-    - ld-cache
     - k8s-journald
     - network-bind
     - docker-support
@@ -385,7 +368,6 @@ apps:
     - home-read-all
     - network
     - network-control
-    - ca-cert
     - kernel-module-observe
     - opengl
   disable:
@@ -394,7 +376,6 @@ apps:
     - home
     - network
     - network-control
-    - ca-cert
     - kernel-module-observe
     - opengl
   start:
