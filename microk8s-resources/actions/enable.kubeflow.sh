@@ -431,7 +431,7 @@ def print_info(hostname, password):
 @click.command()
 @click.option(
     "--bundle",
-    default="cs:kubeflow-252",
+    default="cs:kubeflow-270",
     help="The Kubeflow bundle to deploy. Can be one of full, lite, edge, or a charm store URL.",
 )
 @click.option(
@@ -475,11 +475,11 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
     # user to specify a full charm store URL if they'd like, such as
     # `cs:kubeflow-lite-123`.
     if bundle == "full":
-        bundle = "cs:kubeflow-252"
+        bundle = "cs:kubeflow-270"
     elif bundle == "lite":
-        bundle = "cs:kubeflow-lite-37"
+        bundle = "cs:kubeflow-lite-54"
     elif bundle == "edge":
-        bundle = "cs:kubeflow-edge-34"
+        bundle = "cs:kubeflow-edge-46"
     else:
         bundle = bundle
 
