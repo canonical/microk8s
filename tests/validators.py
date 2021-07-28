@@ -41,6 +41,7 @@ def validate_dns_dashboard():
 
     assert attempt > 0
 
+
 def validate_dashboard_ingress():
     """
     Validate the ingress for dashboard addon by trying to access the kubernetes dashboard
@@ -51,7 +52,9 @@ def validate_dashboard_ingress():
     attempt = 50
     while attempt >= 0:
         try:
-            resp = requests.get("https://kubernetes-dashboard.127.0.0.1.nip.io/#/login", verify=False)
+            resp = requests.get(
+                "https://kubernetes-dashboard.127.0.0.1.nip.io/#/login", verify=False
+            )
             if resp.status_code == 200 and "Kubernetes Dashboard" in resp.content.decode("utf-8"):
                 service_ok = True
                 break
@@ -60,6 +63,7 @@ def validate_dashboard_ingress():
             attempt -= 1
 
     assert service_ok
+
 
 def validate_storage():
     """
