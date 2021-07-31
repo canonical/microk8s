@@ -119,6 +119,8 @@ parts:
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
+    build-packages:
+      - liblz4-dev
     organize:
       usr/lib/: lib/
       include/: usr/include/
@@ -177,15 +179,16 @@ parts:
     source-type: git
     plugin: go
     go-channel: 1.15/stable
-    build-packages:
-      - libsqlite3-dev
     go-importpath: github.com/canonical/go-dqlite
     override-build: |
       set -eux
       snap refresh go --channel=1.15/stable || true
       go version
       export GOPATH=${SNAPCRAFT_STAGE}
-      CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
+      export CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" 
+      export CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" 
+      export CGO_LDFLAGS_ALLOW="-Wl,-z,now"
+      go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       cp $GOPATH/bin/dqlite $SNAPCRAFT_PART_INSTALL/bin/
 
