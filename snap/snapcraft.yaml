@@ -540,6 +540,7 @@ parts:
         rm actions/*.openfaas.sh
         rm -rf "actions/kata"
         rm actions/*.kata.sh
+        rm actions/*.inaccel.sh
       fi
 
       # Remove addons that do not work on s390x
@@ -571,6 +572,7 @@ parts:
         rm actions/*.linkerd.sh
         rm -rf "actions/kata"
         rm actions/*.kata.sh
+        rm actions/*.inaccel.sh
       fi
 
       echo "Creating inspect hook"
