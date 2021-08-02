@@ -103,8 +103,6 @@ microk8s-addons:
       check_status: "pod/jaeger-operator"
       supported_architectures:
         - amd64
-        - arm64
-        - s390x
 
     - name: "linkerd"
       description: "Linkerd is a service mesh for Kubernetes and other frameworks"
