@@ -159,3 +159,4 @@ A workaround is adding these entries to `/etc/hosts`:
 ```
 127.0.0.1 kubernetes-dashboard.127.0.0.1.nip.io
 127.0.0.1 microbot.127.0.0.1.nip.io
+```
