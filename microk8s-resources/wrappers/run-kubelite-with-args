@@ -76,10 +76,13 @@ fi
 
 #UFW configuration
 ufw=$(ufw status)
-if echo $ufw | grep -q "Status: active"
+if echo $ufw | grep -q "Status: active" &&
+   ! [ -e ${SNAP_DATA}/var/lock/skip.ufw ]
 then
   # These succeed regardless of whether the rule exists already or not
-  echo "Found enabled UFW: adding rules to allow in/out traffic on 'cali+' devices"
+  echo "Found enabled UFW: adding rules to allow in/out traffic on 'cali+' and 'vxlan.calico' devices"
+  ufw allow in on vxlan.calico
+  ufw allow out on vxlan.calico
   ufw allow in on cali+
   ufw allow out on cali+
 fi
