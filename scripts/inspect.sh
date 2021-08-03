@@ -143,10 +143,25 @@ function suggest_fixes {
   if /snap/core18/current/usr/bin/which ufw &> /dev/null
   then
     ufw=$(ufw status)
-    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep vxlan.calico &> /dev/null
+    if echo $ufw | grep -q "Status: active"
     then
-      printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-      printf -- 'with: sudo ufw allow in on vxlan.calico && sudo ufw allow out on vxlan.calico\n'
+      header='\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic with: \n'
+      content=''
+      if ! echo $ufw | grep -q vxlan.calico
+      then
+        content+='  sudo ufw allow in on vxlan.calico && sudo ufw allow out on vxlan.calico\n'
+      fi
+      if ! echo $ufw | grep 'cali+' &> /dev/null
+      then
+        content+='  sudo ufw allow in on cali+ && sudo ufw allow out on cali+\n'
+      fi
+
+      if [[ ! -z "$content" ]]
+      then
+        echo printing
+        printf -- "$header"
+        printf -- "$content"
+      fi
     fi
   fi
 
