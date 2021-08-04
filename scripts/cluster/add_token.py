@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import argparse
 import subprocess
@@ -56,8 +57,9 @@ def run_util(*args, debug=False):
 
     try:
         result.check_returncode()
-    except subprocess.CalledProcessError as err:
-        raise
+    except subprocess.CalledProcessError:
+        print("Failed to call utility function.")
+        sys.exit(1)
 
     return result.stdout.decode("utf-8").strip()
 
