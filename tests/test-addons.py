@@ -447,6 +447,7 @@ class TestAddons(object):
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
 
+    @pytest.mark.skip("disabling the addon test until is fixed in v1.22")
     @pytest.mark.skipif(
         platform.machine() == "s390x",
         reason="OpenEBS is not available on s390x",

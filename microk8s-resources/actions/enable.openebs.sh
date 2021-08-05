@@ -8,6 +8,13 @@ KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
 OPENEBS_NS="openebs"
 
+echo ""
+echo "This addon is not yet available on Kubernetes v1.22. Follow the link for more details: "
+echo "https://github.com/ubuntu/microk8s/issues/2498"
+echo ""
+exit 1
+
+
 # Check if iscsid is installed 
 if ! systemctl is-enabled iscsid | grep enabled &> /dev/null
   then
