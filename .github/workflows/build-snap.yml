@@ -48,7 +48,9 @@ jobs:
       - name: Running cluster tests
         run: |
           set -x
-          sg lxd -c 'CHANNEL_TO_TEST=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-cluster.py'
+          cd tests
+          sg lxd -c 'CHANNEL_TO_TEST=`pwd`/`ls ../microk8s*.snap` pytest -s ./test-cluster.py'
+          cd ..
       - name: Running upgrade path test
         run: |
           set -x
