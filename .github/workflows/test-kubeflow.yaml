@@ -11,6 +11,7 @@ on:
 jobs:
   build:
     name: Build
+    if: ${{ false }}  # disable Kubeflow tests until v1.22 is supported.
     runs-on: ubuntu-latest
 
     steps:

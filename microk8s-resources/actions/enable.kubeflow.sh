@@ -136,6 +136,19 @@ def wait_ready(debug: bool, extra: bool = True):
         )
 
 
+def report_not_ready():
+    """The Kubeflow addon is not ready for the v1.22 release yet.
+
+    Fail gracefully informing the user where to look for updates.
+    """
+
+    print("")
+    print("This addon is not yet available on Kubernetes v1.22. Follow the link for more details: ")
+    print("https://github.com/ubuntu/microk8s/issues/2496")
+    print("")
+    sys.exit(1)
+
+
 def check_user():
     """Ensures that user isn't root.
 
@@ -465,6 +478,8 @@ def print_info(hostname, password):
     help="The Kubeflow dashboard password.",
 )
 def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, password):
+    report_not_ready()
+    
     check_user()
     check_memory(bundle, ignore_min_mem)
     check_enabled()
