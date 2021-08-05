@@ -37,6 +37,10 @@ jobs:
         run: |
           echo -e "$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)\t$(hostname -f) $(hostname -s)" | sudo tee -a /etc/hosts
       # DO NOT FORGET TO REMOVE CODE ABOVE WHEN ISSUE IS ADDRESSED!
+      - name: Running cluster tests
+        run: |
+          set -x
+          sg lxd -c 'CHANNEL_TO_TEST=`pwd`/`ls microk8s*.snap` pytest -s ./test-cluster.py'
       - name: Running upgrade path test
         run: |
           set -x
