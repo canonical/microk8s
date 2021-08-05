@@ -43,10 +43,12 @@ jobs:
           sudo apt-get install python3-setuptools
           sudo pip3 install --upgrade pip
           sudo pip3 install -U pytest sh
+          sudo apt-get -y install open-iscsi
+          sudo systemctl enable iscsid
       - name: Running cluster tests
         run: |
           set -x
-          sg lxd -c 'CHANNEL_TO_TEST=`pwd`/`ls microk8s*.snap` pytest -s ./test-cluster.py'
+          sg lxd -c 'CHANNEL_TO_TEST=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-cluster.py'
       - name: Running upgrade path test
         run: |
           set -x
@@ -55,8 +57,6 @@ jobs:
       - name: Running addons tests
         run: |
           set -x
-          sudo apt-get -y install open-iscsi
-          sudo systemctl enable iscsid
           sudo snap install *.snap --classic --dangerous
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
