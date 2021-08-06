@@ -153,31 +153,6 @@ class TestAddons(object):
         """
 
     @pytest.mark.skipif(
-        platform.machine() != "x86_64", reason="Cilium tests are only relevant in x86 architectures"
-    )
-    @pytest.mark.skipif(
-        os.environ.get("UNDER_TIME_PRESSURE") == "True",
-        reason="Skipping cilium tests as we are under time pressure",
-    )
-    def test_cilium(self):
-        """
-        Sets up and validates Cilium.
-        """
-        print("Enabling Cilium")
-        run(
-            "/snap/bin/microk8s.enable cilium".split(),
-            stdout=PIPE,
-            input=b"N\n",
-            stderr=STDOUT,
-            check=True,
-        )
-        print("Validating Cilium")
-        validate_cilium()
-        print("Disabling Cilium")
-        microk8s_disable("cilium")
-        microk8s_reset()
-
-    @pytest.mark.skipif(
         os.environ.get("UNDER_TIME_PRESSURE") == "True",
         reason="Skipping GPU tests as we are under time pressure",
     )
@@ -271,6 +246,34 @@ class TestAddons(object):
         validate_prometheus()
         print("Disabling prometheus")
         microk8s_disable("prometheus")
+        microk8s_reset()
+
+    @pytest.mark.skipif(
+        platform.machine() != "x86_64", reason="Cilium tests are only relevant in x86 architectures"
+    )
+    def test_cilium(self):
+        """
+        Sets up and validates Cilium.
+        """
+        try:
+            check_call("sudo grep -E lxc /proc/1/environ".split())
+            print("Cilium test skipped on lxc containers")
+            return True
+        except CalledProcessError:
+            print("Testing cilium on this platform")
+
+        print("Enabling Cilium")
+        run(
+            "/snap/bin/microk8s.enable cilium".split(),
+            stdout=PIPE,
+            input=b"N\n",
+            stderr=STDOUT,
+            check=True,
+        )
+        print("Validating Cilium")
+        validate_cilium()
+        print("Disabling Cilium")
+        microk8s_disable("cilium")
         microk8s_reset()
 
     @pytest.mark.skip("disabling the test while we work on a 1.20 release")
