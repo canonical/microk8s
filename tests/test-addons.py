@@ -251,17 +251,14 @@ class TestAddons(object):
     @pytest.mark.skipif(
         platform.machine() != "x86_64", reason="Cilium tests are only relevant in x86 architectures"
     )
+    @pytest.mark.skipif(
+        is_container(),
+        reason="Cilium tests are skipped in containers",
+    )
     def test_cilium(self):
         """
         Sets up and validates Cilium.
         """
-        try:
-            check_call("sudo grep -E lxc /proc/1/environ".split())
-            print("Cilium test skipped on lxc containers")
-            return True
-        except CalledProcessError:
-            print("Testing cilium on this platform")
-
         print("Enabling Cilium")
         run(
             "/snap/bin/microk8s.enable cilium".split(),
