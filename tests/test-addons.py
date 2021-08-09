@@ -252,8 +252,8 @@ class TestAddons(object):
         platform.machine() != "x86_64", reason="Cilium tests are only relevant in x86 architectures"
     )
     @pytest.mark.skipif(
-        os.environ.get("UNDER_TIME_PRESSURE") == "True",
-        reason="Skipping cilium tests as we are under time pressure",
+        is_container(),
+        reason="Cilium tests are skipped in containers",
     )
     def test_cilium(self):
         """
@@ -447,6 +447,7 @@ class TestAddons(object):
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
 
+    @pytest.mark.skip("disabling the addon test until is fixed in v1.22")
     @pytest.mark.skipif(
         platform.machine() == "s390x",
         reason="OpenEBS is not available on s390x",
