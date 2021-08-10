@@ -89,7 +89,7 @@ sudo snap install microk8s_latest_amd64.snap --dangerous
 #### Connecting the required interfaces
 
 ```
-for i in docker-privileged docker-support kubernetes-support k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe ca-cert home opengl k8s-journald ld-cache cifs-mount fuse-support kernel-crypto-api; do sudo snap connect microk8s:$i; done
+for i in docker-privileged docker-support kubernetes-support k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe home opengl k8s-journald cifs-mount fuse-support kernel-crypto-api; do sudo snap connect microk8s:$i; done
 ```
 
 After copying it, you can install it with:
@@ -122,10 +122,10 @@ At the time of the v3.13.2 release. The `calico.yaml` manifest is a slightly mod
               - name: IP_AUTODETECTION_METHOD
               value: "first-found"
   ```
+
 - In the `cni_network_config` in the calico manifest we also set:
 
           "nodename_file_optional": true,
- 
 
 ## Running the tests locally
 

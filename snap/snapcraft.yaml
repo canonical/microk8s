@@ -431,6 +431,8 @@ passthrough:
       bind: $SNAP_COMMON/usr/libexec
     /usr/local/lib:
       bind: $SNAP_COMMON/usr/local/lib
+    /lib/ufw/ufw-init:
+      bind-file: $SNAP/lib/ufw/ufw-init
     /var/lib/cni:
       bind: $SNAP_COMMON/var/lib/cni
     /var/log/pods:
@@ -650,6 +652,8 @@ parts:
       - libnfnetlink-dev
       - libnetfilter-conntrack3
       - libnetfilter-conntrack-dev
+    stage-packages:
+      - ufw
     configflags:
       - "--disable-shared"
       - "--enable-static"
