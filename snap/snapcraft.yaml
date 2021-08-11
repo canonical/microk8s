@@ -657,6 +657,8 @@ parts:
     configflags:
       - "--disable-shared"
       - "--enable-static"
+    stage:
+      - -usr/bin/python3
     prime: [-bin/iptables-xml]
 
   migrator:
@@ -774,6 +776,8 @@ parts:
       - util-linux
       - libatm1
       - zfsutils-linux
+    stage:
+      - -usr/bin/python3
 
   cluster-agent:
     plugin: python
