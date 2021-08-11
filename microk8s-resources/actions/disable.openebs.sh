@@ -17,12 +17,12 @@ forceful_bdc_delete() {
     
     if [[ $1 == "spc" ]]
     then
-        EXTRA_LABELS="-l openebs.io/storage-pool-claim"
-        MESSAGE="Deleting BDCs from SPCs forcefully"
+      EXTRA_LABELS="-l openebs.io/storage-pool-claim"
+      MESSAGE="Deleting BDCs from SPCs forcefully"
     elif [[ $1 == "cspc" ]]
     then
-	EXTRA_LABELS="-l openebs.io/cstor-pool-cluster"
-	MESSAGE="Deleting BDCs from CSPCs forcefully"
+      EXTRA_LABELS="-l openebs.io/cstor-pool-cluster"
+      MESSAGE="Deleting BDCs from CSPCs forcefully"
     fi
 
     echo $MESSAGE
@@ -30,8 +30,8 @@ forceful_bdc_delete() {
     
     if [ -n "$OBJ_LIST" ]
     then
-        $KUBECTL -n $OPENEBS_NS patch blockdeviceclaims.openebs.io ${OBJ_LIST} --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
-        $KUBECTL -n $OPENEBS_NS delete blockdeviceclaims.openebs.io ${OBJ_LIST} --timeout=60s --ignore-not-found || true
+      $KUBECTL -n $OPENEBS_NS patch blockdeviceclaims.openebs.io ${OBJ_LIST} --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
+      $KUBECTL -n $OPENEBS_NS delete blockdeviceclaims.openebs.io ${OBJ_LIST} --timeout=60s --ignore-not-found || true
     fi
 }
 
@@ -66,28 +66,28 @@ disable_cstor() {
     
     if [ -n "$CSPC_DEL_FAILED" ]
     then
-        echo "Deleting OpenEBS cStor validatingwebhookconfiguration"
-        $KUBECTL delete validatingwebhookconfiguration openebs-cstor-validation-webhook --timeout=60s --ignore-not-found || true
+      echo "Deleting OpenEBS cStor validatingwebhookconfiguration"
+      $KUBECTL delete validatingwebhookconfiguration openebs-cstor-validation-webhook --timeout=60s --ignore-not-found || true
 	
-	# Resources with Finalizers
-	# cvr, cvc, cspi, cspc, cva
-        OBJ_LIST="cstorvolumereplicas.cstor.openebs.io,cstorvolumeconfigs.cstor.openebs.io,cstorpoolinstances.cstor.openebs.io,cstorpoolclusters.cstor.openebs.io,cstorvolumeattachments.cstor.openebs.io"
-        OBJ_LIST_FOUND=`$KUBECTL -n $OPENEBS_NS get $OBJ_LIST -o name` || true
-	$KUBECTL -n $OPENEBS_NS patch $OBJ_LIST_FOUND --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
+      # Resources with Finalizers
+      # cvr, cvc, cspi, cspc, cva
+      OBJ_LIST="cstorvolumereplicas.cstor.openebs.io,cstorvolumeconfigs.cstor.openebs.io,cstorpoolinstances.cstor.openebs.io,cstorpoolclusters.cstor.openebs.io,cstorvolumeattachments.cstor.openebs.io"
+      OBJ_LIST_FOUND=`$KUBECTL -n $OPENEBS_NS get $OBJ_LIST -o name` || true
+      $KUBECTL -n $OPENEBS_NS patch $OBJ_LIST_FOUND --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
         
         
-	# Resources without Finalizers
-	# cbackup, ccompletedbackup, crestore, cvp, cv
-	# [Now patched] cvr, cvc, cspi, cspc, cva
-        OBJ_LIST="cstorvolumereplicas.cstor.openebs.io,cstorvolumeconfigs.cstor.openebs.io,cstorpoolinstances.cstor.openebs.io,cstorpoolclusters.cstor.openebs.io,cstorbackups.cstor.openebs.io,cstorcompletedbackups.cstor.openebs.io,cstorrestores.cstor.openebs.io,cstorvolumeattachments.cstor.openebs.io,cstorvolumepolicies.cstor.openebs.io,cstorvolumes.cstor.openebs.io"
-	OBJ_LIST_FOUND=`$KUBECTL -n $OPENEBS_NS get $OBJ_LIST -o name` || true
-	$KUBECTL -n $OPENEBS_NS delete $OBJ_LIST_FOUND --timeout=60s --ignore-not-found || true
+      # Resources without Finalizers
+      # cbackup, ccompletedbackup, crestore, cvp, cv
+      # [Now patched] cvr, cvc, cspi, cspc, cva
+      OBJ_LIST="cstorvolumereplicas.cstor.openebs.io,cstorvolumeconfigs.cstor.openebs.io,cstorpoolinstances.cstor.openebs.io,cstorpoolclusters.cstor.openebs.io,cstorbackups.cstor.openebs.io,cstorcompletedbackups.cstor.openebs.io,cstorrestores.cstor.openebs.io,cstorvolumeattachments.cstor.openebs.io,cstorvolumepolicies.cstor.openebs.io,cstorvolumes.cstor.openebs.io"
+      OBJ_LIST_FOUND=`$KUBECTL -n $OPENEBS_NS get $OBJ_LIST -o name` || true
+      $KUBECTL -n $OPENEBS_NS delete $OBJ_LIST_FOUND --timeout=60s --ignore-not-found || true
 
-	forceful_bdc_delete "cspc"
-        # Forceful cleanup does not wait for BlockDevice cleanup
+      forceful_bdc_delete "cspc"
+      # Forceful cleanup does not wait for BlockDevice cleanup
     else
-        echo "Waiting for BlockDevice cleanup... (30 seconds)"
-	sleep 30
+      echo "Waiting for BlockDevice cleanup... (30 seconds)"
+      sleep 30
     fi
 }
 
