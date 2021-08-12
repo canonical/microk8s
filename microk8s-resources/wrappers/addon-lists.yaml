@@ -218,7 +218,7 @@ microk8s-addons:
     - name: "openebs"
       description: "OpenEBS is the open-source storage solution for Kubernetes"
       version: "2.6.0"
-      check_status: "pod/openebs-apiserver"
+      check_status: "pod/openebs-ndm"
       supported_architectures:
         - arm64
         - amd64
