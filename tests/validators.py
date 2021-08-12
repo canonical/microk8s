@@ -506,7 +506,7 @@ def validate_openebs():
         "",
         "openebs",
         "running",
-        label="openebs.io/component-name=maya-apiserver",
+        label="openebs.io/component-name=ndm",
         timeout_insec=900,
     )
     print("OpenEBS is up and running.")

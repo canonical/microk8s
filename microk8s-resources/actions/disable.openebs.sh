@@ -9,8 +9,6 @@ OPENEBS_NS="openebs"
 
 echo "Disabling OpenEBS"
 
-read -ra ARGUMENTS <<< "$1"
-
 forceful_bdc_delete() {
     
     MESSAGE="Deleting BDC forcefully"
@@ -143,11 +141,4 @@ disable_openebs() {
 }
 
 
-if [ ! -z "${ARGUMENTS[@]}" ] && [ "${ARGUMENTS[@]}" = "force" ]
-then
-  disable_openebs
-else
-  echo "Information with regards to OpenEBS uninstallation (https://docs.openebs.io/docs/next/uninstall.html)".
-  read -p "Have you deleted all the pods and PersistentVolumeClaims using OpenEBS PVC? (Y/N): " confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit 1
-  disable_openebs
-fi
+disable_openebs
