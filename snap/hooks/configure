@@ -6,7 +6,7 @@ source $SNAP/actions/common/utils.sh
 
 # Check whether all of the required interfaces are connected before proceeding.
 # This is to address https://forum.snapcraft.io/t/mimic-sequence-of-hook-calls-with-auto-connected-interfaces/19618
-readonly interfaces="docker-privileged docker-support kubernetes-support k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe ca-cert home opengl k8s-journald ld-cache cifs-mount fuse-support kernel-crypto-api"
+readonly interfaces="docker-privileged docker-support kubernetes-support k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe home opengl k8s-journald cifs-mount fuse-support kernel-crypto-api"
 for interface in ${interfaces}
 do
   if ! snapctl is-connected ${interface}
