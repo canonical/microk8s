@@ -15,42 +15,24 @@ forceful_bdc_delete() {
     
     MESSAGE="Deleting BDC forcefully"
     
-    if [ $1 = "spc" ]
+    if [[ $1 == "spc" ]]
     then
       EXTRA_LABELS="-l openebs.io/storage-pool-claim"
       MESSAGE="Deleting BDCs from SPCs forcefully"
+    elif [[ $1 == "cspc" ]]
+    then
+      EXTRA_LABELS="-l openebs.io/cstor-pool-cluster"
+      MESSAGE="Deleting BDCs from CSPCs forcefully"
     fi
 
     echo $MESSAGE
     OBJ_LIST=`$KUBECTL -n $OPENEBS_NS get blockdeviceclaims.openebs.io $EXTRA_LABELS -o=jsonpath='{.items[*].metadata.name}'` || true
-    $KUBECTL -n $OPENEBS_NS patch blockdeviceclaims.openebs.io ${OBJ_LIST} --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
-    $KUBECTL -n $OPENEBS_NS delete blockdeviceclaims.openebs.io ${OBJ_LIST} --timeout=60s || true
-}
-
-forceful_spc_delete() {
-
-    #echo "Deleting validatingwebhookconfiguration"
-    #$KUBECTL delete validatingwebhookconfiguration openebs-validation-webhook-cfg || true
-
-    echo "Deleting CStorVolumeReplica forcefully"
-    OBJ_LIST=`$KUBECTL -n $OPENEBS_NS get cstorvolumereplicas.openebs.io -o=jsonpath='{.items[*].metadata.name}'` || true
-    $KUBECTL -n $OPENEBS_NS patch cstorvolumereplicas.openebs.io ${OBJ_LIST} --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
-    $KUBECTL -n $OPENEBS_NS delete --all cstorvolumereplicas.openebs.io --timeout=60s || true
-
-    echo "Deleting CStorVolume forcefully"
-    $KUBECTL -n $OPENEBS_NS delete --all cstorvolumes.openebs.io --timeout=60s || true
-
-    echo "Deleting CSP forcefully"
-    OBJ_LIST=`$KUBECTL get cstorpools.openebs.io -o=jsonpath='{.items[*].metadata.name}'` || true
-    $KUBECTL patch cstorpools.openebs.io ${OBJ_LIST} --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
-    $KUBECTL delete --all cstorpools.openebs.io --timeout=60s || true
-
-    forceful_bdc_delete "spc"
-
-    echo "Deleting SPC forcefully"
-    OBJ_LIST=`$KUBECTL get storagepoolclaims.openebs.io -o=jsonpath='{.items[*].metadata.name}'` || true
-    $KUBECTL patch storagepoolclaims.openebs.io ${OBJ_LIST} --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
-    $KUBECTL delete --all storagepoolclaims.openebs.io --timeout=60s || true
+    
+    if [ -n "$OBJ_LIST" ]
+    then
+      $KUBECTL -n $OPENEBS_NS patch blockdeviceclaims.openebs.io ${OBJ_LIST} --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
+      $KUBECTL -n $OPENEBS_NS delete blockdeviceclaims.openebs.io ${OBJ_LIST} --timeout=60s --ignore-not-found || true
+    fi
 }
 
 bd_remove_finalizer() {
@@ -58,63 +40,103 @@ bd_remove_finalizer() {
     #OBJ_LIST=`$KUBECTL -n $OPENEBS_NS get blockdevice.openebs.io -o=jsonpath='{.items[?(@.status.claimState=="Claimed")].metadata.name}'`
     #$KUBECTL -n $OPENEBS_NS patch blockdevice.openebs.io ${OBJ_LIST} --type=json -p='[{"op":"replace", "path":"/status/claimState", "value":"Released"}]' || true
 
-    #echo "Waiting for BlockDevice cleanup... (20 seconds)"
-    #sleep 20
+    #echo "Waiting for BlockDevice cleanup... (30 seconds)"
+    #sleep 30
 
     OBJ_LIST=`$KUBECTL -n $OPENEBS_NS get blockdevice.openebs.io -o=jsonpath='{.items[?(@.status.claimState!="Unclaimed")].metadata.name}'` || true
     $KUBECTL -n $OPENEBS_NS patch blockdevice.openebs.io ${OBJ_LIST} --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
 }
 
+disable_legacy() {
+
+    echo "Deleting validatingwebhookconfiguration"
+    $KUBECTL delete validatingwebhookconfiguration openebs-validation-webhook-cfg --ignore-not-found || true
+    
+    forceful_bdc_delete "spc"
+
+    $KUBECTL delete storageclass openebs-jiva-default \
+        openebs-snapshot-promoter \
+        --timeout=60s --ignore-not-found || true
+}
+
+disable_cstor() {
+
+    echo "Deleting OpenEBS cStor resources"
+    $KUBECTL -n $OPENEBS_NS delete --all cstorpoolclusters.cstor.openebs.io --timeout=60s || CSPC_DEL_FAILED=$?
+    
+    if [ -n "$CSPC_DEL_FAILED" ]
+    then
+      echo "Deleting OpenEBS cStor validatingwebhookconfiguration"
+      $KUBECTL delete validatingwebhookconfiguration openebs-cstor-validation-webhook --timeout=60s --ignore-not-found || true
+	
+      # Resources with Finalizers
+      # cvr, cvc, cspi, cspc, cva
+      OBJ_LIST="cstorvolumereplicas.cstor.openebs.io,cstorvolumeconfigs.cstor.openebs.io,cstorpoolinstances.cstor.openebs.io,cstorpoolclusters.cstor.openebs.io,cstorvolumeattachments.cstor.openebs.io"
+      OBJ_LIST_FOUND=`$KUBECTL -n $OPENEBS_NS get $OBJ_LIST -o name` || true
+      $KUBECTL -n $OPENEBS_NS patch $OBJ_LIST_FOUND --type=json -p='[{"op":"remove", "path":"/metadata/finalizers"}]' || true
+        
+        
+      # Resources without Finalizers
+      # cbackup, ccompletedbackup, crestore, cvp, cv
+      # [Now patched] cvr, cvc, cspi, cspc, cva
+      OBJ_LIST="cstorvolumereplicas.cstor.openebs.io,cstorvolumeconfigs.cstor.openebs.io,cstorpoolinstances.cstor.openebs.io,cstorpoolclusters.cstor.openebs.io,cstorbackups.cstor.openebs.io,cstorcompletedbackups.cstor.openebs.io,cstorrestores.cstor.openebs.io,cstorvolumeattachments.cstor.openebs.io,cstorvolumepolicies.cstor.openebs.io,cstorvolumes.cstor.openebs.io"
+      OBJ_LIST_FOUND=`$KUBECTL -n $OPENEBS_NS get $OBJ_LIST -o name` || true
+      $KUBECTL -n $OPENEBS_NS delete $OBJ_LIST_FOUND --timeout=60s --ignore-not-found || true
+
+      forceful_bdc_delete "cspc"
+      # Forceful cleanup does not wait for BlockDevice cleanup
+    else
+      echo "Waiting for BlockDevice cleanup... (30 seconds)"
+      sleep 30
+    fi
+}
+
 disable_openebs() {
 
-    $HELM uninstall -n $OPENEBS_NS openebs || true
+    # LEGACY
+    disable_legacy
 
-    echo "Deleting OpenEBS SPCs in case of cStor"
-    $KUBECTL delete --all storagepoolclaims.openebs.io --timeout=60s || SPC_DEL_FAILED=$?
+    # CSTOR-CSI
+    disable_cstor
 
-    if [ -n "$SPC_DEL_FAILED" ]
-    then
-      forceful_spc_delete
-    fi
-
-    echo "Deleting OpenEBS StoragePools in case of Jiva"
-    $KUBECTL delete --all storagepool.openebs.io --timeout=60s || true
-
+    # BLOCKDEVICES and BLOCKDEVICECLAIMS
     BD_WITH_FINALIZER=`$KUBECTL -n $OPENEBS_NS get blockdevice.openebs.io -o=jsonpath='{.items[?(@.status.claimState!="Unclaimed")].metadata.name}'` || true
     if [ -n "$BD_WITH_FINALIZER" ]
     then
       forceful_bdc_delete
       bd_remove_finalizer
     fi
+   
+    # Helm chart
+    $HELM uninstall openebs -n $OPENEBS_NS || true
     
-    $KUBECTL delete customresourcedefinition castemplates.openebs.io \
-cstorpools.openebs.io \
-cstorpoolinstances.openebs.io \
-cstorvolumeclaims.openebs.io \
-cstorvolumereplicas.openebs.io \
-cstorvolumepolicies.openebs.io \
-cstorvolumes.openebs.io \
-runtasks.openebs.io \
-storagepoolclaims.openebs.io \
-storagepools.openebs.io \
-volumesnapshotdatas.volumesnapshot.external-storage.k8s.io \
-volumesnapshots.volumesnapshot.external-storage.k8s.io \
-blockdevices.openebs.io \
-blockdeviceclaims.openebs.io \
-cstorbackups.openebs.io \
-cstorrestores.openebs.io \
-cstorcompletedbackups.openebs.io \
-upgradetasks.openebs.io \
---timeout=60s || true
-
+    # Default StorageClasses
     $KUBECTL delete storageclass openebs-hostpath \
-openebs-device \
-openebs-jiva-default \
-openebs-snapshot-promoter \
---timeout=60s || true
+        openebs-device \
+        openebs-jiva-csi-default \
+        --timeout=60s --ignore-not-found|| true
 
     KUBECTL_DELETE_ARGS="--wait=true --timeout=180s --ignore-not-found=true"
     $KUBECTL delete $KUBECTL_DELETE_ARGS namespace $OPENEBS_NS || true
+
+    # CRDs
+    $KUBECTL delete customresourcedefinition blockdeviceclaims.openebs.io \
+        blockdevices.openebs.io \
+        cstorbackups.cstor.openebs.io \
+        cstorcompletedbackups.cstor.openebs.io \
+        cstorpoolclusters.cstor.openebs.io \
+        cstorpoolinstances.cstor.openebs.io \
+        cstorrestores.cstor.openebs.io \
+        cstorvolumeattachments.cstor.openebs.io \
+        cstorvolumeconfigs.cstor.openebs.io \
+        cstorvolumepolicies.cstor.openebs.io \
+        cstorvolumereplicas.cstor.openebs.io \
+        cstorvolumes.cstor.openebs.io \
+        jivavolumepolicies.openebs.io \
+        jivavolumes.openebs.io \
+        migrationtasks.openebs.io \
+        upgradetasks.openebs.io \
+        --timeout=60s --ignore-not-found || true
 
     echo "OpenEBS disabled"
     echo "Manually clean up the directory $SNAP_COMMON/var/openebs/"
