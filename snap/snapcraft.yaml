@@ -532,7 +532,7 @@ parts:
 
   juju:
     plugin: dump
-    source: https://launchpad.net/juju/2.9/2.9.0/+download/juju-2.9.0-k8s.tar.xz
+    source: https://launchpad.net/juju/2.9/2.9.10/+download/juju-2.9.10-k8s.tar.xz
     source-type: tar
     organize:
       juju: bin/juju
