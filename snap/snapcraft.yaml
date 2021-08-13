@@ -443,8 +443,8 @@ passthrough:
       bind: $SNAP_DATA/kubelet
     /var/lib/kube-proxy:
       bind: $SNAP_DATA/kube-proxy
-    /etc/service/enabled/felix/supervise/lock:
-      bind-file: $SNAP_COMMON/etc/service/enabled/felix/supervise/lock
+    /etc/service/enabled:
+      bind: $SNAP_COMMON/etc/service/enabled
 
 parts:
   raft:
