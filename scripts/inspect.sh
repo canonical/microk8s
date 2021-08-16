@@ -203,11 +203,7 @@ function suggest_fixes {
       printf -- '\033[0;33mWARNING: \033[0m The memory cgroup is not enabled. \n'
       printf -- 'The cluster may not be functioning properly. Please ensure cgroups are enabled \n'
       printf -- 'See for example: https://microk8s.io/docs/install-alternatives#heading--arm \n'
-    else
-      printf -- 'cgroups2 enabled \n'
     fi
-  else
-      printf -- 'cgroups enabled \n'
   fi
 
   # Fedora Specific Checks
@@ -237,8 +233,7 @@ function suggest_fixes {
     # Check if snapctl is fresh
     if ! [ -L "/usr/bin/snapctl" ]
     then
-      printf -- '\033[0;33mWARNING: \033[0m On Debian 9 the snapctl binary if outdated. \n'
-      printf -- '\treplace it with: \n'
+      printf -- '\033[0;33mWARNING: \033[0m On Debian 9 the snapctl binary if outdated. Replace it with: \n'
       printf -- '\t sudo snap install core \n'
       printf -- '\t sudo mv /usr/bin/snapctl /usr/bin/snapctl.old \n'
       printf -- '\t sudo ln -s  /snap/core/current/usr/bin/snapctl /usr/bin/snapctl \n'
