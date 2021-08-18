@@ -639,23 +639,69 @@ get_container_shim_pids() {
 }
 
 kill_all_container_shims() {
-    systemctl kill snap.microk8s.daemon-kubelite.service --signal=SIGKILL &>/dev/null || true
-    systemctl kill snap.microk8s.daemon-kubelet.service --signal=SIGKILL &>/dev/null || true
-    systemctl kill snap.microk8s.daemon-containerd.service --signal=SIGKILL &>/dev/null || true
+    snapctl kill snap.microk8s.daemon-kubelite.service --signal=SIGKILL &>/dev/null || true
+    snapctl kill snap.microk8s.daemon-kubelet.service --signal=SIGKILL &>/dev/null || true
+    snapctl kill snap.microk8s.daemon-containerd.service --signal=SIGKILL &>/dev/null || true
 }
 
 is_first_boot() {
-  # Return 0 if this is the first start after the host booted.
-  SENTINEL="/tmp/.containerd-first-book-check"
-  # We rely on the fact that /tmp is cleared at every boot to determine if
-  # this is the first call after boot: if the sentinel file exists, then it
-  # means that no reboot occurred since last check; otherwise, return success
-  # and create the sentinel file for the future check.
-  if [ -f "$SENTINEL" ]
-  then
-    return 1
-  else
-    touch "$SENTINEL"
-    return 0
-  fi
+    # Return 0 if this is the first start after the host booted.
+    SENTINEL="/tmp/.containerd-first-book-check"
+    # We rely on the fact that /tmp is cleared at every boot to determine if
+    # this is the first call after boot: if the sentinel file exists, then it
+    # means that no reboot occurred since last check; otherwise, return success
+    # and create the sentinel file for the future check.
+    if [ -f "$SENTINEL" ]
+    then
+      return 1
+    else
+      touch "$SENTINEL"
+      return 0
+    fi
+}
+
+check_snap_interfaces() {
+    # Check whether all of the required interfaces are connected before proceeding.
+    # This is to address https://forum.snapcraft.io/t/mimic-sequence-of-hook-calls-with-auto-connected-interfaces/19618
+    declare -ra interfaces=(
+        "docker-privileged"
+        "docker-support"
+        "kubernetes-support"
+        "k8s-kubelet"
+        "k8s-journald"
+        "k8s-kubeproxy"
+        "dot-kube"
+        "network"
+        "network-bind"
+        "network-control"
+        "network-observe"
+        "firewall-control"
+        "process-control"
+        "kernel-module-observe"
+        "mount-observe"
+        "hardware-observe"
+        "system-observe"
+        "home opengl"
+        "cifs-mount"
+        "fuse-support"
+        "kernel-crypto-api"
+    )
+    declare -a missing=()
+
+    for interface in ${interfaces[@]}
+    do
+        if ! snapctl is-connected ${interface}
+        then
+            missing+=("${interface}")
+        fi
+    done
+
+    if [ ${#missing[@]} -gt 0 ]
+    then
+        snapctl set-health blocked "You must connect ${missing[@]} before proceeding"
+        exit 0
+    else
+        snapctl set-health okay
+        snapctl start --enable ${SNAP_NAME}
+    fi
 }

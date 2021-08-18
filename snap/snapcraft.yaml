@@ -165,18 +165,21 @@ apps:
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
+    install-mode: disable
     plugs:
     - network-bind
   daemon-flanneld:
     command: run-flanneld-with-args
     daemon: simple
+    install-mode: disable
     plugs:
     - network-bind
     - network-control
     - firewall-control
   daemon-containerd:
     command: run-containerd-with-args
-    daemon: simple
+    daemon: notify
+    install-mode: disable
     plugs:
     - k8s-journald
     - network-bind
@@ -190,12 +193,12 @@ apps:
     - cifs-mount
     - fuse-support
     - kernel-crypto-api
-    daemon: notify
     stop-mode: sigterm
     restart-condition: always
   daemon-kubelite:
     command: run-kubelite-with-args
     daemon: simple
+    install-mode: disable
     plugs:
     - dot-kube
     - docker-support
@@ -214,6 +217,7 @@ apps:
   daemon-apiserver:
     command: run-null-daemon
     daemon: simple
+    install-mode: disable
     plugs:
     - network-bind
     - network-observe
@@ -223,6 +227,7 @@ apps:
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
+    install-mode: disable
     plugs:
     - kernel-module-control
     - network-bind
@@ -233,6 +238,7 @@ apps:
   daemon-control-plane-kicker:
     command: run-null-daemon
     daemon: simple
+    install-mode: disable
     plugs:
     - network-bind
     - network-observe
@@ -242,6 +248,7 @@ apps:
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
+    install-mode: disable
     plugs:
     - mount-observe
     - network-bind
@@ -250,6 +257,7 @@ apps:
   daemon-controller-manager:
     command: run-null-daemon
     daemon: simple
+    install-mode: disable
     plugs:
     - network-bind
     - docker-support
@@ -260,12 +268,14 @@ apps:
   daemon-scheduler:
     command: run-null-daemon
     daemon: simple
+    install-mode: disable
     plugs:
     - network-bind
     - k8s-journald
   daemon-kubelet:
     command: run-null-daemon
     daemon: simple
+    install-mode: disable
     plugs:
     - dot-kube
     - firewall-control
@@ -281,6 +291,7 @@ apps:
   daemon-proxy:
     command: run-null-daemon
     daemon: simple
+    install-mode: disable
     plugs:
     - network-bind
     - network-control

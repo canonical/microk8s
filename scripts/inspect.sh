@@ -140,30 +140,30 @@ function suggest_fixes {
     printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
   fi
 
-  if /snap/core18/current/usr/bin/which ufw &> /dev/null
-  then
-    ufw=$(ufw status)
-    if echo $ufw | grep -q "Status: active"
-    then
-      header='\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic with: \n'
-      content=''
-      if ! echo $ufw | grep -q vxlan.calico
-      then
-        content+='  sudo ufw allow in on vxlan.calico && sudo ufw allow out on vxlan.calico\n'
-      fi
-      if ! echo $ufw | grep 'cali+' &> /dev/null
-      then
-        content+='  sudo ufw allow in on cali+ && sudo ufw allow out on cali+\n'
-      fi
+  # if /snap/core18/current/usr/bin/which ufw &> /dev/null
+  # then
+  #   ufw=$(ufw status)
+  #   if echo $ufw | grep -q "Status: active"
+  #   then
+  #     header='\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic with: \n'
+  #     content=''
+  #     if ! echo $ufw | grep -q vxlan.calico
+  #     then
+  #       content+='  sudo ufw allow in on vxlan.calico && sudo ufw allow out on vxlan.calico\n'
+  #     fi
+  #     if ! echo $ufw | grep 'cali+' &> /dev/null
+  #     then
+  #       content+='  sudo ufw allow in on cali+ && sudo ufw allow out on cali+\n'
+  #     fi
 
-      if [[ ! -z "$content" ]]
-      then
-        echo printing
-        printf -- "$header"
-        printf -- "$content"
-      fi
-    fi
-  fi
+  #     if [[ ! -z "$content" ]]
+  #     then
+  #       echo printing
+  #       printf -- "$header"
+  #       printf -- "$content"
+  #     fi
+  #   fi
+  # fi
 
   # check for selinux. if enabled, print warning.
   if getenforce 2>&1 | grep 'Enabled' > /dev/null
@@ -197,7 +197,7 @@ function suggest_fixes {
       fi
     fi
   fi
-  
+
   if ! mount | grep -q 'cgroup/memory'; then
     if ! mount | grep -q 'cgroup2 on /sys/fs/cgroup'; then
       printf -- '\033[0;33mWARNING: \033[0m The memory cgroup is not enabled. \n'

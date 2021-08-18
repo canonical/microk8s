@@ -34,7 +34,7 @@ def delete_runtime_manifest():
 def restart_containerd():
     try:
         print("Restarting containerd")
-        subprocess.call(['sudo', 'systemctl', 'restart', 'snap.microk8s.daemon-containerd'])
+        subprocess.call(["snapctl", "restart" "{}.daemon-containerd".format(os.environ.get("SNAP_NAME"))])
     except (subprocess.CalledProcessError):
         print("Failed to restart containerd. Please, yry to 'microk8s stop' and 'microk8s start' manually." )
         sys.exit(3)

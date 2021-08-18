@@ -2,23 +2,23 @@
 
 set -eux
 
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
+ARCH="$(${SNAP}/bin/uname -m)"
+export LD_LIBRARY_PATH="${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/$ARCH-linux-gnu:${SNAP}/usr/lib/$ARCH-linux-gnu"
+export PATH="${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:$PATH:/usr/bin:/usr/local/bin"
 export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
 
-source $SNAP/actions/common/utils.sh
+source ${SNAP}/actions/common/utils.sh
 
 cp -r ${SNAP}/default-args ${SNAP_DATA}/args
 
 # Sym link the host's /var/lib/kubelet to the Snap's.  This will be fixed with layouts when
 # this Snap is strictly confined.  Warn if there's already a directory.
 if ! [ -e /var/lib/kubelet ] &&
-   ln -s $SNAP_COMMON/var/lib/kubelet /var/lib/kubelet
+   ln -s ${SNAP_COMMON}/var/lib/kubelet /var/lib/kubelet
 then
-  echo "\`/var/lib/kubelet\` linked to $SNAP_COMMON"
+  echo "\`/var/lib/kubelet\` linked to ${SNAP_COMMON}"
 else
-  echo "\`/var/lib/kubelet\` already exists.  Will not be linking to $SNAP_COMMON"
+  echo "\`/var/lib/kubelet\` already exists.  Will not be linking to ${SNAP_COMMON}"
 fi
 
 # Create the certificates
@@ -46,42 +46,42 @@ echo "${scheduler_token},system:kube-scheduler,scheduler" >> ${SNAP_DATA}/creden
 
 # Create the client kubeconfig
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
+${SNAP}/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
+${SNAP}/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
+${SNAP}/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/client.config
+${SNAP}/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/client.config
+${SNAP}/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
 
 # Create the client kubeconfig for the controller
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/controller.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/controller.config
-$SNAP/bin/sed -i 's/NAME/controller/g' ${SNAP_DATA}/credentials/controller.config
-$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/controller.config
-$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/controller.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${controller_token}"'/g' ${SNAP_DATA}/credentials/controller.config
+${SNAP}/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/controller.config
+${SNAP}/bin/sed -i 's/NAME/controller/g' ${SNAP_DATA}/credentials/controller.config
+${SNAP}/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/controller.config
+${SNAP}/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/controller.config
+${SNAP}/bin/sed -i 's/PASSWORD/'"${controller_token}"'/g' ${SNAP_DATA}/credentials/controller.config
 
 # Create the client kubeconfig for the scheduler
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/scheduler.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/scheduler.config
-$SNAP/bin/sed -i 's/NAME/scheduler/g' ${SNAP_DATA}/credentials/scheduler.config
-$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/scheduler.config
-$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/scheduler.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${scheduler_token}"'/g' ${SNAP_DATA}/credentials/scheduler.config
+${SNAP}/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/scheduler.config
+${SNAP}/bin/sed -i 's/NAME/scheduler/g' ${SNAP_DATA}/credentials/scheduler.config
+${SNAP}/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/scheduler.config
+${SNAP}/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/scheduler.config
+${SNAP}/bin/sed -i 's/PASSWORD/'"${scheduler_token}"'/g' ${SNAP_DATA}/credentials/scheduler.config
 
 # Create the proxy and kubelet kubeconfig
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/kubelet.config
-$SNAP/bin/sed -i 's/NAME/kubelet/g' ${SNAP_DATA}/credentials/kubelet.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/kubelet.config
-$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/kubelet.config
-$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/kubelet.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${kubelet_token}"'/g' ${SNAP_DATA}/credentials/kubelet.config
+${SNAP}/bin/sed -i 's/NAME/kubelet/g' ${SNAP_DATA}/credentials/kubelet.config
+${SNAP}/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/kubelet.config
+${SNAP}/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/kubelet.config
+${SNAP}/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/kubelet.config
+${SNAP}/bin/sed -i 's/PASSWORD/'"${kubelet_token}"'/g' ${SNAP_DATA}/credentials/kubelet.config
 
 cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/proxy.config
-$SNAP/bin/sed -i 's/NAME/kubeproxy/g' ${SNAP_DATA}/credentials/proxy.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/proxy.config
-$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/proxy.config
-$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/proxy.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${proxy_token}"'/g' ${SNAP_DATA}/credentials/proxy.config
+${SNAP}/bin/sed -i 's/NAME/kubeproxy/g' ${SNAP_DATA}/credentials/proxy.config
+${SNAP}/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/proxy.config
+${SNAP}/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/proxy.config
+${SNAP}/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/proxy.config
+${SNAP}/bin/sed -i 's/PASSWORD/'"${proxy_token}"'/g' ${SNAP_DATA}/credentials/proxy.config
 
 for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/
 do
@@ -93,9 +93,9 @@ if snapctl is-connected network-control
   then
   for link in cni0 cilium_vxlan
   do
-    if $SNAP/sbin/ip link show ${link}
+    if ${SNAP}/sbin/ip link show ${link}
     then
-      $SNAP/sbin/ip link delete ${link}
+      ${SNAP}/sbin/ip link delete ${link}
     fi
   done
 fi
@@ -114,19 +114,19 @@ set_service_not_expected_to_start flanneld
 touch "${SNAP_DATA}/var/lock/ha-cluster"
 touch "${SNAP_DATA}/var/lock/lite.lock"
 
-RESOURCES="$SNAP/upgrade-scripts/000-switch-to-calico/resources"
-BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
+RESOURCES="${SNAP}/upgrade-scripts/000-switch-to-calico/resources"
+BACKUP_DIR="${SNAP_DATA}/var/tmp/upgrades/000-switch-to-calico"
 
-mkdir -p "$BACKUP_DIR"
+mkdir -p "${BACKUP_DIR}"
 
-mkdir -p "$BACKUP_DIR/args/cni-network/"
-cp "$SNAP_DATA"/args/cni-network/* "$BACKUP_DIR/args/cni-network/" 2>/dev/null || true
-rm -rf "$SNAP_DATA"/args/cni-network/*
+mkdir -p "${BACKUP_DIR}/args/cni-network/"
+cp "${SNAP_DATA}"/args/cni-network/* "${BACKUP_DIR}/args/cni-network/" 2>/dev/null || true
+rm -rf "${SNAP_DATA}"/args/cni-network/*
 if [ "$ARCH" == "s390x" ]
 then
-  cp "$RESOURCES/calico.s390x.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
+  cp "${RESOURCES}/calico.s390x.yaml" "${SNAP_DATA}/args/cni-network/cni.yaml"
 else
-  cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
+  cp "${RESOURCES}/calico.yaml" "${SNAP_DATA}/args/cni-network/cni.yaml"
 fi
-mkdir -p "$SNAP_DATA/opt/cni/bin/"
-cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
+mkdir -p "${SNAP_DATA}/opt/cni/bin/"
+cp -R "${SNAP}"/opt/cni/bin/* "${SNAP_DATA}"/opt/cni/bin/
