@@ -15,12 +15,23 @@ echo "Configuring services"
 ${SNAP}/microk8s-stop.wrapper
 
 cp "$SNAP_DATA"/args/kube-apiserver "$BACKUP_DIR/args"
-refresh_opt_in_config "storage-backend" "dqlite" kube-apiserver
-refresh_opt_in_config "storage-dir" "\${SNAP_DATA}/var/kubernetes/backend/" kube-apiserver
+# Configure the API sever to talk to the external dqlite
+if [ -e ${SNAP}/default-args/k8s-dqlite ] &&
+   ! [ -e ${SNAP_DATA}/args/k8s-dqlite ] &&
+then
+  echo "Reconfiguring the API server for dqlite"
+  cp ${SNAP}/default-args/k8s-dqlite ${SNAP_DATA}/args/k8s-dqlite
+fi
+
+skip_opt_in_config storage-backend kube-apiserver
+skip_opt_in_config storage-dir kube-apiserver
+
 skip_opt_in_config "etcd-servers" kube-apiserver
 skip_opt_in_config "etcd-cafile" kube-apiserver
 skip_opt_in_config "etcd-certfile" kube-apiserver
 skip_opt_in_config "etcd-keyfile" kube-apiserver
+
+refresh_opt_in_config etcd-servers unix://\${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379 kube-apiserver
 
 cp "$SNAP_DATA"/args/etcd "$BACKUP_DIR/args"
 cat <<EOT > "$SNAP_DATA"/args/etcd
@@ -41,6 +52,7 @@ then
 else
   snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
+snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
 
 run_etcd="$(is_service_expected_to_start etcd)"
 if [ "${run_etcd}" == "1" ]
@@ -70,13 +82,14 @@ then
   if [[ "$now" < "$(($start_timer + $timeout))" ]] ; then
     if (is_apiserver_ready)
     then
-        $SNAP/bin/migrator --mode restore --endpoint "unix:///var/snap/microk8s/current/var/kubernetes/backend/kine.sock" --db-dir "$DB_DIR" --debug
+        $SNAP/bin/migrator --mode restore --endpoint "unix:///var/snap/microk8s/current/var/kubernetes/backend/kine.sock:12379" --db-dir "$DB_DIR" --debug
     fi
   fi
 
   sleep 10
   set_service_not_expected_to_start etcd
   snapctl stop microk8s.daemon-etcd
+  set_service_expected_to_start k8s-dqlite
 fi
 
 ${SNAP}/microk8s-start.wrapper
