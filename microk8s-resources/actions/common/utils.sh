@@ -681,10 +681,8 @@ check_snap_interfaces() {
         "mount-observe"
         "hardware-observe"
         "system-observe"
-        "home opengl"
-        "cifs-mount"
-        "fuse-support"
-        "kernel-crypto-api"
+        "home"
+        "opengl"
     )
     declare -a missing=()
 
@@ -698,10 +696,10 @@ check_snap_interfaces() {
 
     if [ ${#missing[@]} -gt 0 ]
     then
-        snapctl set-health blocked "You must connect ${missing[@]} before proceeding"
+        snapctl set-health blocked "You must connect ${missing[*]} before proceeding"
         exit 0
     else
-        snapctl set-health okay
         snapctl start --enable ${SNAP_NAME}
+        snapctl set-health okay
     fi
 }
