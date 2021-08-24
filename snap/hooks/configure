@@ -4,7 +4,7 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
-check_snap_interfaces
+check_snap_interfaces 0  # Check for interfaces but do not start until this script has run.
 
 need_api_restart=false
 need_proxy_restart=false
@@ -568,3 +568,5 @@ then
     fi
   fi
 fi
+
+check_snap_interfaces 1  # Check for interfaces and enable all services.

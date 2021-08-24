@@ -699,7 +699,10 @@ check_snap_interfaces() {
         snapctl set-health blocked "You must connect ${missing[*]} before proceeding"
         exit 0
     else
-        snapctl start --enable ${SNAP_NAME}
-        snapctl set-health okay
+        if [ $1 -gt 0 ]
+        then
+            snapctl start --enable ${SNAP_NAME}
+            snapctl set-health okay
+        fi
     fi
 }
