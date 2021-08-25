@@ -41,6 +41,7 @@ fi
 # Enable the aggregation layer
 if ! grep "requestheader-client-ca-file" ${SNAP_DATA}/args/kube-apiserver
 then
+  mkdir -p ${SNAP_DATA}/args
   echo "Patching requestheader-client-ca-file argument"
   # Add a new line at the end
   echo "" >> ${SNAP_DATA}/args/kube-apiserver
@@ -82,7 +83,7 @@ mkdir -p ${SNAP_DATA}/var/lock/
 if [ ! -f ${SNAP_DATA}/credentials/client.config ]
 then
   echo "Patching client config location"
-  mkdir -p ${SNAP_DATA}/credentials/
+  mkdir -p ${SNAP_DATA}/credentials
   cp ${SNAP}/microk8s-resources/client.config ${SNAP_DATA}/credentials/
 fi
 
