@@ -12,15 +12,21 @@ need_kubelet_restart=false
 need_controller_restart=false
 need_scheduler_restart=false
 
+#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
+if [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
+then
+  mkdir -p ${SNAP_DATA}/certs
+  cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
+fi
+
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
 # and make sure the respective services use them.
 # Without this patch the user would have to remove and reainstall microk8s.
 # This patch can be removed at a later stage.
-if [ ! -d ${SNAP_DATA}/certs ] && grep -e "\-\-client-ca-file=\${SNAP}/certs/ca.crt" ${SNAP_DATA}/args/kube-apiserver
+if grep -e "\-\-client-ca-file=\${SNAP}/certs/ca.crt" ${SNAP_DATA}/args/kube-apiserver
 then
   echo "Patching certificates location"
-  mkdir -p ${SNAP_DATA}/certs
   cp -r ${SNAP}/certs-beta/* ${SNAP_DATA}/certs/
   "$SNAP/bin/sed" -i 's@\${SNAP}/certs/ca.crt@\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
   "$SNAP/bin/sed" -i 's@\${SNAP}/certs/server.key@\${SNAP_DATA}/certs/server.key@g' ${SNAP_DATA}/args/kube-apiserver
@@ -30,12 +36,6 @@ then
   "$SNAP/bin/sed" -i 's@\${SNAP}/certs/serviceaccount.key@\${SNAP_DATA}/certs/serviceaccount.key@g' ${SNAP_DATA}/args/kube-controller-manager
   need_api_restart=true
   need_controller_restart=true
-fi
-
-#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
-if [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
-then
-   cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
 fi
 
 # Enable the aggregation layer
