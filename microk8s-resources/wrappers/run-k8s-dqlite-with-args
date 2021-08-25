@@ -15,5 +15,12 @@ exit_if_service_not_expected_to_start k8s-dqlite
 
 app=k8s-dqlite
 
+set -a
+if [ -e "${SNAP_DATA}/args/${app}-env" ]
+then
+  . "${SNAP_DATA}/args/${app}-env"
+fi
+set +a
+
 declare -a args="($(cat $SNAP_DATA/args/$app))"
 exec "$SNAP/bin/$app" "${args[@]}"
