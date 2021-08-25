@@ -35,12 +35,7 @@ git clone --depth 1 https://github.com/kubernetes/kubernetes $GOPATH/src/github.
   make clean
   for app in ${path_apps}
   do
-    if [ "$app" = "cmd/kubelite" ]
-    then
-      make WHAT="${app}" GOFLAGS=-tags=libsqlite3,dqlite CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" KUBE_CGO_OVERRIDES=kubelite
-    else
-      make WHAT="${app}"
-    fi
+    make WHAT="${app}"
   done
 )
 for app in $apps; do
