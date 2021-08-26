@@ -508,16 +508,12 @@ def update_dqlite_ip(host):
     dqlite_port = get_dqlite_port()
     service("stop", "apiserver")
     time.sleep(10)
-    service("stop", "k8s-dqlite")
-    time.sleep(5)
 
     cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
     # TODO make the port configurable
     update_data = {"Address": "{}:{}".format(host, dqlite_port)}
     with open("{}/update.yaml".format(cluster_dir), "w") as f:
         yaml.dump(update_data, f)
-    service("start", "k8s-dqlite")
-    time.sleep(5)
     service("start", "apiserver")
     time.sleep(10)
     attempts = 12

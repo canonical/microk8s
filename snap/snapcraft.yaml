@@ -56,9 +56,6 @@ apps:
   daemon-proxy:
     command: run-null-daemon
     daemon: simple
-  daemon-k8s-dqlite:
-    command: wrappers/run-k8s-dqlite-with-args
-    daemon: simple
   dashboard-proxy:
     command: microk8s-dashboard-proxy.wrapper
   kubectl:
@@ -189,35 +186,6 @@ parts:
       go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       cp $GOPATH/bin/dqlite $SNAPCRAFT_PART_INSTALL/bin/
-
-  k8s-dqlite:
-    build-snaps: [go]
-    after: [dqlite-client, dqlite]
-    source: build-scripts/
-    plugin: dump
-    override-build: |
-      set -eux
-      . $SNAPCRAFT_PART_SRC/set-env-variables.sh
-      snap refresh go --channel=1.15/stable || true
-      go version
-      export GOPATH=${SNAPCRAFT_STAGE}
-      export CGO_LDFLAGS_ALLOW="-Wl,-z,now"
-      export CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/"
-      export CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib"
-      mkdir -p $GOPATH/src/github.com/canonical/
-      (
-        cd $GOPATH/src/github.com/canonical/
-        rm -rf k8s-dqlite
-        git clone https://github.com/canonical/k8s-dqlite
-        cd k8s-dqlite
-        git checkout tags/"${K8S_DQLITE_TAG}" -b build
-        go build  -tags libsqlite3,dqlite .
-        cd ..
-      )
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      cp $GOPATH/src/github.com/canonical/k8s-dqlite/k8s-dqlite $SNAPCRAFT_PART_INSTALL/bin/
-    stage-packages:
-      - openssl
 
   etcd:
     plugin: dump
