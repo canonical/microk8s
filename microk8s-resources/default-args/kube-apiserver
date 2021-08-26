@@ -10,7 +10,8 @@
 --secure-port=16443
 --token-auth-file=${SNAP_DATA}/credentials/known_tokens.csv
 --insecure-port=0
---etcd-servers="unix://${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379"
+--storage-backend=dqlite
+--storage-dir=${SNAP_DATA}/var/kubernetes/backend/
 --allow-privileged=true
 --service-account-issuer='https://kubernetes.default.svc'
 --service-account-signing-key-file=${SNAP_DATA}/certs/serviceaccount.key
