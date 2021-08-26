@@ -2,6 +2,11 @@
 
 set -eux
 
+if [ ! -f "${SNAP_DATA}/installed.lock" ]
+then
+  "${SNAP}/meta/hooks/install"
+fi
+
 source $SNAP/actions/common/utils.sh
 
 check_snap_interfaces 0  # Check for interfaces but do not start until this script has run.
@@ -15,7 +20,6 @@ need_scheduler_restart=false
 #Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
 if [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
 then
-  mkdir -p ${SNAP_DATA}/certs
   cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
 fi
 
@@ -41,7 +45,6 @@ fi
 # Enable the aggregation layer
 if ! grep "requestheader-client-ca-file" ${SNAP_DATA}/args/kube-apiserver
 then
-  mkdir -p ${SNAP_DATA}/args
   echo "Patching requestheader-client-ca-file argument"
   # Add a new line at the end
   echo "" >> ${SNAP_DATA}/args/kube-apiserver
@@ -83,7 +86,6 @@ mkdir -p ${SNAP_DATA}/var/lock/
 if [ ! -f ${SNAP_DATA}/credentials/client.config ]
 then
   echo "Patching client config location"
-  mkdir -p ${SNAP_DATA}/credentials
   cp ${SNAP}/microk8s-resources/client.config ${SNAP_DATA}/credentials/
 fi
 

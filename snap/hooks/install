@@ -2,6 +2,11 @@
 
 set -eux
 
+if [ -f "${SNAP_DATA}/installed.lock" ]
+then
+  exit 0
+fi
+
 ARCH="$(${SNAP}/bin/uname -m)"
 export LD_LIBRARY_PATH="${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/$ARCH-linux-gnu:${SNAP}/usr/lib/$ARCH-linux-gnu"
 export PATH="${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:$PATH:/usr/bin:/usr/local/bin"
@@ -130,3 +135,5 @@ else
 fi
 mkdir -p "${SNAP_DATA}/opt/cni/bin/"
 cp -R "${SNAP}"/opt/cni/bin/* "${SNAP_DATA}"/opt/cni/bin/
+
+touch "${SNAP_DATA}/installed.lock"
