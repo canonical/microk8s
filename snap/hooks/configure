@@ -517,6 +517,37 @@ then
   need_api_restart=true
 fi
 
+# Are we using etcd or some other non-dqlite datastore?
+if ! [ -e ${SNAP_DATA}/args/k8s-dqlite ] &&
+   ! grep -e "\-\-storage-backend=dqlite" ${SNAP_DATA}/args/kube-apiserver
+then
+  set_service_not_expected_to_start k8s-dqlite
+  snapctl stop ${SNAP_NAME}.daemon-k8s-dqlite
+fi
+
+# Configure the API sever to talk to the external dqlite
+if [ -e ${SNAP}/default-args/k8s-dqlite ] &&
+   ! [ -e ${SNAP_DATA}/args/k8s-dqlite ] &&
+   grep -e "\-\-storage-backend=dqlite" ${SNAP_DATA}/args/kube-apiserver
+then
+  echo "Reconfiguring the API server for dqlite"
+  cp ${SNAP}/default-args/k8s-dqlite ${SNAP_DATA}/args/k8s-dqlite
+  cp ${SNAP}/default-args/k8s-dqlite-env ${SNAP_DATA}/args/k8s-dqlite-env
+  need_api_restart=true
+  if ! [ -e ${SNAP_DATA}/var/lock/lite.lock ]
+  then
+    snapctl stop ${SNAP_NAME}.daemon-kubelite
+  else
+    snapctl stop ${SNAP_NAME}.daemon-apiserver
+  fi
+
+  refresh_opt_in_config etcd-servers unix://\${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379 kube-apiserver
+  skip_opt_in_config storage-backend kube-apiserver
+  skip_opt_in_config storage-dir kube-apiserver
+
+  snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
+fi
+
 # Restart reconfigured services
 if ${need_api_restart} ||
    ${need_proxy_restart} ||

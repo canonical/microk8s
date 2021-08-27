@@ -322,6 +322,7 @@ printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"
 check_service "snap.microk8s.daemon-containerd"
 check_service "snap.microk8s.daemon-apiserver-kicker"
+check_service "snap.microk8s.daemon-k8s-dqlite"
 if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
 then
   check_service "snap.microk8s.daemon-kubelite"
