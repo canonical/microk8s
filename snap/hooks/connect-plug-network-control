@@ -9,4 +9,4 @@ do
   fi
 done
 
-${SNAP}/meta/hooks/install
+${SNAP}/meta/hooks/configure
