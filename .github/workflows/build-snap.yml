@@ -1,12 +1,17 @@
 name: Build MicroK8s snap on PR and push to master
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  - push
+  - pull_request
+
+### While we work on the strict feature we want the tests to run even if we do put PRs against the master.
+### When this work get merged into master the following should be commented in.
+#  push:
+#    branches:
+#      - master
+#  pull_request:
+#    branches:
+#      - master
 
 jobs:
   build:
