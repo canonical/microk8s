@@ -77,7 +77,7 @@ else
       --set daemon.runPath="$SNAP_DATA/var/run/cilium" \
       --set operator.replicas=1 \
       --set keepDeprecatedLabels=true \
-      | run_with_sudo tee "$SNAP_DATA/actions/cilium.yaml" >/dev/null)
+      | tee "$SNAP_DATA/actions/cilium.yaml" >/dev/null)
 
   ${SNAP}/microk8s-status.wrapper --wait-ready >/dev/null
   echo "Deploying $SNAP_DATA/actions/cilium.yaml. This may take several minutes."
