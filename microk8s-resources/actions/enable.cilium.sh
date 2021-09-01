@@ -4,8 +4,6 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
-CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
-
 ARCH=$(arch)
 if ! [ "${ARCH}" = "amd64" ]; then
   echo "Cilium is not available for ${ARCH}" >&2

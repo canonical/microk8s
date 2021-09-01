@@ -3,7 +3,6 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
@@ -26,7 +25,7 @@ get_kube_prometheus () {
     mkdir -p "${SNAP_DATA}/kube-prometheus"
     mkdir -p "${SNAP_DATA}/tmp/kube-prometheus"
 
-    "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/prometheus-operator/kube-prometheus/archive/${KUBE_PROMETHEUS_VERSION}.tar.gz -o "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz"
+    "${SNAP}/usr/bin/curl" -L https://github.com/prometheus-operator/kube-prometheus/archive/${KUBE_PROMETHEUS_VERSION}.tar.gz -o "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz"
     tar -xzvf "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz" -C "$SNAP_DATA/tmp/kube-prometheus/"
     cp -R "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus-${KUBE_PROMETHEUS_ERSION}/manifests/" "${SNAP_DATA}/kube-prometheus"
 
