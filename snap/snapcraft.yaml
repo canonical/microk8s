@@ -416,10 +416,14 @@ apps:
   helm:
     command: microk8s-helm.wrapper
     plugs:
+      - home-read-all
+      - home
       - network
   helm3:
     command: microk8s-helm3.wrapper
     plugs:
+      - home-read-all
+      - home
       - network
   cilium:
     command: microk8s-cilium.wrapper
@@ -428,9 +432,14 @@ apps:
   juju:
     command: microk8s-juju.wrapper
     plugs:
+      - home-read-all
+      - home
       - network
   dbctl:
     command: microk8s-dbctl.wrapper
+    plugs:
+      - home-read-all
+      - home
 
 passthrough:
   system-usernames:
