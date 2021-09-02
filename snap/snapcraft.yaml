@@ -375,6 +375,7 @@ apps:
     command: microk8s-enable.wrapper
     plugs:
       - home-read-all
+      - home
       - network
       - network-control
       - kernel-module-observe
@@ -382,6 +383,7 @@ apps:
   disable:
     command: microk8s-disable.wrapper
     plugs:
+      - home-read-all
       - home
       - network
       - network-control
