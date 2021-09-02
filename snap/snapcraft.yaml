@@ -442,6 +442,7 @@ apps:
     plugs:
       - home-read-all
       - home
+      - kubernetes-support
 
 passthrough:
   system-usernames:
