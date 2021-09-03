@@ -70,6 +70,8 @@ jobs:
           export SKIP_PROMETHEUS="False"
           (cd tests; sudo -E pytest -s -ra test-addons.py)
           sudo snap remove microk8s --purge
+          sudo rm -rf $HOME/.kube
+          sudo rm -rf $HOME/.config/helm
       - name: Running addons tests in devmode
         run: |
           set -x
