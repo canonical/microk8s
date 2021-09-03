@@ -23,9 +23,7 @@ def run_until_success(cmd, timeout_insec=60, err_out=None):
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         try:
-            print("Calling {}".format(cmd))
             output = check_output(cmd.split()).strip().decode("utf8")
-            print(output)
             return output.replace("\\n", "\n")
         except CalledProcessError as err:
             output = err.output.strip().decode("utf8").replace("\\n", "\n")
