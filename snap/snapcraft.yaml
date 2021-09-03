@@ -52,7 +52,6 @@ hooks:
   install:
     plugs:
       - network-bind
-      - network-control
       - firewall-control
       - network-control
   remove:
