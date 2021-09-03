@@ -35,6 +35,7 @@ plugs:
     interface: personal-files
     write:
       - $HOME/.kube
+      - $HOME/.config/helm
 
 slots:
   microk8s:
@@ -376,7 +377,7 @@ apps:
     plugs:
       - home-read-all
       - home
-      - personal-files
+      - dot-kube
       - network
       - network-control
       - kernel-module-observe
@@ -421,14 +422,14 @@ apps:
     plugs:
       - home-read-all
       - home
-      - personal-files
+      - dot-kube
       - network
   helm3:
     command: microk8s-helm3.wrapper
     plugs:
       - home-read-all
       - home
-      - personal-files
+      - dot-kube
       - network
   cilium:
     command: microk8s-cilium.wrapper
