@@ -74,6 +74,13 @@ jobs:
         run: |
           set -x
           sudo snap install microk8s.snap --devmode --dangerous
+          for i in docker-privileged docker-support kubernetes-support k8s-journald k8s-kubelet \
+                   k8s-kubeproxy dot-kube network network-bind network-control network-observe \
+                   firewall-control process-control kernel-module-observe mount-observe \
+                   hardware-observe system-observe home opengl home-read-all kernel-module-control
+          do
+            sudo snap connect microk8s:$i
+          done
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
