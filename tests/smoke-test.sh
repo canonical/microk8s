@@ -16,7 +16,7 @@ done
 n=0
 until [ $n -ge 3 ]
 do
-  (sudo /snap/bin/microk8s kubectl get no | grep -z "Ready") && exit 0
+  (sudo /snap/bin/microk8s kubectl get no | grep -z " Ready") && exit 0
   n=$[$n+1]
   sleep 20
 done
