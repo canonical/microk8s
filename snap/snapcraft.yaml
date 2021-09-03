@@ -54,6 +54,7 @@ hooks:
       - network-bind
       - network-control
       - firewall-control
+      - network-control
   remove:
     plugs:
       - k8s-kubelet
@@ -376,6 +377,7 @@ apps:
     plugs:
       - home-read-all
       - home
+      - personal-files
       - network
       - network-control
       - kernel-module-observe
@@ -420,12 +422,14 @@ apps:
     plugs:
       - home-read-all
       - home
+      - personal-files
       - network
   helm3:
     command: microk8s-helm3.wrapper
     plugs:
       - home-read-all
       - home
+      - personal-files
       - network
   cilium:
     command: microk8s-cilium.wrapper
