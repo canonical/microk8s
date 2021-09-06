@@ -22,27 +22,30 @@ class VM:
     This class abstracts the backend we are using. It could be either multipass or lxc.
     """
 
-    INTERFACES = ["docker-privileged",
-                  "docker-support",
-                  "kubernetes-support",
-                  "k8s-journald",
-                  "k8s-kubelet",
-                  "k8s-kubeproxy",
-                  "dot-kube",
-                  "network",
-                  "network-bind",
-                  "network-control",
-                  "network-observe",
-                  "firewall-control",
-                  "process-control",
-                  "kernel-module-observe",
-                  "mount-observe",
-                  "hardware-observe",
-                  "system-observe",
-                  "home",
-                  "opengl",
-                  "home-read-all",
-                  "kernel-module-control"]
+    # List of interfaces we need to manually connect in the case we test a local build
+    INTERFACES = [
+        "docker-privileged",
+        "docker-support",
+        "kubernetes-support",
+        "k8s-journald",
+        "k8s-kubelet",
+        "k8s-kubeproxy",
+        "dot-kube",
+        "network",
+        "network-bind",
+        "network-control",
+        "network-observe",
+        "firewall-control",
+        "process-control",
+        "kernel-module-observe",
+        "mount-observe",
+        "hardware-observe",
+        "system-observe",
+        "home",
+        "opengl",
+        "home-read-all",
+        "kernel-module-control",
+    ]
 
     def __init__(self, backend=None, attach_vm=None):
         """Detect the available backends and instantiate a VM
