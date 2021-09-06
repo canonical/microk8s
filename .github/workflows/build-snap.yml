@@ -69,9 +69,17 @@ jobs:
           export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
           (cd tests; sudo -E pytest -s -ra test-addons.py)
+          sudo microk8s inspect |
+          grep -Po "Report tarball is at \K.+" |
+          sudo xargs -I {} mv {} inspection-report-strict-${{ strategy.job-index }}.tar.gz
           sudo snap remove microk8s --purge
           sudo rm -rf $HOME/.kube
           sudo rm -rf $HOME/.config/helm
+      - name: Upload strict inspect tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: inspection-report-actions
+          path: ./inspection-report-strict-${{ strategy.job-index }}.tar.gz
       - name: Running addons tests in devmode
         run: |
           set -x
@@ -87,17 +95,24 @@ jobs:
           export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
           (cd tests; sudo -E pytest -s -ra test-addons.py)
+          sudo microk8s inspect |
+          grep -Po "Report tarball is at \K.+" |
+          sudo xargs -I {} mv {} inspection-report-devmode-${{ strategy.job-index }}.tar.gz
           sudo snap remove microk8s --purge
+      - name: Upload devmode inspect tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: inspection-report-actions
+          path: ./inspection-report-devmode-${{ strategy.job-index }}.tar.gz
       - name: Generate inspect tarball
         run: >
           sudo microk8s inspect |
           grep -Po "Report tarball is at \K.+" |
-          sudo xargs -I {} mv {} inspection-report-${{ strategy.job-index }}.tar.gz
+          sudo xargs -I {} mv {} inspection-report-fail-${{ strategy.job-index }}.tar.gz
         if: failure()
-
       - name: Upload inspect tarball
         uses: actions/upload-artifact@v2
         with:
           name: inspection-report-actions
-          path: ./inspection-report-${{ strategy.job-index }}.tar.gz
+          path: ./inspection-report-fail-${{ strategy.job-index }}.tar.gz
         if: failure()
