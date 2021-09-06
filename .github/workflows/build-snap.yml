@@ -78,7 +78,7 @@ jobs:
       - name: Upload strict inspect tarball
         uses: actions/upload-artifact@v2
         with:
-          name: inspection-report-actions
+          name: inspection-report-strict-actions
           path: ./inspection-report-strict-${{ strategy.job-index }}.tar.gz
       - name: Running addons tests in devmode
         run: |
@@ -102,7 +102,7 @@ jobs:
       - name: Upload devmode inspect tarball
         uses: actions/upload-artifact@v2
         with:
-          name: inspection-report-actions
+          name: inspection-report-devmode-actions
           path: ./inspection-report-devmode-${{ strategy.job-index }}.tar.gz
       - name: Generate inspect tarball
         run: >
