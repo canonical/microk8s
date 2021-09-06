@@ -45,6 +45,8 @@ class VM:
         "opengl",
         "home-read-all",
         "kernel-module-control",
+        "login-session-observe",
+        "log-observe",
     ]
 
     def __init__(self, backend=None, attach_vm=None):
