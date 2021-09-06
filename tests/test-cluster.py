@@ -22,8 +22,30 @@ class VM:
     This class abstracts the backend we are using. It could be either multipass or lxc.
     """
 
+    INTERFACES = ["docker-privileged",
+                  "docker-support",
+                  "kubernetes-support",
+                  "k8s-journald",
+                  "k8s-kubelet",
+                  "k8s-kubeproxy",
+                  "dot-kube",
+                  "network",
+                  "network-bind",
+                  "network-control",
+                  "network-observe",
+                  "firewall-control",
+                  "process-control",
+                  "kernel-module-observe",
+                  "mount-observe",
+                  "hardware-observe",
+                  "system-observe",
+                  "home",
+                  "opengl",
+                  "home-read-all",
+                  "kernel-module-control"]
+
     def __init__(self, backend=None, attach_vm=None):
-        """Detect the available backends and instantiate a VM.
+        """Detect the available backends and instantiate a VM
 
         If `attach_vm` is provided we just make sure the right MicroK8s is deployed.
         :param backend: either multipass of lxc
@@ -79,7 +101,7 @@ class VM:
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
                 cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
-                cmd = ["snap install microk8s --classic --channel {}".format(channel_or_snap)]
+                cmd = ["snap install microk8s --channel {}".format(channel_or_snap)]
                 time.sleep(20)
                 subprocess.check_output(cmd_prefix + cmd)
         else:
@@ -99,8 +121,12 @@ class VM:
             channel_or_snap, self.vm_name
         ).split()
         subprocess.check_output(cmd)
-        cmd = ["snap install /var/tmp/microk8s.snap --classic --dangerous"]
+        cmd = ["snap install /var/tmp/microk8s.snap --dangerous"]
         subprocess.check_output(cmd_prefix + cmd)
+        time.sleep(20)
+        for i in self.INTERFACES:
+            cmd = "snap connect microk8s:{}".format(i)
+            subprocess.check_output(cmd_prefix + [cmd])
         time.sleep(20)
 
     def _setup_multipass(self, channel_or_snap):
@@ -113,7 +139,7 @@ class VM:
             else:
                 subprocess.check_call(
                     "/snap/bin/multipass exec {}  -- sudo "
-                    "snap install microk8s --classic --channel {}".format(
+                    "snap install microk8s --channel {}".format(
                         self.vm_name, channel_or_snap
                     ).split()
                 )
@@ -137,8 +163,14 @@ class VM:
         )
         subprocess.check_call(
             "/snap/bin/multipass exec {}  -- sudo "
-            "snap install /var/tmp/microk8s.snap --classic --dangerous".format(self.vm_name).split()
+            "snap install /var/tmp/microk8s.snap --dangerous".format(self.vm_name).split()
         )
+        for i in self.INTERFACES:
+            subprocess.check_call(
+                "/snap/bin/multipass exec {}  -- sudo "
+                "snap connect microk8s:{}".format(self.vm_name, i).split()
+            )
+        time.sleep(20)
 
     def run(self, cmd):
         """
