@@ -370,7 +370,13 @@ apps:
   inspect:
     command: inspect.sh
     plugs:
+      - network-observe
+      - kubernetes-support
+      - kernel-module-observe
+      - login-session-observe
       - system-observe
+      - mount-observe
+      - log-observe
       - firewall-control
   enable:
     command: microk8s-enable.wrapper
@@ -791,6 +797,7 @@ parts:
       - grep
       - jq
       - hostname
+      - procps
       - squashfs-tools
       - tar
       - coreutils
