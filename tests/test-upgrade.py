@@ -40,7 +40,7 @@ class TestUpgrade(object):
         """
         print("Testing upgrade from {} to {}".format(upgrade_from, upgrade_to))
 
-        cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from)
+        cmd = "sudo snap install microk8s --channel={}".format(upgrade_from)
         run_until_success(cmd)
         wait_for_installation()
         if is_container():
