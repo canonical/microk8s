@@ -434,7 +434,9 @@ apps:
 
 passthrough:
   system-usernames:
-    snap_microk8s: shared
+    # The right group to be used here is snap_microk8s. The automatic creation of this
+    # user group will land with snapd 2.52.
+    snap_daemon: shared
   layout:
     /usr/libexec:
       bind: $SNAP_COMMON/usr/libexec
