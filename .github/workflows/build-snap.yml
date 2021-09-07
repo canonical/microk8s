@@ -1,12 +1,17 @@
 name: Build MicroK8s snap on PR and push to master
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  - push
+  - pull_request
+
+### While we work on the strict feature we want the tests to run even if we do put PRs against the master.
+### When this work get merged into master the following should be commented in.
+#  push:
+#    branches:
+#      - master
+#  pull_request:
+#    branches:
+#      - master
 
 jobs:
   build:
@@ -37,28 +42,79 @@ jobs:
         run: |
           echo -e "$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)\t$(hostname -f) $(hostname -s)" | sudo tee -a /etc/hosts
       # DO NOT FORGET TO REMOVE CODE ABOVE WHEN ISSUE IS ADDRESSED!
-      - name: Running upgrade path test
+      - name: Install dependencies
         run: |
           set -x
           sudo apt-get install python3-setuptools
           sudo pip3 install --upgrade pip
           sudo pip3 install -U pytest sh
-          sudo -E UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade-path.py
-          sudo snap remove microk8s --purge
-      - name: Running addons tests
-        run: |
-          set -x
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
-          sudo snap install microk8s.snap --devmode --dangerous
+      - name: Check branches
+        run: |
+          set -x
+          (cd tests; pytest -s verify-branches.py)
+      - name: Running addons tests in strict mode
+        run: |
+          set -x
+          sudo snap install microk8s.snap --dangerous
+          for i in docker-privileged docker-support kubernetes-support k8s-journald k8s-kubelet \
+                   k8s-kubeproxy dot-kube network network-bind network-control network-observe \
+                   firewall-control process-control kernel-module-observe mount-observe \
+                   hardware-observe system-observe home opengl home-read-all kernel-module-control \
+                   login-session-observe log-observe
+          do
+            sudo snap connect microk8s:$i
+          done
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
-          (cd tests; pytest -s verify-branches.py)
           (cd tests; sudo -E pytest -s -ra test-addons.py)
+          sudo microk8s inspect |
+          grep -Po "Report tarball is at \K.+" |
+          sudo xargs -I {} mv {} inspection-report-strict-${{ strategy.job-index }}.tar.gz
           sudo snap remove microk8s --purge
-      - name: Running upgrade tests
+          sudo rm -rf $HOME/.kube
+          sudo rm -rf $HOME/.config/helm
+      - name: Upload strict inspect tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: inspection-report-strict-actions
+          path: ./inspection-report-strict-${{ strategy.job-index }}.tar.gz
+      - name: Running addons tests in devmode
         run: |
           set -x
+          sudo snap install microk8s.snap --devmode --dangerous
+          for i in docker-privileged docker-support kubernetes-support k8s-journald k8s-kubelet \
+                   k8s-kubeproxy dot-kube network network-bind network-control network-observe \
+                   firewall-control process-control kernel-module-observe mount-observe \
+                   hardware-observe system-observe home opengl home-read-all kernel-module-control \
+                   login-session-observe log-observe
+          do
+            sudo snap connect microk8s:$i
+          done
+          ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
-          sudo -E UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=`pwd`/`ls microk8s*.snap` pytest -s ./tests/test-upgrade.py
+          export SKIP_PROMETHEUS="False"
+          (cd tests; sudo -E pytest -s -ra test-addons.py)
+          sudo microk8s inspect |
+          grep -Po "Report tarball is at \K.+" |
+          sudo xargs -I {} mv {} inspection-report-devmode-${{ strategy.job-index }}.tar.gz
+          sudo snap remove microk8s --purge
+      - name: Upload devmode inspect tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: inspection-report-devmode-actions
+          path: ./inspection-report-devmode-${{ strategy.job-index }}.tar.gz
+      - name: Generate inspect tarball
+        run: >
+          sudo microk8s inspect |
+          grep -Po "Report tarball is at \K.+" |
+          sudo xargs -I {} mv {} inspection-report-fail-${{ strategy.job-index }}.tar.gz
+        if: failure()
+      - name: Upload inspect tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: inspection-report-actions
+          path: ./inspection-report-fail-${{ strategy.job-index }}.tar.gz
+        if: failure()

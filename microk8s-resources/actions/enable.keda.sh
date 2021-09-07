@@ -3,7 +3,6 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
@@ -19,7 +18,7 @@ get_keda () {
   KEDA_VERSION="v2.1.0"
   KEDA_ERSION=$(echo $KEDA_VERSION | sed 's/v//g')
   echo "Fetching keda version $KEDA_ERSION."
-  "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L https://github.com/kedacore/keda/releases/download/${KEDA_VERSION}/keda-${KEDA_ERSION}.yaml -o "$SNAP_DATA/keda/keda.yaml"
+  "${SNAP}/usr/bin/curl" -L https://github.com/kedacore/keda/releases/download/${KEDA_VERSION}/keda-${KEDA_ERSION}.yaml -o "$SNAP_DATA/keda/keda.yaml"
 }
 
 

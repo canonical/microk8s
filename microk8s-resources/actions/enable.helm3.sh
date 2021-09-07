@@ -3,7 +3,6 @@
 set -e
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 echo "Enabling Helm 3"
 
