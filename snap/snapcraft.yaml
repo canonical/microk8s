@@ -35,6 +35,9 @@ plugs:
     interface: personal-files
     write:
       - $HOME/.kube
+  dot-config-helm:
+    interface: personal-files
+    write:
       - $HOME/.config/helm
 
 slots:
@@ -429,6 +432,7 @@ apps:
       - home-read-all
       - home
       - dot-kube
+      - dot-config-helm
       - network
   helm3:
     command: microk8s-helm3.wrapper
@@ -436,6 +440,7 @@ apps:
       - home-read-all
       - home
       - dot-kube
+      - dot-config-helm
       - network
   cilium:
     command: microk8s-cilium.wrapper
