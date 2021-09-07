@@ -305,7 +305,7 @@ check_apparmor
 printf -- 'Gathering system information\n'
 store_sys
 store_network
-#
+
 printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info
 
