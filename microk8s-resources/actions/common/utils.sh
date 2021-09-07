@@ -683,6 +683,8 @@ check_snap_interfaces() {
         "system-observe"
         "home"
         "opengl"
+        "log-observe"
+        "login-session-observe"
     )
     declare -a missing=()
 
