@@ -36,6 +36,15 @@ plugs:
     write:
       - $HOME/.kube
 
+slots:
+  microk8s:
+    interface: content
+    content: microk8s
+    source:
+      read:
+        - $SNAP/.microk8s-info/microk8s
+        - $HOME/.kube
+
 hooks:
   configure:
     plugs:
@@ -425,7 +434,7 @@ apps:
 
 passthrough:
   system-usernames:
-    snap_daemon: shared
+    snap_microk8s: shared
   layout:
     /usr/libexec:
       bind: $SNAP_COMMON/usr/libexec
@@ -905,10 +914,3 @@ parts:
       juju: bin/juju
     prime:
       - bin/juju
-
-slots:
-  microk8s:
-    interface: content
-    content: microk8s
-    source:
-      read: [$SNAP/.microk8s-info/microk8s]
