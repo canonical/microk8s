@@ -6,6 +6,7 @@ import pytest
 import os
 import subprocess
 from os import path
+from utils import snap_interfaces
 
 # Provide a list of VMs you want to reuse. VMs should have already microk8s installed.
 # the test will attempt a refresh to the channel requested for testing
@@ -21,33 +22,6 @@ class VM:
     """
     This class abstracts the backend we are using. It could be either multipass or lxc.
     """
-
-    # List of interfaces we need to manually connect in the case we test a local build
-    INTERFACES = [
-        "docker-privileged",
-        "docker-support",
-        "kubernetes-support",
-        "k8s-journald",
-        "k8s-kubelet",
-        "k8s-kubeproxy",
-        "dot-kube",
-        "network",
-        "network-bind",
-        "network-control",
-        "network-observe",
-        "firewall-control",
-        "process-control",
-        "kernel-module-observe",
-        "mount-observe",
-        "hardware-observe",
-        "system-observe",
-        "home",
-        "opengl",
-        "home-read-all",
-        "kernel-module-control",
-        "login-session-observe",
-        "log-observe",
-    ]
 
     def __init__(self, backend=None, attach_vm=None):
         """Detect the available backends and instantiate a VM
@@ -129,7 +103,7 @@ class VM:
         cmd = ["snap install /var/tmp/microk8s.snap --dangerous"]
         subprocess.check_output(cmd_prefix + cmd)
         time.sleep(20)
-        for i in self.INTERFACES:
+        for i in snap_interfaces:
             cmd = "snap connect microk8s:{}".format(i)
             subprocess.check_output(cmd_prefix + [cmd])
         time.sleep(20)
@@ -170,7 +144,7 @@ class VM:
             "/snap/bin/multipass exec {}  -- sudo "
             "snap install /var/tmp/microk8s.snap --dangerous".format(self.vm_name).split()
         )
-        for i in self.INTERFACES:
+        for i in snap_interfaces:
             subprocess.check_call(
                 "/snap/bin/multipass exec {}  -- sudo "
                 "snap connect microk8s:{}".format(self.vm_name, i).split()

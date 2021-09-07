@@ -187,7 +187,7 @@ class TestUpgrade(object):
 
         # Refresh the snap to the target
         if upgrade_to.endswith(".snap"):
-            cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to)
+            cmd = "sudo snap install {} --dangerous".format(upgrade_to)
         else:
             cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to)
         run_until_success(cmd)
