@@ -62,7 +62,7 @@ jobs:
                    k8s-kubeproxy dot-kube network network-bind network-control network-observe \
                    firewall-control process-control kernel-module-observe mount-observe \
                    hardware-observe system-observe home opengl home-read-all kernel-module-control \
-                   login-session-observe log-observe
+                   login-session-observe log-observe dot-config-helm
           do
             sudo snap connect microk8s:$i
           done
@@ -89,7 +89,7 @@ jobs:
                    k8s-kubeproxy dot-kube network network-bind network-control network-observe \
                    firewall-control process-control kernel-module-observe mount-observe \
                    hardware-observe system-observe home opengl home-read-all kernel-module-control \
-                   login-session-observe log-observe
+                   login-session-observe log-observe dot-config-helm
           do
             sudo snap connect microk8s:$i
           done
