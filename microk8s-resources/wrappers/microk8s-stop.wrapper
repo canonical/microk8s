@@ -13,6 +13,7 @@ then
     exit 0
 fi
 
+exit_if_not_root
 exit_if_no_permissions
 
 FORCE=false

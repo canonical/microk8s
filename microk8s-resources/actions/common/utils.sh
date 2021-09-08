@@ -14,6 +14,14 @@ exit_if_no_permissions() {
   fi
 }
 
+exit_if_not_root() {
+  # test if we run with sudo
+  if [ "$EUID" -ne 0 ]
+  then echo "Elevated permissions are needed for this command. Please use sudo."
+    exit 1
+  fi
+}
+
 exit_if_stopped() {
   # test if the snap is marked as stopped
   if [ -e ${SNAP_DATA}/var/lock/stopped.lock ]

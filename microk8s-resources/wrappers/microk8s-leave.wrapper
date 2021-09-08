@@ -18,6 +18,7 @@ if echo "$*" | grep -q -- 'help'; then
 fi
 
 exit_if_stopped
+exit_if_not_root
 exit_if_no_permissions
 
 if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ] &&
