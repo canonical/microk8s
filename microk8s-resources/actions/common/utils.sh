@@ -667,6 +667,7 @@ check_snap_interfaces() {
         "docker-privileged"
         "docker-support"
         "dot-kube"
+        "dot-config-helm"
         "firewall-control"
         "hardware-observe"
         "home"

@@ -17,6 +17,7 @@ snap_interfaces = [
     "k8s-kubelet",
     "k8s-kubeproxy",
     "dot-kube",
+    "dot-config-helm",
     "network",
     "network-bind",
     "network-control",

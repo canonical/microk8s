@@ -387,6 +387,7 @@ apps:
       - home-read-all
       - home
       - dot-kube
+      - dot-config-helm
       - network
       - network-control
       - kernel-module-observe
