@@ -439,23 +439,24 @@ parts:
     source: snap
     plugin: dump
     stage-packages:
-      - curl
       - aufs-tools
+      - coreutils
+      - curl
+      - diffutils
+      - ethtool
       - gawk
+      - grep
+      - hostname
+      - iproute2
+      - jq
+      - libatm1
+      - members
+      - net-tools
       - sed
       - socat
-      - grep
-      - jq
-      - hostname
       - squashfs-tools
       - tar
-      - coreutils
-      - diffutils
-      - iproute2
-      - ethtool
-      - net-tools
       - util-linux
-      - libatm1
       - zfsutils-linux
 
   cluster-agent:
