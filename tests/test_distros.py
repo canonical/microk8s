@@ -81,7 +81,7 @@ class InstallTests:
 
     def test_snap_install(self):
         """Test installing a snap"""
-        self.node.snap.install("microk8s", channel=self.install_version, classic=True)
+        self.node.snap.install("microk8s", channel=self.install_version, classic=False)
         # Required for registry
         self.node.snap.install("docker", channel="stable", classic=True)
         self.node.docker.set_storage_driver("vfs")
@@ -140,9 +140,9 @@ class UpgradeTests(InstallTests):
         print(f"Install Version: {self.install_version}")
         print(f"Upgrade Version: {self.upgrade_version}")
         if self.upgrade_version.endswith(".snap"):
-            self.node.snap.install(self.upgrade_version, classic=True, dangerous=True)
+            self.node.snap.install(self.upgrade_version, classic=False, dangerous=True)
         else:
-            self.node.snap.refresh("microk8s", channel=self.upgrade_version, classic=True)
+            self.node.snap.refresh("microk8s", channel=self.upgrade_version, classic=False)
 
     def test_restart_microk8s(self):
         """Test restarting microk8s"""

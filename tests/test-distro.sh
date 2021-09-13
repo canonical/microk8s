@@ -75,9 +75,9 @@ create_machine $NAME $PROXY
 if [ ${TO_CHANNEL} == "local" ]
 then
   lxc file push ./microk8s_latest_amd64.snap $VM2_NAME/tmp/
-  lxc exec $VM1_NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+  lxc exec $VM1_NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous
 else
-  lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL} --classic
+  lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL}
 fi
 lxc exec $NAME -- /root/tests/smoke-test.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774

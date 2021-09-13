@@ -59,7 +59,7 @@ class TestUpgradePath(object):
 
         channel = "1.{}/stable".format(start_channel)
         print("Installing {}".format(channel))
-        cmd = "sudo snap install microk8s --classic --channel={}".format(channel)
+        cmd = "sudo snap install microk8s --channel={}".format(channel)
         run_until_success(cmd)
         wait_for_installation()
         channel_minor = start_channel
@@ -67,7 +67,7 @@ class TestUpgradePath(object):
         while channel_minor <= last_stable_minor:
             channel = "1.{}/stable".format(channel_minor)
             print("Refreshing to {}".format(channel))
-            cmd = "sudo snap refresh microk8s --classic --channel={}".format(channel)
+            cmd = "sudo snap refresh microk8s --channel={}".format(channel)
             run_until_success(cmd)
             wait_for_installation()
             time.sleep(30)
@@ -75,7 +75,7 @@ class TestUpgradePath(object):
 
         print("Installing {}".format(upgrade_to))
         if upgrade_to.endswith(".snap"):
-            cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to)
+            cmd = "sudo snap install {} --dangerous".format(upgrade_to)
         else:
             cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to)
         run_until_success(cmd, timeout_insec=600)
