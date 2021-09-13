@@ -22,6 +22,7 @@ function create_machine() {
   cat tests/lxc/microk8s.profile | lxc profile edit microk8s
 
   lxc launch -p default -p microk8s $DISTRO $NAME
+  lxc config device override $NAME root size=50GB
 
   # Allow for the machine to boot and get an IP
   sleep 20
