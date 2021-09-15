@@ -705,12 +705,12 @@ mark_boot_time() {
   echo "$now" > "$1"/last-start-date
 }
 
-try_migrate_users_to_snap_microk8s() {
+try_copy_users_to_snap_microk8s() {
   # try copy users from microk8s to snap_microk8s group
   if getent group microk8s >/dev/null 2>&1 &&
      getent group snap_microk8s >/dev/null 2>&1 
   then
-    for m in $(members microk8s)
+    for m in $($SNAP/usr/bin/members microk8s)
     do
       echo "Processing user $m"
       if ! usermod -a -G snap_microk8s $m

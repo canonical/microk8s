@@ -330,7 +330,7 @@ then
   chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ || true
 fi
 
-try_migrate_users_to_snap_microk8s
+try_copy_users_to_snap_microk8s
 
 if ! [ -e "${SNAP_DATA}/opt/cni/bin/flanneld" ]
 then
