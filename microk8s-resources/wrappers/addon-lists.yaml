@@ -209,7 +209,7 @@ microk8s-addons:
         - amd64
 
     - name: "openfaas"
-      description: "openfaas serverless framework"
+      description: "OpenFaaS serverless framework"
       version: "6.2.2"
       check_status: "pod/gateway"
       supported_architectures:
