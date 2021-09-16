@@ -72,10 +72,11 @@ lxc delete $NAME --force
 # Test addons
 NAME=machine-$RANDOM
 create_machine $NAME $PROXY
-if [ ${TO_CHANNEL} == "local" ]
+if [ $(echo "${TO_CHANNEL}" | grep ".snap") ]
 then
-  lxc file push ./microk8s_latest_amd64.snap $VM2_NAME/tmp/
-  lxc exec $VM1_NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous
+  lxc file push ./${TO_CHANNEL} $NAME/tmp/
+  lxc exec $NAME -- snap install /tmp/${TO_CHANNEL} --dangerous
+  lxc exec $NAME -- bash -c 'for i in docker-privileged docker-support kubernetes-support k8s-journald k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe dot-config-helm home-read-all log-observe login-session-observe home opengl; do snap connect microk8s:$i; done'
 else
   lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL}
 fi
