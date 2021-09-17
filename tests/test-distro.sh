@@ -22,13 +22,14 @@ function create_machine() {
   cat tests/lxc/microk8s.profile | lxc profile edit microk8s
 
   lxc launch -p default -p microk8s $DISTRO $NAME
+  lxc config device override $NAME root size=50GB
 
   # Allow for the machine to boot and get an IP
   sleep 20
-  tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /var/tmp
+  tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /root
   DISTRO_DEPS_TMP="${DISTRO//:/_}"
   DISTRO_DEPS="${DISTRO_DEPS_TMP////-}"
-  lxc exec $NAME -- /bin/bash "/var/tmp/tests/lxc/install-deps/$DISTRO_DEPS"
+  lxc exec $NAME -- /bin/bash "/root/tests/lxc/install-deps/$DISTRO_DEPS"
   lxc exec $NAME -- reboot
   sleep 20
 
@@ -58,29 +59,29 @@ fi
 # TODO Handle local in the upgrade
 create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade.py"
+lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /root/tests/test-upgrade.py"
 lxc delete $NAME --force
 
 # Test upgrade-path
 NAME=machine-$RANDOM
 create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade-path.py"
+lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /root/tests/test-upgrade-path.py"
 lxc delete $NAME --force
 
 # Test addons
 NAME=machine-$RANDOM
 create_machine $NAME $PROXY
-if [ ${TO_CHANNEL} == "local" ]
+if [ $(echo "${TO_CHANNEL}" | grep ".snap") ]
 then
-  lxc file push ./microk8s_latest_amd64.snap $VM2_NAME/tmp/
-  lxc exec $VM1_NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+  lxc file push ./${TO_CHANNEL} $NAME/tmp/
+  lxc exec $NAME -- snap install /tmp/${TO_CHANNEL} --dangerous
+  lxc exec $NAME -- bash -c 'for i in docker-privileged docker-support kubernetes-support k8s-journald k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe dot-config-helm home-read-all log-observe login-session-observe home opengl; do snap connect microk8s:$i; done'
 else
-  lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL} --classic
+  lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL}
 fi
-lxc exec $NAME -- /var/tmp/tests/patch-kube-proxy.sh
-lxc exec $NAME -- /var/tmp/tests/smoke-test.sh
+lxc exec $NAME -- /root/tests/smoke-test.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "pytest -s /var/tmp/tests/test-addons.py"
+lxc exec $NAME -- script -e -c "pytest -s /root/tests/test-addons.py"
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force

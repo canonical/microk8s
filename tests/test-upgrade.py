@@ -40,16 +40,9 @@ class TestUpgrade(object):
         """
         print("Testing upgrade from {} to {}".format(upgrade_from, upgrade_to))
 
-        cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from)
+        cmd = "sudo snap install microk8s --channel={}".format(upgrade_from)
         run_until_success(cmd)
         wait_for_installation()
-        if is_container():
-            # In some setups (eg LXC on GCE) the hashsize nf_conntrack file under
-            # sys is marked as rw but any update on it is failing causing kube-proxy
-            # to fail.
-            here = os.path.dirname(os.path.abspath(__file__))
-            apply_patch = os.path.join(here, "patch-kube-proxy.sh")
-            check_call("sudo {}".format(apply_patch).split())
 
         # Run through the validators and
         # select those that were valid for the original snap
