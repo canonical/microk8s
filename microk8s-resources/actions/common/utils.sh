@@ -704,3 +704,21 @@ mark_boot_time() {
   now=$(date +%s)
   echo "$now" > "$1"/last-start-date
 }
+
+try_copy_users_to_snap_microk8s() {
+  # try copy users from microk8s to snap_microk8s group
+  if getent group microk8s >/dev/null 2>&1 &&
+     getent group snap_microk8s >/dev/null 2>&1 
+  then
+    for m in $($SNAP/usr/bin/members microk8s)
+    do
+      echo "Processing user $m"
+      if ! usermod -a -G snap_microk8s $m
+      then
+        echo "Failed to migrate user $m to snap_microk8s group"
+      fi
+    done
+  else
+    echo "One of the microk8s or snap_microk8s groups is missing"
+  fi
+}
