@@ -178,14 +178,14 @@ class TestAddons(object):
 
     @pytest.mark.skipif(
         os.environ.get("UNDER_TIME_PRESSURE") == "True",
-        reason="Skipping GPU tests as we are under time pressure",
+        reason="Skipping FPGA tests as we are under time pressure",
     )
     @pytest.mark.skipif(
         os.environ.get("TEST_FPGA") != "True",
         reason="Skipping FPGA because TEST_FPGA is not set",
     )
     @pytest.mark.skipif(
-        platform.machine() != "x86_64", reason="GPU tests are only relevant in x86 architectures"
+        platform.machine() != "x86_64", reason="FPGA tests are only relevant in x86 architectures"
     )
     def test_inaccel(self):
         """
