@@ -229,3 +229,10 @@ microk8s-addons:
       check_status: "${SNAP_DATA}/var/lock/kata.enabled"
       supported_architectures:
         - amd64
+
+    - name: "inaccel"
+      description: "Simplifying FPGA management in Kubernetes"
+      version: ""
+      check_status: "daemonset.apps/fpga-operator"
+      supported_architectures:
+        - amd64
