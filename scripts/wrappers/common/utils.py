@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Union, List, Tuple, Dict
 
 import click
 import yaml
@@ -13,21 +14,21 @@ import yaml
 kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/client.config")
 
 
-def get_current_arch():
+def get_current_arch() -> str:
     # architecture mapping
     arch_mapping = {"aarch64": "arm64", "armv7l": "armhf", "x86_64": "amd64", "s390x": "s390x"}
 
     return arch_mapping[platform.machine()]
 
 
-def snap_data() -> Path:
+def snap_data() -> pathlib.PosixPath:
     try:
         return Path(os.environ["SNAP_DATA"])
     except KeyError:
         return Path("/var/snap/microk8s/current")
 
 
-def run(*args, die=True):
+def run(*args: str, die: bool = True) -> subprocess.CompletedProcess:
     # Add wrappers to $PATH
     env = os.environ.copy()
     env["PATH"] += ":%s" % os.environ["SNAP"]
@@ -49,7 +50,7 @@ def run(*args, die=True):
     return result.stdout.decode("utf-8")
 
 
-def is_cluster_ready():
+def is_cluster_ready() -> bool:
     try:
         service_output = kubectl_get("all")
         node_output = kubectl_get("nodes")
@@ -62,12 +63,12 @@ def is_cluster_ready():
         return False
 
 
-def is_ha_enabled():
+def is_ha_enabled() -> bool:
     ha_lock = os.path.expandvars("${SNAP_DATA}/var/lock/ha-cluster")
     return os.path.isfile(ha_lock)
 
 
-def get_dqlite_info():
+def get_dqlite_info() -> Union[List[None],List[Tuple[str]]]:
     cluster_dir = os.path.expandvars("${SNAP_DATA}/var/kubernetes/backend")
     snap_path = os.environ.get("SNAP")
 
@@ -111,14 +112,14 @@ def get_dqlite_info():
     return info
 
 
-def is_cluster_locked():
+def is_cluster_locked() -> None:
     if (snap_data() / "var/lock/clustered.lock").exists():
         click.echo("This MicroK8s deployment is acting as a node in a cluster.")
         click.echo("Please use the master node.")
         sys.exit(1)
 
 
-def wait_for_ready(timeout):
+def wait_for_ready(timeout: int) -> bool:
     start_time = time.time()
 
     while True:
@@ -130,14 +131,14 @@ def wait_for_ready(timeout):
             time.sleep(2)
 
 
-def exit_if_stopped():
+def exit_if_stopped() -> None:
     stoppedLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/stopped.lock")
     if os.path.isfile(stoppedLockFile):
         print("microk8s is not running, try microk8s start")
         exit(0)
 
 
-def exit_if_no_permission():
+def exit_if_no_permission() -> None:
     user = getpass.getuser()
     # test if we can access the default kubeconfig
     clientConfigFile = os.path.expandvars("${SNAP_DATA}/credentials/client.config")
@@ -158,26 +159,26 @@ def exit_if_no_permission():
         exit(1)
 
 
-def ensure_started():
+def ensure_started() -> None:
     if (snap_data() / "var/lock/stopped.lock").exists():
         click.echo("microk8s is not running, try microk8s start", err=True)
         sys.exit(1)
 
 
-def kubectl_get(cmd, namespace="--all-namespaces"):
+def kubectl_get(cmd: str, namespace: str ="--all-namespaces") -> subprocess.CompletedProcess:
     if namespace == "--all-namespaces":
         return run("kubectl", kubeconfig, "get", cmd, "--all-namespaces", die=False)
     else:
         return run("kubectl", kubeconfig, "get", cmd, "-n", namespace, die=False)
 
 
-def kubectl_get_clusterroles():
+def kubectl_get_clusterroles() -> subprocess.CompletedProcess:
     return run(
         "kubectl", kubeconfig, "get", "clusterroles", "--show-kind", "--no-headers", die=False
     )
 
 
-def get_available_addons(arch):
+def get_available_addons(arch: str) -> List[Dict]:
     addon_dataset = os.path.expandvars("${SNAP}/addon-lists.yaml")
     available = []
     with open(addon_dataset, "r") as file:
@@ -192,7 +193,7 @@ def get_available_addons(arch):
     return available
 
 
-def get_addon_by_name(addons, name):
+def get_addon_by_name(addons: List[Dict[str]], name: str) -> List[Dict[str]]:
     filtered_addon = []
     for addon in addons:
         if name == addon["name"]:
@@ -200,7 +201,7 @@ def get_addon_by_name(addons, name):
     return filtered_addon
 
 
-def is_service_expected_to_start(service):
+def is_service_expected_to_start(service: str) -> bool:
     """
     Check if a service is supposed to start
     :param service: the service name
@@ -211,7 +212,7 @@ def is_service_expected_to_start(service):
     return os.path.exists(lock_path) and not os.path.isfile(lock)
 
 
-def set_service_expected_to_start(service, start=True):
+def set_service_expected_to_start(service: str, start: bool = True) -> None:
     """
     Check if a service is not expected to start.
     :param service: the service name
@@ -226,7 +227,7 @@ def set_service_expected_to_start(service, start=True):
         os.close(fd)
 
 
-def check_help_flag(addons: list) -> bool:
+def check_help_flag(addons: List[str]) -> bool:
     """Checks to see if a help message needs to be printed for an addon.
 
     Not all addons check for help flags themselves. Until they do, intercept
@@ -240,7 +241,7 @@ def check_help_flag(addons: list) -> bool:
     return False
 
 
-def xable(action: str, addons: list, xabled_addons: list):
+def xable(action: str, addons: List[str], xabled_addons: List[str]) -> None:
     """Enables or disables the given addons.
 
     Collated into a single function since the logic is identical other than
