@@ -82,6 +82,11 @@ jobs:
         with:
           name: inspection-report-strict-actions
           path: ./inspection-report-strict-${{ strategy.job-index }}.tar.gz
+      - name: Upload AppArmor denials
+        uses: actions/upload-artifact@v2
+        with:
+          name: apparmor-denials
+          path: ./denials-${{ strategy.job-index }}.log
       - name: Running addons tests in devmode
         run: |
           set -x
@@ -102,11 +107,6 @@ jobs:
           grep -Po "Report tarball is at \K.+" |
           sudo xargs -I {} mv {} inspection-report-devmode-${{ strategy.job-index }}.tar.gz
           sudo snap remove microk8s --purge
-      - name: Upload AppArmor denials
-        uses: actions/upload-artifact@v2
-        with:
-          name: apparmor-denials
-          path: ./denials-${{ strategy.job-index }}.log
       - name: Upload devmode inspect tarball
         uses: actions/upload-artifact@v2
         with:
