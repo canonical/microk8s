@@ -76,6 +76,7 @@ jobs:
           sudo snap remove microk8s --purge
           sudo rm -rf $HOME/.kube
           sudo rm -rf $HOME/.config/helm
+          sudo dmesg | grep 'apparmor="DENIED"' > ./denials-${{ strategy.job-index }}.log
       - name: Upload strict inspect tarball
         uses: actions/upload-artifact@v2
         with:
@@ -101,11 +102,25 @@ jobs:
           grep -Po "Report tarball is at \K.+" |
           sudo xargs -I {} mv {} inspection-report-devmode-${{ strategy.job-index }}.tar.gz
           sudo snap remove microk8s --purge
+      - name: Upload AppArmor denials
+        uses: actions/upload-artifact@v2
+        with:
+          name: apparmor-denials
+          path: ./denials-${{ strategy.job-index }}.log
       - name: Upload devmode inspect tarball
         uses: actions/upload-artifact@v2
         with:
           name: inspection-report-devmode-actions
           path: ./inspection-report-devmode-${{ strategy.job-index }}.tar.gz
+      - name: Generate AppArmor on failure
+        run: sudo dmesg | grep 'apparmor="DENIED"' > ./denials-${{ strategy.job-index }}.log
+        if: failure()
+      - name: Upload AppArmor denials failure
+        uses: actions/upload-artifact@v2
+        with:
+          name: apparmor-denials
+          path: ./denials-${{ strategy.job-index }}.log
+        if: failure()
       - name: Generate inspect tarball
         run: >
           sudo microk8s inspect |
