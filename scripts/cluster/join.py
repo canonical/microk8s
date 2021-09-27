@@ -910,6 +910,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
                     snappath=snap_path, dbdir=cluster_dir
                 ).split(),
                 timeout=4,
+                stderr=subprocess.STDOUT,
             )
             if host in out.decode():
                 break
