@@ -29,7 +29,7 @@ HELM="$SNAP_DATA/bin/helm3 --kubeconfig=$SNAP_DATA/credentials/client.config"
 
 $HELM repo add openebs https://openebs.github.io/charts
 $HELM repo update
-$HELM -n openebs install openebs openebs/openebs \
+$HELM -n openebs install openebs openebs/openebs --version '2.x.x' \
     --set cstor.enabled=true \
     --set jiva.enabled=true \
     --set localpv-provisioner.enabled=true \
