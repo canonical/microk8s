@@ -287,7 +287,7 @@ parts:
       - git
     override-build: |
       set -eux
-      snap refresh go --channel=1.16/stable || true
+      snap refresh go --channel=1.17/stable || true
       . ./set-env-variables.sh
 
       # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
@@ -439,23 +439,24 @@ parts:
     source: snap
     plugin: dump
     stage-packages:
-      - curl
       - aufs-tools
+      - coreutils
+      - curl
+      - diffutils
+      - ethtool
       - gawk
+      - grep
+      - hostname
+      - iproute2
+      - jq
+      - libatm1
+      - members
+      - net-tools
       - sed
       - socat
-      - grep
-      - jq
-      - hostname
       - squashfs-tools
       - tar
-      - coreutils
-      - diffutils
-      - iproute2
-      - ethtool
-      - net-tools
       - util-linux
-      - libatm1
       - zfsutils-linux
 
   cluster-agent:
@@ -540,6 +541,7 @@ parts:
         rm actions/*.openfaas.sh
         rm -rf "actions/kata"
         rm actions/*.kata.sh
+        rm actions/*.inaccel.sh
       fi
 
       # Remove addons that do not work on s390x
@@ -571,6 +573,7 @@ parts:
         rm actions/*.linkerd.sh
         rm -rf "actions/kata"
         rm actions/*.kata.sh
+        rm actions/*.inaccel.sh
       fi
 
       echo "Creating inspect hook"

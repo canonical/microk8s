@@ -209,7 +209,7 @@ microk8s-addons:
         - amd64
 
     - name: "openfaas"
-      description: "openfaas serverless framework"
+      description: "OpenFaaS serverless framework"
       version: "6.2.2"
       check_status: "pod/gateway"
       supported_architectures:
@@ -227,5 +227,12 @@ microk8s-addons:
       description: "Kata Containers is a secure runtime with lightweight VMS"
       version: "latest/stable"
       check_status: "${SNAP_DATA}/var/lock/kata.enabled"
+      supported_architectures:
+        - amd64
+
+    - name: "inaccel"
+      description: "Simplifying FPGA management in Kubernetes"
+      version: ""
+      check_status: "daemonset.apps/fpga-operator"
       supported_architectures:
         - amd64
