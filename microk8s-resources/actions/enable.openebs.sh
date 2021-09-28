@@ -30,6 +30,7 @@ HELM="$SNAP_DATA/bin/helm3 --kubeconfig=$SNAP_DATA/credentials/client.config"
 $HELM repo add openebs https://openebs.github.io/charts
 $HELM repo update
 $HELM -n openebs install openebs openebs/openebs \
+    --version 2.x.x \
     --set cstor.enabled=true \
     --set jiva.enabled=true \
     --set localpv-provisioner.enabled=true \
@@ -40,7 +41,8 @@ $HELM -n openebs install openebs openebs/openebs \
     --set jiva.csiNode.kubeletDir="$SNAP_COMMON/var/lib/kubelet/" \
     --set localpv-provisioner.localpv.basePath="$SNAP_COMMON/var/openebs/local" \
     --set localpv-provisioner.hostpathClass.basePath="$SNAP_COMMON/var/openebs/local" \
-    --set openebs-ndm.ndm.sparse.path="$SNAP_COMMON/var/openebs/sparse"
+    --set openebs-ndm.ndm.sparse.path="$SNAP_COMMON/var/openebs/sparse" \
+    --set openebs-ndm.varDirectoryPath.baseDir="$SNAP_COMMON/var/openebs"
 
 echo "OpenEBS is installed"
 
