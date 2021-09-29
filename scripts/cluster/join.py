@@ -162,6 +162,7 @@ def usage():
         "--skip-verify  skip the certificate verification of the node we are"
         " joining to (default: false)."
     )
+    print("--force  force the node removal operation" " (default: false).")
 
 
 def set_arg(key, value, file):
