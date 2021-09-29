@@ -165,7 +165,6 @@ def usage():
     print("--force  force the node removal operation" " (default: false).")
 
 
-
 def set_arg(key, value, file):
     """
     Set an argument to a file
