@@ -347,11 +347,11 @@ parts:
 
   migrator:
     build-snaps: [go]
-    source: https://github.com/ktsakalozos/go-migrator
+    source: https://github.com/canonical/go-migrator
     source-type: git
     plugin: go
     go-channel: 1.15/stable
-    go-importpath: github.com/ktsakalozos/go-migrator
+    go-importpath: github.com/canonical/go-migrator
     build-packages:
       - gcc
     prime:
