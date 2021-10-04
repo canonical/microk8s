@@ -143,10 +143,25 @@ function suggest_fixes {
   if /snap/core18/current/usr/bin/which ufw &> /dev/null
   then
     ufw=$(ufw status)
-    if echo $ufw | grep "Status: active" &> /dev/null && ! echo $ufw | grep vxlan.calico &> /dev/null
+    if echo $ufw | grep -q "Status: active"
     then
-      printf -- '\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic '
-      printf -- 'with: sudo ufw allow in on vxlan.calico && sudo ufw allow out on vxlan.calico\n'
+      header='\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic with: \n'
+      content=''
+      if ! echo $ufw | grep -q vxlan.calico
+      then
+        content+='  sudo ufw allow in on vxlan.calico && sudo ufw allow out on vxlan.calico\n'
+      fi
+      if ! echo $ufw | grep 'cali+' &> /dev/null
+      then
+        content+='  sudo ufw allow in on cali+ && sudo ufw allow out on cali+\n'
+      fi
+
+      if [[ ! -z "$content" ]]
+      then
+        echo printing
+        printf -- "$header"
+        printf -- "$content"
+      fi
     fi
   fi
 
@@ -188,11 +203,7 @@ function suggest_fixes {
       printf -- '\033[0;33mWARNING: \033[0m The memory cgroup is not enabled. \n'
       printf -- 'The cluster may not be functioning properly. Please ensure cgroups are enabled \n'
       printf -- 'See for example: https://microk8s.io/docs/install-alternatives#heading--arm \n'
-    else
-      printf -- 'cgroups2 enabled \n'
     fi
-  else
-      printf -- 'cgroups enabled \n'
   fi
 
   # Fedora Specific Checks
@@ -212,6 +223,20 @@ function suggest_fixes {
       printf -- '\033[31m FAIL: \033[0m Cgroup v1 seems not to be enabled. Please enable it \n'
       printf -- '\tby executing the following command and reboot: \n'
       printf -- '\tgrubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=0" \n'
+    fi
+  fi
+
+  # Debian 9 checks
+  if debian9_release
+  then
+
+    # Check if snapctl is fresh
+    if ! [ -L "/usr/bin/snapctl" ]
+    then
+      printf -- '\033[0;33mWARNING: \033[0m On Debian 9 the snapctl binary if outdated. Replace it with: \n'
+      printf -- '\t sudo snap install core \n'
+      printf -- '\t sudo mv /usr/bin/snapctl /usr/bin/snapctl.old \n'
+      printf -- '\t sudo ln -s  /snap/core/current/usr/bin/snapctl /usr/bin/snapctl \n'
     fi
   fi
 
@@ -243,6 +268,16 @@ function suggest_fixes {
 function fedora_release {
   local RELEASE=`cat /etc/os-release | grep "^NAME=" | cut -f2 -d=`
   if [ "${RELEASE}" == "Fedora" ]
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
+function debian9_release {
+  if [ -e /etc/debian_version ] &&
+     grep "9\." /etc/debian_version -q
   then
     return 0
   else
@@ -287,6 +322,7 @@ printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"
 check_service "snap.microk8s.daemon-containerd"
 check_service "snap.microk8s.daemon-apiserver-kicker"
+check_service "snap.microk8s.daemon-k8s-dqlite"
 if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
 then
   check_service "snap.microk8s.daemon-kubelite"

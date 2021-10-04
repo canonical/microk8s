@@ -705,6 +705,24 @@ mark_boot_time() {
   echo "$now" > "$1"/last-start-date
 }
 
+try_copy_users_to_snap_microk8s() {
+  # try copy users from microk8s to snap_microk8s group
+  if getent group microk8s >/dev/null 2>&1 &&
+     getent group snap_microk8s >/dev/null 2>&1
+  then
+    for m in $($SNAP/usr/bin/members microk8s)
+    do
+      echo "Processing user $m"
+      if ! usermod -a -G snap_microk8s $m
+      then
+        echo "Failed to migrate user $m to snap_microk8s group"
+      fi
+    done
+  else
+    echo "One of the microk8s or snap_microk8s groups is missing"
+  fi
+}
+
 cluster_agent_port() {
   port="25000"
   if grep -e port "${SNAP_DATA}"/args/cluster-agent &> /dev/null
@@ -720,8 +738,8 @@ server_cert_check() {
 }
 
 # check if this file is run with arguments
-if [[ "$0" == "${BASH_SOURCE}" ]] && 
-   [[ ! -z "$1" ]] 
+if [[ "$0" == "${BASH_SOURCE}" ]] &&
+   [[ ! -z "$1" ]]
 then
   # call help
   if echo "$*" | grep -q -- 'help'; then

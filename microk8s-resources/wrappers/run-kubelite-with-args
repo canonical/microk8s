@@ -74,6 +74,25 @@ then
   fi
 fi
 
+#UFW configuration
+if ufw version &> /dev/null
+then
+  ufw=$(ufw status)
+  if echo $ufw | grep -q "Status: active" &&
+     ! [ -e ${SNAP_DATA}/var/lock/skip.ufw ]
+  then
+    # These succeed regardless of whether the rule exists already or not
+    echo "Found enabled UFW: adding rules to allow in/out traffic on 'cali+' and 'vxlan.calico' devices"
+    if ! ufw allow in on vxlan.calico ||
+       ! ufw allow out on vxlan.calico ||
+       ! ufw allow in on cali+ ||
+       ! ufw allow out on cali+
+    then
+      echo "Failed to update UFW rules. You may want to set them manually."
+    fi
+  fi
+fi
+
 # wait for containerd socket
 if grep -e "--address " $SNAP_DATA/args/containerd &> /dev/null
 then
