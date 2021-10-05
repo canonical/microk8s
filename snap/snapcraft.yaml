@@ -57,7 +57,7 @@ apps:
     command: run-null-daemon
     daemon: simple
   daemon-k8s-dqlite:
-    command: wrappers/run-k8s-dqlite-with-args
+    command: run-k8s-dqlite-with-args
     daemon: simple
   dashboard-proxy:
     command: microk8s-dashboard-proxy.wrapper
