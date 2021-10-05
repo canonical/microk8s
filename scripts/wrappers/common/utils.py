@@ -21,14 +21,14 @@ def get_current_arch() -> str:
     return arch_mapping[platform.machine()]
 
 
-def snap_data() -> pathlib.PosixPath:
+def snap_data() -> Path:
     try:
         return Path(os.environ["SNAP_DATA"])
     except KeyError:
         return Path("/var/snap/microk8s/current")
 
 
-def run(*args: str, die: bool = True) -> subprocess.CompletedProcess:
+def run(*args: str, die: bool = True) -> str:
     # Add wrappers to $PATH
     env = os.environ.copy()
     env["PATH"] += ":%s" % os.environ["SNAP"]
@@ -68,7 +68,7 @@ def is_ha_enabled() -> bool:
     return os.path.isfile(ha_lock)
 
 
-def get_dqlite_info() -> Union[List[None],List[Tuple[str]]]:
+def get_dqlite_info() -> Union[List[None], List[Tuple[str]]]:
     cluster_dir = os.path.expandvars("${SNAP_DATA}/var/kubernetes/backend")
     snap_path = os.environ.get("SNAP")
 
@@ -165,7 +165,7 @@ def ensure_started() -> None:
         sys.exit(1)
 
 
-def kubectl_get(cmd: str, namespace: str ="--all-namespaces") -> subprocess.CompletedProcess:
+def kubectl_get(cmd: str, namespace: str = "--all-namespaces") -> subprocess.CompletedProcess:
     if namespace == "--all-namespaces":
         return run("kubectl", kubeconfig, "get", cmd, "--all-namespaces", die=False)
     else:
