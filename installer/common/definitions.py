@@ -29,4 +29,4 @@ DEFAULT_CORES: int = 2
 DEFAULT_MEMORY: int = 4
 DEFAULT_DISK: int = 50
 DEFAULT_ASSUME: bool = False
-DEFAULT_CHANNEL: str = "latest/stable"
+DEFAULT_CHANNEL: str = "1.22/stable"

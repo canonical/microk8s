@@ -1,6 +1,8 @@
 import os
+import sys
 import time
 import argparse
+import subprocess
 
 try:
     from secrets import token_hex
@@ -12,6 +14,7 @@ except ImportError:
 
 
 cluster_tokens_file = os.path.expandvars("${SNAP_DATA}/credentials/cluster-tokens.txt")
+utils_sh_file = os.path.expandvars("${SNAP}/actions/common/utils.sh")
 token_with_expiry = "{}|{}\n"
 token_without_expiry = "{}\n"
 
@@ -36,6 +39,64 @@ def add_token_with_expiry(token, file, ttl):
             fp.write(token_without_expiry.format(token))
 
 
+def run_util(*args, debug=False):
+    env = os.environ.copy()
+    prog = ["bash", utils_sh_file]
+    prog.extend(args)
+
+    if debug:
+        print("\033[;1;32m+ %s\033[;0;0m" % " ".join(prog))
+
+    result = subprocess.run(
+        prog,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
+    )
+
+    try:
+        result.check_returncode()
+    except subprocess.CalledProcessError:
+        print("Failed to call utility function.")
+        sys.exit(1)
+
+    return result.stdout.decode("utf-8").strip()
+
+
+def get_network_info():
+    """
+    Obtain machine IP address(es) and cluster agent port.
+    :return: tuple of default IP, all IPs, and cluster agent port
+    """
+    default_ip = run_util("get_default_ip")
+    all_ips = run_util("get_ips").split(" ")
+    port = run_util("cluster_agent_port")
+
+    return (default_ip, all_ips, port)
+
+
+def print_pretty(token, check):
+    default_ip, all_ips, port = get_network_info()
+
+    print("From the node you wish to join to this cluster, run the following:")
+    print(f"microk8s join {default_ip}:{port}/{token}/{check}\n")
+
+    print(
+        "If the node you are adding is not reachable through the default interface you can use one of the following:"
+    )
+    for ip in all_ips:
+        print(f"microk8s join {ip}:{port}/{token}/{check}")
+
+
+def print_short(token, check):
+    default_ip, all_ips, port = get_network_info()
+
+    print(f"microk8s join {default_ip}:{port}/{token}/{check}")
+    for ip in all_ips:
+        print(f"microk8s join {ip}:{port}/{token}/{check}")
+
+
 if __name__ == "__main__":
 
     # initiate the parser with a description
@@ -58,6 +119,12 @@ if __name__ == "__main__":
         help="Specify the bootstrap token to add, must be 32 characters long. "
         "Auto generates when empty.",
     )
+    parser.add_argument(
+        "--format",
+        help="Format the output of the token in pretty, short, token, or token-check",
+        default="pretty",
+        choices={"pretty", "short", "token", "token-check"},
+    )
 
     # read arguments from the command line
     args = parser.parse_args()
@@ -74,4 +141,13 @@ if __name__ == "__main__":
         exit(1)
 
     add_token_with_expiry(token, cluster_tokens_file, ttl)
-    print(token)
+    check = run_util("server_cert_check")
+
+    if args.format == "pretty":
+        print_pretty(token, check)
+    elif args.format == "short":
+        print_short(token, check)
+    elif args.format == "token-check":
+        print(f"{token}/{check}")
+    else:
+        print(token)

@@ -172,6 +172,30 @@ def validate_gpu():
     assert "PASSED" in result
 
 
+def validate_inaccel():
+    """
+    Validate inaccel
+    """
+    if platform.machine() != "x86_64":
+        print("FPGA tests are only relevant in x86 architectures")
+        return
+
+    wait_for_pod_state("", "kube-system", "running", label="app.kubernetes.io/name=fpga-operator")
+    here = os.path.dirname(os.path.abspath(__file__))
+    manifest = os.path.join(here, "templates", "inaccel.yaml")
+
+    get_pod = kubectl_get("po")
+    if "inaccel-vadd" in str(get_pod):
+        # Cleanup
+        kubectl("delete -f {}".format(manifest))
+        time.sleep(10)
+
+    kubectl("apply -f {}".format(manifest))
+    wait_for_pod_state("inaccel-vadd", "default", "terminated")
+    result = kubectl("logs pod/inaccel-vadd")
+    assert "PASSED" in result
+
+
 def validate_istio():
     """
     Validate istio by deploying the bookinfo app.
@@ -182,20 +206,15 @@ def validate_istio():
 
     wait_for_installation()
     istio_services = [
-        "citadel",
+        "pilot",
         "egressgateway",
-        "galley",
         "ingressgateway",
-        "sidecar-injector",
     ]
     for service in istio_services:
         wait_for_pod_state("", "istio-system", "running", label="istio={}".format(service))
 
-    here = os.path.dirname(os.path.abspath(__file__))
-    manifest = os.path.join(here, "templates", "bookinfo.yaml")
-    kubectl("apply -f {}".format(manifest))
-    wait_for_pod_state("", "default", "running", label="app=details")
-    kubectl("delete -f {}".format(manifest))
+    cmd = "/snap/bin/microk8s.istioctl verify-install"
+    return run_until_success(cmd, timeout_insec=900, err_out="no")
 
 
 def validate_knative():
@@ -511,7 +530,7 @@ def validate_openebs():
         "",
         "openebs",
         "running",
-        label="openebs.io/component-name=maya-apiserver",
+        label="openebs.io/component-name=ndm",
         timeout_insec=900,
     )
     print("OpenEBS is up and running.")

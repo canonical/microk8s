@@ -7,7 +7,7 @@ source $SNAP/actions/common/utils.sh
 echo "Disabling Ingress"
 
 ARCH=$(arch)
-TAG="v0.35.0"
+TAG="v1.0.0-alpha.2"
 DEFAULT_CERT="- ' '" # This default value is always fine when deleting resources.
 EXTRA_ARGS="- --publish-status-address=127.0.0.1"
 
