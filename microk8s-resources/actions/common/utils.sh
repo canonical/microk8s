@@ -708,7 +708,7 @@ mark_boot_time() {
 try_copy_users_to_snap_microk8s() {
   # try copy users from microk8s to snap_microk8s group
   if getent group microk8s >/dev/null 2>&1 &&
-     getent group snap_microk8s >/dev/null 2>&1 
+     getent group snap_microk8s >/dev/null 2>&1
   then
     for m in $($SNAP/usr/bin/members microk8s)
     do
@@ -722,3 +722,42 @@ try_copy_users_to_snap_microk8s() {
     echo "One of the microk8s or snap_microk8s groups is missing"
   fi
 }
+
+cluster_agent_port() {
+  port="25000"
+  if grep -e port "${SNAP_DATA}"/args/cluster-agent &> /dev/null
+  then
+    port=$(cat "${SNAP_DATA}"/args/cluster-agent | "$SNAP"/usr/bin/gawk '{print $2}')
+  fi
+
+  echo "$port"
+}
+
+server_cert_check() {
+  openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1 | cut -c1-12
+}
+
+# check if this file is run with arguments
+if [[ "$0" == "${BASH_SOURCE}" ]] &&
+   [[ ! -z "$1" ]]
+then
+  # call help
+  if echo "$*" | grep -q -- 'help'; then
+    echo "usage: $0 [function]"
+    echo ""
+    echo "Run a utility function and return the output."
+    echo ""
+    echo "available functions:"
+    declare -F | gawk '{print "- "$3}'
+    exit 0
+  fi
+
+  if declare -F "$1" > /dev/null
+  then
+    $1 ${@:2}
+    exit $?
+  else
+    echo "Function does not exist: $1" >&2
+    exit 1
+  fi
+fi
