@@ -548,9 +548,9 @@ if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
 then
   echo "Setting up the CNI"
   start_timer="$(date +%s)"
-  # Wait up to two minutes for the apiserver to come up.
+  # Wait up to five minutes for the apiserver to come up.
   # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
-  timeout="120"
+  timeout="300"
   KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
   while ! (is_apiserver_ready)
   do
