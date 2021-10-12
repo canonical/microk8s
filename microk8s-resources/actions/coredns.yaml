@@ -67,7 +67,7 @@ spec:
       labels:
         k8s-app: kube-dns
       annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ""
+        priorityClassName: system-cluster-critical
     spec:
       priorityClassName: system-cluster-critical
       serviceAccountName: coredns
