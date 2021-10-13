@@ -43,7 +43,7 @@ def kubeflow():
     resources = [
         ("mutatingwebhookconfigurations", ""),
         ("validatingwebhookconfigurations", ""),
-        ("customresourcedefinitions", ",juju-app notin (kubeflow-dashboard)"),
+        ("customresourcedefinitions", ",app.kubernetes.io/name notin (kubeflow-dashboard)"),
         ("clusterroles", ""),
         ("clusterrolebindings", ""),
     ]
@@ -52,7 +52,12 @@ def kubeflow():
         click.echo(f"Destroying Kubeflow {resource}...")
         try:
             subprocess.check_call(
-                ["microk8s-kubectl.wrapper", "delete", resource, "-ljuju-app" + selector],
+                [
+                    "microk8s-kubectl.wrapper",
+                    "delete",
+                    resource,
+                    "-lapp.kubernetes.io/name" + selector,
+                ],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
