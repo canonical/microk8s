@@ -3,6 +3,7 @@ import logging
 import traceback
 from typing import List
 from sys import exit, platform
+from os import getcwd
 
 import click
 
@@ -210,6 +211,34 @@ def kubectl(args) -> int:
     else:
         return Linux(args).kubectl()
 
+def inspect() -> None:
+    vm_provider_name = "multipass"
+    vm_provider_class = get_provider_for(vm_provider_name)
+    echo = Echo()
+    try:
+        vm_provider_class.ensure_provider()
+        instance = vm_provider_class(echoer=echo)
+        instance.get_instance_info()
+
+        command = ["microk8s.inspect"]
+        output = instance.run(command,hide_output=True)
+        tarball_location = None
+        host_destination = getcwd()
+        if b"Report tarball is at" not in output:
+            echo.error("Report tarball not generated")
+        else:
+            for line in output.split(b"\n"):
+                if line.startswith(b"Report tarball is at"):
+                    tarball_location = line.split(b"Report tarball is at ")[0].decode()
+                    break
+            if not tarball_location:
+                echo.error("Cannot find tarball file location")
+            else:
+                instance.pull_file(name=tarball_location,destination=host_destination)
+
+    except ProviderInstanceNotFoundError:
+        _not_installed(echo)
+        return 1
 
 def dashboard_proxy() -> None:
     vm_provider_name = "multipass"
