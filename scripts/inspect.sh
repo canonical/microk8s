@@ -32,7 +32,7 @@ function check_service {
 function check_apparmor {
   # Collect apparmor info.
   mkdir -p $INSPECT_DUMP/apparmor
-  dmesg &> $INSPECT_DUMP/apparmor/dmesg
+  journalctl -k &> $INSPECT_DUMP/apparmor/dmesg
 }
 
 
