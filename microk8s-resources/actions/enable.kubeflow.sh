@@ -136,6 +136,19 @@ def wait_ready(debug: bool, extra: bool = True):
         )
 
 
+def report_not_ready():
+    """The Kubeflow addon is not ready for the v1.22 release yet.
+
+    Fail gracefully informing the user where to look for updates.
+    """
+
+    print("")
+    print("This addon is not yet available on Kubernetes v1.22. Follow the link for more details: ")
+    print("https://github.com/ubuntu/microk8s/issues/2496")
+    print("")
+    sys.exit(1)
+
+
 def check_user():
     """Ensures that user isn't root.
 
@@ -431,7 +444,7 @@ def print_info(hostname, password):
 @click.command()
 @click.option(
     "--bundle",
-    default="cs:kubeflow-269",
+    default="cs:kubeflow-270",
     help="The Kubeflow bundle to deploy. Can be one of full, lite, edge, or a charm store URL.",
 )
 @click.option(
@@ -465,6 +478,8 @@ def print_info(hostname, password):
     help="The Kubeflow dashboard password.",
 )
 def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, password):
+    report_not_ready()
+    
     check_user()
     check_memory(bundle, ignore_min_mem)
     check_enabled()
@@ -475,11 +490,11 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
     # user to specify a full charm store URL if they'd like, such as
     # `cs:kubeflow-lite-123`.
     if bundle == "full":
-        bundle = "cs:kubeflow-269"
+        bundle = "cs:kubeflow-270"
     elif bundle == "lite":
-        bundle = "cs:kubeflow-lite-53"
+        bundle = "cs:kubeflow-lite-54"
     elif bundle == "edge":
-        bundle = "cs:kubeflow-edge-44"
+        bundle = "cs:kubeflow-edge-46"
     else:
         bundle = bundle
 

@@ -4,7 +4,7 @@
 !include "Sections.nsh"
 
 !define PRODUCT_NAME "MicroK8s"
-!define PRODUCT_VERSION "2.1.0"
+!define PRODUCT_VERSION "2.2.0"
 !define PRODUCT_PUBLISHER "Canonical"
 !define MUI_ICON ".\microk8s.ico"
 !define MUI_HEADERIMAGE
@@ -162,7 +162,7 @@ Function "ConfigureVm"
         ${NSD_CreateLabel} 42% 50 50u 10u "Snap Track"
         Pop $VmConfigureDialogTrackLabel
 
-        ${NSD_CreateText} 42% 67.5 50u 10u "1.21/stable"
+        ${NSD_CreateText} 42% 67.5 50u 10u "1.22/stable"
         Pop $VmConfigureDialogTrack
 
         ${NSD_CreateLabel} 8% 102.5 100% 10u "These are the minimum recommended parameters for the VM running ${PRODUCT_NAME}"

@@ -47,6 +47,7 @@ fi
 
 set_service_expected_to_start etcd
 set_service_expected_to_start flanneld
+set_service_not_expected_to_start k8s-dqlite
 
 ${SNAP}/microk8s-start.wrapper
 ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 30

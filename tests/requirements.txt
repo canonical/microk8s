@@ -4,3 +4,4 @@ pylxd
 pytest
 pytest-xdist
 pyyaml
+sh
