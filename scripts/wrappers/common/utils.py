@@ -68,7 +68,7 @@ def is_ha_enabled() -> bool:
     return os.path.isfile(ha_lock)
 
 
-def get_dqlite_info() -> Union[List[None],List[Tuple[str, str]]]:
+def get_dqlite_info() -> Union[List[None], List[Tuple[str, str]]]:
     cluster_dir = os.path.expandvars("${SNAP_DATA}/var/kubernetes/backend")
     snap_path = os.environ.get("SNAP")
 
