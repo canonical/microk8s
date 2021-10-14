@@ -28,7 +28,7 @@ def snap_data() -> pathlib.PosixPath:
         return Path("/var/snap/microk8s/current")
 
 
-def run(*args: str, die: bool = True) -> subprocess.CompletedProcess:
+def run(*args: str, die: bool = True) -> str:
     # Add wrappers to $PATH
     env = os.environ.copy()
     env["PATH"] += ":%s" % os.environ["SNAP"]
@@ -68,11 +68,11 @@ def is_ha_enabled() -> bool:
     return os.path.isfile(ha_lock)
 
 
-def get_dqlite_info() -> Union[List[None],List[Tuple[str]]]:
+def get_dqlite_info() -> Union[List[None], List[Tuple[str, str]]]:
     cluster_dir = os.path.expandvars("${SNAP_DATA}/var/kubernetes/backend")
     snap_path = os.environ.get("SNAP")
 
-    info = []
+    info: List[List[None],List[Tuple[str, str]]] = []
 
     if not is_ha_enabled():
         return info
@@ -165,22 +165,22 @@ def ensure_started() -> None:
         sys.exit(1)
 
 
-def kubectl_get(cmd: str, namespace: str ="--all-namespaces") -> subprocess.CompletedProcess:
+def kubectl_get(cmd: str, namespace: str ="--all-namespaces") -> str:
     if namespace == "--all-namespaces":
         return run("kubectl", kubeconfig, "get", cmd, "--all-namespaces", die=False)
     else:
         return run("kubectl", kubeconfig, "get", cmd, "-n", namespace, die=False)
 
 
-def kubectl_get_clusterroles() -> subprocess.CompletedProcess:
+def kubectl_get_clusterroles() -> str:
     return run(
         "kubectl", kubeconfig, "get", "clusterroles", "--show-kind", "--no-headers", die=False
     )
 
 
-def get_available_addons(arch: str) -> List[Dict]:
+def get_available_addons(arch: str) -> List[Dict[str, List[str]]]:
     addon_dataset = os.path.expandvars("${SNAP}/addon-lists.yaml")
-    available = []
+    available: List[Dict[str, List[str]]] = []
     with open(addon_dataset, "r") as file:
         # The FullLoader parameter handles the conversion from YAML
         # scalar values to Python the dictionary format
@@ -193,7 +193,7 @@ def get_available_addons(arch: str) -> List[Dict]:
     return available
 
 
-def get_addon_by_name(addons: List[Dict[str]], name: str) -> List[Dict[str]]:
+def get_addon_by_name(addons: List[Dict[str, List[str]]], name: str) -> List[Dict[str, List[str]]]:
     filtered_addon = []
     for addon in addons:
         if name == addon["name"]:
