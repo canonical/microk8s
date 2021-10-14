@@ -21,7 +21,7 @@ def get_current_arch() -> str:
     return arch_mapping[platform.machine()]
 
 
-def snap_data() -> pathlib.PosixPath:
+def snap_data() -> Path:
     try:
         return Path(os.environ["SNAP_DATA"])
     except KeyError:
