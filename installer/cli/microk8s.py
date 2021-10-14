@@ -57,6 +57,9 @@ def cli(ctx, help):
         elif ctx.args[0] == "dashboard-proxy":
             dashboard_proxy()
             exit(0)
+        elif ctx.args[0] == "inspect":
+            inspect()
+            exit(0)
         else:
             run(ctx.args)
             exit(0)
