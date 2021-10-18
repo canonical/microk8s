@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Install lxd
         run: |
@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Download built snap
         uses: actions/download-artifact@v2
@@ -132,7 +132,7 @@ jobs:
         bundle: [full, lite]
     steps:
       - name: Check out code
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
 
       - name: Download built snap
         uses: actions/download-artifact@v2
