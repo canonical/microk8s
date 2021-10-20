@@ -334,7 +334,7 @@ get_default_ip() {
 }
 
 get_ips() {
-    local IP_ADDR="$($SNAP/bin/hostname -I)"
+    local IP_ADDR="$($SNAP/bin/hostname -I | sed 's/169\.254\.[0-9]\{1,3\}\.[0-9]\{1,3\}//g')"
     local CNI_INTERFACE="vxlan.calico"
     if [[ -z "$IP_ADDR" ]]
     then
@@ -342,7 +342,7 @@ get_ips() {
     else
         if $SNAP/sbin/ifconfig "$CNI_INTERFACE" &> /dev/null
         then
-          CNI_IP="$($SNAP/sbin/ip -o -4 addr list "$CNI_INTERFACE" | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
+          CNI_IP="$($SNAP/sbin/ip -o -4 addr list "$CNI_INTERFACE" | $SNAP/bin/grep -v 'inet 169.254' | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
           local ips="";
           for ip in $IP_ADDR
           do
@@ -710,3 +710,60 @@ check_snap_interfaces() {
         fi
     fi
 }
+
+try_copy_users_to_snap_microk8s() {
+  # try copy users from microk8s to snap_microk8s group
+  if getent group microk8s >/dev/null 2>&1 &&
+     getent group snap_microk8s >/dev/null 2>&1
+  then
+    for m in $($SNAP/usr/bin/members microk8s)
+    do
+      echo "Processing user $m"
+      if ! usermod -a -G snap_microk8s $m
+      then
+        echo "Failed to migrate user $m to snap_microk8s group"
+      fi
+    done
+  else
+    echo "One of the microk8s or snap_microk8s groups is missing"
+  fi
+}
+
+cluster_agent_port() {
+  port="25000"
+  if grep -e port "${SNAP_DATA}"/args/cluster-agent &> /dev/null
+  then
+    port=$(cat "${SNAP_DATA}"/args/cluster-agent | "$SNAP"/usr/bin/gawk '{print $2}')
+  fi
+
+  echo "$port"
+}
+
+server_cert_check() {
+  openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1 | cut -c1-12
+}
+
+# check if this file is run with arguments
+if [[ "$0" == "${BASH_SOURCE}" ]] &&
+   [[ ! -z "$1" ]]
+then
+  # call help
+  if echo "$*" | grep -q -- 'help'; then
+    echo "usage: $0 [function]"
+    echo ""
+    echo "Run a utility function and return the output."
+    echo ""
+    echo "available functions:"
+    declare -F | gawk '{print "- "$3}'
+    exit 0
+  fi
+
+  if declare -F "$1" > /dev/null
+  then
+    $1 ${@:2}
+    exit $?
+  else
+    echo "Function does not exist: $1" >&2
+    exit 1
+  fi
+fi

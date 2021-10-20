@@ -189,11 +189,7 @@ function suggest_fixes {
       printf -- '\033[0;33mWARNING: \033[0m The memory cgroup is not enabled. \n'
       printf -- 'The cluster may not be functioning properly. Please ensure cgroups are enabled \n'
       printf -- 'See for example: https://microk8s.io/docs/install-alternatives#heading--arm \n'
-    else
-      printf -- 'cgroups2 enabled \n'
     fi
-  else
-      printf -- 'cgroups enabled \n'
   fi
 
   # Fedora Specific Checks
@@ -216,6 +212,33 @@ function suggest_fixes {
     fi
   fi
 
+  # Debian 9 checks
+  if debian9_release
+  then
+
+    # Check if snapctl is fresh
+    if ! [ -L "/usr/bin/snapctl" ]
+    then
+      printf -- '\033[0;33mWARNING: \033[0m On Debian 9 the snapctl binary if outdated. Replace it with: \n'
+      printf -- '\t sudo snap install core \n'
+      printf -- '\t sudo mv /usr/bin/snapctl /usr/bin/snapctl.old \n'
+      printf -- '\t sudo ln -s  /snap/core/current/usr/bin/snapctl /usr/bin/snapctl \n'
+    fi
+  fi
+
+  # LXD Specific Checks
+  if cat /proc/1/environ | grep "container=lxc" &> /dev/null
+    then
+
+    # make sure the /dev/kmsg is available, indicating a potential missing profile
+    if [ ! -c "/dev/kmsg" ]  # kmsg is a character device
+    then
+      printf -- '\033[0;33mWARNING: \033[0m the lxc profile for MicroK8s might be missing. \n'
+      printf -- '\t  Refer to this help document to get MicroK8s working in with LXD: \n'
+      printf -- '\t  https://microk8s.io/docs/lxd \n'
+    fi
+  fi
+
   # node name
   nodename="$(hostname)"
   if [[ "$nodename" =~ [A-Z|_] ]] && ! grep -e "hostname-override" /var/snap/microk8s/current/args/kubelet &> /dev/null
@@ -231,6 +254,16 @@ function suggest_fixes {
 function fedora_release {
   local RELEASE=`cat /etc/os-release | grep "^NAME=" | cut -f2 -d=`
   if [ "${RELEASE}" == "Fedora" ]
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
+function debian9_release {
+  if [ -e /etc/debian_version ] &&
+     grep "9\." /etc/debian_version -q
   then
     return 0
   else
@@ -280,6 +313,7 @@ printf -- 'Inspecting services\n'
 check_service "microk8s.daemon-cluster-agent"
 check_service "microk8s.daemon-containerd"
 check_service "microk8s.daemon-apiserver-kicker"
+check_service "microk8s.daemon-k8s-dqlite"
 if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
 then
   check_service "microk8s.daemon-kubelite"

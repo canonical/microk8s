@@ -303,6 +303,13 @@ apps:
       - kernel-module-observe
       - mount-observe
       - system-observe
+  daemon-k8s-dqlite:
+    command: run-k8s-dqlite-with-args
+    daemon: simple
+    plugs:
+      - network-bind
+      - network-control
+      - network-observe
   dashboard-proxy:
     command: microk8s-dashboard-proxy.wrapper
     plugs:
@@ -568,6 +575,35 @@ parts:
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
       cp $GOPATH/bin/dqlite $SNAPCRAFT_PART_INSTALL/bin/
 
+  k8s-dqlite:
+    build-snaps: [go]
+    after: [dqlite-client, dqlite]
+    source: build-scripts/
+    plugin: dump
+    override-build: |
+      set -eux
+      . $SNAPCRAFT_PART_SRC/set-env-variables.sh
+      snap refresh go --channel=1.15/stable || true
+      go version
+      export GOPATH=${SNAPCRAFT_STAGE}
+      export CGO_LDFLAGS_ALLOW="-Wl,-z,now"
+      export CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/"
+      export CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib"
+      mkdir -p $GOPATH/src/github.com/canonical/
+      (
+        cd $GOPATH/src/github.com/canonical/
+        rm -rf k8s-dqlite
+        git clone https://github.com/canonical/k8s-dqlite
+        cd k8s-dqlite
+        git checkout tags/"${K8S_DQLITE_TAG}" -b build
+        go build  -tags libsqlite3,dqlite .
+        cd ..
+      )
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      cp $GOPATH/src/github.com/canonical/k8s-dqlite/k8s-dqlite $SNAPCRAFT_PART_INSTALL/bin/
+    stage-packages:
+      - openssl
+
   etcd:
     plugin: dump
     source: build-scripts/
@@ -636,7 +672,7 @@ parts:
       - git
     override-build: |
       set -eux
-      snap refresh go --channel=1.16/stable || true
+      snap refresh go --channel=1.17/stable || true
       . ./set-env-variables.sh
 
       # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
@@ -700,11 +736,11 @@ parts:
 
   migrator:
     build-snaps: [go]
-    source: https://github.com/ktsakalozos/go-migrator
+    source: https://github.com/canonical/go-migrator
     source-type: git
     plugin: go
     go-channel: 1.15/stable
-    go-importpath: github.com/ktsakalozos/go-migrator
+    go-importpath: github.com/canonical/go-migrator
     build-packages:
       - gcc
     prime:
@@ -795,24 +831,25 @@ parts:
     source: snap
     plugin: dump
     stage-packages:
-      - curl
       - aufs-tools
+      - coreutils
+      - curl
+      - diffutils
+      - ethtool
       - gawk
-      - sed
-      - socat
       - grep
-      - jq
       - hostname
       - procps
-      - squashfs-tools
       - tar
-      - coreutils
-      - diffutils
       - iproute2
-      - ethtool
-      - net-tools
-      - util-linux
+      - jq
       - libatm1
+      - members
+      - net-tools
+      - sed
+      - socat
+      - squashfs-tools
+      - util-linux
       - zfsutils-linux
     stage:
       - -usr/bin/python3
@@ -899,6 +936,7 @@ parts:
         rm actions/*.openfaas.sh
         rm -rf "actions/kata"
         rm actions/*.kata.sh
+        rm actions/*.inaccel.sh
       fi
 
       # Remove addons that do not work on s390x
@@ -930,6 +968,7 @@ parts:
         rm actions/*.linkerd.sh
         rm -rf "actions/kata"
         rm actions/*.kata.sh
+        rm actions/*.inaccel.sh
       fi
 
       echo "Creating inspect hook"

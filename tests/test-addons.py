@@ -16,6 +16,7 @@ from validators import (
     validate_forward,
     validate_metrics_server,
     validate_fluentd,
+    validate_inaccel,
     validate_jaeger,
     validate_keda,
     validate_linkerd,
@@ -174,6 +175,33 @@ class TestAddons(object):
         validate_gpu()
         print("Disable gpu")
         microk8s_disable("gpu")
+
+    @pytest.mark.skipif(
+        os.environ.get("UNDER_TIME_PRESSURE") == "True",
+        reason="Skipping FPGA tests as we are under time pressure",
+    )
+    @pytest.mark.skipif(
+        os.environ.get("TEST_FPGA") != "True",
+        reason="Skipping FPGA because TEST_FPGA is not set",
+    )
+    @pytest.mark.skipif(
+        platform.machine() != "x86_64", reason="FPGA tests are only relevant in x86 architectures"
+    )
+    def test_inaccel(self):
+        """
+        Sets up inaccel.
+
+        """
+        try:
+            print("Enabling inaccel")
+            microk8s_enable("inaccel")
+        except CalledProcessError:
+            # Failed to enable addon. Skip the test.
+            print("Could not enable inaccel support")
+            return
+        validate_inaccel()
+        print("Disable inaccel")
+        microk8s_disable("inaccel")
 
     @pytest.mark.skipif(
         platform.machine() != "x86_64", reason="Istio tests are only relevant in x86 architectures"
@@ -447,7 +475,6 @@ class TestAddons(object):
         check_call("/snap/bin/microk8s.dbctl --debug backup -o backupfile".split())
         check_call("/snap/bin/microk8s.dbctl --debug restore backupfile.tar.gz".split())
 
-    @pytest.mark.skip("disabling the addon test until is fixed in v1.22")
     @pytest.mark.skipif(
         platform.machine() == "s390x",
         reason="OpenEBS is not available on s390x",
