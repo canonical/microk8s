@@ -553,7 +553,6 @@ then
   fi
   skip_opt_in_config storage-dir kube-apiserver
 
-
   snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
 fi
 
