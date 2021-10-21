@@ -47,7 +47,7 @@ done
 
 if [ -e ${SNAP_DATA}/args/ha-conf ]
 then
-  storage_param="$(get_opt_in_config '--storage-dir' 'kube-apiserver')"
+  storage_param="$(get_opt_in_config '--storage-dir' 'k8s-dqlite')"
   storage_dir="$(eval echo $storage_param)"
   if $(grep -qE "^failure-domain" "${SNAP_DATA}/args/ha-conf"); then
     val="$(get_opt_in_config 'failure-domain' 'ha-conf')"
