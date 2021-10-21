@@ -1,0 +1,5 @@
+# Environment variables k8s-dqlite will run with
+#
+# Enable dqlite debugging flags
+# LIBRAFT_TRACE="1"
+# LIBDQLITE_TRACE="1"

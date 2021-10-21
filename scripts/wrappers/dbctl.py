@@ -15,13 +15,22 @@ from common.utils import (
 )
 
 
+def get_kine_endpoint():
+    """
+    Return the default kine endpoint
+    """
+    kine_socket = "unix:///var/snap/microk8s/current/var/kubernetes/backend/kine.sock:12379"
+    return kine_socket
+
+
 def kine_exists():
     """
     Check the existence of the kine socket
     :return: True if the kine socket exists
     """
-    kine_socket = "/var/snap/microk8s/current/var/kubernetes/backend/kine.sock"
-    return os.path.exists(kine_socket)
+    kine_socket = get_kine_endpoint()
+    kine_socket_path = kine_socket.replace("unix://", "")
+    return os.path.exists(kine_socket_path)
 
 
 def generate_backup_name():
@@ -57,6 +66,7 @@ def backup(fname=None, debug=False):
     :param debug: show debug output
     """
     snap_path = os.environ.get("SNAP")
+    kine_ep = get_kine_endpoint()
     # snap_path = '/snap/microk8s/current'
     # snapdata_path = '/var/snap/microk8s/current'
 
@@ -67,8 +77,8 @@ def backup(fname=None, debug=False):
     fname_tar = "{}.tar.gz".format(fname)
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        backup_cmd = "{}/bin/migrator --mode backup-dqlite --db-dir {}".format(
-            snap_path, "{}/{}".format(tmpdirname, fname)
+        backup_cmd = "{}/bin/migrator --endpoint {} --mode backup-dqlite --db-dir {}".format(
+            snap_path, kine_ep, "{}/{}".format(tmpdirname, fname)
         )
         if debug:
             backup_cmd = "{} {}".format(backup_cmd, "--debug")
@@ -96,6 +106,7 @@ def restore(fname_tar, debug=False):
     :param debug: show debug output
     """
     snap_path = os.environ.get("SNAP")
+    kine_ep = get_kine_endpoint()
     # snap_path = '/snap/microk8s/current'
     with tempfile.TemporaryDirectory() as tmpdirname:
         with tarfile.open(fname_tar, "r:gz") as tar:
@@ -105,8 +116,8 @@ def restore(fname_tar, debug=False):
         else:
             fname = fname_tar
         fname = os.path.basename(fname)
-        restore_cmd = "{}/bin/migrator --mode restore-to-dqlite --db-dir {}".format(
-            snap_path, "{}/{}".format(tmpdirname, fname)
+        restore_cmd = "{}/bin/migrator --endpoint {} --mode restore-to-dqlite --db-dir {}".format(
+            snap_path, kine_ep, "{}/{}".format(tmpdirname, fname)
         )
         if debug:
             restore_cmd = "{} {}".format(restore_cmd, "--debug")
