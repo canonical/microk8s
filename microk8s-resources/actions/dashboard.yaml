@@ -202,7 +202,7 @@ spec:
         - name: tmp-volume
           emptyDir: {}
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       serviceAccountName: kubernetes-dashboard
       # Comment the following tolerations if Dashboard must not be deployed on master
       tolerations:
@@ -273,7 +273,7 @@ spec:
         - name: tmp-volume
           emptyDir: {}
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 
 ---
 
