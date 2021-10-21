@@ -545,6 +545,12 @@ then
 
   refresh_opt_in_config etcd-servers unix://\${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379 kube-apiserver
   skip_opt_in_config storage-backend kube-apiserver
+
+  storage_dir="$(get_opt_in_config '--storage-dir' 'kube-apiserver')"
+  if ! [ -z $storage_dir ]
+  then
+    refresh_opt_in_config storage-dir "$storage_dir" k8s-dqlite
+  fi
   skip_opt_in_config storage-dir kube-apiserver
 
   snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
