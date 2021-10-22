@@ -212,8 +212,6 @@ function suggest_fixes {
     fi
   fi
 
-<<<<<<< HEAD
-=======
   # Debian 9 checks
   if debian9_release
   then
@@ -241,7 +239,6 @@ function suggest_fixes {
     fi
   fi
 
->>>>>>> master
   # node name
   nodename="$(hostname)"
   if [[ "$nodename" =~ [A-Z|_] ]] && ! grep -e "hostname-override" /var/snap/microk8s/current/args/kubelet &> /dev/null
