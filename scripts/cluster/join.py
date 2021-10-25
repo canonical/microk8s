@@ -162,6 +162,7 @@ def usage():
         "--skip-verify  skip the certificate verification of the node we are"
         " joining to (default: false)."
     )
+    print("--force  force the node removal operation" " (default: false).")
 
 
 def set_arg(key, value, file):
@@ -426,6 +427,7 @@ def reset_current_dqlite_installation():
     my_ep, other_ep = get_dqlite_endpoints()
 
     service("stop", "apiserver")
+    service("stop", "k8s-dqlite")
     time.sleep(10)
 
     delete_dqlite_node(my_ep, other_ep)
@@ -479,6 +481,7 @@ def reset_current_dqlite_installation():
     with open("{}/init.yaml".format(cluster_dir), "w") as f:
         yaml.dump(init_data, f)
 
+    service("start", "k8s-dqlite")
     service("start", "apiserver")
 
     waits = 10  # type: int
@@ -881,6 +884,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     :param host: the hostname others see of this node
     """
     service("stop", "apiserver")
+    service("stop", "k8s-dqlite")
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
     shutil.move(cluster_dir, cluster_backup_dir)
@@ -898,6 +902,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     with open("{}/init.yaml".format(cluster_dir), "w") as f:
         yaml.dump(init_data, f)
 
+    service("start", "k8s-dqlite")
     service("start", "apiserver")
 
     waits = 10
@@ -910,6 +915,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
                     snappath=snap_path, dbdir=cluster_dir
                 ).split(),
                 timeout=4,
+                stderr=subprocess.STDOUT,
             )
             if host in out.decode():
                 break

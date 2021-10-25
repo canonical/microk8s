@@ -16,7 +16,7 @@ jobs:
         working-directory: ${{ github.workspace }}/installer/windows
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
       - name: Set up Python 3.8
         uses: actions/setup-python@v2.2.2
         with:
@@ -40,7 +40,7 @@ jobs:
       - name: Download Multipass installer
         uses: carlosperate/download-file-action@v1.0.3
         with:
-          file-url: https://github.com/canonical/multipass/releases/download/v1.5.0/multipass-1.5.0+win-win64.exe
+          file-url: https://github.com/canonical/multipass/releases/download/v1.7.2/multipass-1.7.2+win-win64.exe
           file-name: multipass.exe
           location: ${{ github.workspace }}/installer/windows
       - name: Download kubectl

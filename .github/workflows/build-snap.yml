@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.3.5
       - name: Install lxd
         run: |
           sudo lxd init --auto
@@ -68,6 +68,7 @@ jobs:
           done
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
+          export SKIP_OPENEBS="True"
           export SKIP_PROMETHEUS="False"
           (cd tests; sudo -E pytest -s -ra test-addons.py)
           sudo microk8s inspect |
@@ -101,6 +102,7 @@ jobs:
           done
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
+          export SKIP_OPENEBS="False"
           export SKIP_PROMETHEUS="False"
           (cd tests; sudo -E pytest -s -ra test-addons.py)
           sudo microk8s inspect |
