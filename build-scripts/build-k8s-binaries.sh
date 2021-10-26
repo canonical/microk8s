@@ -37,7 +37,7 @@ git clone --depth 1 https://github.com/kubernetes/kubernetes $GOPATH/src/github.
   do
     if [ "$app" = "cmd/kube-apiserver" ]
     then
-      make WHAT="${app}" GOFLAGS=-tags=libsqlite3,dqlite CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" KUBE_CGO_OVERRIDES=kube-apiserver
+      make WHAT="${app}" CGO_LDFLAGS_ALLOW="-Wl,-z,now" GOFLAGS=-tags=libsqlite3,dqlite CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" KUBE_CGO_OVERRIDES=kube-apiserver
     else
       make WHAT="${app}"
     fi
