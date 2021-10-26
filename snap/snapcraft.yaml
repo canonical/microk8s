@@ -494,6 +494,8 @@ passthrough:
       bind: $SNAP_DATA/kube-proxy
     /etc/service/enabled:
       bind: $SNAP_COMMON/etc/service/enabled
+    /etc/nanorc:
+      bind-file: $SNAP_COMMON/etc/nanorc
 
 parts:
   raft:
@@ -987,3 +989,12 @@ parts:
       juju: bin/juju
     prime:
       - bin/juju
+
+  nano:
+    plugin: nil
+    stage-packages:
+      - nano
+    stage:
+      - bin/nano
+    prime:
+      - bin/nano
