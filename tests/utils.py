@@ -31,7 +31,6 @@ snap_interfaces = [
     "home",
     "opengl",
     "home-read-all",
-    "kernel-module-control",
     "login-session-observe",
     "log-observe",
 ]
