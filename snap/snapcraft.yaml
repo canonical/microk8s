@@ -231,7 +231,6 @@ apps:
     daemon: simple
     install-mode: disable
     plugs:
-      - kernel-module-control
       - network-bind
       - network-observe
       - network-control
