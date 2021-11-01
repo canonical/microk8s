@@ -58,7 +58,7 @@ class TestAddons(object):
             sh.microk8s.enable.foo()
 
     def test_help_text(self):
-        status = yaml.load(sh.microk8s.status(format="yaml").stdout)
+        status = yaml.safe_load(sh.microk8s.status(format="yaml").stdout)
         expected = {a["name"]: "disabled" for a in status["addons"]}
         expected["ha-cluster"] = "enabled"
 
