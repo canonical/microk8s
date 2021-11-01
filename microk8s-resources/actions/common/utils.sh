@@ -4,12 +4,20 @@ exit_if_no_permissions() {
   # test if we can access the default kubeconfig
   if [ ! -r $SNAP_DATA/credentials/client.config ]; then
     echo "Insufficient permissions to access MicroK8s." >&2
-    echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:" >&2
+    echo "You can either try again with sudo or add the user $USER to the 'snap_microk8s' group:" >&2
     echo "" >&2
-    echo "    sudo usermod -a -G microk8s $USER" >&2
+    echo "    sudo usermod -a -G snap_microk8s $USER" >&2
     echo "    sudo chown -f -R $USER ~/.kube" >&2
     echo "" >&2
-    echo "After this, reload the user groups either via a reboot or by running 'newgrp microk8s'." >&2
+    echo "After this, reload the user groups either via a reboot or by running 'newgrp snap_microk8s'." >&2
+    exit 1
+  fi
+}
+
+exit_if_not_root() {
+  # test if we run with sudo
+  if [ "$EUID" -ne 0 ]
+  then echo "Elevated permissions are needed for this command. Please use sudo."
     exit 1
   fi
 }
@@ -536,9 +544,9 @@ init_cluster() {
   $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
   ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
   chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
-  if getent group microk8s >/dev/null 2>&1
+  if getent group snap_microk8s >/dev/null 2>&1
   then
-    chgrp microk8s -R ${SNAP_DATA}/var/kubernetes/backend/ || true
+    chgrp snap_microk8s -R ${SNAP_DATA}/var/kubernetes/backend/ || true
   fi
 }
 

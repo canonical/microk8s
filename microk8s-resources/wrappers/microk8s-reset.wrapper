@@ -190,6 +190,7 @@ if [ $(( $# - $OPTIND )) -ge 0 ]; then
 fi
 
 exit_if_stopped
+exit_if_not_root
 exit_if_no_permissions
 
 disable_addons

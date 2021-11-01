@@ -11,6 +11,7 @@ description: |-
 grade: stable
 confinement: strict
 base: core18
+assumes: [snapd2.52]
 
 plugs:
   home-read-all:
@@ -472,9 +473,7 @@ apps:
 
 passthrough:
   system-usernames:
-    # The right group to be used here is snap_microk8s. The automatic creation of this
-    # user group will land with snapd 2.52.
-    snap_daemon: shared
+    snap_microk8s: shared
   layout:
     /usr/libexec:
       bind: $SNAP_COMMON/usr/libexec

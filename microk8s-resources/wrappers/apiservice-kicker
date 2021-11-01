@@ -47,10 +47,10 @@ do
     # every 5 seconds
     sleep 5
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
-      getent group microk8s >/dev/null 2>&1
+      getent group snap_microk8s >/dev/null 2>&1
     then
       chmod -R ug+rwX ${SNAP_DATA}/var/kubernetes/backend || true
-      chgrp microk8s -R ${SNAP_DATA}/var/kubernetes/backend || true
+      chgrp snap_microk8s -R ${SNAP_DATA}/var/kubernetes/backend || true
     fi
 
     if ! [ -e "${SNAP_DATA}/var/lock/no-cert-reissue" ] &&
