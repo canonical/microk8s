@@ -32,7 +32,7 @@ jobs:
       - name: Download EnVar plugin for NSIS
         uses: carlosperate/download-file-action@v1.0.3
         with:
-          file-url: https://nsis.sourceforge.io/mediawiki/images/7/7f/EnVar_plugin.zip
+          file-url: https://github.com/GsNSIS/EnVar/releases/download/v0.3.1/EnVar-Plugin.zip
           file-name: envar_plugin.zip
           location: ${{ github.workspace }}
       - name: Extract EnVar plugin
