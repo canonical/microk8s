@@ -141,7 +141,7 @@ microk8s-addons:
     - name: "kubeflow"
       description: "Kubeflow for easy ML deployments"
       version: ""
-      check_status: "pod/ambassador-operator-0"
+      check_status: "{SNAP_DATA}/var/lock/kubeflow.enabled"
       supported_architectures:
         - amd64
 
