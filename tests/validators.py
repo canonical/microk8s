@@ -174,7 +174,7 @@ def validate_gpu():
 
 def validate_inaccel():
     """
-    Validate inaccel
+    Validate inaccel by trying a vadd.
     """
     if platform.machine() != "x86_64":
         print("FPGA tests are only relevant in x86 architectures")
