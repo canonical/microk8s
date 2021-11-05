@@ -963,7 +963,7 @@ def join_dqlite(connection_parts, verify=False, worker=False):
         cluster_type="dqlite",
         verify_peer=verify,
         fingerprint=fingerprint,
-        worker=worker
+        worker=worker,
     )
 
     if worker:
@@ -981,8 +981,10 @@ def update_traefik(master_ip, api_port):
     traefik_providers_out = os.path.expandvars("${SNAP_DATA}/args/traefik/provider.yaml")
     with open(traefik_providers) as f:
         p = yaml.safe_load(f)
-        p['tcp']['services']['kube-apiserver']['loadBalancer']['servers'] = [{'address': '{}:{}'.format(master_ip, api_port)}]
-        with open(traefik_providers_out, 'w') as out_file:
+        p["tcp"]["services"]["kube-apiserver"]["loadBalancer"]["servers"] = [
+            {"address": "{}:{}".format(master_ip, api_port)}
+        ]
+        with open(traefik_providers_out, "w") as out_file:
             yaml.dump(p, out_file)
     service("restart", "traefik")
 
@@ -1065,7 +1067,9 @@ def join_etcd(connection_parts, verify=True):
 
 if __name__ == "__main__":
     try:
-        opts, args = getopt.gnu_getopt(sys.argv[1:], "hfsw", ["help", "force", "skip-verify", "worker"])
+        opts, args = getopt.gnu_getopt(
+            sys.argv[1:], "hfsw", ["help", "force", "skip-verify", "worker"]
+        )
     except getopt.GetoptError as err:
         print(err)  # will print something like "option -a not recognized"
         usage()
