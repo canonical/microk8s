@@ -8,6 +8,8 @@ source $SNAP/actions/common/utils.sh
 
 exit_if_service_not_expected_to_start traefik
 
+# We add some delay so that systemd really retries the restarts
+sleep 6
 sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g' $SNAP_DATA/args/traefik/traefik-template.yaml > $SNAP_DATA/args/traefik/traefik.yaml
 
 export CORE_LD_LIBRARY_PATH="$SNAP/../../core18/current/lib/$ARCH-linux-gnu"

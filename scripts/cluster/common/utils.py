@@ -113,6 +113,18 @@ def is_node_running_dqlite():
     return os.path.isfile(ha_lock)
 
 
+def is_node_dqlite_worker():
+    """
+    Check if this is a worker only node
+
+    :returns: True if this is a worker node, otherwise False
+    """
+    ha_lock = os.path.expandvars("${SNAP_DATA}/var/lock/ha-cluster")
+    clustered_lock = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
+    traefik_lock = os.path.expandvars("${SNAP_DATA}/var/lock/no-traefik")
+    return os.path.isfile(ha_lock) and os.path.isfile(clustered_lock) and not os.path.exists(traefik_lock)
+
+
 def get_dqlite_port():
     """
     What is the port dqlite listens on
@@ -298,3 +310,52 @@ def unmark_no_cert_reissue():
     lock_file = "{}/var/lock/no-cert-reissue".format(snap_data)
     if os.path.exists(lock_file):
         os.unlink(lock_file)
+
+
+def restart_all_services():
+    """
+    Restart all services
+    """
+    snap_path = os.environ.get("SNAP")
+    waits = 10
+    while waits > 0:
+        try:
+            subprocess.check_call(
+                "{}/microk8s-stop.wrapper".format(snap_path).split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+            waits -= 1
+    waits = 10
+    while waits > 0:
+        try:
+            subprocess.check_call(
+                "{}/microk8s-start.wrapper".format(snap_path).split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+            waits -= 1
+
+
+def get_token(name, tokens_file="known_tokens.csv"):
+    """
+    Get token from known_tokens file
+
+    :param name: the name of the node
+    :param tokens_file: the file where the tokens should go
+    :returns: the token or None(if name doesn't exist)
+    """
+    snapdata_path = os.environ.get("SNAP_DATA")
+    file = "{}/credentials/{}".format(snapdata_path, tokens_file)
+    with open(file) as fp:
+        for line in fp:
+            if name in line:
+                parts = line.split(",")
+                return parts[0].rstrip()
+    return None
