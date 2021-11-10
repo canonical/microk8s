@@ -214,6 +214,7 @@ def kubectl(args) -> int:
     else:
         return Linux(args).kubectl()
 
+
 def inspect() -> None:
     vm_provider_name = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
@@ -224,7 +225,7 @@ def inspect() -> None:
         instance.get_instance_info()
 
         command = ["microk8s.inspect"]
-        output = instance.run(command,hide_output=True)
+        output = instance.run(command, hide_output=True)
         tarball_location = None
         host_destination = getcwd()
         if b"Report tarball is at" not in output:
@@ -237,11 +238,12 @@ def inspect() -> None:
             if not tarball_location:
                 echo.error("Cannot find tarball file location")
             else:
-                instance.pull_file(name=tarball_location,destination=host_destination)
+                instance.pull_file(name=tarball_location, destination=host_destination)
 
     except ProviderInstanceNotFoundError:
         _not_installed(echo)
         return 1
+
 
 def dashboard_proxy() -> None:
     vm_provider_name = "multipass"
