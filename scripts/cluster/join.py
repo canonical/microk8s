@@ -576,8 +576,9 @@ def print_traefik_usage():
     print("")
     print("The node has joined the cluster and will appear in the nodes list in a few seconds.")
     print("")
-    print("If you run a multi-master cluster without a VIP please add all the Kubernetes API server endpoints in")
-    print("/var/snap/microk8s/current/args/traefik/provider.yaml and restart the node.")
+    print("Currently this worker node is connected only to a single control plane node.")
+    print("If you run an HA kubernetes cluster all master nodes need to be configured to access this node.")
+    print("Consult the documentation on how this can be achieved.")
     print("")
 
 

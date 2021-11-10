@@ -184,6 +184,28 @@ def add_kubelet_token(hostname):
     return token.rstrip()
 
 
+def add_proxy_token(hostname):
+    """
+    Add a kube-proxy token for a node in the known tokens
+
+    :param: hostname the name of the joining host
+    :returns: the token added
+    """
+    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
+    old_token = get_token("system:kube-proxy:{}".format(hostname))
+    if old_token:
+        return old_token.rstrip()
+
+    alpha = string.ascii_letters + string.digits
+    token = "".join(random.SystemRandom().choice(alpha) for _ in range(32))
+    uid = "".join(random.SystemRandom().choice(string.digits) for _ in range(8))
+    with open(file, "a") as fp:
+        # TODO double check this format. Why is userid unique?
+        line = '{},system:kube-proxy:{},kube-proxy-{}'.format(token, hostname, uid)
+        fp.write(line + os.linesep)
+    return token.rstrip()
+
+
 def getCA():
     """
     Return the CA
@@ -618,8 +640,8 @@ def join_node_dqlite():
     proxy_token = None
     kubelet_token = None
     if worker:
-        proxy_token = get_token("kube-proxy")
         node_addr = get_node_ep(hostname, request.remote_addr)
+        proxy_token = add_proxy_token(node_addr)
         kubelet_token = add_kubelet_token(node_addr)
         service("restart", "apiserver")
 
