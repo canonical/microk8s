@@ -102,7 +102,7 @@ def disable_traefik():
     lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
     lock = "{}/no-traefik".format(lock_path)
     if not os.path.exists(lock):
-        open(lock, 'a').close()
+        open(lock, "a").close()
     service("stop", "traefik")
 
 

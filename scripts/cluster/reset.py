@@ -193,8 +193,14 @@ def remove_callback_token(node):
 
 
 @click.command()
-@click.argument('node', required=True)
-@click.option("--force", is_flag=True, required=False, default=False, help='Force the node removal operation. (default: false)')
+@click.argument("node", required=True)
+@click.option(
+    "--force",
+    is_flag=True,
+    required=False,
+    default=False,
+    help="Force the node removal operation. (default: false)",
+)
 def reset(node, force):
     """
     Remove a node from the cluster

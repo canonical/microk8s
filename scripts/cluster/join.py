@@ -577,7 +577,9 @@ def print_traefik_usage():
     print("The node has joined the cluster and will appear in the nodes list in a few seconds.")
     print("")
     print("Currently this worker node is connected only to a single control plane node.")
-    print("If you run an HA kubernetes cluster all master nodes need to be configured to access this node.")
+    print(
+        "If you run an HA kubernetes cluster all master nodes need to be configured to access this node."
+    )
     print("Consult the documentation on how this can be achieved.")
     print("")
 
@@ -656,13 +658,23 @@ def join_etcd(connection_parts, verify=True):
 
 
 @click.command(context_settings={"ignore_unknown_options": True})
-@click.argument('connection', required=True)
-@click.option('--worker', 'worker', default=False, flag_value='as-worker',
-              help='Join as a worker only node.')
-@click.option('--controlplane', 'worker', flag_value='as-master',
-              help='Join running the control plane on HA clusters. (default)')
-@click.option("--skip-verify", is_flag=True, required=False, default=False,
-              help='Skip the certificate verification of the node we are joining to. (default: false)')
+@click.argument("connection", required=True)
+@click.option(
+    "--worker", "worker", default=False, flag_value="as-worker", help="Join as a worker only node."
+)
+@click.option(
+    "--controlplane",
+    "worker",
+    flag_value="as-master",
+    help="Join running the control plane on HA clusters. (default)",
+)
+@click.option(
+    "--skip-verify",
+    is_flag=True,
+    required=False,
+    default=False,
+    help="Skip the certificate verification of the node we are joining to. (default: false)",
+)
 def join(connection, worker, skip_verify):
     """
     Join the node to a cluster

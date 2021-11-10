@@ -201,7 +201,7 @@ def add_proxy_token(hostname):
     uid = "".join(random.SystemRandom().choice(string.digits) for _ in range(8))
     with open(file, "a") as fp:
         # TODO double check this format. Why is userid unique?
-        line = '{},system:kube-proxy:{},kube-proxy-{}'.format(token, hostname, uid)
+        line = "{},system:kube-proxy:{},kube-proxy-{}".format(token, hostname, uid)
         fp.write(line + os.linesep)
     return token.rstrip()
 

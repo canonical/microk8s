@@ -122,7 +122,11 @@ def is_node_dqlite_worker():
     ha_lock = os.path.expandvars("${SNAP_DATA}/var/lock/ha-cluster")
     clustered_lock = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
     traefik_lock = os.path.expandvars("${SNAP_DATA}/var/lock/no-traefik")
-    return os.path.isfile(ha_lock) and os.path.isfile(clustered_lock) and not os.path.exists(traefik_lock)
+    return (
+        os.path.isfile(ha_lock)
+        and os.path.isfile(clustered_lock)
+        and not os.path.exists(traefik_lock)
+    )
 
 
 def get_dqlite_port():
