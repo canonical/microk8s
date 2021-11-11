@@ -54,6 +54,12 @@ then
   PROXY=$4
 fi
 
+# Test clustering. This test will create lxc containers or multipass VMs
+# therefore we do not need to run it inside a VM/container
+apt-get install python3-pip -y
+pip3 install -U pytest requests pyyaml sh
+LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHANNEL} pytest -s tests/test-cluster.py
+
 # Test addons upgrade
 # TODO Handle local in the upgrade
 create_machine $NAME $PROXY

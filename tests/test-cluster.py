@@ -15,6 +15,7 @@ reuse_vms = None
 # Channel we want to test. A full path to a local snap can be used for local builds
 channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/edge")
 backend = os.environ.get("BACKEND", None)
+profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
 
 
 class VM:
@@ -59,7 +60,7 @@ class VM:
             profiles = subprocess.check_output("/snap/bin/lxc profile list".split())
             if "microk8s" not in profiles.decode():
                 subprocess.check_call("/snap/bin/lxc profile copy default microk8s".split())
-                with open("lxc/microk8s-zfs.profile", "r+") as fp:
+                with open(profile, "r+") as fp:
                     profile_string = fp.read()
                     process = subprocess.Popen(
                         "/snap/bin/lxc profile edit microk8s".split(),
