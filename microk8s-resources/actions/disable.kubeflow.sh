@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import subprocess
 
 import click
 
+def mark_kubeflow_disabled():
+    """Mark Kubeflow addon as disabled by removing kubeflow.enabled lock file."""
+    try:
+        snapdata_path = os.environ.get("SNAP_DATA")
+        lock_fname = "{}/var/lock/kubeflow.enabled".format(snapdata_path)
+        subprocess.call(['sudo', 'rm', lock_fname])
+    except (subprocess.CalledProcessError):
+        print("Failed to mark Kubeflow addon as disabled." )
+        sys.exit(4)
 
 @click.command()
 def kubeflow():
@@ -65,6 +75,8 @@ def kubeflow():
             )
         except subprocess.CalledProcessError:
             pass
+
+    mark_kubeflow_disabled()
 
     click.echo("Destruction complete.")
 

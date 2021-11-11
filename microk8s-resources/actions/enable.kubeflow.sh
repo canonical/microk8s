@@ -29,6 +29,16 @@ CONNECTIVITY_CHECKS = [
 ]
 
 
+def mark_kubeflow_enabled():
+    """Mark Kubeflow addon as enabled by creating kubeflow.enabled."""
+    try:
+        snapdata_path = os.environ.get("SNAP_DATA")
+        lock_fname = "{}/var/lock/kubeflow.enabled".format(snapdata_path)
+        subprocess.call(['sudo', 'touch', lock_fname])
+    except (subprocess.CalledProcessError):
+        print("Failed to mark Kubeflow addon as enabled." )
+        sys.exit(4)
+
 def charm_exists(name: str):
     try:
         run("microk8s-juju.wrapper", "show-application", name, die=False)
@@ -519,6 +529,7 @@ def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, passwor
 
     print_info(hostname, password)
 
+    mark_kubeflow_enabled()
 
 if __name__ == "__main__":
     kubeflow(prog_name="microk8s enable kubeflow", auto_envvar_prefix="KUBEFLOW")
