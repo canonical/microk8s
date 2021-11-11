@@ -62,7 +62,7 @@ def get_traefik_port():
             and "address" in data["entryPoints"]["apiserver"]
         ):
             port = data["entryPoints"]["apiserver"]["address"]
-            port = port.remove(":", "")
+            port = port.replace(":", "")
             return port
         else:
             return "16443"
