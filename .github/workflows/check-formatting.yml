@@ -5,7 +5,7 @@ on:
   - pull_request
 
 jobs:
-  build:
+  check-formatting:
     name: Check Formatting
     runs-on: ubuntu-latest
 
