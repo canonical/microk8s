@@ -156,7 +156,9 @@ def validate_gpu():
         print("GPU tests are only relevant in x86 architectures")
         return
 
-    wait_for_pod_state("", "kube-system", "running", label="name=nvidia-device-plugin-ds")
+    wait_for_pod_state(
+        "", "gpu-operator-resources", "running", label="app=nvidia-device-plugin-daemonset"
+    )
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "cuda-add.yaml")
 
