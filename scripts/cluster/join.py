@@ -238,18 +238,21 @@ def get_client_cert(master_ip, master_port, token, username, group=None):
     cer_key_file = "/var/snap/microk8s/current/certs/{}.key".format(username)
     cer_file = "{}/certs/{}.crt".format(snapdata_path, username)
     if not os.path.exists(cer_key_file):
-        cmd_gen_cert_key = (
-            "{snap}/usr/bin/openssl genrsa -out {key} 2048".format(
-                snap=snap_path, key=cer_key_file
-            )
+        cmd_gen_cert_key = "{snap}/usr/bin/openssl genrsa -out {key} 2048".format(
+            snap=snap_path, key=cer_key_file
         )
-        subprocess.check_call(cmd_gen_cert_key.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.check_call(
+            cmd_gen_cert_key.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         try_set_file_permissions(cer_key_file)
 
-    cmd_cert = (
-        "{snap}/usr/bin/openssl req -new -sha256 -key {key} -out {csr} -subj {info}".format(
-            snap=snap_path, snapdata=snapdata_path, key=cer_key_file, csr=cer_req_file, username=username, info=info
-        )
+    cmd_cert = "{snap}/usr/bin/openssl req -new -sha256 -key {key} -out {csr} -subj {info}".format(
+        snap=snap_path,
+        snapdata=snapdata_path,
+        key=cer_key_file,
+        csr=cer_req_file,
+        username=username,
+        info=info,
     )
     subprocess.check_call(cmd_cert.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     with open(cer_req_file) as fp:
@@ -402,7 +405,7 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, api_port, host
         "proxy.config",
         "kubeproxy",
         cert["certificate_location"],
-        cert["certificate_key_location"]
+        cert["certificate_key_location"],
     )
     set_arg("--master", None, "kube-proxy")
     if hostname_override:
@@ -430,7 +433,7 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port, api_port):
         "kubelet.config",
         "kubelet",
         cert["certificate_location"],
-        cert["certificate_key_location"]
+        cert["certificate_key_location"],
     )
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
     service("restart", "kubelet")
@@ -739,7 +742,9 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
 
     store_base_kubelet_args(info["kubelet_args"])
 
-    update_cert_auth_kubeproxy(token, info["ca"], master_ip, master_port, info["apiport"], hostname_override)
+    update_cert_auth_kubeproxy(
+        token, info["ca"], master_ip, master_port, info["apiport"], hostname_override
+    )
     update_cert_auth_kubelet(token, info["ca"], master_ip, master_port, info["apiport"])
 
     create_admin_kubeconfig(info["ca"], info["admin_token"])
