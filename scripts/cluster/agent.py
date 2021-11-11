@@ -633,11 +633,14 @@ def join_node_dqlite():
     remove_token_from_file(token, cluster_tokens_file)
     api_port = get_arg("--secure-port", "kube-apiserver")
 
-    proxy_token = None
-    kubelet_token = None
+    ca_key = None
+    admin_token = None
     if worker:
         add_token_to_certs_request("{}-kubelet".format(token))
         add_token_to_certs_request("{}-proxy".format(token))
+    else:
+        ca_key = get_cert("ca.key")
+        admin_token = get_token("admin")
 
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
@@ -647,7 +650,7 @@ def join_node_dqlite():
 
     return jsonify(
         ca=get_cert("ca.crt"),
-        ca_key=get_cert("ca.key"),
+        ca_key=ca_key,
         service_account_key=get_cert("serviceaccount.key"),
         cluster_cert=cluster_cert,
         cluster_key=cluster_key,
@@ -656,9 +659,7 @@ def join_node_dqlite():
         apiport=api_port,
         kubelet_args=kubelet_args,
         hostname_override=node_addr,
-        admin_token=get_token("admin"),
-        kubeproxy=proxy_token,
-        kubelet=kubelet_token,
+        admin_token=admin_token,
     )
 
 

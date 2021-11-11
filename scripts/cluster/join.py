@@ -49,6 +49,25 @@ cluster_key_file = "{}/cluster.key".format(cluster_dir)
 FINGERPRINT_MIN_LEN = 12
 
 
+def get_traefik_port():
+    """
+    Return the port Traefik listens to. Try read the port from the Traefik configuration or return the default value
+    """
+    config_file = "{}/args/traefik/traefik-template.yaml".format(snapdata_path)
+    with open(config_file) as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+        if (
+            "entryPoints" in data
+            and "apiserver" in data["entryPoints"]
+            and "address" in data["entryPoints"]["apiserver"]
+        ):
+            port = data["entryPoints"]["apiserver"]["address"]
+            port = port.remove(":", "")
+            return port
+        else:
+            return "16443"
+
+
 def join_request(conn, api_version, req_data, master_ip, verify_peer, fingerprint):
     json_params = json.dumps(req_data)
     headers = {"Content-type": "application/json", "Accept": "application/json"}
@@ -223,7 +242,8 @@ def get_etcd_client_cert(master_ip, master_port, token):
 
 def get_client_cert(master_ip, master_port, token, username, group=None):
     """
-    Get a signed cert
+    Get a signed cert.
+    See https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certs
 
     :param master_ip: master ip
     :param master_port: master port
@@ -385,7 +405,7 @@ def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
     service("restart", "proxy")
 
 
-def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, api_port, hostname_override):
+def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, hostname_override):
     """
     Configure the kube-proxy
 
@@ -393,15 +413,15 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, api_port, host
     :param ca: the ca
     :param master_ip: the master node IP
     :param master_port: the master node port where the cluster agent listens
-    :param api_port: the API server port
     :param hostname_override: the hostname override in case the hostname is not resolvable
     """
     proxy_token = "{}-proxy".format(token)
+    traefik_port = get_traefik_port()
     cert = get_client_cert(master_ip, master_port, proxy_token, "kubeproxy")
     create_x509_kubeconfig(
         ca,
-        master_ip,
-        api_port,
+        "127.0.0.1",
+        traefik_port,
         "proxy.config",
         "kubeproxy",
         cert["certificate_location"],
@@ -413,7 +433,7 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, api_port, host
     service("restart", "proxy")
 
 
-def update_cert_auth_kubelet(token, ca, master_ip, master_port, api_port):
+def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     """
     Configure the kubelet
 
@@ -424,12 +444,13 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port, api_port):
     :param api_port: the API server port
     :param hostname_override: the hostname override in case the hostname is not resolvable
     """
+    traefik_port = get_traefik_port()
     kubelet_token = "{}-kubelet".format(token)
     cert = get_client_cert(master_ip, master_port, kubelet_token, "kubelet", "system:nodes")
     create_x509_kubeconfig(
         ca,
-        master_ip,
-        api_port,
+        "127.0.0.1",
+        traefik_port,
         "kubelet.config",
         "kubelet",
         cert["certificate_location"],
@@ -736,22 +757,19 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     :param master_port: the port of the mester node we contacted to connect to the cluster
     :param token: the token to pass to the master in order to authenticate with it
     """
+    mark_worker_node()
+    mark_no_cert_reissue()
     hostname_override = info["hostname_override"]
     store_remote_ca(info["ca"])
     store_cert("serviceaccount.key", info["service_account_key"])
 
     store_base_kubelet_args(info["kubelet_args"])
 
-    update_cert_auth_kubeproxy(
-        token, info["ca"], master_ip, master_port, info["apiport"], hostname_override
-    )
-    update_cert_auth_kubelet(token, info["ca"], master_ip, master_port, info["apiport"])
+    update_cert_auth_kubeproxy(token, info["ca"], master_ip, master_port, hostname_override)
+    update_cert_auth_kubelet(token, info["ca"], master_ip, master_port)
 
-    create_admin_kubeconfig(info["ca"], info["admin_token"])
     store_callback_token(info["callback_token"])
     update_traefik(master_ip, info["apiport"])
-    mark_worker_node()
-    mark_no_cert_reissue()
     print_traefik_usage()
 
 

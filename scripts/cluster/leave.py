@@ -37,8 +37,6 @@ def reset_current_dqlite_worker_installation():
     Take a node out of a cluster
     """
     print("Configuring services.", flush=True)
-    unmark_no_cert_reissue()
-    unmark_worker_node()
     disable_traefik()
     os.remove(ca_cert_file)
 
@@ -60,6 +58,8 @@ def reset_current_dqlite_worker_installation():
         config = "{}/credentials/{}.config".format(snapdata_path, user)
         shutil.copyfile("{}.backup".format(config), config)
 
+    unmark_no_cert_reissue()
+    unmark_worker_node()
     restart_all_services()
     apply_cni()
 
