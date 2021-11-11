@@ -123,7 +123,7 @@ def sign_client_cert(cert_request, token):
     sign_cmd = (
         "openssl x509 -sha256 -req -in {csr} -CA {SNAP_DATA}/certs/ca.crt -CAkey"
         " {SNAP_DATA}/certs/ca.key -CAcreateserial -out {SNAP_DATA}/certs/server.{token}.crt"
-        " -days 365".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
+        " -days 3650".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
     )
 
     with open(req_file, "w") as fp:
@@ -370,10 +370,6 @@ def sign_cert():
     if not is_valid(token, certs_request_tokens_file):
         error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype="application/json", status=500)
-
-    if is_node_running_dqlite():
-        error_msg = {"error": "Not possible to join. This is an HA dqlite cluster."}
-        return Response(json.dumps(error_msg), mimetype="application/json", status=501)
 
     remove_token_from_file(token, certs_request_tokens_file)
     signed_cert = sign_client_cert(cert_request, token)
@@ -640,10 +636,8 @@ def join_node_dqlite():
     proxy_token = None
     kubelet_token = None
     if worker:
-        node_addr = get_node_ep(hostname, request.remote_addr)
-        proxy_token = add_proxy_token(node_addr)
-        kubelet_token = add_kubelet_token(node_addr)
-        service("restart", "apiserver")
+        add_token_to_certs_request("{}-kubelet".format(token))
+        add_token_to_certs_request("{}-proxy".format(token))
 
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()

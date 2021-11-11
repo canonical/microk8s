@@ -221,6 +221,63 @@ def get_etcd_client_cert(master_ip, master_port, token):
         try_set_file_permissions(server_cert_file)
 
 
+def get_client_cert(master_ip, master_port, token, username, group=None):
+    """
+    Get a signed cert
+
+    :param master_ip: master ip
+    :param master_port: master port
+    :param token: token to contact the master with
+    :param username: the username of the cert's owner
+    :param group: the group the owner belongs to
+    """
+    info = "/CN={}".format(username)
+    if group:
+        info = "{}/O={}".format(info, group)
+    cer_req_file = "/var/snap/microk8s/current/certs/{}.csr".format(username)
+    cer_key_file = "/var/snap/microk8s/current/certs/{}.key".format(username)
+    cer_file = "{}/certs/{}.crt".format(snapdata_path, username)
+    if not os.path.exists(cer_key_file):
+        cmd_gen_cert_key = (
+            "{snap}/usr/bin/openssl genrsa -out {key} 2048".format(
+                snap=snap_path, key=cer_key_file
+            )
+        )
+        subprocess.check_call(cmd_gen_cert_key.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try_set_file_permissions(cer_key_file)
+
+    cmd_cert = (
+        "{snap}/usr/bin/openssl req -new -sha256 -key {key} -out {csr} -subj {info}".format(
+            snap=snap_path, snapdata=snapdata_path, key=cer_key_file, csr=cer_req_file, username=username, info=info
+        )
+    )
+    subprocess.check_call(cmd_cert.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    with open(cer_req_file) as fp:
+        csr = fp.read()
+        req_data = {"token": token, "request": csr}
+        # TODO: enable ssl verification
+        signed = requests.post(
+            "https://{}:{}/{}/sign-cert".format(master_ip, master_port, CLUSTER_API),
+            json=req_data,
+            verify=False,
+        )
+        if signed.status_code != 200:
+            error = "Failed to sign {} certificate ({}).".format(username, signed.status_code)
+            if "error" in signed.json():
+                error = "{} {}".format(error, format(signed.json()["error"]))
+            print(error)
+            exit(1)
+        info = signed.json()
+        with open(cer_file, "w") as cert_fp:
+            cert_fp.write(info["certificate"])
+        try_set_file_permissions(cer_file)
+
+        return {
+            "certificate_location": cer_file,
+            "certificate_key_location": cer_key_file,
+        }
+
+
 def update_flannel(etcd, master_ip, master_port, token):
     """
     Configure flannel
@@ -277,6 +334,37 @@ def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
         try_set_file_permissions(config)
 
 
+def create_x509_kubeconfig(ca, master_ip, api_port, filename, user, path_to_cert, path_to_cert_key):
+    """
+    Create a kubeconfig file. The file in stored under credentials named after the user
+
+    :param ca: the ca
+    :param master_ip: the master node IP
+    :param api_port: the API server port
+    :param filename: the name of the config file
+    :param user: the user to use al login
+    :param path_to_cert: path to certificate file
+    :param path_to_cert_key: path to certificate key file
+    """
+    snap_path = os.environ.get("SNAP")
+    config_template = "{}/microk8s-resources/{}".format(snap_path, "client-x509.config.template")
+    config = "{}/credentials/{}".format(snapdata_path, filename)
+    shutil.copyfile(config, "{}.backup".format(config))
+    try_set_file_permissions("{}.backup".format(config))
+    ca_line = ca_one_line(ca)
+    with open(config_template, "r") as tfp:
+        with open(config, "w+") as fp:
+            config_txt = tfp.read()
+            config_txt = config_txt.replace("CADATA", ca_line)
+            config_txt = config_txt.replace("NAME", user)
+            config_txt = config_txt.replace("PATHTOCERT", path_to_cert)
+            config_txt = config_txt.replace("PATHTOKEYCERT", path_to_cert_key)
+            config_txt = config_txt.replace("127.0.0.1", master_ip)
+            config_txt = config_txt.replace("16443", api_port)
+            fp.write(config_txt)
+        try_set_file_permissions(config)
+
+
 def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
     """
     Configure the kube-proxy
@@ -292,6 +380,60 @@ def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
     if hostname_override:
         set_arg("--hostname-override", hostname_override, "kube-proxy")
     service("restart", "proxy")
+
+
+def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, api_port, hostname_override):
+    """
+    Configure the kube-proxy
+
+    :param token: the token to be in the kubeconfig
+    :param ca: the ca
+    :param master_ip: the master node IP
+    :param master_port: the master node port where the cluster agent listens
+    :param api_port: the API server port
+    :param hostname_override: the hostname override in case the hostname is not resolvable
+    """
+    proxy_token = "{}-proxy".format(token)
+    cert = get_client_cert(master_ip, master_port, proxy_token, "kubeproxy")
+    create_x509_kubeconfig(
+        ca,
+        master_ip,
+        api_port,
+        "proxy.config",
+        "kubeproxy",
+        cert["certificate_location"],
+        cert["certificate_key_location"]
+    )
+    set_arg("--master", None, "kube-proxy")
+    if hostname_override:
+        set_arg("--hostname-override", hostname_override, "kube-proxy")
+    service("restart", "proxy")
+
+
+def update_cert_auth_kubelet(token, ca, master_ip, master_port, api_port):
+    """
+    Configure the kubelet
+
+    :param token: the token to be in the kubeconfig
+    :param ca: the ca
+    :param master_ip: the master node IP
+    :param master_port: the master node port where the cluster agent listens
+    :param api_port: the API server port
+    :param hostname_override: the hostname override in case the hostname is not resolvable
+    """
+    kubelet_token = "{}-kubelet".format(token)
+    cert = get_client_cert(master_ip, master_port, kubelet_token, "kubelet", "system:nodes")
+    create_x509_kubeconfig(
+        ca,
+        master_ip,
+        api_port,
+        "kubelet.config",
+        "kubelet",
+        cert["certificate_location"],
+        cert["certificate_key_location"]
+    )
+    set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
+    service("restart", "kubelet")
 
 
 def update_kubelet(token, ca, master_ip, api_port):
@@ -448,7 +590,7 @@ def store_callback_token(token):
     """
     Store the callback token
 
-    :param stoken: the callback token
+    :param token: the callback token
     """
     callback_token_file = "{}/credentials/callback-token.txt".format(snapdata_path)
     with open(callback_token_file, "w") as fp:
@@ -546,7 +688,7 @@ def join_dqlite(connection_parts, verify=False, worker=False):
     )
 
     if worker:
-        join_dqlite_worker_node(info, master_ip, token)
+        join_dqlite_worker_node(info, master_ip, master_port, token)
     else:
         join_dqlite_master_node(info, master_ip, token)
 
@@ -577,21 +719,29 @@ def print_traefik_usage():
     print("The node has joined the cluster and will appear in the nodes list in a few seconds.")
     print("")
     print("Currently this worker node is connected only to a single control plane node.")
-    print(
-        "If you run an HA kubernetes cluster all master nodes need to be configured to access this node."
-    )
-    print("Consult the documentation on how this can be achieved.")
+    print("If you run an HA kubernetes cluster you may want to add the all control plane nodes in:")
+    print("/var/snap/microk8s/current/args/traefik/provider.yaml and restart this node.")
     print("")
 
 
-def join_dqlite_worker_node(info, master_ip, token):
+def join_dqlite_worker_node(info, master_ip, master_port, token):
+    """
+    Join this node as a worker to a cluster running dqlite.
+
+    :param info: dictionary with the connection information
+    :param master_ip: the IP of the master node we contacted to connect to the cluster
+    :param master_port: the port of the mester node we contacted to connect to the cluster
+    :param token: the token to pass to the master in order to authenticate with it
+    """
     hostname_override = info["hostname_override"]
     store_remote_ca(info["ca"])
     store_cert("serviceaccount.key", info["service_account_key"])
 
     store_base_kubelet_args(info["kubelet_args"])
-    update_kubeproxy(info["kubeproxy"], info["ca"], "127.0.0.1", info["apiport"], hostname_override)
-    update_kubelet(info["kubelet"], info["ca"], "127.0.0.1", info["apiport"])
+
+    update_cert_auth_kubeproxy(token, info["ca"], master_ip, master_port, info["apiport"], hostname_override)
+    update_cert_auth_kubelet(token, info["ca"], master_ip, master_port, info["apiport"])
+
     create_admin_kubeconfig(info["ca"], info["admin_token"])
     store_callback_token(info["callback_token"])
     update_traefik(master_ip, info["apiport"])
@@ -601,6 +751,13 @@ def join_dqlite_worker_node(info, master_ip, token):
 
 
 def join_dqlite_master_node(info, master_ip, token):
+    """
+    Join this node to a cluster running dqlite.
+
+    :param info: dictionary with the connection information
+    :param master_ip: the IP of the master node we contacted to connect to the cluster
+    :param token: the token to pass to the master in order to authenticate with it
+    """
     hostname_override = info["hostname_override"]
     store_cert("ca.crt", info["ca"])
     store_cert("ca.key", info["ca_key"])
