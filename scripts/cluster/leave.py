@@ -111,11 +111,13 @@ def unmark_worker_node():
     Unmark a node as being part of a cluster not running the control plane
     by deleting a var/lock/clustered.lock
     """
-    lock_file = "{}/var/lock/clustered.lock".format(snapdata_path)
-    if not os.path.isfile(lock_file):
-        print("Not in clustering mode.")
-        exit(2)
-    os.remove(lock_file)
+    locks = ["clustered.lock", "no-k8s-dqlite"]
+    for lock in locks:
+        lock_file = "{}/var/lock/{}".format(snapdata_path, lock)
+        if not os.path.isfile(lock_file):
+            print("Not in clustering mode.")
+            exit(2)
+        os.remove(lock_file)
 
 
 def reset_current_etcd_installation():

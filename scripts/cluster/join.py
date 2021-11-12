@@ -490,10 +490,12 @@ def mark_worker_node():
     Mark a node as being part of a cluster not running the control plane
     by creating a var/lock/clustered.lock
     """
-    lock_file = "{}/var/lock/clustered.lock".format(snapdata_path)
-    open(lock_file, "a").close()
-    os.chmod(lock_file, 0o700)
-    services = ["kubelite", "etcd", "apiserver-kicker", "traefik"]
+    locks = ["clustered.lock", "no-k8s-dqlite"]
+    for lock in locks:
+        lock_file = "{}/var/lock/{}".format(snapdata_path, lock)
+        open(lock_file, "a").close()
+        os.chmod(lock_file, 0o700)
+    services = ["kubelite", "etcd", "apiserver-kicker", "traefik", "k8s-dqlite"]
     for s in services:
         service("restart", s)
 
