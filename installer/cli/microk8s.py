@@ -232,8 +232,9 @@ def inspect() -> None:
             echo.error("Report tarball not generated")
         else:
             for line in output.split(b"\n"):
-                if line.startswith(b"Report tarball is at"):
-                    tarball_location = line.split(b"Report tarball is at ")[0].decode()
+                line = line.decode().strip()
+                if line.startswith("Report tarball is at "):
+                    tarball_location = line.split("Report tarball is at ")[1]
                     break
             if not tarball_location:
                 echo.error("Cannot find tarball file location")
