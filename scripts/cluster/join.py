@@ -193,11 +193,11 @@ def set_arg(key, value, file):
                 if line.startswith(key):
                     done = True
                     if value is not None:
-                        back_fp.write("{} {}\n".format(key, value))
+                        back_fp.write("{}={}\n".format(key, value))
                 else:
                     back_fp.write("{}".format(line))
         if not done and value is not None:
-            back_fp.write("{} {}\n".format(key, value))
+            back_fp.write("{}={}\n".format(key, value))
 
     shutil.copyfile(filename, "{}.backup".format(filename))
     try_set_file_permissions("{}.backup".format(filename))
@@ -457,6 +457,7 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
         cert["certificate_key_location"],
     )
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
+    set_arg("--node-labels", "microk8s.io/cluster=true,node.kubernetes.io/microk8s-worker=microk8s-worker", "kubelet")
     service("restart", "kubelet")
 
 
@@ -471,6 +472,7 @@ def update_kubelet(token, ca, master_ip, api_port):
     """
     create_kubeconfig(token, ca, master_ip, api_port, "kubelet.config", "kubelet")
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
+    set_arg("--node-labels", "microk8s.io/cluster=true,node.kubernetes.io/microk8s-worker=microk8s-worker", "kubelet")
     service("restart", "kubelet")
 
 
