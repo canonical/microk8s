@@ -286,8 +286,11 @@ def get_client_cert(master_ip, master_port, token, username, group=None):
         )
         if signed.status_code != 200:
             error = "Failed to sign {} certificate ({}).".format(username, signed.status_code)
-            if "error" in signed.json():
-                error = "{} {}".format(error, format(signed.json()["error"]))
+            try:
+                if "error" in signed.json():
+                    error = "{} {}".format(error, format(signed.json()["error"]))
+            except ValueError:
+                print("Make sure the cluster you connect to supports joining worker nodes.")
             print(error)
             exit(1)
         info = signed.json()
@@ -761,8 +764,6 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     :param master_port: the port of the mester node we contacted to connect to the cluster
     :param token: the token to pass to the master in order to authenticate with it
     """
-    mark_worker_node()
-    mark_no_cert_reissue()
     hostname_override = info["hostname_override"]
     store_remote_ca(info["ca"])
     store_cert("serviceaccount.key", info["service_account_key"])
@@ -774,6 +775,8 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
 
     store_callback_token(info["callback_token"])
     update_traefik(master_ip, info["apiport"])
+    mark_worker_node()
+    mark_no_cert_reissue()
     print_traefik_usage()
 
 
