@@ -154,7 +154,8 @@ def get_status(available_addons, isReady):
     enabled = []
     disabled = []
     if isReady:
-        kube_output = kubectl_get("all")
+        # 'all' does not include ingress
+        kube_output = kubectl_get("all,ingress")
         cluster_output = kubectl_get_clusterroles()
         kube_output = kube_output + cluster_output
         for addon in available_addons:

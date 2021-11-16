@@ -28,6 +28,14 @@ microk8s-addons:
         - amd64
         - s390x
 
+    - name: "dashboard-ingress"
+      description: "Ingress definition for Kubernetes dashboard"
+      version: "1.0.0"
+      check_status: "ingress.networking.k8s.io/kubernetes-dashboard-ingress"
+      supported_architectures:
+        - arm64
+        - amd64
+
     - name: "ingress"
       description: "Ingress controller for external access"
       version: "1.0.0-alpha.2"

@@ -6,6 +6,7 @@ import yaml
 
 from validators import (
     validate_dns_dashboard,
+    validate_dashboard_ingress,
     validate_storage,
     validate_ingress,
     validate_ambassador,
@@ -127,6 +128,12 @@ class TestAddons(object):
         microk8s_enable("dashboard")
         print("Validating dashboard")
         validate_dns_dashboard()
+        print("Enabling dashboard-ingress")
+        microk8s_enable("dashboard-ingress")
+        print("Validating dashboard-ingress")
+        validate_dashboard_ingress()
+        print("Disabling dashboard-ingress")
+        microk8s_disable("dashboard-ingress")
         print("Enabling storage")
         microk8s_enable("storage")
         print("Validating storage")
