@@ -152,3 +152,11 @@ cd tests/
 pytest -s test-addons.py
 pytest -s test-upgrade.py
 ```
+
+Note: the `ingress` and `dashboard-ingress` tests make use of nip.io for wildcard ingress domains on localhost. [DNS rebinding protection](https://en.wikipedia.org/wiki/DNS_rebinding) may prevent the resolution of the domains used in the tests. 
+
+A workaround is adding these entries to `/etc/hosts`:
+```
+127.0.0.1 kubernetes-dashboard.127.0.0.1.nip.io
+127.0.0.1 microbot.127.0.0.1.nip.io
+```
