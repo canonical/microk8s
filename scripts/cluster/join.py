@@ -460,7 +460,11 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
         cert["certificate_key_location"],
     )
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
-    set_arg("--node-labels", "microk8s.io/cluster=true,node.kubernetes.io/microk8s-worker=microk8s-worker", "kubelet")
+    set_arg(
+        "--node-labels",
+        "microk8s.io/cluster=true,node.kubernetes.io/microk8s-worker=microk8s-worker",
+        "kubelet",
+    )
     service("restart", "kubelet")
 
 
@@ -475,7 +479,11 @@ def update_kubelet(token, ca, master_ip, api_port):
     """
     create_kubeconfig(token, ca, master_ip, api_port, "kubelet.config", "kubelet")
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
-    set_arg("--node-labels", "microk8s.io/cluster=true,node.kubernetes.io/microk8s-worker=microk8s-worker", "kubelet")
+    set_arg(
+        "--node-labels",
+        "microk8s.io/cluster=true,node.kubernetes.io/microk8s-worker=microk8s-worker",
+        "kubelet",
+    )
     service("restart", "kubelet")
 
 
@@ -760,14 +768,22 @@ def print_traefik_usage(master_ip, api_port, nodes_ips):
     print("")
     print("The node has joined the cluster and will appear in the nodes list in a few seconds.")
     print("")
-    print("Currently this worker node is configured with the following kubernetes API server endpoints:")
-    print("    - {} and port {}, this is the cluster node contacted during the join operation.".format(master_ip, api_port))
+    print(
+        "Currently this worker node is configured with the following kubernetes API server endpoints:"
+    )
+    print(
+        "    - {} and port {}, this is the cluster node contacted during the join operation.".format(
+            master_ip, api_port
+        )
+    )
     for n in nodes_ips:
         if n == master_ip:
             continue
         print("    - {} assuming port {}".format(n, api_port))
     print("")
-    print("If the above endpoint are incorrect or if the API servers are behind a loadbalancer please update")
+    print(
+        "If the above endpoint are incorrect or if the API servers are behind a loadbalancer please update"
+    )
     print("/var/snap/microk8s/current/args/traefik/provider.yaml and restart this node.")
     print("")
 
@@ -783,7 +799,9 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     """
     hostname_override = info["hostname_override"]
     if info["ca_key"] is not None:
-        print("Joining process failed. Make sure the cluster you connect to supports joining worker nodes.")
+        print(
+            "Joining process failed. Make sure the cluster you connect to supports joining worker nodes."
+        )
         exit(1)
 
     store_remote_ca(info["ca"])
