@@ -724,33 +724,50 @@ def join_dqlite(connection_parts, verify=False, worker=False):
         join_dqlite_master_node(info, master_ip, token)
 
 
-def update_traefik(master_ip, api_port):
+def update_traefik(master_ip, api_port, nodes_ips):
+    """
+    Update the traefik configuration
+    """
     lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
     lock = "{}/no-traefik".format(lock_path)
     if os.path.exists(lock):
         os.remove(lock)
 
+    # add the addresses where we expect to find the API servers
+    addresses = []
+    # first the node we contact
+    addresses.append({"address": "{}:{}".format(master_ip, api_port)})
+    # then all the nodes assuming the default port
+    for n in nodes_ips:
+        if n == master_ip:
+            continue
+        addresses.append({"address": "{}:{}".format(n, api_port)})
+
     traefik_providers = os.path.expandvars("${SNAP_DATA}/args/traefik/provider-template.yaml")
     traefik_providers_out = os.path.expandvars("${SNAP_DATA}/args/traefik/provider.yaml")
     with open(traefik_providers) as f:
         p = yaml.safe_load(f)
-        p["tcp"]["services"]["kube-apiserver"]["loadBalancer"]["servers"] = [
-            {"address": "{}:{}".format(master_ip, api_port)}
-        ]
+        p["tcp"]["services"]["kube-apiserver"]["loadBalancer"]["servers"] = addresses
         with open(traefik_providers_out, "w") as out_file:
             yaml.dump(p, out_file)
     service("restart", "traefik")
 
 
-def print_traefik_usage():
+def print_traefik_usage(master_ip, api_port, nodes_ips):
     """
     Print Traefik usage
     """
     print("")
     print("The node has joined the cluster and will appear in the nodes list in a few seconds.")
     print("")
-    print("Currently this worker node is connected only to a single control plane node.")
-    print("If you run an HA kubernetes cluster you may want to add the all control plane nodes in:")
+    print("Currently this worker node is configured with the following kubernetes API server endpoints:")
+    print("    - {} and port {}, this is the cluster node contacted during the join operation.".format(master_ip, api_port))
+    for n in nodes_ips:
+        if n == master_ip:
+            continue
+        print("    - {} assuming port {}".format(n, api_port))
+    print("")
+    print("If the above endpoint are incorrect or if the API servers are behind a loadbalancer please update")
     print("/var/snap/microk8s/current/args/traefik/provider.yaml and restart this node.")
     print("")
 
@@ -765,6 +782,10 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     :param token: the token to pass to the master in order to authenticate with it
     """
     hostname_override = info["hostname_override"]
+    if info["ca_key"] is not None:
+        print("Joining process failed. Make sure the cluster you connect to supports joining worker nodes.")
+        exit(1)
+
     store_remote_ca(info["ca"])
     store_cert("serviceaccount.key", info["service_account_key"])
 
@@ -774,10 +795,10 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     update_cert_auth_kubelet(token, info["ca"], master_ip, master_port)
 
     store_callback_token(info["callback_token"])
-    update_traefik(master_ip, info["apiport"])
+    update_traefik(master_ip, info["apiport"], info["control_plane_nodes"])
     mark_worker_node()
     mark_no_cert_reissue()
-    print_traefik_usage()
+    print_traefik_usage(master_ip, info["apiport"], info["control_plane_nodes"])
 
 
 def join_dqlite_master_node(info, master_ip, token):

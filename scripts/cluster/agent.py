@@ -24,6 +24,7 @@ from .common.utils import (
     try_initialise_cni_autodetect_for_clustering,
     service,
     mark_no_cert_reissue,
+    get_control_plane_nodes_internal_ips,
 )
 
 from flask import Flask, jsonify, request, Response
@@ -288,7 +289,6 @@ def get_node_ep(hostname, remote_addr):
         return hostname
     except socket.gaierror:
         return remote_addr
-    return remote_addr
 
 
 @app.route("/{}/join".format(CLUSTER_API), methods=["POST"])
@@ -635,9 +635,11 @@ def join_node_dqlite():
 
     ca_key = None
     admin_token = None
+    control_plane_nodes = []
     if worker:
         add_token_to_certs_request("{}-kubelet".format(token))
         add_token_to_certs_request("{}-proxy".format(token))
+        control_plane_nodes = get_control_plane_nodes_internal_ips()
     else:
         ca_key = get_cert("ca.key")
         admin_token = get_token("admin")
@@ -660,6 +662,7 @@ def join_node_dqlite():
         kubelet_args=kubelet_args,
         hostname_override=node_addr,
         admin_token=admin_token,
+        control_plane_nodes=control_plane_nodes,
     )
 
 

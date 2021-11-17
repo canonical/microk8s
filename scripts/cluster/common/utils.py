@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import subprocess
 import time
@@ -167,6 +168,24 @@ def get_cluster_agent_port():
                 if len(port_parse) > 1:
                     cluster_agent_port = port_parse[1].rstrip()
     return cluster_agent_port
+
+
+def get_control_plane_nodes_internal_ips():
+    """
+    Return the internal IP of the nodes labeled running the control plane.
+
+    :return: list of node internal IPs
+    """
+    snap_path = os.environ.get("SNAP")
+    nodes_info = subprocess.check_output(
+        "{}/microk8s-kubectl.wrapper get no -o json -l node.kubernetes.io/microk8s-controlplane=microk8s-controlplane".format(snap_path).split()
+    )
+    info = json.loads(nodes_info.decode())
+    node_ips = []
+    for node_info in info["items"]:
+        node_ip = get_internal_ip_from_get_node(node_info)
+        node_ips.append(node_ip)
+    return node_ips
 
 
 def get_internal_ip_from_get_node(node_info):
