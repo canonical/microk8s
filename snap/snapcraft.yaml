@@ -832,9 +832,8 @@ parts:
       - -sbin/iptables*
       - -lib/xtables
 
-  bash-utils:
-    source: snap
-    plugin: dump
+  auxiliary:
+    plugin: nil
     stage-packages:
       - aufs-tools
       - coreutils
@@ -854,6 +853,7 @@ parts:
       - net-tools
       - sed
       - socat
+      - nano
       - util-linux
       - zfsutils-linux
     stage:
@@ -989,12 +989,3 @@ parts:
       juju: bin/juju
     prime:
       - bin/juju
-
-  nano:
-    plugin: nil
-    stage-packages:
-      - nano
-    stage:
-      - bin/nano
-    prime:
-      - bin/nano
