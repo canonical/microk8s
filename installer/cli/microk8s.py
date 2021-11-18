@@ -3,6 +3,7 @@ import logging
 import traceback
 from typing import List
 from sys import exit, platform
+from os import getcwd
 
 import click
 
@@ -55,6 +56,9 @@ def cli(ctx, help):
             exit(kubectl(ctx.args[1:]))
         elif ctx.args[0] == "dashboard-proxy":
             dashboard_proxy()
+            exit(0)
+        elif ctx.args[0] == "inspect":
+            inspect()
             exit(0)
         else:
             run(ctx.args)
@@ -209,6 +213,44 @@ def kubectl(args) -> int:
         return MacOS(args).kubectl()
     else:
         return Linux(args).kubectl()
+
+
+def inspect() -> None:
+    vm_provider_name = "multipass"
+    vm_provider_class = get_provider_for(vm_provider_name)
+    echo = Echo()
+    try:
+        vm_provider_class.ensure_provider()
+        instance = vm_provider_class(echoer=echo)
+        instance.get_instance_info()
+
+        command = ["microk8s.inspect"]
+        output = instance.run(command, hide_output=True)
+        tarball_location = None
+        host_destination = getcwd()
+        if b"Report tarball is at" not in output:
+            echo.error("Report tarball not generated")
+        else:
+            for line_out in output.split(b"\n"):
+                line_out = line_out.decode()
+                line = line_out.strip()
+                if line.startswith("Report tarball is at "):
+                    tarball_location = line.split("Report tarball is at ")[1]
+                    break
+                echo.wrapped(line_out)
+            if not tarball_location:
+                echo.error("Cannot find tarball file location")
+            else:
+                instance.pull_file(name=tarball_location, destination=host_destination)
+                echo.wrapped(
+                    "The report tarball {} is stored on the current directory".format(
+                        tarball_location.split("/")[-1]
+                    )
+                )
+
+    except ProviderInstanceNotFoundError:
+        _not_installed(echo)
+        return 1
 
 
 def dashboard_proxy() -> None:
