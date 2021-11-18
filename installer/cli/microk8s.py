@@ -242,7 +242,11 @@ def inspect() -> None:
                 echo.error("Cannot find tarball file location")
             else:
                 instance.pull_file(name=tarball_location, destination=host_destination)
-                echo.wrapped("The report tarball {} is stored on the current directory".format(tarball_location.split('/')[-1]))
+                echo.wrapped(
+                    "The report tarball {} is stored on the current directory".format(
+                        tarball_location.split("/")[-1]
+                    )
+                )
 
     except ProviderInstanceNotFoundError:
         _not_installed(echo)
