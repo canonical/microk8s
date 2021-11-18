@@ -466,7 +466,7 @@ def get_dqlite_nodes():
     while waits > 0:
         try:
             with open("{}/info.yaml".format(cluster_dir)) as f:
-                data = yaml.load(f, Loader=yaml.FullLoader)
+                data = yaml.safe_load(f)
                 out = subprocess.check_output(
                     "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
                     "-k {dbdir}/cluster.key -f json k8s .cluster".format(

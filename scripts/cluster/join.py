@@ -894,7 +894,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     # We get the dqlite port from the already existing deployment
     port = 19001
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
-        data = yaml.load(f, Loader=yaml.FullLoader)
+        data = yaml.safe_load(f)
     if "Address" in data:
         port = data["Address"].split(":")[1]
 
