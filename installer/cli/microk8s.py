@@ -231,15 +231,18 @@ def inspect() -> None:
         if b"Report tarball is at" not in output:
             echo.error("Report tarball not generated")
         else:
-            for line in output.split(b"\n"):
-                line = line.decode().strip()
+            for line_out in output.split(b"\n"):
+                line_out = line_out.decode()
+                line = line_out.strip()
                 if line.startswith("Report tarball is at "):
                     tarball_location = line.split("Report tarball is at ")[1]
                     break
+                echo.wrapped(line_out)
             if not tarball_location:
                 echo.error("Cannot find tarball file location")
             else:
                 instance.pull_file(name=tarball_location, destination=host_destination)
+                echo.wrapped("The report tarball {} is stored on the current directory".format(tarball_location.split('/')[-1]))
 
     except ProviderInstanceNotFoundError:
         _not_installed(echo)
