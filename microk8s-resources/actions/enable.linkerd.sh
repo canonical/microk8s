@@ -11,7 +11,7 @@ ARCH=$(arch)
 
 # check if linkerd cli is already in the system.  Download if it doesn't exist.
 if [ ! -f "${SNAP_DATA}/bin/linkerd" ]; then
-  LINKERD_VERSION="${LINKERD_VERSION:-v2.10.2}"
+  LINKERD_VERSION="${LINKERD_VERSION:-v2.11.1}"
   echo "Fetching Linkerd2 version $LINKERD_VERSION."
   mkdir -p "$SNAP_DATA/bin"
   LINKERD_VERSION=$(echo $LINKERD_VERSION | sed 's/v//g')

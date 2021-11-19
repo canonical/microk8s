@@ -28,6 +28,14 @@ microk8s-addons:
         - amd64
         - s390x
 
+    - name: "dashboard-ingress"
+      description: "Ingress definition for Kubernetes dashboard"
+      version: "1.0.0"
+      check_status: "ingress.networking.k8s.io/kubernetes-dashboard-ingress"
+      supported_architectures:
+        - arm64
+        - amd64
+
     - name: "ingress"
       description: "Ingress controller for external access"
       version: "1.0.0-alpha.2"
@@ -106,7 +114,7 @@ microk8s-addons:
 
     - name: "linkerd"
       description: "Linkerd is a service mesh for Kubernetes and other frameworks"
-      version: "2.10.2"
+      version: "2.11.1"
       check_status: "pod/linkerd-controller"
       supported_architectures:
         - amd64
