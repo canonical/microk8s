@@ -758,6 +758,7 @@ def update_traefik(master_ip, api_port, nodes_ips):
         p["tcp"]["services"]["kube-apiserver"]["loadBalancer"]["servers"] = addresses
         with open(traefik_providers_out, "w") as out_file:
             yaml.dump(p, out_file)
+    try_set_file_permissions(traefik_providers_out)
     service("restart", "traefik")
 
 
