@@ -493,6 +493,8 @@ passthrough:
       bind: $SNAP_DATA/kube-proxy
     /etc/service/enabled:
       bind: $SNAP_COMMON/etc/service/enabled
+    /etc/nanorc:
+      bind-file: $SNAP_COMMON/etc/nanorc
 
 parts:
   raft:
@@ -829,9 +831,8 @@ parts:
       - -sbin/iptables*
       - -lib/xtables
 
-  bash-utils:
-    source: snap
-    plugin: dump
+  auxiliary:
+    plugin: nil
     stage-packages:
       - aufs-tools
       - coreutils
@@ -851,6 +852,7 @@ parts:
       - net-tools
       - sed
       - socat
+      - nano
       - util-linux
       - zfsutils-linux
     stage:
