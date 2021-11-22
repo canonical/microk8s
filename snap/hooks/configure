@@ -104,6 +104,7 @@ if [ ! -e ${SNAP_DATA}/args/traefik ]
 then
   echo "Making sure we have traefik configuration"
   cp -r ${SNAP}/default-args/traefik ${SNAP_DATA}/args/
+  set_service_not_expected_to_start traefik
 fi
 
 # Upgrading to containerd
