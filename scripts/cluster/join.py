@@ -783,9 +783,9 @@ def print_traefik_usage(master_ip, api_port, nodes_ips):
         print("    - {} assuming port {}".format(n, api_port))
     print("")
     print(
-        "If the above endpoint are incorrect or if the API servers are behind a loadbalancer please update"
+        "If the above endpoints are incorrect, incomplete or if the API servers are behind a loadbalancer please update"
     )
-    print("/var/snap/microk8s/current/args/traefik/provider.yaml and restart this node.")
+    print("/var/snap/microk8s/current/args/traefik/provider.yaml")
     print("")
 
 
