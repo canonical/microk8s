@@ -436,7 +436,7 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, hostname_overr
     service("restart", "proxy")
 
 
-def update_cert_auth_kubelet(token, ca, master_ip, master_port, hostname_override):
+def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     """
     Configure the kubelet
 
@@ -444,11 +444,10 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port, hostname_overrid
     :param ca: the ca
     :param master_ip: the master node IP
     :param master_port: the master node port where the cluster agent listens
-    :param hostname_override: the hostname override in case the hostname is not resolvable
     """
     traefik_port = get_traefik_port()
     kubelet_token = "{}-kubelet".format(token)
-    kubelet_user = "system:node:kubelet-{}".format(hostname_override)
+    kubelet_user = "system:node:{}".format(socket.gethostname())
     cert = get_client_cert(master_ip, master_port, kubelet_token, kubelet_user, "system:nodes")
     create_x509_kubeconfig(
         ca,
@@ -811,7 +810,7 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     store_base_kubelet_args(info["kubelet_args"])
 
     update_cert_auth_kubeproxy(token, info["ca"], master_ip, master_port, hostname_override)
-    update_cert_auth_kubelet(token, info["ca"], master_ip, master_port, hostname_override)
+    update_cert_auth_kubelet(token, info["ca"], master_ip, master_port)
 
     store_callback_token(info["callback_token"])
     update_traefik(master_ip, info["apiport"], info["control_plane_nodes"])
