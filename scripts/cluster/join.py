@@ -448,7 +448,9 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     traefik_port = get_traefik_port()
     kubelet_token = "{}-kubelet".format(token)
     kubelet_user = "system:node:{}".format(socket.gethostname())
-    cert = get_client_cert(master_ip, master_port, "kubelet", kubelet_token, kubelet_user, "system:nodes")
+    cert = get_client_cert(
+        master_ip, master_port, "kubelet", kubelet_token, kubelet_user, "system:nodes"
+    )
     create_x509_kubeconfig(
         ca,
         "127.0.0.1",
