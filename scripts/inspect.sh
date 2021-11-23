@@ -99,6 +99,17 @@ function store_juju_info {
 }
 
 
+function store_dqlite_info {
+  # Collect some dqlite details
+  printf -- '  Inspect dqlite\n'
+  mkdir -p $INSPECT_DUMP/dqlite
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
+  sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
+}
+
+
 function store_kubeflow_info {
   # Collect some kubeflow details
   printf -- '  Inspect Kubeflow\n'
@@ -343,14 +354,15 @@ store_network
 printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info
 
-### Juju and kubeflow are out of scope of the strict confinement work for now
-#
-#printf -- 'Inspecting juju\n'
-#store_juju_info
-#
-#printf -- 'Inspecting kubeflow\n'
-#store_kubeflow_info
-#
+# printf -- 'Inspecting juju\n'
+# store_juju_info
+
+# printf -- 'Inspecting kubeflow\n'
+# store_kubeflow_info
+
+# printf -- 'Inspecting dqlite\n'
+# store_dqlite_info
+
 suggest_fixes
 #
 #printf -- 'Building the report tarball\n'

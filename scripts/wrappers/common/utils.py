@@ -80,7 +80,7 @@ def get_dqlite_info():
     while waits > 0:
         try:
             with open("{}/info.yaml".format(cluster_dir), mode="r") as f:
-                data = yaml.load(f, Loader=yaml.FullLoader)
+                data = yaml.safe_load(f)
                 out = subprocess.check_output(
                     "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
                     "-k {dbdir}/cluster.key -f json k8s .cluster".format(
@@ -183,7 +183,7 @@ def get_available_addons(arch):
     with open(addon_dataset, "r") as file:
         # The FullLoader parameter handles the conversion from YAML
         # scalar values to Python the dictionary format
-        addons = yaml.load(file, Loader=yaml.FullLoader)
+        addons = yaml.safe_load(file)
         for addon in addons["microk8s-addons"]["addons"]:
             if arch in addon["supported_architectures"]:
                 available.append(addon)

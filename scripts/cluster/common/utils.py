@@ -126,7 +126,7 @@ def get_dqlite_port():
     port = 19001
     if os.path.exists(dqlite_info):
         with open(dqlite_info) as f:
-            data = yaml.load(f, Loader=yaml.FullLoader)
+            data = yaml.safe_load(f)
         if "Address" in data:
             port = data["Address"].split(":")[1]
 

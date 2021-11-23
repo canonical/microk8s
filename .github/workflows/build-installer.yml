@@ -16,9 +16,9 @@ jobs:
         working-directory: ${{ github.workspace }}/installer/windows
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.5
+        uses: actions/checkout@v2.4.0
       - name: Set up Python 3.8
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v2.3.0
         with:
           python-version: 3.8
       - name: Install Python requirements
@@ -32,7 +32,7 @@ jobs:
       - name: Download EnVar plugin for NSIS
         uses: carlosperate/download-file-action@v1.0.3
         with:
-          file-url: https://nsis.sourceforge.io/mediawiki/images/7/7f/EnVar_plugin.zip
+          file-url: https://github.com/GsNSIS/EnVar/releases/download/v0.3.1/EnVar-Plugin.zip
           file-name: envar_plugin.zip
           location: ${{ github.workspace }}
       - name: Extract EnVar plugin
