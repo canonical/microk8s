@@ -420,7 +420,7 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, hostname_overr
     """
     proxy_token = "{}-proxy".format(token)
     traefik_port = get_traefik_port()
-    cert = get_client_cert(master_ip, master_port, proxy_token, "kubeproxy")
+    cert = get_client_cert(master_ip, master_port, proxy_token, "system:kube-proxy")
     create_x509_kubeconfig(
         ca,
         "127.0.0.1",
@@ -436,7 +436,7 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, hostname_overr
     service("restart", "proxy")
 
 
-def update_cert_auth_kubelet(token, ca, master_ip, master_port):
+def update_cert_auth_kubelet(token, ca, master_ip, master_port, hostname_override):
     """
     Configure the kubelet
 
@@ -444,12 +444,12 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     :param ca: the ca
     :param master_ip: the master node IP
     :param master_port: the master node port where the cluster agent listens
-    :param api_port: the API server port
     :param hostname_override: the hostname override in case the hostname is not resolvable
     """
     traefik_port = get_traefik_port()
     kubelet_token = "{}-kubelet".format(token)
-    cert = get_client_cert(master_ip, master_port, kubelet_token, "kubelet", "system:nodes")
+    kubelet_user = "system:node:kubelet-{}".format(hostname_override)
+    cert = get_client_cert(master_ip, master_port, kubelet_token, kubelet_user, "system:nodes")
     create_x509_kubeconfig(
         ca,
         "127.0.0.1",
@@ -811,7 +811,7 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     store_base_kubelet_args(info["kubelet_args"])
 
     update_cert_auth_kubeproxy(token, info["ca"], master_ip, master_port, hostname_override)
-    update_cert_auth_kubelet(token, info["ca"], master_ip, master_port)
+    update_cert_auth_kubelet(token, info["ca"], master_ip, master_port, hostname_override)
 
     store_callback_token(info["callback_token"])
     update_traefik(master_ip, info["apiport"], info["control_plane_nodes"])
