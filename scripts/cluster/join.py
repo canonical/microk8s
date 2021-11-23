@@ -240,13 +240,14 @@ def get_etcd_client_cert(master_ip, master_port, token):
         try_set_file_permissions(server_cert_file)
 
 
-def get_client_cert(master_ip, master_port, token, username, group=None):
+def get_client_cert(master_ip, master_port, fname, token, username, group=None):
     """
     Get a signed cert.
     See https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certs
 
     :param master_ip: master ip
     :param master_port: master port
+    :param fname: file name prefix for the certificate
     :param token: token to contact the master with
     :param username: the username of the cert's owner
     :param group: the group the owner belongs to
@@ -254,9 +255,9 @@ def get_client_cert(master_ip, master_port, token, username, group=None):
     info = "/CN={}".format(username)
     if group:
         info = "{}/O={}".format(info, group)
-    cer_req_file = "/var/snap/microk8s/current/certs/{}.csr".format(username)
-    cer_key_file = "/var/snap/microk8s/current/certs/{}.key".format(username)
-    cer_file = "/var/snap/microk8s/current/certs/{}.crt".format(username)
+    cer_req_file = "/var/snap/microk8s/current/certs/{}.csr".format(fname)
+    cer_key_file = "/var/snap/microk8s/current/certs/{}.key".format(fname)
+    cer_file = "/var/snap/microk8s/current/certs/{}.crt".format(fname)
     if not os.path.exists(cer_key_file):
         cmd_gen_cert_key = "{snap}/usr/bin/openssl genrsa -out {key} 2048".format(
             snap=snap_path, key=cer_key_file
@@ -271,7 +272,6 @@ def get_client_cert(master_ip, master_port, token, username, group=None):
         snapdata=snapdata_path,
         key=cer_key_file,
         csr=cer_req_file,
-        username=username,
         info=info,
     )
     subprocess.check_call(cmd_cert.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -285,7 +285,7 @@ def get_client_cert(master_ip, master_port, token, username, group=None):
             verify=False,
         )
         if signed.status_code != 200:
-            error = "Failed to sign {} certificate ({}).".format(username, signed.status_code)
+            error = "Failed to sign {} certificate ({}).".format(fname, signed.status_code)
             try:
                 if "error" in signed.json():
                     error = "{} {}".format(error, format(signed.json()["error"]))
@@ -420,7 +420,7 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, hostname_overr
     """
     proxy_token = "{}-proxy".format(token)
     traefik_port = get_traefik_port()
-    cert = get_client_cert(master_ip, master_port, proxy_token, "system:kube-proxy")
+    cert = get_client_cert(master_ip, master_port, "kube-proxy", proxy_token, "system:kube-proxy")
     create_x509_kubeconfig(
         ca,
         "127.0.0.1",
@@ -448,7 +448,7 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     traefik_port = get_traefik_port()
     kubelet_token = "{}-kubelet".format(token)
     kubelet_user = "system:node:{}".format(socket.gethostname())
-    cert = get_client_cert(master_ip, master_port, kubelet_token, kubelet_user, "system:nodes")
+    cert = get_client_cert(master_ip, master_port, "kubelet", kubelet_token, kubelet_user, "system:nodes")
     create_x509_kubeconfig(
         ca,
         "127.0.0.1",
