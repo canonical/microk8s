@@ -38,6 +38,9 @@ apps:
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
+  daemon-traefik:
+    command: run-traefik-with-args
+    daemon: simple
   daemon-control-plane-kicker:
     command: run-null-daemon
     daemon: simple
@@ -245,6 +248,28 @@ parts:
     stage:
       - etcd
       - etcdctl
+
+  traefik:
+    plugin: dump
+    source: build-scripts/
+    override-build: |
+      . ./set-env-variables.sh
+      case ${SNAPCRAFT_ARCH_TRIPLET%%-*} in
+      x86_64|aarch64)
+        echo "Supported arch by traefik - use official binary"
+        curl -LO https://github.com/traefik/traefik/releases/download/${TRAEFIK_VERSION}/traefik_${TRAEFIK_VERSION}_linux_${KUBE_ARCH}.tar.gz
+        tar -xzvf traefik_*.tar.gz
+        mkdir -p bin
+        mv traefik bin/
+        ;;
+      *)
+        echo "Unsupported arch by traefik - TODO: build from sources"
+      esac
+      snapcraftctl build
+    organize:
+      traefik: bin/traefik
+    prime:
+      - bin/traefik
 
   cni:
     plugin: dump

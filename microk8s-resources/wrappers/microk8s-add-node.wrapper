@@ -46,7 +46,9 @@ fi
 
 if getent group microk8s >/dev/null 2>&1
 then
-  chgrp microk8s $SNAP_DATA/credentials/cluster-tokens.txt || true
+  chgrp microk8s $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
+  chmod ug+rw $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
+  chmod o-rwX $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
 fi
 
 # Use python's built-in (3.6+) secrets generator to produce the token.

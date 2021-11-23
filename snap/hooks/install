@@ -102,6 +102,7 @@ init_cluster
 mkdir -p "${SNAP_DATA}/var/lock"
 set_service_not_expected_to_start etcd
 set_service_not_expected_to_start flanneld
+set_service_not_expected_to_start traefik
 
 touch "${SNAP_DATA}/var/lock/ha-cluster"
 touch "${SNAP_DATA}/var/lock/lite.lock"

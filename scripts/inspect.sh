@@ -332,7 +332,6 @@ check_certificates
 printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"
 check_service "snap.microk8s.daemon-containerd"
-check_service "snap.microk8s.daemon-apiserver-kicker"
 check_service "snap.microk8s.daemon-k8s-dqlite"
 if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
 then
@@ -349,6 +348,14 @@ if ! [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then
   check_service "snap.microk8s.daemon-flanneld"
   check_service "snap.microk8s.daemon-etcd"
+fi
+if ! [ -e "${SNAP_DATA}/var/lock/no-traefik" ]
+then
+  check_service "snap.microk8s.daemon-traefik"
+fi
+if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  check_service "snap.microk8s.daemon-apiserver-kicker"
 fi
 
 store_args
