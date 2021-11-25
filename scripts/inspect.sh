@@ -144,7 +144,7 @@ function suggest_fixes {
     fi
   fi
 
-  if iptables -L | grep FORWARD | grep DROP &> /dev/null
+  if iptables -L 2>&1 | grep FORWARD | grep DROP &> /dev/null
   then
     printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
     printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
@@ -272,6 +272,15 @@ function suggest_fixes {
     printf -- "\t  This is not a valid name for a Kubernetes node, causing node registration to fail.\n"
     printf -- "\t  Please change the machine's hostname or refer to the documentation for more details: \n"
     printf -- "\t  https://microk8s.io/docs/troubleshooting#heading--common-issues \n"
+  fi
+
+  if grep Raspberry /proc/cpuinfo -q &&
+    [ -e /etc/os-release ] &&
+    grep impish /etc/os-release -q &&
+    ! dpkg -l | grep linux-modules-extra-raspi -q 
+  then
+    printf -- "\033[0;33mWARNING: \033[0m On Raspberry Pi consider installing the linux-modules-extra-raspi package with: \n"
+    printf -- "\t  'sudo apt install linux-modules-extra-raspi' and reboot.\n"
   fi
 
 }
