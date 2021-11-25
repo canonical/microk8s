@@ -166,7 +166,7 @@ if [ -f "${SNAP_DATA}/var/lock/host-access-enabled" ] &&
    ! ip link show lo:microk8s &> /dev/null
 then
   IP_ADDRESS=$(<"${SNAP_DATA}/var/lock/host-access-enabled")
-  if ! "$SNAP/sbin/ifconfig" lo:microk8s "$IP_ADDRESS" up
+  if ! "$SNAP/sbin/ip" addr add "$ip_ADDRESS" dev lo label lo:microk8s
   then
     echo "Failed to enable host-access"
   else
