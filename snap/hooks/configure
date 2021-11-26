@@ -527,6 +527,12 @@ then
   need_api_restart=true
 fi
 
+# Removed --insecure-port argument
+if grep -e "\-\-insecure\-port" ${SNAP_DATA}/args/kube-apiserver
+then
+  skip_opt_in_config "insecure-port" kube-apiserver
+fi
+
 # Are we using etcd or some other non-dqlite datastore?
 if ! [ -e ${SNAP_DATA}/args/k8s-dqlite ] &&
    ! grep -e "\-\-storage-backend=dqlite" ${SNAP_DATA}/args/kube-apiserver
