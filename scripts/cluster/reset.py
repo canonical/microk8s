@@ -184,7 +184,7 @@ def remove_callback_token(node):
             # Entries are of the format: 'node_hostname:agent_port token'
             # We need to get the node_hostname part
             for _, line in enumerate(callback_fp):
-                parts = line.split(':')
+                parts = line.split(":")
                 if parts[0] == node:
                     continue
                 else:
