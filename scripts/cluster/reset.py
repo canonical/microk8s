@@ -181,8 +181,10 @@ def remove_callback_token(node):
     with open(tmp_file, "w") as backup_fp:
         os.chmod(tmp_file, 0o600)
         with open(callback_tokens_file, "r+") as callback_fp:
+            # Entries are of the format: 'node_hostname:agent_port token'
+            # We need to get the node_hostname part
             for _, line in enumerate(callback_fp):
-                parts = line.split()
+                parts = line.split(':')
                 if parts[0] == node:
                     continue
                 else:
