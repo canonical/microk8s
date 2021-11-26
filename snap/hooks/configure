@@ -327,7 +327,7 @@ do
   chmod -R o-rwX ${dir}
 done
 
-# Try to great the microk8s group. DO not fail the installation if something goes wrong
+# Try to create the microk8s group. Do not fail the installation if something goes wrong
 if ! getent group microk8s >/dev/null 2>&1
 then
   groupadd --system microk8s || true
@@ -595,7 +595,7 @@ then
   # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
   timeout="120"
   KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-  while ! (is_apiserver_ready) 
+  while ! (is_apiserver_ready)
   do
     sleep 5
     now="$(date +%s)"
@@ -608,7 +608,7 @@ then
   now="$(date +%s)"
   if [[ "$now" < "$(($start_timer + $timeout))" ]] ; then
     if (is_apiserver_ready) &&
-        $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml" 
+        $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
     then
       touch "${SNAP_DATA}/var/lock/cni-loaded"
     fi
