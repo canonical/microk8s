@@ -85,7 +85,9 @@ def print_pretty(token, check):
     print(f"microk8s join {default_ip}:{port}/{token}/{check}\n")
 
     if is_node_running_dqlite():
-        print("Use the '--worker' flag to join a node as a worker not running the control plane, eg:")
+        print(
+            "Use the '--worker' flag to join a node as a worker not running the control plane, eg:"
+        )
         print(f"microk8s join {default_ip}:{port}/{token}/{check} --worker\n")
 
     print(
