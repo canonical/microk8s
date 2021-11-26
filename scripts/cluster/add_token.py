@@ -4,6 +4,8 @@ import time
 import argparse
 import subprocess
 
+from common.utils import is_node_running_dqlite
+
 try:
     from secrets import token_hex
 except ImportError:
@@ -82,8 +84,9 @@ def print_pretty(token, check):
     print("From the node you wish to join to this cluster, run the following:")
     print(f"microk8s join {default_ip}:{port}/{token}/{check}\n")
 
-    print("Use the '--worker' flag to join a node as a worker not running the control plane, eg:")
-    print(f"microk8s join {default_ip}:{port}/{token}/{check} --worker\n")
+    if is_node_running_dqlite():
+        print("Use the '--worker' flag to join a node as a worker not running the control plane, eg:")
+        print(f"microk8s join {default_ip}:{port}/{token}/{check} --worker\n")
 
     print(
         "If the node you are adding is not reachable through the default interface you can use one of the following:"
