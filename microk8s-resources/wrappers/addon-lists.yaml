@@ -216,6 +216,13 @@ microk8s-addons:
       supported_architectures:
         - amd64
 
+    - name: "chaosmesh"
+      description: "ChaosMesh chaos framework"
+      version: "2.0.5"
+      check_status: "pod/chaos"
+      supported_architectures:
+        - amd64
+
     - name: "openfaas"
       description: "OpenFaaS serverless framework"
       version: "6.2.2"

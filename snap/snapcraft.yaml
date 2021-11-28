@@ -564,6 +564,7 @@ parts:
         rm "actions/multus.yaml"
         rm actions/*.keda.sh
         rm actions/*.openfaas.sh
+        rm actions/*.chaosmesh.sh
         rm -rf "actions/kata"
         rm actions/*.kata.sh
         rm actions/*.inaccel.sh
@@ -587,6 +588,7 @@ parts:
         rm actions/*.keda.sh
         rm actions/*.openebs.sh
         rm actions/*.openfaas.sh
+        rm actions/*.chaosmesh.sh
         rm actions/*.prometheus.sh
         rm -rf "actions/prometheus"
         rm actions/*.ambassador.sh

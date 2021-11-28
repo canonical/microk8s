@@ -31,6 +31,7 @@ from validators import (
     validate_coredns_config,
     validate_portainer,
     validate_openfaas,
+    validate_chaosmesh,
     validate_openebs,
     validate_kata,
 )
@@ -396,6 +397,21 @@ class TestAddons(object):
         validate_ambassador()
         print("Disabling Ambassador")
         microk8s_disable("ambassador")
+
+    @pytest.mark.skipif(
+        platform.machine() != "x86_64",
+        reason="ChaosMesh tests are only relevant in x86 architectures",
+    )
+    def test_chaosmesh(self):
+        """
+        Sets up and validates ChaosMesh.
+        """
+        print("Enabling chaosmesh")
+        microk8s_enable("chaosmesh")
+        print("Validating chaosmesh")
+        validate_chaosmesh()
+        print("Disabling chaosmesh")
+        microk8s_disable("chaosmesh")
 
     @pytest.mark.skipif(
         platform.machine() != "x86_64", reason="Multus tests are only relevant in x86 architectures"

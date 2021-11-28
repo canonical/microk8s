@@ -538,6 +538,11 @@ def validate_portainer():
     """
     wait_for_pod_state("", "portainer", "running", label="app.kubernetes.io/name=portainer")
 
+def validate_chaosmesh():
+    """
+    Validate chaosmesh
+    """
+    wait_for_pod_state("", "chaosmesh", "running", label="app.kubernetes.io/instance=chaos-mesh")
 
 def validate_openfaas():
     """
