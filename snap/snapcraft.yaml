@@ -262,6 +262,7 @@ parts:
         echo "Supported arch by traefik - use official binary"
         curl -LO https://github.com/traefik/traefik/releases/download/${TRAEFIK_VERSION}/traefik_${TRAEFIK_VERSION}_linux_${KUBE_ARCH}.tar.gz
         tar -xzvf traefik_*.tar.gz
+        cp traefik $SNAPCRAFT_PART_INSTALL/bin/
         ;;
       *)
         echo "Unsupported arch by traefik - building from sources"
