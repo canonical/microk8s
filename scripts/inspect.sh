@@ -184,7 +184,7 @@ function suggest_fixes {
 
   # check for docker
   # if docker is installed
-  if [ -d "/etc/docker/" ]; then 
+  if [ -d "/etc/docker/" ] && ! [ -z "$(which dockerd)" ]; then
     # if docker/daemon.json file doesn't exist print prompt to create it and mark the registry as insecure
     if [ ! -f "/etc/docker/daemon.json" ]; then
       printf -- '\033[0;33mWARNING: \033[0m Docker is installed. \n'
@@ -208,7 +208,7 @@ function suggest_fixes {
       fi
     fi
   fi
-  
+
   if ! mount | grep -q 'cgroup/memory'; then
     if ! mount | grep -q 'cgroup2 on /sys/fs/cgroup'; then
       printf -- '\033[0;33mWARNING: \033[0m The memory cgroup is not enabled. \n'
