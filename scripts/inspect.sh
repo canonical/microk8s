@@ -52,8 +52,8 @@ function store_network {
   # Collect network setup.
   printf -- '  Copy network configuration to the final report tarball\n'
   mkdir -p $INSPECT_DUMP/network
-  netstat -pln &> $INSPECT_DUMP/network/netstat
-  ifconfig &> $INSPECT_DUMP/network/ifconfig
+  ss -pln &> $INSPECT_DUMP/network/ss
+  ip addr &> $INSPECT_DUMP/network/ip-addr
   iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
   iptables -S &> $INSPECT_DUMP/network/iptables-S
   iptables -L &> $INSPECT_DUMP/network/iptables-L
