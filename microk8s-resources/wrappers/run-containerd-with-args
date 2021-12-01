@@ -15,7 +15,6 @@ fi
 SNAP_CURRENT="/snap/microk8s/current"
 CURRENT_PATH="$SNAP_CURRENT/usr/sbin:$SNAP_CURRENT/usr/bin:$SNAP_CURRENT/sbin:$SNAP_CURRENT/bin"
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$CURRENT_PATH:$PATH"
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
