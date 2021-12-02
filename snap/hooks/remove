@@ -20,6 +20,12 @@ then
   unlink /var/lib/kubelet || true
 fi
 
+# Remove the symlink to runc 
+if test -L /usr/sbin/runc
+then
+  unlink /usr/sbin/runc || true
+fi
+
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
 if [ -z "$pod_cidr" ]
 then
