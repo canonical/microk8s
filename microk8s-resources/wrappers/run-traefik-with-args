@@ -17,6 +17,4 @@ fi
 sleep 6
 sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g' $SNAP_DATA/args/traefik/traefik-template.yaml > $SNAP_DATA/args/traefik/traefik.yaml
 
-export CORE_LD_LIBRARY_PATH="$SNAP/../../core18/current/lib/$ARCH-linux-gnu"
-export LD_LIBRARY_PATH="$CORE_LD_LIBRARY_PATH:$LD_LIBRARY_PATH"
 exec "$SNAP/bin/traefik" --configfile "$SNAP_DATA/args/traefik/traefik.yaml"
