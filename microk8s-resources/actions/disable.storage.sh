@@ -7,10 +7,10 @@ source $SNAP/actions/common/utils.sh
 echo "Disabling default storage"
 read -ra ARGUMENTS <<< "$1"
 
-declare -A map
-map[\$SNAP_COMMON]="$SNAP_COMMON"
-use_manifest storage delete "$(declare -p map)"
+"$SNAP/microk8s-helm3.wrapper" uninstall hostpath-provisioner --namespace kube-system
+
 sleep 5
+
 echo "Storage removed"
 if [ ! -z "${ARGUMENTS[@]}" ] && [ "${ARGUMENTS[@]}" = "destroy-storage" ]
 then
