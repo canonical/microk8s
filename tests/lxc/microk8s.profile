@@ -27,3 +27,7 @@ devices:
     path: /sys/fs/bpf
     source: /sys/fs/bpf
     type: disk
+  aadisable4:
+    path: /proc/sys/net/netfilter/nf_conntrack_max
+    source: /proc/sys/net/netfilter/nf_conntrack_max
+    type: disk
