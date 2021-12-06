@@ -10,6 +10,7 @@ export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
 source $SNAP/actions/common/utils.sh
 
 cp -r ${SNAP}/default-args ${SNAP_DATA}/args
+mv ${SNAP_DATA}/args/certs.d/localhost__32000 ${SNAP_DATA}/args/certs.d/localhost:32000
 
 # Sym link the host's /var/lib/kubelet to the Snap's.  This will be fixed with layouts when
 # this Snap is strictly confined.  Warn if there's already a directory.
