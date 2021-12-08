@@ -10,8 +10,8 @@ MANIFEST_PTR="https://raw.githubusercontent.com/portainer/k8s/master/deploy/mani
 
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
-microk8s enable storage
-microk8s enable dns
+"$SNAP/microk8s-enable.wrapper" storage
+"$SNAP/microk8s-enable.wrapper" dns
 
 echo "Enabling portainer"
 
@@ -23,7 +23,7 @@ $KUBECTL create namespace "$NAMESPACE_PTR" > /dev/null 2>&1 || true
 $KUBECTL apply -f "$MANIFEST_PTR"
 # change storage class that is default
 #PVCNAME= "$KUBECTL get pvc -n "$NAMESPACE_PTR"  -o jsonpath="{.items[0].metadata.name}""
-SC=$($KUBECTL get sc | grep default | awk  '{print $1}')
+SC=$($KUBECTL get sc | grep default | awk '{print $1}')
 $KUBECTL patch pvc portainer -n  "$NAMESPACE_PTR"    -p '{ "spec": { "storageClassName": "'${SC}'"}}'
 
 
