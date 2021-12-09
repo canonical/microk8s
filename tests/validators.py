@@ -70,7 +70,10 @@ def validate_storage():
     Validate storage by creating a PVC.
     """
     wait_for_pod_state(
-        "", "kube-system", "running", label="app.kubernetes.io/name=hostpath-provisioner"
+        "",
+        "kube-system",
+        "running",
+        label=["app.kubernetes.io/name=hostpath-provisioner", "k8s-app=hostpath-provisioner"],
     )
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "pvc.yaml")

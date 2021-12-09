@@ -89,32 +89,39 @@ def wait_for_pod_state(
     Wait for a a pod state. If you do not specify a pod name and you set instead a label
     only the first pod will be checked.
     """
+    state_reached = False
+
+    if type(label) is str:
+        label = [label]
+
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
-    while True:
+
+    while not state_reached:
         if datetime.datetime.now() > deadline:
             raise TimeoutError(
                 "Pod {} not in {} after {} seconds.".format(pod, desired_state, timeout_insec)
             )
-        cmd = "po {} -n {}".format(pod, namespace)
-        if label:
-            cmd += " -l {}".format(label)
-        data = kubectl_get(cmd, timeout_insec)
-        if pod == "":
-            if len(data["items"]) > 0:
-                status = data["items"][0]["status"]
+        for l in label:
+            cmd = "po {} -n {}".format(pod, namespace)
+            if l:
+                cmd += " -l {}".format(l)
+            data = kubectl_get(cmd, timeout_insec)
+            if pod == "":
+                if len(data["items"]) > 0:
+                    status = data["items"][0]["status"]
+                else:
+                    status = []
             else:
-                status = []
-        else:
-            status = data["status"]
-        if "containerStatuses" in status:
-            container_status = status["containerStatuses"][0]
-            state, details = list(container_status["state"].items())[0]
-            if desired_reason:
-                reason = details.get("reason")
-                if state == desired_state and reason == desired_reason:
-                    break
-            elif state == desired_state:
-                break
+                status = data["status"]
+            if "containerStatuses" in status:
+                container_status = status["containerStatuses"][0]
+                state, details = list(container_status["state"].items())[0]
+                if desired_reason:
+                    reason = details.get("reason")
+                    if state == desired_state and reason == desired_reason:
+                        state_reached = True
+                elif state == desired_state:
+                    state_reached = True
         time.sleep(3)
 
 
