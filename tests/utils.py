@@ -82,6 +82,25 @@ def kubectl_get(target, timeout_insec=300):
     return yaml.safe_load(output)
 
 
+def get_pod_by_label(label, namespace):
+    """
+    Get the pod name by label.
+
+    Args:
+        label: label to search for
+        namespace: namespace to search in
+
+    Returns: pod name
+
+    """
+    cmd = "po -l {} -n {}".format(label, namespace)
+    data = kubectl_get(cmd)
+    if len(data["items"]) > 0:
+        return data
+    else:
+        return None
+
+
 def wait_for_pod_state(
     pod, namespace, desired_state, desired_reason=None, label=None, timeout_insec=600
 ):
@@ -89,39 +108,32 @@ def wait_for_pod_state(
     Wait for a a pod state. If you do not specify a pod name and you set instead a label
     only the first pod will be checked.
     """
-    state_reached = False
-
-    if type(label) is str:
-        label = [label]
-
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
-
-    while not state_reached:
+    while True:
         if datetime.datetime.now() > deadline:
             raise TimeoutError(
                 "Pod {} not in {} after {} seconds.".format(pod, desired_state, timeout_insec)
             )
-        for l in label:
-            cmd = "po {} -n {}".format(pod, namespace)
-            if l:
-                cmd += " -l {}".format(l)
-            data = kubectl_get(cmd, timeout_insec)
-            if pod == "":
-                if len(data["items"]) > 0:
-                    status = data["items"][0]["status"]
-                else:
-                    status = []
+        cmd = "po {} -n {}".format(pod, namespace)
+        if label:
+            cmd += " -l {}".format(label)
+        data = kubectl_get(cmd, timeout_insec)
+        if pod == "":
+            if len(data["items"]) > 0:
+                status = data["items"][0]["status"]
             else:
-                status = data["status"]
-            if "containerStatuses" in status:
-                container_status = status["containerStatuses"][0]
-                state, details = list(container_status["state"].items())[0]
-                if desired_reason:
-                    reason = details.get("reason")
-                    if state == desired_state and reason == desired_reason:
-                        state_reached = True
-                elif state == desired_state:
-                    state_reached = True
+                status = []
+        else:
+            status = data["status"]
+        if "containerStatuses" in status:
+            container_status = status["containerStatuses"][0]
+            state, details = list(container_status["state"].items())[0]
+            if desired_reason:
+                reason = details.get("reason")
+                if state == desired_state and reason == desired_reason:
+                    break
+            elif state == desired_state:
+                break
         time.sleep(3)
 
 

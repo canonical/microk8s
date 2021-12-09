@@ -14,6 +14,7 @@ from utils import (
     docker,
     update_yaml_with_arch,
     run_until_success,
+    get_pod_by_label,
 )
 
 
@@ -69,12 +70,15 @@ def validate_storage():
     """
     Validate storage by creating a PVC.
     """
-    wait_for_pod_state(
-        "",
-        "kube-system",
-        "running",
-        label=["app.kubernetes.io/name=hostpath-provisioner", "k8s-app=hostpath-provisioner"],
-    )
+    namespace = "kube-system"
+    for label in ["app.kubernetes.io/name=hostpath-provisioner", "k8s-app=hostpath-provisioner"]:
+        if get_pod_by_label(label, namespace):
+            wait_for_pod_state(
+                "",
+                namespace,
+                "running",
+                label=label,
+            )
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "pvc.yaml")
     kubectl("apply -f {}".format(manifest))
