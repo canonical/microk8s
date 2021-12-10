@@ -15,6 +15,14 @@ exit_if_service_not_expected_to_start k8s-dqlite
 
 app=k8s-dqlite
 
+if ! [ -e "$SNAP_DATA/args/${app}" ]
+then
+  exit 0
+fi
+
+# We add some delay so that systemd really retries the restarts
+sleep 6
+
 set -a
 if [ -e "${SNAP_DATA}/args/${app}-env" ]
 then

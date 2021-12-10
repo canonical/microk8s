@@ -240,6 +240,16 @@ apps:
       - network-control
       - k8s-journald
       - kubernetes-support
+  daemon-traefik:
+    plugs:
+      - kernel-module-control
+      - network-bind
+      - network-observe
+      - network-control
+      - k8s-journald
+      - kubernetes-support
+    command: run-traefik-with-args
+    daemon: simple
   daemon-control-plane-kicker:
     command: run-null-daemon
     daemon: simple
@@ -634,6 +644,48 @@ parts:
     stage:
       - etcd
       - etcdctl
+
+  traefik:
+    plugin: dump
+    source: build-scripts/
+    build-snaps: [go]
+    build-attributes: [no-patchelf]
+    override-build: |
+      . ./set-env-variables.sh
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      case ${SNAPCRAFT_ARCH_TRIPLET%%-*} in
+      x86_64|aarch64)
+        echo "Supported arch by traefik - use official binary"
+        curl -LO https://github.com/traefik/traefik/releases/download/${TRAEFIK_VERSION}/traefik_${TRAEFIK_VERSION}_linux_${KUBE_ARCH}.tar.gz
+        tar -xzvf traefik_*.tar.gz
+        cp traefik $SNAPCRAFT_PART_INSTALL/bin/
+        ;;
+      *)
+        echo "Unsupported arch by traefik - building from sources"
+        snap refresh go --channel=1.16/stable || true
+        go version
+        export GOPATH=$(realpath ../go)
+        mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+        rm -rf $GOPATH
+        mkdir -p $GOPATH
+        curl -LO https://github.com/traefik/traefik/releases/download/${TRAEFIK_VERSION}/traefik-${TRAEFIK_VERSION}.src.tar.gz
+        mkdir -p $GOPATH/src/github.com/traefik/traefik
+        mv traefik*.tar.gz $GOPATH/src/github.com/traefik/traefik
+        (
+          cd $GOPATH/src/github.com/traefik/traefik
+          GO111MODULE=off go get github.com/containous/go-bindata/...
+          export GO111MODULE=on
+          tar -zxvf traefik*.tar.gz
+          rm -rf static/ autogen/;
+          #make generate-webui
+          export PATH=$PATH:$GOPATH/bin
+          go generate
+          go build ./cmd/traefik
+        )
+        cp $GOPATH/src/github.com/traefik/traefik/traefik $SNAPCRAFT_PART_INSTALL/bin/
+      esac
+    stage:
+      - bin/traefik
 
   cni:
     plugin: dump

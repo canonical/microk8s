@@ -104,6 +104,14 @@ then
   cp ${SNAP}/default-args/kubectl ${SNAP_DATA}/args/kubectl
 fi
 
+# copy trafik
+if [ ! -e ${SNAP_DATA}/args/traefik ]
+then
+  echo "Making sure we have traefik configuration"
+  cp -r ${SNAP}/default-args/traefik ${SNAP_DATA}/args/
+  set_service_not_expected_to_start traefik
+fi
+
 # Upgrading to containerd
 if [ ! -e ${SNAP_DATA}/args/containerd ] ||
    grep -e "\-\-docker unix://\${SNAP_DATA}/docker.sock" ${SNAP_DATA}/args/kubelet
@@ -324,8 +332,18 @@ do
   chmod -R o-rwX ${dir}
 done
 
+<<<<<<< HEAD
 # Try to great the microk8s group. DO not fail the installation if something goes wrong
 if getent group snap_microk8s >/dev/null 2>&1
+=======
+# Try to create the microk8s group. Do not fail the installation if something goes wrong
+if ! getent group microk8s >/dev/null 2>&1
+then
+  groupadd --system microk8s || true
+fi
+
+if getent group microk8s >/dev/null 2>&1
+>>>>>>> master
 then
   chgrp snap_microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ || true
 fi
@@ -519,6 +537,13 @@ then
   need_api_restart=true
 fi
 
+# Removed --insecure-port argument
+if grep -e "\-\-insecure\-port" ${SNAP_DATA}/args/kube-apiserver
+then
+  $SNAP/bin/sed -i '/\-\-insecure\-port/d' ${SNAP_DATA}/args/kube-apiserver
+  need_api_restart=true
+fi
+
 # Are we using etcd or some other non-dqlite datastore?
 if ! [ -e ${SNAP_DATA}/args/k8s-dqlite ] &&
    ! grep -e "\-\-storage-backend=dqlite" ${SNAP_DATA}/args/kube-apiserver
@@ -536,24 +561,22 @@ then
   cp ${SNAP}/default-args/k8s-dqlite ${SNAP_DATA}/args/k8s-dqlite
   cp ${SNAP}/default-args/k8s-dqlite-env ${SNAP_DATA}/args/k8s-dqlite-env
   need_api_restart=true
-  if ! [ -e ${SNAP_DATA}/var/lock/lite.lock ]
+  if [ -e ${SNAP_DATA}/var/lock/lite.lock ]
   then
     snapctl stop ${SNAP_NAME}.daemon-kubelite
   else
     snapctl stop ${SNAP_NAME}.daemon-apiserver
   fi
 
-  refresh_opt_in_config etcd-servers unix://\${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379 kube-apiserver
-  skip_opt_in_config storage-backend kube-apiserver
+  refresh_opt_in_local_config etcd-servers unix://\${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379 kube-apiserver
+  $SNAP/bin/sed -i '/\-\-storage\-backend=dqlite/d' ${SNAP_DATA}/args/kube-apiserver
 
   storage_dir="$(get_opt_in_config '--storage-dir' 'kube-apiserver')"
   if ! [ -z $storage_dir ]
   then
-    refresh_opt_in_config storage-dir "$storage_dir" k8s-dqlite
+    refresh_opt_in_local_config storage-dir "$storage_dir" k8s-dqlite
   fi
-  skip_opt_in_config storage-dir kube-apiserver
-  refresh_opt_in_config storage-dir "$val" k8s-dqlite
-
+  $SNAP/bin/sed -i '/\-\-storage\-dir/d' ${SNAP_DATA}/args/kube-apiserver
 
   snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
 fi
@@ -580,7 +603,8 @@ then
 fi
 
 if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
-   [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
+   [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
+   ! [ -e "${SNAP_DATA}/var/lock/clustered.lock" ]
 then
   echo "Setting up the CNI"
   start_timer="$(date +%s)"
