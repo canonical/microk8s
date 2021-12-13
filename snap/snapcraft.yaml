@@ -580,7 +580,7 @@ parts:
         rm actions/*.jaeger.sh
         rm -rf "actions/jaeger"
         rm actions/*.juju.sh
-        rm actions/*.kubeflow.sh
+        rm actions/*.kubeflow.py
         rm actions/*.multus.sh
         rm "actions/multus.yaml"
         rm actions/*.keda.sh
@@ -602,7 +602,7 @@ parts:
         rm actions/*.jaeger.sh
         rm -rf "actions/jaeger"
         rm actions/*.juju.sh
-        rm actions/*.kubeflow.sh
+        rm actions/*.kubeflow.py
         rm actions/*.multus.sh
         rm actions/multus.yaml
         rm actions/*.keda.sh

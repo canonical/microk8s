@@ -247,7 +247,9 @@ def xable(action: str, addons: list, xabled_addons: list):
     the script names.
     """
     actions = Path(__file__).absolute().parent / "../../../actions"
-    existing_addons = {sh.with_suffix("").name[7:] for sh in actions.glob("enable.*.sh")}
+    existing_addons = [sh.with_suffix("").name[7:] for sh in actions.glob("enable.*.sh")]
+    existing_addons += [py.with_suffix("").name[7:] for py in actions.glob("enable.*.py")]
+    existing_addons = set(existing_addons)
 
     # Backwards compatibility with enabling multiple addons at once, e.g.
     # `microk8s.enable foo bar:"baz"`
@@ -255,6 +257,13 @@ def xable(action: str, addons: list, xabled_addons: list):
         for addon in addons:
             if addon in xabled_addons and addon != "kubeflow":
                 click.echo("Addon %s is already %sd." % (addon, action))
+            elif addon in xabled_addons and addon == "kubeflow":
+                addon, *args = addon.split(":")
+                wait_for_ready(timeout=30)
+                p = subprocess.run([str(actions / ("%s.%s.py" % (action, addon)))] + args)
+                if p.returncode:
+                    sys.exit(p.returncode)
+                wait_for_ready(timeout=30)
             else:
                 addon, *args = addon.split(":")
                 wait_for_ready(timeout=30)
@@ -288,7 +297,10 @@ def xable(action: str, addons: list, xabled_addons: list):
             sys.exit(1)
 
         wait_for_ready(timeout=30)
-        script = [str(actions / ("%s.%s.sh" % (action, addon)))]
+        if addon != "kubeflow":
+            script = [str(actions / ("%s.%s.sh" % (action, addon)))]
+        else:
+            script = [str(actions / ("%s.%s.py" % (action, addon)))]
         if args:
             p = subprocess.run(script + args)
         else:

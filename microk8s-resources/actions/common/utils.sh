@@ -516,7 +516,7 @@ uncordon_node() {
 }
 
 get_all_addons() {
-    actions="$(find "$SNAP/actions" -maxdepth 1 ! -name 'coredns.yaml' -name '*.yaml' -or -name 'enable.*.sh')"
+    actions="$(find "$SNAP/actions" -maxdepth 1 ! -name 'coredns.yaml' -name '*.yaml' -or -name 'enable.*.sh' -or -name 'enable.*.py')"
     actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
     echo $actions
 }
