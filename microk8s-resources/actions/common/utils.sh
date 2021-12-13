@@ -241,10 +241,10 @@ use_manifest() {
     else
         declare -A items
     fi
-    local tmp_manifest="${SNAP_USER_DATA}/tmp/temp.${manifest}"
+    local tmp_manifest="/tmp/temp.${manifest}"
     items[\$ARCH]=$(arch)
 
-    mkdir -p ${SNAP_USER_DATA}/tmp
+    mkdir -p /tmp
     cp "${SNAP}/actions/${manifest}" "${tmp_manifest}"
     for i in "${!items[@]}"
     do
@@ -538,11 +538,11 @@ init_cluster() {
   # after the initialisation but before connecting other nodes
   echo "Address: $IP:19001" > ${SNAP_DATA}/var/kubernetes/backend/init.yaml
   DNS=$($SNAP/bin/hostname)
-  mkdir -p $SNAP_DATA/var/tmp/
-  cp $SNAP/microk8s-resources/certs/csr-dqlite.conf.template $SNAP_DATA/var/tmp/csr-dqlite.conf
-  $SNAP/bin/sed -i 's/HOSTNAME/'"${DNS}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
-  $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
-  ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
+  mkdir -p /tmp/
+  cp $SNAP/microk8s-resources/certs/csr-dqlite.conf.template /tmp/csr-dqlite.conf
+  $SNAP/bin/sed -i 's/HOSTNAME/'"${DNS}"'/g' /tmp/csr-dqlite.conf
+  $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' /tmp/csr-dqlite.conf
+  ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config /tmp/csr-dqlite.conf -extensions v3_ext
   chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
   if getent group snap_microk8s >/dev/null 2>&1
   then

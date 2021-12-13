@@ -50,23 +50,23 @@ else
   NAMESPACE=kube-system
 
   echo "Fetching cilium version $CILIUM_VERSION."
-  mkdir -p "${SNAP_DATA}/tmp/cilium"
-  (cd "${SNAP_DATA}/tmp/cilium"
-  curl -L $SOURCE_URI/$CILIUM_VERSION.tar.gz -o "$SNAP_DATA/tmp/cilium/cilium.tar.gz"
-  if ! gzip -f -d "$SNAP_DATA/tmp/cilium/cilium.tar.gz"; then
+  mkdir -p "/tmp/cilium"
+  (cd "/tmp/cilium"
+  curl -L $SOURCE_URI/$CILIUM_VERSION.tar.gz -o "/tmp/cilium/cilium.tar.gz"
+  if ! gzip -f -d "/tmp/cilium/cilium.tar.gz"; then
     echo "Invalid version \"$CILIUM_VERSION\". Must be a branch on https://github.com/cilium/cilium."
     exit 1
   fi
-  tar -xf "$SNAP_DATA/tmp/cilium/cilium.tar" "$CILIUM_DIR/install" "$CILIUM_DIR/$CILIUM_CNI_CONF" --no-same-owner)
+  tar -xf "/tmp/cilium/cilium.tar" "$CILIUM_DIR/install" "$CILIUM_DIR/$CILIUM_CNI_CONF" --no-same-owner)
 
   mv "$SNAP_DATA/args/cni-network/cni.conf" "$SNAP_DATA/args/cni-network/10-kubenet.conf" 2>/dev/null || true
   mv "$SNAP_DATA/args/cni-network/flannel.conflist" "$SNAP_DATA/args/cni-network/20-flanneld.conflist" 2>/dev/null || true
-  cp "$SNAP_DATA/tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF" "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
+  cp "/tmp/cilium/$CILIUM_DIR/$CILIUM_CNI_CONF" "$SNAP_DATA/args/cni-network/05-cilium-cni.conf"
 
   mkdir -p "$SNAP_DATA/actions/cilium/"
 
   # Generate the YAMLs for Cilium and apply them
-  (cd "${SNAP_DATA}/tmp/cilium/$CILIUM_DIR/install/kubernetes"
+  (cd "/tmp/cilium/$CILIUM_DIR/install/kubernetes"
   ${SNAP_DATA}/bin/helm3 template cilium \
       --namespace $NAMESPACE \
       --set cni.confPath="$SNAP_DATA/args/cni-network" \
@@ -102,7 +102,7 @@ else
   chmod +x "$SNAP_DATA/bin/cilium-$CILIUM_ERSION"
   ln -s $SNAP_DATA/bin/cilium-$CILIUM_ERSION $SNAP_DATA/bin/cilium
 
-  rm -rf "$SNAP_DATA/tmp/cilium"
+  rm -rf "/tmp/cilium"
 fi
 
 echo "Cilium is enabled"

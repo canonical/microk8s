@@ -23,13 +23,13 @@ get_kube_prometheus () {
     KUBE_PROMETHEUS_ERSION=$(echo $KUBE_PROMETHEUS_VERSION | sed 's/v//g')
     echo "Fetching kube-prometheus version $KUBE_PROMETHEUS_VERSION."
     mkdir -p "${SNAP_DATA}/kube-prometheus"
-    mkdir -p "${SNAP_DATA}/tmp/kube-prometheus"
+    mkdir -p "/tmp/kube-prometheus"
 
-    "${SNAP}/usr/bin/curl" -L https://github.com/prometheus-operator/kube-prometheus/archive/${KUBE_PROMETHEUS_VERSION}.tar.gz -o "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz"
-    tar -xzvf "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus.tar.gz" -C "$SNAP_DATA/tmp/kube-prometheus/"
-    cp -R "$SNAP_DATA/tmp/kube-prometheus/kube-prometheus-${KUBE_PROMETHEUS_ERSION}/manifests/" "${SNAP_DATA}/kube-prometheus"
+    "${SNAP}/usr/bin/curl" -L https://github.com/prometheus-operator/kube-prometheus/archive/${KUBE_PROMETHEUS_VERSION}.tar.gz -o "/tmp/kube-prometheus/kube-prometheus.tar.gz"
+    tar -xzvf "/tmp/kube-prometheus/kube-prometheus.tar.gz" -C "/tmp/kube-prometheus/"
+    cp -R "/tmp/kube-prometheus/kube-prometheus-${KUBE_PROMETHEUS_ERSION}/manifests/" "${SNAP_DATA}/kube-prometheus"
 
-    rm -rf "$SNAP_DATA/tmp/kube-prometheus"
+    rm -rf "/tmp/kube-prometheus"
   fi
 }
 

@@ -4,7 +4,7 @@ set -ex
 echo "Rolling back dqlite upgrade on master"
 
 source $SNAP/actions/common/utils.sh
-BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/001-switch-to-dqlite"
+BACKUP_DIR="/tmp/upgrades/001-switch-to-dqlite"
 
 echo "Restarting etcd"
 set_service_expected_to_start etcd

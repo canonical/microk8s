@@ -6,7 +6,7 @@ echo "Switching node to dqlite"
 
 source $SNAP/actions/common/utils.sh
 
-BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/001-switch-to-dqlite"
+BACKUP_DIR="/tmp/upgrades/001-switch-to-dqlite"
 
 mkdir -p "$BACKUP_DIR/args/"
 

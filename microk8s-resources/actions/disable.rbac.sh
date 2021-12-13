@@ -22,9 +22,9 @@ fi
 
 echo "Removing default RBAC resources"
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-tmp_manifest="${SNAP_USER_DATA}/tmp/temp.rbac.yaml"
+tmp_manifest="/tmp/temp.rbac.yaml"
 trap "rm -f '${tmp_manifest}'" EXIT ERR INT TERM
-mkdir -p "${SNAP_USER_DATA}/tmp"
+mkdir -p "/tmp"
 touch "${tmp_manifest}"
 for type in rolebindings roles clusterrolebindings clusterroles; do
   echo -e "---\n" >> "${tmp_manifest}"

@@ -122,7 +122,7 @@ touch "${SNAP_DATA}/var/lock/ha-cluster"
 touch "${SNAP_DATA}/var/lock/lite.lock"
 
 RESOURCES="${SNAP}/upgrade-scripts/000-switch-to-calico/resources"
-BACKUP_DIR="${SNAP_DATA}/var/tmp/upgrades/000-switch-to-calico"
+BACKUP_DIR="/tmp/upgrades/000-switch-to-calico"
 
 mkdir -p "${BACKUP_DIR}"
 

@@ -11,17 +11,17 @@ then
   ISTIO_VERSION="v1.10.3"
   echo "Fetching istioctl version $ISTIO_VERSION."
   ISTIO_ERSION=$(echo $ISTIO_VERSION | sed 's/v//g')
-  mkdir -p "${SNAP_DATA}/tmp/istio"
-  (cd "${SNAP_DATA}/tmp/istio"
-  "${SNAP}/usr/bin/curl" -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux-amd64.tar.gz -o "$SNAP_DATA/tmp/istio/istio.tar.gz"
-  gzip -q -d "$SNAP_DATA/tmp/istio/istio.tar.gz"
-  tar -xvf "$SNAP_DATA/tmp/istio/istio.tar"
-  chmod 777 "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}")
+  mkdir -p "/tmp/istio"
+  (cd "/tmp/istio"
+  "${SNAP}/usr/bin/curl" -L https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux-amd64.tar.gz -o "/tmp/istio/istio.tar.gz"
+  gzip -q -d "/tmp/istio/istio.tar.gz"
+  tar -xvf "/tmp/istio/istio.tar"
+  chmod 777 "/tmp/istio/istio-${ISTIO_ERSION}")
   mkdir -p "$SNAP_DATA/bin/"
-  mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/bin/istioctl" "$SNAP_DATA/bin/"
+  mv "/tmp/istio/istio-${ISTIO_ERSION}/bin/istioctl" "$SNAP_DATA/bin/"
   chmod +x "$SNAP_DATA/bin/"
 
-  rm -rf "$SNAP_DATA/tmp/istio"
+  rm -rf "/tmp/istio"
 fi
 
 # pod/servicegraph will start failing without dns

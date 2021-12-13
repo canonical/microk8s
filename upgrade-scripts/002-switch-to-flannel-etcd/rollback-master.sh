@@ -4,7 +4,7 @@ set -ex
 echo "Rolling back flannel-etcd upgrade on master"
 
 source $SNAP/actions/common/utils.sh
-BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/002-switch-to-flannel-etcd"
+BACKUP_DIR="/tmp/upgrades/002-switch-to-flannel-etcd"
 
 ${SNAP}/microk8s-stop.wrapper
 

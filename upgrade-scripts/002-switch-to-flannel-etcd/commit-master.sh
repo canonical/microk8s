@@ -5,7 +5,7 @@ echo "Switching master to flannel-etcd"
 
 source $SNAP/actions/common/utils.sh
 
-BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/002-switch-to-flannel-etcd"
+BACKUP_DIR="/tmp/upgrades/002-switch-to-flannel-etcd"
 DB_DIR="$BACKUP_DIR/db"
 
 mkdir -p "$BACKUP_DIR/args/"

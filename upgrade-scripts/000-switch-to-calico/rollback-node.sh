@@ -5,7 +5,7 @@ echo "Rolling back calico upgrade on a node"
 
 source $SNAP/actions/common/utils.sh
 
-BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
+BACKUP_DIR="/tmp/upgrades/000-switch-to-calico"
 
 if [ -e "$BACKUP_DIR/args/cni-network/flannel.conflist" ]; then
   find "$SNAP_DATA"/args/cni-network/* -not -name '*multus*' -exec rm -f {} \;

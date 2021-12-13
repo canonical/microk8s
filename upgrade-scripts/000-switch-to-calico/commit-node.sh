@@ -7,7 +7,7 @@ echo "Switching master to calico"
 source $SNAP/actions/common/utils.sh
 
 RESOURCES="$SNAP/upgrade-scripts/000-switch-to-calico/resources"
-BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
+BACKUP_DIR="/tmp/upgrades/000-switch-to-calico"
 
 mkdir -p "$BACKUP_DIR"
 

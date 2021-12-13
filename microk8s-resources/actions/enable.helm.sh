@@ -12,18 +12,18 @@ then
   HELM_VERSION="v2.16.7"
 
   echo "Fetching helm version $HELM_VERSION."
-  mkdir -p "${SNAP_DATA}/tmp/helm"
-  (cd "${SNAP_DATA}/tmp/helm"
-  curl -L $SOURCE_URI/helm-$HELM_VERSION-linux-$(arch).tar.gz -o "$SNAP_DATA/tmp/helm/helm.tar.gz"
-  gzip -f -d "$SNAP_DATA/tmp/helm/helm.tar.gz"
-  tar -xf "$SNAP_DATA/tmp/helm/helm.tar" --no-same-owner)
+  mkdir -p "/tmp/helm"
+  (cd "/tmp/helm"
+  curl -L $SOURCE_URI/helm-$HELM_VERSION-linux-$(arch).tar.gz -o "/tmp/helm/helm.tar.gz"
+  gzip -f -d "/tmp/helm/helm.tar.gz"
+  tar -xf "/tmp/helm/helm.tar" --no-same-owner)
 
   mkdir -p "$SNAP_DATA/bin/"
-  mv "$SNAP_DATA/tmp/helm/linux-$(arch)/helm" "$SNAP_DATA/bin/helm"
+  mv "/tmp/helm/linux-$(arch)/helm" "$SNAP_DATA/bin/helm"
   chmod +x "$SNAP_DATA/bin/"
   chmod +x "$SNAP_DATA/bin/helm"
 
-  rm -rf "$SNAP_DATA/tmp/helm"
+  rm -rf "/tmp/helm"
 fi
 
 echo "Helm is enabled"

@@ -240,19 +240,17 @@ def reinit_cluster():
         ip = "127.0.0.1"  # type: str
         shutil.copy(
             "{}/microk8s-resources/certs/csr-dqlite.conf.template".format(snap_path),
-            "{}/var/tmp/csr-dqlite.conf".format(snapdata_path),
+            "/tmp/csr-dqlite.conf",
         )
         subprocess.check_call(
-            "{}/bin/sed -i s/HOSTNAME/{}/g {}/var/tmp/csr-dqlite.conf".format(
-                snap_path, hostname, snapdata_path
+            "{}/bin/sed -i s/HOSTNAME/{}/g /tmp/csr-dqlite.conf".format(
+                snap_path, hostname
             ).split(),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
         subprocess.check_call(
-            "{}/bin/sed -i s/HOSTIP/{}/g  {}/var/tmp/csr-dqlite.conf".format(
-                snap_path, ip, snapdata_path
-            ).split(),
+            "{}/bin/sed -i s/HOSTIP/{}/g /tmp/csr-dqlite.conf".format(snap_path, ip).split(),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -260,7 +258,7 @@ def reinit_cluster():
             "{0}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes "
             "-keyout {1}/var/kubernetes/backend/cluster.key "
             "-out {1}/var/kubernetes/backend/cluster.crt "
-            "-subj /CN=k8s -config {1}/var/tmp/csr-dqlite.conf -extensions v3_ext".format(
+            "-subj /CN=k8s -config /tmp/csr-dqlite.conf -extensions v3_ext".format(
                 snap_path, snapdata_path
             ).split(),
             stdout=subprocess.DEVNULL,
