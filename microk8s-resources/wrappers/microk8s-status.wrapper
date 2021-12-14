@@ -11,4 +11,6 @@ source $SNAP/actions/common/utils.sh
 
 exit_if_no_permissions
 
+exit_if_low_memory_guard
+
 LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/status.py $@
