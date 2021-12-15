@@ -72,6 +72,8 @@ jobs:
           export UNDER_TIME_PRESSURE="True"
           export SKIP_OPENEBS="True"
           export SKIP_PROMETHEUS="False"
+          sudo mkdir $HOME/.config/helm
+          sudo chown $USER:$USER $HOME/.config/helm
           (cd tests; sudo -E pytest -s -ra test-addons.py)
           sudo microk8s inspect |
           grep -Po "Report tarball is at \K.+" |
