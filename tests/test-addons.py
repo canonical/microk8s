@@ -439,22 +439,9 @@ class TestAddons(object):
         print("Disabling Helm3")
         microk8s_disable("helm3")
         helm_dirs = [
-            os.path.join(
-                os.path.expanduser("~"),
-                ".cache",
-                "helm"
-            ),
-            os.path.join(
-                os.path.expanduser("~"),
-                ".config",
-                "helm"
-            ),
-            os.path.join(
-                os.path.expanduser("~"),
-                ".local",
-                "share",
-                "helm"
-            )
+            os.path.join(os.path.expanduser("~"), ".cache", "helm"),
+            os.path.join(os.path.expanduser("~"), ".config", "helm"),
+            os.path.join(os.path.expanduser("~"), ".local", "share", "helm")
         ]
         for d in helm_dirs:
             if os.path.exists(d):
