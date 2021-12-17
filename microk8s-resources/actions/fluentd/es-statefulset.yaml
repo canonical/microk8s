@@ -90,6 +90,8 @@ spec:
         - name: elasticsearch-logging
           mountPath: /data
         env:
+        - name: ES_JAVA_OPTS
+          value: "-Dlog4j2.formatMsgNoLookups=true"
         - name: "MINIMUM_MASTER_NODES"
           value: "1"
         - name: "NAMESPACE"
