@@ -88,5 +88,25 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 		HTTPResponse(w, map[string]string{"result": "ok"})
 	}))
 
+	// POST v1/upgrade
+	server.HandleFunc(fmt.Sprintf("%s/upgrade", ClusterApiV1), withMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		req := v1.UpgradeRequest{}
+		if err := UnmarshalJSON(r, &req); err != nil {
+			HTTPError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		err := v1.Upgrade(r.Context(), req)
+		if err != nil {
+			HTTPError(w, http.StatusInternalServerError, err)
+			return
+		}
+		HTTPResponse(w, map[string]string{"result": "ok"})
+	}))
+
 	return server
 }
