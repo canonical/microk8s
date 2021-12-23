@@ -112,6 +112,11 @@ func RemoveClusterToken(token string) error {
 	return removeToken(token, SnapDataPath("credentials", "cluster-tokens.txt"))
 }
 
+// RemoveCertificateRequestToken removes a token from the known certificate request tokens.
+func RemoveCertificateRequestToken(token string) error {
+	return removeToken(token, SnapDataPath("credentials", "certs-request-tokens.txt"))
+}
+
 // AddCertificateRequestToken appends a new token that can be used to issue a certificate signing request.
 func AddCertificateRequestToken(token string) error {
 	return appendToken(token, SnapDataPath("credentials", "certs-request-tokens.txt"))
