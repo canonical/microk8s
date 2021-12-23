@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/canonical/microk8s/cluster-agent/pkg/util"
+	utiltest "github.com/canonical/microk8s/cluster-agent/pkg/util/test"
 )
 
 func TestGetServiceArgument(t *testing.T) {
@@ -52,23 +53,15 @@ func TestGetServiceArgument(t *testing.T) {
 	}
 }
 
-func withMockRunner(m *mockRunner, f func(*testing.T)) func(*testing.T) {
-	return func(t *testing.T) {
-		util.CommandRunner = m.run
-		f(t)
-		util.CommandRunner = util.DefaultCommandRunner
-	}
-}
-
 func TestRestart(t *testing.T) {
-	m := &mockRunner{}
-	withMockRunner(m, func(t *testing.T) {
+	m := &utiltest.MockRunner{}
+	utiltest.WithMockRunner(m, func(t *testing.T) {
 		t.Run("NoKubelite", func(t *testing.T) {
 			for _, service := range []string{"apiserver", "k8s-dqlite"} {
 				util.Restart(context.Background(), service)
 				expectedCommand := fmt.Sprintf("snapctl restart microk8s.daemon-%s", service)
-				if m.calledWithCommand != expectedCommand {
-					t.Fatalf("Expected command %q, but %q was called instead", expectedCommand, m.calledWithCommand)
+				if m.CalledWithCommand != expectedCommand {
+					t.Fatalf("Expected command %q, but %q was called instead", expectedCommand, m.CalledWithCommand)
 				}
 			}
 		})
@@ -94,8 +87,8 @@ func TestRestart(t *testing.T) {
 				{service: "containerd", expectedCommand: "snapctl restart microk8s.daemon-containerd"},
 			} {
 				util.Restart(context.Background(), tc.service)
-				if m.calledWithCommand != tc.expectedCommand {
-					t.Fatalf("Expected command %q, but %q was called instead", tc.expectedCommand, m.calledWithCommand)
+				if m.CalledWithCommand != tc.expectedCommand {
+					t.Fatalf("Expected command %q, but %q was called instead", tc.expectedCommand, m.CalledWithCommand)
 				}
 			}
 		})

@@ -2,23 +2,10 @@ package util_test
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/canonical/microk8s/cluster-agent/pkg/util"
 )
-
-type mockRunner struct {
-	calledWithCtx     context.Context
-	calledWithCommand string
-	err               error
-}
-
-func (m *mockRunner) run(ctx context.Context, command []string) error {
-	m.calledWithCommand = strings.Join(command, " ")
-	m.calledWithCtx = ctx
-	return m.err
-}
 
 func TestExec(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
