@@ -67,7 +67,7 @@ func UpdateServiceArguments(serviceName string, update map[string]string, delete
 		deleteMap[k] = struct{}{}
 	}
 
-	newArguments := make([]string, len(arguments))
+	newArguments := make([]string, 0, len(arguments))
 	for _, line := range strings.Split(arguments, "\n") {
 		line = strings.TrimSpace(line)
 		// ignore empty lines
