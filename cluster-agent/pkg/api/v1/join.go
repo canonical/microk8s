@@ -87,11 +87,12 @@ func HandleJoin(ctx context.Context, request JoinRequest) (*JoinResponse, error)
 		kubeletArgs = fmt.Sprintf("%s--hostname-override=%s", kubeletArgs, hostname)
 	}
 	return &JoinResponse{
-		CA:             ca,
-		EtcdEndpoint:   util.GetServiceArgument("etcd", "--listen-client-urls"),
-		ApiServerPort:  util.GetServiceArgument("kube-apiserver", "--secure-port"),
-		KubeProxyToken: kubeProxyToken,
-		KubeletToken:   kubeletToken,
-		KubeletArgs:    kubeletArgs,
+		CA:               ca,
+		EtcdEndpoint:     util.GetServiceArgument("etcd", "--listen-client-urls"),
+		ApiServerPort:    util.GetServiceArgument("kube-apiserver", "--secure-port"),
+		KubeProxyToken:   kubeProxyToken,
+		KubeletToken:     kubeletToken,
+		KubeletArgs:      kubeletArgs,
+		HostNameOverride: hostname,
 	}, nil
 }
