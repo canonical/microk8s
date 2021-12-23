@@ -57,6 +57,28 @@ func TestRestart(t *testing.T) {
 	m := &utiltest.MockRunner{}
 	utiltest.WithMockRunner(m, func(t *testing.T) {
 		t.Run("NoKubelite", func(t *testing.T) {
+			for _, tc := range []struct {
+				service         string
+				expectedCommand string
+			}{
+				{service: "apiserver", expectedCommand: "snapctl restart microk8s.daemon-apiserver"},
+				{service: "proxy", expectedCommand: "snapctl restart microk8s.daemon-proxy"},
+				{service: "kubelet", expectedCommand: "snapctl restart microk8s.daemon-kubelet"},
+				{service: "scheduler", expectedCommand: "snapctl restart microk8s.daemon-scheduler"},
+				{service: "controller-manager", expectedCommand: "snapctl restart microk8s.daemon-controller-manager"},
+				{service: "kube-apiserver", expectedCommand: "snapctl restart microk8s.daemon-apiserver"},
+				{service: "kube-proxy", expectedCommand: "snapctl restart microk8s.daemon-proxy"},
+				{service: "kube-scheduler", expectedCommand: "snapctl restart microk8s.daemon-scheduler"},
+				{service: "kube-controller-manager", expectedCommand: "snapctl restart microk8s.daemon-controller-manager"},
+				{service: "k8s-dqlite", expectedCommand: "snapctl restart microk8s.daemon-k8s-dqlite"},
+				{service: "cluster-agent", expectedCommand: "snapctl restart microk8s.daemon-cluster-agent"},
+				{service: "containerd", expectedCommand: "snapctl restart microk8s.daemon-containerd"},
+			} {
+				util.Restart(context.Background(), tc.service)
+				if m.CalledWithCommand[len(m.CalledWithCommand)-1] != tc.expectedCommand {
+					t.Fatalf("Expected command %q, but %q was called instead", tc.expectedCommand, m.CalledWithCommand)
+				}
+			}
 			for _, service := range []string{"apiserver", "k8s-dqlite"} {
 				util.Restart(context.Background(), service)
 				expectedCommand := fmt.Sprintf("snapctl restart microk8s.daemon-%s", service)

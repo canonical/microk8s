@@ -9,6 +9,11 @@ import (
 
 // Restart a MicroK8s service, handling the case where the MicroK8s cluster is running Kubelite.
 func Restart(ctx context.Context, serviceName string) error {
+	switch serviceName {
+	case "kube-apiserver", "kube-proxy", "kube-scheduler", "kube-controller-manager":
+		// drop kube- prefix
+		serviceName = serviceName[5:]
+	}
 	if HasKubeliteLock() {
 		switch serviceName {
 		case "apiserver", "proxy", "kubelet", "scheduler", "controller-manager":
