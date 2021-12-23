@@ -71,7 +71,7 @@ admin-token,admin,admin,"system:masters"
 			if err := os.MkdirAll("testdata/var/lock", 0755); err != nil {
 				t.Fatalf("Failed to create lock directory: %s", err)
 			}
-			defer os.RemoveAll("testdata/var/lock")
+			defer os.RemoveAll("testdata/var")
 			resp, err := v1.Join(context.Background(), v1.JoinRequest{
 				ClusterToken:     "valid-cluster-token",
 				HostName:         "my-hostname",
