@@ -86,6 +86,9 @@ func Join(ctx context.Context, request JoinRequest) (*JoinResponse, error) {
 	if hostname != request.HostName {
 		kubeletArgs = fmt.Sprintf("%s--hostname-override=%s", kubeletArgs, hostname)
 	}
+	if err := util.CreateNoCertsReissueLock(); err != nil {
+		return nil, fmt.Errorf("failed to create lock file to disable certificate reissuing: %w", err)
+	}
 	return &JoinResponse{
 		CA:               ca,
 		EtcdEndpoint:     util.GetServiceArgument("etcd", "--listen-client-urls"),

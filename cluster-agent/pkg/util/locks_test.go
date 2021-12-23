@@ -8,7 +8,6 @@ import (
 	"github.com/canonical/microk8s/cluster-agent/pkg/util"
 )
 
-
 func TestLock(t *testing.T) {
 	if err := os.MkdirAll("testdata/var/lock", 0755); err != nil {
 		t.Fatalf("Failed to create directory: %s", err)
@@ -21,6 +20,7 @@ func TestLock(t *testing.T) {
 	}{
 		{name: "kubelite", file: "lite.lock", hasLock: util.HasKubeliteLock},
 		{name: "dqlite", file: "ha-cluster", hasLock: util.HasDqliteLock},
+		{name: "cert-reissue", file: "no-cert-reissue", hasLock: util.HasNoCertsReissueLock},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			lockFile := filepath.Join("testdata", "var", "lock", tc.file)

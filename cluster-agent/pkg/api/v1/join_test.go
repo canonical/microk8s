@@ -68,6 +68,10 @@ admin-token,admin,admin,"system:masters"
 		})
 
 		t.Run("Success", func(t *testing.T) {
+			if err := os.MkdirAll("testdata/var/lock", 0755); err != nil {
+				t.Fatalf("Failed to create lock directory: %s", err)
+			}
+			defer os.RemoveAll("testdata/var/lock")
 			resp, err := v1.Join(context.Background(), v1.JoinRequest{
 				ClusterToken:     "valid-cluster-token",
 				HostName:         "my-hostname",
@@ -105,7 +109,7 @@ admin-token,admin,admin,"system:masters"
 
 			kubeletToken, err := util.GetKnownToken("system:node:10.10.10.10")
 			if err != nil {
-				t.Fatalf("Expected no error when retrieving kubelet token, but received %s", err)
+				t.Fatalf("Expected no error when retrieving kubelet token, but received %q", err)
 			}
 			if kubeletToken != resp.KubeletToken {
 				t.Fatalf("Expected kubelet known token to match response, but they do not (%q != %q)", kubeletToken, resp.KubeletToken)
@@ -116,6 +120,9 @@ admin-token,admin,admin,"system:masters"
 			}
 			if !util.IsValidCertificateRequestToken("valid-cluster-token") {
 				t.Fatal("Expected valid-cluster-token to be a valid certificate request token, but it is not")
+			}
+			if !util.HasNoCertsReissueLock() {
+				t.Fatal("Expected certificate reissue lock to be in place after successful join, but it is not")
 			}
 		})
 
