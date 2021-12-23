@@ -41,8 +41,8 @@ type JoinResponse struct {
 	HostNameOverride string `json:"hostname_override"`
 }
 
-// HandleJoin implements "POST /CLUSTER_API_V1/join".
-func HandleJoin(ctx context.Context, request JoinRequest) (*JoinResponse, error) {
+// Join implements "POST /CLUSTER_API_V1/join".
+func Join(ctx context.Context, request JoinRequest) (*JoinResponse, error) {
 	if !util.IsValidClusterToken(request.ClusterToken) {
 		return nil, fmt.Errorf("invalid cluster token")
 	}

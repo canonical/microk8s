@@ -36,7 +36,7 @@ admin-token,admin,admin,"system:masters"
 		}
 
 		t.Run("InvalidToken", func(t *testing.T) {
-			resp, err := v1.HandleJoin(context.Background(), v1.JoinRequest{
+			resp, err := v1.Join(context.Background(), v1.JoinRequest{
 				ClusterToken: "invalid-token",
 			})
 			if resp != nil {
@@ -55,7 +55,7 @@ admin-token,admin,admin,"system:masters"
 				os.RemoveAll("testdata/var")
 				t.Fatalf("Failed to create dqlite lock file: %s", err)
 			}
-			resp, err := v1.HandleJoin(context.Background(), v1.JoinRequest{
+			resp, err := v1.Join(context.Background(), v1.JoinRequest{
 				ClusterToken: "valid-cluster-token",
 			})
 			os.RemoveAll("testdata/var")
@@ -68,7 +68,7 @@ admin-token,admin,admin,"system:masters"
 		})
 
 		t.Run("Success", func(t *testing.T) {
-			resp, err := v1.HandleJoin(context.Background(), v1.JoinRequest{
+			resp, err := v1.Join(context.Background(), v1.JoinRequest{
 				ClusterToken:     "valid-cluster-token",
 				HostName:         "my-hostname",
 				ClusterAgentPort: "25000",

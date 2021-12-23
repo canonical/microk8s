@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/canonical/microk8s/cluster-agent/pkg/middleware"
+	"github.com/canonical/microk8s/cluster-agent/pkg/server"
 	"github.com/spf13/cobra"
 )
 
@@ -22,20 +22,9 @@ lifecycle of a MicroK8s cluster.`,
 		cert, _ := cmd.Flags().GetString("certfile")
 		timeout, _ := cmd.Flags().GetInt("timeout")
 
-		handler := func(w http.ResponseWriter, req *http.Request) {
-			w.Write([]byte(`{"result":"ok"}`))
-		}
-
-		withMiddleware := func(f http.HandlerFunc) http.HandlerFunc {
-			m := middleware.Timeout(time.Duration(timeout) * time.Second)
-			return m(f)
-		}
-
-		server := http.NewServeMux()
-		server.HandleFunc("/cluster/api/1.0/test", withMiddleware(handler))
-
+		s := server.NewServer(time.Duration(timeout) * time.Second)
 		log.Printf("Starting cluster agent on https://%s\n", bind)
-		if err := http.ListenAndServeTLS(bind, cert, key, server); err != nil {
+		if err := http.ListenAndServeTLS(bind, cert, key, s); err != nil {
 			log.Fatalf("Failed to listen: %s", err)
 		}
 	},
