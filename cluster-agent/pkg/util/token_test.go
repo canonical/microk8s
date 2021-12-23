@@ -30,7 +30,7 @@ token1
 token-invalid-timestamp|-10a
 token-expired|%d
 token-not-expired|%d
-	`, now-300, now+300)
+`, now-300, now+300)
 
 	if err := os.WriteFile("testdata/credentials/cluster-tokens.txt", []byte(clusterTokens), 0600); err != nil {
 		t.Fatalf("Failed to create test cluster-tokens.txt file: %s", err)
