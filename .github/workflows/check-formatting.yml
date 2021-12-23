@@ -13,18 +13,21 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2.4.0
 
-      - name: Install dependencies
+      - name: Install Python
+        uses: actions/setup-python@v2
+
+      - name: Check Python linter
         run: |
-          sudo apt-get update
-          sudo apt-get install tox --fix-missing
-          sudo snap install node --classic
-          sudo npm install --save-dev --save-exact -g prettier
-      - name: Check Python formatting
-        run: |
+          python3 -m pip install tox
           tox -e lint
+
+      - name: Install NPM
+        uses: actions/setup-node@v2
+
       - name: Check YAML formatting
         run: |
           set -eux
+          npm install --save-dev --save-exact -g prettier
           prettier --check $(find . -name "*.yaml" -o -name "*.yml" | \
             grep -v "./microk8s-resources/actions/ingress.yaml" | \
             grep -v "./microk8s-resources/actions/metallb.yaml" | \
