@@ -97,6 +97,16 @@ func IsValidClusterToken(token string) bool {
 	return isValidToken(token, SnapDataPath("credentials", "cluster-tokens.txt"))
 }
 
+// IsValidCertificateRequestToken checks whether a token is a valid MicroK8s certificate request token.
+func IsValidCertificateRequestToken(token string) bool {
+	return isValidToken(token, SnapDataPath("credentials", "certs-request-tokens.txt"))
+}
+
+// IsValidCallbackToken checks whether a token is a valid MicroK8s callback token.
+func IsValidCallbackToken(clusterAgentEndpoint, token string) bool {
+	return isValidToken(fmt.Sprintf("%s %s", clusterAgentEndpoint, token), SnapDataPath("credentials", "callback-tokens.txt"))
+}
+
 // RemoveClusterToken removes a token from the known cluster tokens.
 func RemoveClusterToken(token string) error {
 	return removeToken(token, SnapDataPath("credentials", "cluster-tokens.txt"))

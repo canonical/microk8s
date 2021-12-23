@@ -98,6 +98,9 @@ func TestCertificateRequestTokens(t *testing.T) {
 	if !strings.Contains(contents, "my-token\n") {
 		t.Fatal("Expected my-token to exist in tokens file, but it did not")
 	}
+	if !util.IsValidCertificateRequestToken("my-token") {
+		t.Fatal("Expected my-token to be a valid certificate request token, but it is not")
+	}
 }
 
 func TestCallbackTokens(t *testing.T) {
@@ -114,6 +117,9 @@ func TestCallbackTokens(t *testing.T) {
 	}
 	if !strings.Contains(contents, "ip:port my-token\n") {
 		t.Fatal("Expected my-token to exist in tokens file, but it did not")
+	}
+	if !util.IsValidCallbackToken("ip:port", "my-token") {
+		t.Fatal("Expected my-token to be a valid callback token for ip:port, but it is not")
 	}
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	v1 "github.com/canonical/microk8s/cluster-agent/pkg/api/v1"
@@ -104,7 +103,6 @@ admin-token,admin,admin,"system:masters"
 				t.Fatalf("Expected API server restart command, but got %q", m.CalledWithCommand)
 			}
 
-			// TODO: verify other side-effects, e.g. certificate request token, kubelet token, etc
 			kubeletToken, err := util.GetKnownToken("system:node:10.10.10.10")
 			if err != nil {
 				t.Fatalf("Expected no error when retrieving kubelet token, but received %s", err)
@@ -113,12 +111,11 @@ admin-token,admin,admin,"system:masters"
 				t.Fatalf("Expected kubelet known token to match response, but they do not (%q != %q)", kubeletToken, resp.KubeletToken)
 			}
 
-			callbackTokens, err := util.ReadFile("testdata/credentials/callback-tokens.txt")
-			if err != nil {
-				t.Fatalf("Failed to retrieve callback tokens file: %s", err)
+			if !util.IsValidCallbackToken("10.10.10.10:25000", "callback-token") {
+				t.Fatal("Expected callback-token to be a valid callback token, but it is not")
 			}
-			if !strings.Contains(callbackTokens, "10.10.10.10:25000 callback-token") {
-				t.Fatal("Missing callback token for new node")
+			if !util.IsValidCertificateRequestToken("valid-cluster-token") {
+				t.Fatal("Expected valid-cluster-token to be a valid certificate request token, but it is not")
 			}
 		})
 
