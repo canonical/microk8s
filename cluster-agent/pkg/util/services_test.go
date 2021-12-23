@@ -95,3 +95,62 @@ func TestRestart(t *testing.T) {
 	})(t)
 
 }
+
+func TestUpdateServiceArguments(t *testing.T) {
+	contents := `
+--key=value
+--other=other-value
+--with-space value2
+`
+	for _, tc := range []struct {
+		name           string
+		update         map[string]string
+		delete         []string
+		expectedValues map[string]string
+	}{
+		{
+			name:   "simple-update",
+			update: map[string]string{"--key": "new-value"},
+			delete: []string{},
+			expectedValues: map[string]string{
+				"--key":   "new-value",
+				"--other": "other-value",
+			},
+		},
+		{
+			name:   "update-many-delete-one",
+			update: map[string]string{"--key": "new-value", "--other": "other-new-value"},
+			delete: []string{"--with-space"},
+			expectedValues: map[string]string{
+				"--key":        "new-value",
+				"--other":      "other-new-value",
+				"--with-space": "",
+			},
+		},
+		{
+			name: "no-updates",
+			expectedValues: map[string]string{
+				"--key": "value",
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := os.MkdirAll("testdata/args", 0755); err != nil {
+				t.Fatalf("Failed to create test directory: %s", err)
+			}
+			defer os.RemoveAll("testdata/args")
+			if err := os.WriteFile("testdata/args/service", []byte(contents), 0660); err != nil {
+				t.Fatalf("Failed to write arguments file: %s", err)
+			}
+
+			if err := util.UpdateServiceArguments("service", tc.update, tc.delete); err != nil {
+				t.Fatalf("Expected no error updating arguments file but received %q", err)
+			}
+			for key, expectedValue := range tc.expectedValues {
+				if value := util.GetServiceArgument("service", key); value != expectedValue {
+					t.Fatalf("Expected value for argument %q does not match (%q and %q)", key, value, expectedValue)
+				}
+			}
+		})
+	}
+}
