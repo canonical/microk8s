@@ -28,6 +28,7 @@ lifecycle of a MicroK8s cluster.`,
 		if devMode {
 			log.Println("Running in development mode")
 			util.SnapData = "data"
+			util.Snap = "data"
 			util.CommandRunner = (&utiltest.MockRunner{Log: true}).Run
 		}
 		s := server.NewServer(time.Duration(timeout) * time.Second)
