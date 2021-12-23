@@ -123,6 +123,19 @@ func TestCallbackTokens(t *testing.T) {
 	}
 }
 
+func TestSelfCallbackToken(t *testing.T) {
+	if err := os.MkdirAll("testdata/credentials", 0755); err != nil {
+		t.Fatalf("Failed to create test directory: %s", err)
+	}
+	defer os.RemoveAll("testdata/credentials")
+	if err := os.WriteFile("testdata/credentials/callback-token.txt", []byte("my-token"), 0600); err != nil {
+		t.Fatalf("Failed to configure callback token: %q", err)
+	}
+	if !util.IsValidSelfCallbackToken("my-token") {
+		t.Fatal("Expected my-token to be a valid callback token for this node, but it is not")
+	}
+}
+
 func TestKnownTokens(t *testing.T) {
 	if err := os.MkdirAll("testdata/credentials", 0755); err != nil {
 		t.Fatalf("Failed to create test directory: %s", err)

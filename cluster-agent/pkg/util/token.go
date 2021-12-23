@@ -30,6 +30,9 @@ func newRandomString(letters string, length int) string {
 }
 
 func isValidToken(token string, tokensFile string) bool {
+	if token == "" {
+		return false
+	}
 	token = strings.TrimSpace(token)
 	if b, err := os.ReadFile(tokensFile); err == nil {
 		knownTokens := strings.Split(string(b), "\n")
@@ -107,6 +110,11 @@ func IsValidCertificateRequestToken(token string) bool {
 // IsValidCallbackToken checks whether a token is a valid MicroK8s callback token.
 func IsValidCallbackToken(clusterAgentEndpoint, token string) bool {
 	return isValidToken(fmt.Sprintf("%s %s", clusterAgentEndpoint, token), SnapDataPath("credentials", "callback-tokens.txt"))
+}
+
+// IsValidSelfCallbackToken checks whether the supplied token is the callback token of the current MicroK8s node.
+func IsValidSelfCallbackToken(token string) bool {
+	return isValidToken(token, SnapDataPath("credentials", "callback-token.txt"))
 }
 
 // RemoveClusterToken removes a token from the known cluster tokens.
