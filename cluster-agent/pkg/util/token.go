@@ -79,6 +79,8 @@ func removeToken(token string, tokensFile string) error {
 	}
 	newTokens := make([]string, 0, len(existingTokens))
 	for _, tokenInFile := range existingTokens {
+		// TODO: this raised an issue with dummy tokens with the same prefix being removed
+		// This should not be an issue in real-life.
 		if strings.HasPrefix(tokenInFile, token) {
 			continue
 		}
