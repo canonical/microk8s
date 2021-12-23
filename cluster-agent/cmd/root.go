@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/canonical/microk8s/cluster-agent/pkg/server"
+	"github.com/canonical/microk8s/cluster-agent/pkg/util"
+	utiltest "github.com/canonical/microk8s/cluster-agent/pkg/util/test"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +23,13 @@ lifecycle of a MicroK8s cluster.`,
 		key, _ := cmd.Flags().GetString("keyfile")
 		cert, _ := cmd.Flags().GetString("certfile")
 		timeout, _ := cmd.Flags().GetInt("timeout")
+		devMode, _ := cmd.Flags().GetBool("devmode")
 
+		if devMode {
+			log.Println("Running in development mode")
+			util.SnapData = "data"
+			util.CommandRunner = (&utiltest.MockRunner{Log: true}).Run
+		}
 		s := server.NewServer(time.Duration(timeout) * time.Second)
 		log.Printf("Starting cluster agent on https://%s\n", bind)
 		if err := http.ListenAndServeTLS(bind, cert, key, s); err != nil {
@@ -44,4 +52,5 @@ func init() {
 	rootCmd.Flags().String("keyfile", "", "Private key for serving TLS")
 	rootCmd.Flags().String("certfile", "", "Certificate for serving TLS")
 	rootCmd.Flags().Int("timeout", 240, "Default request timeout (in seconds)")
+	rootCmd.Flags().Bool("devmode", false, "Turn on development mode (local data, mock commands)")
 }

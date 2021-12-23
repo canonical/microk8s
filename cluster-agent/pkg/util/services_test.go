@@ -60,7 +60,7 @@ func TestRestart(t *testing.T) {
 			for _, service := range []string{"apiserver", "k8s-dqlite"} {
 				util.Restart(context.Background(), service)
 				expectedCommand := fmt.Sprintf("snapctl restart microk8s.daemon-%s", service)
-				if m.CalledWithCommand != expectedCommand {
+				if m.CalledWithCommand[len(m.CalledWithCommand)-1] != expectedCommand {
 					t.Fatalf("Expected command %q, but %q was called instead", expectedCommand, m.CalledWithCommand)
 				}
 			}
@@ -87,7 +87,7 @@ func TestRestart(t *testing.T) {
 				{service: "containerd", expectedCommand: "snapctl restart microk8s.daemon-containerd"},
 			} {
 				util.Restart(context.Background(), tc.service)
-				if m.CalledWithCommand != tc.expectedCommand {
+				if m.CalledWithCommand[len(m.CalledWithCommand)-1] != tc.expectedCommand {
 					t.Fatalf("Expected command %q, but %q was called instead", tc.expectedCommand, m.CalledWithCommand)
 				}
 			}

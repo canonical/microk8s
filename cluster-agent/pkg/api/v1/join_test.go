@@ -99,7 +99,7 @@ admin-token,admin,admin,"system:masters"
 			if util.IsValidClusterToken("valid-cluster-token") {
 				t.Fatal("Expected cluster token to not be valid after successful join, but it is")
 			}
-			if m.CalledWithCommand != "snapctl restart microk8s.daemon-apiserver" {
+			if len(m.CalledWithCommand) != 1 || m.CalledWithCommand[0] != "snapctl restart microk8s.daemon-apiserver" {
 				t.Fatalf("Expected API server restart command, but got %q", m.CalledWithCommand)
 			}
 

@@ -2,6 +2,7 @@ package utiltest
 
 import (
 	"context"
+	"log"
 	"strings"
 	"testing"
 
@@ -10,12 +11,16 @@ import (
 
 type MockRunner struct {
 	CalledWithCtx     context.Context
-	CalledWithCommand string
+	CalledWithCommand []string
+	Log               bool
 	Err               error
 }
 
 func (m *MockRunner) Run(ctx context.Context, command []string) error {
-	m.CalledWithCommand = strings.Join(command, " ")
+	if m.Log {
+		log.Printf("mock execute %#v", command)
+	}
+	m.CalledWithCommand = append(m.CalledWithCommand, strings.Join(command, " "))
 	m.CalledWithCtx = ctx
 	return m.Err
 }
