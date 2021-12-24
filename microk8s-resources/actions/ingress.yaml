@@ -96,6 +96,7 @@ rules:
   - configmaps
   resourceNames:
   - ingress-controller-leader-public
+  - ingress-controller-leader
   verbs:
   - create
   - update
