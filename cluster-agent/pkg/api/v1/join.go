@@ -46,6 +46,9 @@ func Join(ctx context.Context, request JoinRequest) (*JoinResponse, error) {
 	if !util.IsValidClusterToken(request.ClusterToken) {
 		return nil, fmt.Errorf("invalid cluster token")
 	}
+	if err := util.RemoveClusterToken(request.ClusterToken); err != nil {
+		return nil, fmt.Errorf("failed to remove cluster token: %w", err)
+	}
 
 	if util.HasDqliteLock() {
 		return nil, fmt.Errorf("failed to join the cluster: this is an HA MicroK8s cluster, run 'microk8s enable ha-cluster' on the joining node and retry")
@@ -53,9 +56,6 @@ func Join(ctx context.Context, request JoinRequest) (*JoinResponse, error) {
 
 	if err := util.AddCertificateRequestToken(request.ClusterToken); err != nil {
 		return nil, fmt.Errorf("failed to add certificate request token: %w", err)
-	}
-	if err := util.RemoveClusterToken(request.ClusterToken); err != nil {
-		return nil, fmt.Errorf("failed to remove cluster token: %w", err)
 	}
 	hostname := util.GetRemoteHost(request.HostName, request.RemoteAddress)
 	clusterAgentEndpoint := net.JoinHostPort(hostname, request.ClusterAgentPort)
