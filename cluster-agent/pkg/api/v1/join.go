@@ -24,8 +24,8 @@ type JoinRequest struct {
 
 // JoinResponse is the response data for the join API endpoint.
 type JoinResponse struct {
-	// CA is the root CA certificate for the Kubernetes cluster.
-	CA string `json:"ca"`
+	// CertificateAuthority is the root CertificateAuthority certificate for the Kubernetes cluster.
+	CertificateAuthority string `json:"ca"`
 	// EtcdEndpoint is the endpoint where the etcd server is running, typically https://0.0.0.0:12379.
 	// Note that "0.0.0.0" in the response will be replaced with the IP used to join the new node.
 	EtcdEndpoint string `json:"etcd"`
@@ -90,12 +90,12 @@ func Join(ctx context.Context, request JoinRequest) (*JoinResponse, error) {
 		return nil, fmt.Errorf("failed to create lock file to disable certificate reissuing: %w", err)
 	}
 	return &JoinResponse{
-		CA:               ca,
-		EtcdEndpoint:     util.GetServiceArgument("etcd", "--listen-client-urls"),
-		ApiServerPort:    util.GetServiceArgument("kube-apiserver", "--secure-port"),
-		KubeProxyToken:   kubeProxyToken,
-		KubeletToken:     kubeletToken,
-		KubeletArgs:      kubeletArgs,
-		HostNameOverride: hostname,
+		CertificateAuthority: ca,
+		EtcdEndpoint:         util.GetServiceArgument("etcd", "--listen-client-urls"),
+		ApiServerPort:        util.GetServiceArgument("kube-apiserver", "--secure-port"),
+		KubeProxyToken:       kubeProxyToken,
+		KubeletToken:         kubeletToken,
+		KubeletArgs:          kubeletArgs,
+		HostNameOverride:     hostname,
 	}, nil
 }

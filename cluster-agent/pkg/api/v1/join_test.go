@@ -86,13 +86,13 @@ admin-token,admin,admin,"system:masters"
 				t.Fatal("Expected non-nil response")
 			}
 			expectedResponse := &v1.JoinResponse{
-				CA:               "CA CERTIFICATE DATA",
-				EtcdEndpoint:     "https://0.0.0.0:12379",
-				ApiServerPort:    "16443",
-				KubeProxyToken:   "kube-proxy-token",
-				KubeletArgs:      "kubelet arguments\n--hostname-override=10.10.10.10",
-				KubeletToken:     resp.KubeletToken,
-				HostNameOverride: "10.10.10.10",
+				CertificateAuthority: "CA CERTIFICATE DATA",
+				EtcdEndpoint:         "https://0.0.0.0:12379",
+				ApiServerPort:        "16443",
+				KubeProxyToken:       "kube-proxy-token",
+				KubeletArgs:          "kubelet arguments\n--hostname-override=10.10.10.10",
+				KubeletToken:         resp.KubeletToken,
+				HostNameOverride:     "10.10.10.10",
 			}
 			if *resp != *expectedResponse {
 				t.Fatalf("Expected response %#v, but it was %#v", expectedResponse, resp)
