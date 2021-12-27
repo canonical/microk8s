@@ -7,8 +7,7 @@ import (
 	"strings"
 )
 
-// Restart a MicroK8s service, handling the case where the MicroK8s cluster is running Kubelite.
-func Restart(ctx context.Context, serviceName string) error {
+func service(ctx context.Context, action, serviceName string) error {
 	switch serviceName {
 	case "kube-apiserver", "kube-proxy", "kube-scheduler", "kube-controller-manager":
 		// drop kube- prefix
@@ -20,7 +19,22 @@ func Restart(ctx context.Context, serviceName string) error {
 			serviceName = "kubelite"
 		}
 	}
-	return RunCommand(ctx, []string{"snapctl", "restart", fmt.Sprintf("microk8s.daemon-%s", serviceName)})
+	return RunCommand(ctx, []string{"snapctl", action, fmt.Sprintf("microk8s.daemon-%s", serviceName)})
+}
+
+// RestartService restarts a MicroK8s service, handling the case where the MicroK8s cluster is running Kubelite.
+func RestartService(ctx context.Context, serviceName string) error {
+	return service(ctx, "restart", serviceName)
+}
+
+// StopService stops a MicroK8s service, handling the case where the MicroK8s cluster is running Kubelite.
+func StopService(ctx context.Context, serviceName string) error {
+	return service(ctx, "stop", serviceName)
+}
+
+// StartService starts a MicroK8s service, handling the case where the MicroK8s cluster is running Kubelite.
+func StartService(ctx context.Context, serviceName string) error {
+	return service(ctx, "start", serviceName)
 }
 
 // GetServiceArgument retrieves the value of a specific argument from the $SNAP_DATA/args/$service file.

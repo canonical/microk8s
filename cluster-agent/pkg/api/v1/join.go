@@ -76,7 +76,7 @@ func Join(ctx context.Context, request JoinRequest) (*JoinResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve kubelet token: %w", err)
 	}
-	if err := util.Restart(ctx, "apiserver"); err != nil {
+	if err := util.RestartService(ctx, "apiserver"); err != nil {
 		return nil, fmt.Errorf("failed to restart apiserver service: %w", err)
 	}
 	kubeletArgs, err := util.ReadFile(util.SnapDataPath("args", "kubelet"))

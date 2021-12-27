@@ -49,7 +49,7 @@ func Configure(ctx context.Context, req ConfigureRequest) error {
 			return fmt.Errorf("failed to update arguments of service %q: %w", service.Name, err)
 		}
 		if service.Restart {
-			if err := util.Restart(ctx, service.Name); err != nil {
+			if err := util.RestartService(ctx, service.Name); err != nil {
 				return fmt.Errorf("failed to restart service %q: %w", service.Name, err)
 			}
 		}
