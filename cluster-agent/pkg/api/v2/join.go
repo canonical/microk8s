@@ -124,6 +124,10 @@ func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
 		kubeletArgs = fmt.Sprintf("%s\n--hostname-override=%s", kubeletArgs, hostname)
 	}
 
+	if err := util.MaybePatchCalicoAutoDetectionMethod(ctx, hostname, true); err != nil {
+		return nil, fmt.Errorf("failed to update cni configuration: %w", err)
+	}
+
 	if err := util.CreateNoCertsReissueLock(); err != nil {
 		return nil, fmt.Errorf("failed to create lock file to disable certificate reissuing: %w", err)
 	}

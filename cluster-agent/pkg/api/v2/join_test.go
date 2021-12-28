@@ -16,19 +16,17 @@ import (
 
 // TestJoin tests responses when joining control plane and worker nodes in an existing cluster.
 func TestJoin(t *testing.T) {
-	m := &utiltest.MockRunner{}
-	utiltest.WithMockRunner(m, func(t *testing.T) {
-		// Create test data
-		for file, contents := range map[string]string{
-			"testdata/var/lock/ha-cluster":                "",
-			"testdata/var/kubernetes/backend/cluster.crt": "DQLITE CERTIFICATE DATA",
-			"testdata/var/kubernetes/backend/cluster.key": "DQLITE KEY DATA",
-			"testdata/var/kubernetes/backend/info.yaml": `
+	// Create test data
+	for file, contents := range map[string]string{
+		"testdata/var/lock/ha-cluster":                "",
+		"testdata/var/kubernetes/backend/cluster.crt": "DQLITE CERTIFICATE DATA",
+		"testdata/var/kubernetes/backend/cluster.key": "DQLITE KEY DATA",
+		"testdata/var/kubernetes/backend/info.yaml": `
 Address: 10.10.10.10:19001
 ID: 1238719276943521
 Role: 0
 `,
-			"testdata/var/kubernetes/backend/cluster.yaml": `
+		"testdata/var/kubernetes/backend/cluster.yaml": `
 - Address: 10.10.10.10:19001
   ID: 1238719276943521
   Role: 0
@@ -39,40 +37,44 @@ Role: 0
   ID: 12312648746587655
   Role: 2
 `,
-			"testdata/certs/ca.crt":                    "CA CERTIFICATE DATA",
-			"testdata/certs/ca.key":                    "CA KEY DATA",
-			"testdata/certs/serviceaccount.key":        "SERVICE ACCOUNT KEY DATA",
-			"testdata/args/kubelet":                    "kubelet arguments\n",
-			"testdata/args/kube-apiserver":             "--secure-port 16443",
-			"testdata/args/cluster-agent":              "--bind=0.0.0.0:25000",
-			"testdata/credentials/cluster-tokens.txt":  "worker-token\ncontrol-plane-token\n",
-			"testdata/credentials/callback-tokens.txt": "",
-			"testdata/credentials/callback-token.txt":  "callback-token",
-			"testdata/credentials/known_tokens.csv": `kube-proxy-token,system:kube-proxy,kube-proxy,
+		"testdata/certs/ca.crt":                    "CA CERTIFICATE DATA",
+		"testdata/certs/ca.key":                    "CA KEY DATA",
+		"testdata/certs/serviceaccount.key":        "SERVICE ACCOUNT KEY DATA",
+		"testdata/args/kubelet":                    "kubelet arguments\n",
+		"testdata/args/kube-apiserver":             "--secure-port 16443",
+		"testdata/args/cni-network/cni.yaml":       `some random content. "first-found"`,
+		"testdata/args/cluster-agent":              "--bind=0.0.0.0:25000",
+		"testdata/credentials/cluster-tokens.txt":  "worker-token\ncontrol-plane-token\n",
+		"testdata/credentials/callback-tokens.txt": "",
+		"testdata/credentials/callback-token.txt":  "callback-token",
+		"testdata/credentials/known_tokens.csv": `kube-proxy-token,system:kube-proxy,kube-proxy,
 admin-token-123,admin,admin,"system:masters"
 `,
-		} {
-			if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
-				t.Fatalf("Failed to create test directory: %s", err)
-			}
-			if err := os.WriteFile(file, []byte(contents), 0660); err != nil {
-				t.Fatalf("Failed to create test file: %s", err)
-			}
-			defer os.RemoveAll(filepath.Dir(file))
+	} {
+		if err := os.MkdirAll(filepath.Dir(file), 0755); err != nil {
+			t.Fatalf("Failed to create test directory: %s", err)
 		}
-		defer os.RemoveAll("testdata/var")
+		if err := os.WriteFile(file, []byte(contents), 0660); err != nil {
+			t.Fatalf("Failed to create test file: %s", err)
+		}
+		defer os.RemoveAll(filepath.Dir(file))
+	}
+	defer os.RemoveAll("testdata/var")
 
-		t.Run("InvalidToken", func(t *testing.T) {
-			resp, err := v2.Join(context.Background(), v2.JoinRequest{ClusterToken: "invalid-token"})
-			if err == nil {
-				t.Fatalf("Expected error but did not receive any")
-			}
-			if resp != nil {
-				t.Fatalf("Expected a nil response but received %#v", resp)
-			}
-		})
+	t.Run("InvalidToken", func(t *testing.T) {
+		resp, err := v2.Join(context.Background(), v2.JoinRequest{ClusterToken: "invalid-token"})
+		if err == nil {
+			t.Fatalf("Expected error but did not receive any")
+		}
+		if resp != nil {
+			t.Fatalf("Expected a nil response but received %#v", resp)
+		}
+	})
 
-		t.Run("ControlPlane", func(t *testing.T) {
+	t.Run("ControlPlane", func(t *testing.T) {
+		m := &utiltest.MockRunner{}
+		utiltest.WithMockRunner(m, func(t *testing.T) {
+
 			resp, err := v2.Join(context.Background(), v2.JoinRequest{
 				ClusterToken:     "control-plane-token",
 				RemoteHostName:   "some-invalid-hostname",
@@ -107,12 +109,20 @@ admin-token-123,admin,admin,"system:masters"
 			if util.IsValidClusterToken("control-plane-token") {
 				t.Fatalf("Expected control-plane-token to not be a valid cluster token after being used, but it is")
 			}
-			if len(m.CalledWithCommand) > 0 {
-				t.Fatalf("Expected no commands to be called, but received %#v", m.CalledWithCommand)
-			}
-		})
 
-		t.Run("Worker", func(t *testing.T) {
+			expectedCommands := []string{
+				"testdata/microk8s-kubectl.wrapper apply -f testdata/args/cni-network/cni.yaml",
+			}
+			if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
+				t.Fatalf("Expected commands %#v, but %#v was executed", expectedCommands, m.CalledWithCommand)
+			}
+		})(t)
+	})
+
+	t.Run("Worker", func(t *testing.T) {
+		m := &utiltest.MockRunner{}
+		utiltest.WithMockRunner(m, func(t *testing.T) {
+
 			resp, err := v2.Join(context.Background(), v2.JoinRequest{
 				ClusterToken:     "worker-token",
 				RemoteHostName:   "10.10.10.12",
@@ -142,17 +152,20 @@ admin-token-123,admin,admin,"system:masters"
 			if util.IsValidClusterToken("worker-token") {
 				t.Fatalf("Expected worker-token to not be a valid cluster token after being used, but it is")
 			}
-			if len(m.CalledWithCommand) > 0 {
-				t.Fatalf("Expected no commands to be called, but received %#v", m.CalledWithCommand)
-			}
 			if !util.IsValidCertificateRequestToken("worker-token-kubelet") {
 				t.Fatal("Expected worker-token-kubelet to be a valid certificate request token, but it is not")
 			}
 			if !util.IsValidCertificateRequestToken("worker-token-proxy") {
 				t.Fatal("Expected worker-token-proxy to be a valid certificate request token, but it is not")
 			}
-		})
-	})(t)
+			expectedCommands := []string{
+				"testdata/microk8s-kubectl.wrapper apply -f testdata/args/cni-network/cni.yaml",
+			}
+			if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
+				t.Fatalf("Expected commands %#v, but %#v was executed", expectedCommands, m.CalledWithCommand)
+			}
+		})(t)
+	})
 }
 
 // TestJoinFirstNode tests responses when joining a control plane node on a new cluster.
@@ -181,6 +194,7 @@ Role: 0
 			"testdata/args/kubelet":                    "kubelet arguments\n",
 			"testdata/args/kube-apiserver":             "--secure-port 16443",
 			"testdata/args/cluster-agent":              "--bind=0.0.0.0:25000",
+			"testdata/args/cni-network/cni.yaml":       `some content here. "first-found"`,
 			"testdata/credentials/cluster-tokens.txt":  "control-plane-token\n",
 			"testdata/credentials/callback-tokens.txt": "",
 			"testdata/credentials/callback-token.txt":  "callback-token",
@@ -253,6 +267,7 @@ admin-token-123,admin,admin,"system:masters"
 
 		expectedCommands := []string{
 			"snapctl restart microk8s.daemon-k8s-dqlite",
+			"testdata/microk8s-kubectl.wrapper apply -f testdata/args/cni-network/cni.yaml",
 		}
 		if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
 			t.Fatalf("Expected commands %#v to be called, but received %#v", expectedCommands, m.CalledWithCommand)
