@@ -20,7 +20,7 @@ func TestJoin(t *testing.T) {
 			"testdata/args/kubelet":                    "kubelet arguments\n",
 			"testdata/args/etcd":                       "--listen-client-urls=https://0.0.0.0:12379",
 			"testdata/args/kube-apiserver":             "--secure-port 16443",
-			"testdata/credentials/cluster-tokens.txt":  "valid-cluster-token",
+			"testdata/credentials/cluster-tokens.txt":  "valid-cluster-token\nvalid-other-token\n",
 			"testdata/credentials/callback-tokens.txt": "",
 			"testdata/credentials/known_tokens.csv": `kube-proxy-token,system:kube-proxy,kube-proxy,
 admin-token,admin,admin,"system:masters"
@@ -56,7 +56,7 @@ admin-token,admin,admin,"system:masters"
 				t.Fatalf("Failed to create dqlite lock file: %s", err)
 			}
 			resp, err := v1.Join(context.Background(), v1.JoinRequest{
-				ClusterToken: "valid-cluster-token",
+				ClusterToken: "valid-other-token",
 			})
 			os.RemoveAll("testdata/var")
 			if resp != nil {
@@ -90,7 +90,7 @@ admin-token,admin,admin,"system:masters"
 				EtcdEndpoint:         "https://0.0.0.0:12379",
 				ApiServerPort:        "16443",
 				KubeProxyToken:       "kube-proxy-token",
-				KubeletArgs:          "kubelet arguments\n--hostname-override=10.10.10.10",
+				KubeletArgs:          "kubelet arguments\n\n--hostname-override=10.10.10.10",
 				KubeletToken:         resp.KubeletToken,
 				HostNameOverride:     "10.10.10.10",
 			}

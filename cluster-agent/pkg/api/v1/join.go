@@ -84,7 +84,7 @@ func Join(ctx context.Context, request JoinRequest) (*JoinResponse, error) {
 		return nil, fmt.Errorf("failed to read arguments of kubelet service: %w", err)
 	}
 	if hostname != request.HostName {
-		kubeletArgs = fmt.Sprintf("%s--hostname-override=%s", kubeletArgs, hostname)
+		kubeletArgs = fmt.Sprintf("%s\n--hostname-override=%s", kubeletArgs, hostname)
 	}
 	if err := util.CreateNoCertsReissueLock(); err != nil {
 		return nil, fmt.Errorf("failed to create lock file to disable certificate reissuing: %w", err)
