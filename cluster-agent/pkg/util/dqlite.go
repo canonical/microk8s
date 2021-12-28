@@ -68,10 +68,6 @@ func UpdateDqliteIP(ctx context.Context, host string) error {
 	if err := RestartService(ctx, "k8s-dqlite"); err != nil {
 		return fmt.Errorf("failed to restart k8s-dqlite service: %w", err)
 	}
-	if err := RestartService(ctx, "apiserver"); err != nil {
-		return fmt.Errorf("failed to restart apiserver service: %w", err)
-	}
-
 	return nil
 }
 

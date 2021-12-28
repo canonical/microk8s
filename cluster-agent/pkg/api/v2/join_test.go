@@ -253,7 +253,6 @@ admin-token-123,admin,admin,"system:masters"
 
 		expectedCommands := []string{
 			"snapctl restart microk8s.daemon-k8s-dqlite",
-			"snapctl restart microk8s.daemon-apiserver",
 		}
 		if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
 			t.Fatalf("Expected commands %#v to be called, but received %#v", expectedCommands, m.CalledWithCommand)

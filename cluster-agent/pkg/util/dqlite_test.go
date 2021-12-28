@@ -44,7 +44,6 @@ Role: 0
 
 		expectedCommands := []string{
 			"snapctl restart microk8s.daemon-k8s-dqlite",
-			"snapctl restart microk8s.daemon-apiserver",
 		}
 
 		if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
