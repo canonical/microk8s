@@ -116,6 +116,9 @@ admin-token-123,admin,admin,"system:masters"
 			if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
 				t.Fatalf("Expected commands %#v, but %#v was executed", expectedCommands, m.CalledWithCommand)
 			}
+			if !util.HasNoCertsReissueLock() {
+				t.Fatal("Expected certificate reissue lock to be in place after successful join, but it is not")
+			}
 		})(t)
 	})
 
@@ -163,6 +166,9 @@ admin-token-123,admin,admin,"system:masters"
 			}
 			if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
 				t.Fatalf("Expected commands %#v, but %#v was executed", expectedCommands, m.CalledWithCommand)
+			}
+			if !util.HasNoCertsReissueLock() {
+				t.Fatal("Expected certificate reissue lock to be in place after successful join, but it is not")
 			}
 		})(t)
 	})
@@ -271,6 +277,9 @@ admin-token-123,admin,admin,"system:masters"
 		}
 		if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
 			t.Fatalf("Expected commands %#v to be called, but received %#v", expectedCommands, m.CalledWithCommand)
+		}
+		if !util.HasNoCertsReissueLock() {
+			t.Fatal("Expected certificate reissue lock to be in place after successful join, but it is not")
 		}
 	})(t)
 }
