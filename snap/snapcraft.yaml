@@ -517,6 +517,22 @@ parts:
       - util-linux
       - zfsutils-linux
 
+  cluster-agent-python:
+    plugin: python
+    python-version: python3
+    source: .
+    python-packages:
+      - flask == 1.1.2
+      - PyYAML == 5.3.1
+      - netifaces == 0.10.9
+    stage-packages:
+      - python3-openssl
+      - openssl
+      - python3-requests
+      - gunicorn3
+      - python3-click
+      - python3-dateutil
+
   cluster-agent:
     build-snaps: [go]
     source: cluster-agent/
