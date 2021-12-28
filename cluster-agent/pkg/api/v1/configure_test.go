@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	v1 "github.com/canonical/microk8s/cluster-agent/pkg/api/v1"
@@ -90,15 +91,9 @@ func TestConfigure(t *testing.T) {
 						}
 					}
 				}
-				if len(m.CalledWithCommand) != len(tc.expectedCommands) {
-					t.Fatalf("Expected commands were %#v, but %#v was executed instead", tc.expectedCommands, m.CalledWithCommand)
+				if !reflect.DeepEqual(tc.expectedCommands, m.CalledWithCommand) {
+					t.Fatalf("Expected commands %#v but %#v was executed instead", tc.expectedCommands, m.CalledWithCommand)
 				}
-				for i := 0; i < len(m.CalledWithCommand); i++ {
-					if m.CalledWithCommand[i] != tc.expectedCommands[i] {
-						t.Fatalf("Expected command %q, but %q was executed instead", tc.expectedCommands[i], m.CalledWithCommand[i])
-					}
-				}
-
 			})(t)
 		})
 	}

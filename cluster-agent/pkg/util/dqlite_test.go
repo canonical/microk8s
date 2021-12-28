@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -46,13 +47,8 @@ Role: 0
 			"snapctl restart microk8s.daemon-apiserver",
 		}
 
-		if len(m.CalledWithCommand) != len(expectedCommands) {
-			t.Fatalf("Expected commands %#v but received %#v", expectedCommands, m.CalledWithCommand)
-		}
-		for idx, cmd := range m.CalledWithCommand {
-			if cmd != expectedCommands[idx] {
-				t.Fatalf("Expected commands %#v but received %#v", expectedCommands, m.CalledWithCommand)
-			}
+		if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
+			t.Fatalf("Expected commands %#v but %#v was executed instead", expectedCommands, m.CalledWithCommand)
 		}
 
 		s, err := util.ReadFile("testdata/var/kubernetes/backend/update.yaml")
