@@ -6,6 +6,7 @@ import (
 	"time"
 
 	v1 "github.com/canonical/microk8s/cluster-agent/pkg/api/v1"
+	v2 "github.com/canonical/microk8s/cluster-agent/pkg/api/v2"
 	"github.com/canonical/microk8s/cluster-agent/pkg/middleware"
 )
 
@@ -106,6 +107,29 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 			return
 		}
 		HTTPResponse(w, map[string]string{"result": "ok"})
+	}))
+
+	// POST v2/join
+	server.HandleFunc(fmt.Sprintf("%s/join", ClusterApiV2), withMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		req := v2.JoinRequest{}
+		if err := UnmarshalJSON(r, &req); err != nil {
+			HTTPError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		req.RemoteAddress = r.RemoteAddr
+		req.HostPort = r.Host
+
+		response, err := v2.Join(r.Context(), req)
+		if err != nil {
+			HTTPError(w, http.StatusInternalServerError, err)
+			return
+		}
+		HTTPResponse(w, response)
 	}))
 
 	return server
