@@ -137,6 +137,20 @@ func AddCallbackToken(clusterAgentEndpoint, token string) error {
 	return appendToken(fmt.Sprintf("%s %s", clusterAgentEndpoint, token), SnapDataPath("credentials", "callback-tokens.txt"))
 }
 
+// GetOrCreateSelfCallbackToken sets the token that can be used for authenticating cluster agent requests to this node.
+func GetOrCreateSelfCallbackToken() (string, error) {
+	callbackTokenFile := SnapDataPath("credentials", "callback-token.txt")
+	s, err := ReadFile(callbackTokenFile)
+	if err != nil {
+		token := newRandomString(alpha, 64)
+		if err := os.WriteFile(callbackTokenFile, []byte(fmt.Sprintf("%s\n", token)), 0600); err != nil {
+			return "", fmt.Errorf("failed to create callback token file: %w", err)
+		}
+		return token, nil
+	}
+	return strings.TrimSpace(s), nil
+}
+
 // GetKnownToken retrieves the known token of a user from the known_tokens file.
 func GetKnownToken(user string) (string, error) {
 	allTokens, err := ReadFile(SnapDataPath("credentials", "known_tokens.csv"))

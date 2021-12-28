@@ -128,11 +128,22 @@ func TestSelfCallbackToken(t *testing.T) {
 		t.Fatalf("Failed to create test directory: %s", err)
 	}
 	defer os.RemoveAll("testdata/credentials")
-	if err := os.WriteFile("testdata/credentials/callback-token.txt", []byte("my-token"), 0600); err != nil {
+	token, err := util.GetOrCreateSelfCallbackToken()
+	if err != nil {
 		t.Fatalf("Failed to configure callback token: %q", err)
 	}
-	if !util.IsValidSelfCallbackToken("my-token") {
+	if token == "" {
+		t.Fatalf("Expected token to not be empty, but it is")
+	}
+	if !util.IsValidSelfCallbackToken(token) {
 		t.Fatal("Expected my-token to be a valid callback token for this node, but it is not")
+	}
+	tokenAgain, err := util.GetOrCreateSelfCallbackToken()
+	if err != nil {
+		t.Fatalf("Failed to retrieve callback token: %q", err)
+	}
+	if tokenAgain != token {
+		t.Fatalf("Expected tokens to match, but they do not (%q and %q)", token, tokenAgain)
 	}
 }
 
