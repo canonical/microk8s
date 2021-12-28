@@ -157,7 +157,8 @@ func TestKnownTokens(t *testing.T) {
 	}
 
 	contents := `
-token1,system:kube-proxy,kube-proxy,
+admin-token,admin,admin,"system:masters"
+token1,system:kube-proxy,kube-proxy
 token2,system:node:existing-host,kubelet-0123,"system:nodes"
 `
 	if err := os.WriteFile("testdata/credentials/known_tokens.csv", []byte(contents), 0600); err != nil {
@@ -171,6 +172,7 @@ token2,system:node:existing-host,kubelet-0123,"system:nodes"
 		{user: "missing-user", expectError: true},
 		{user: "system:kube-proxy", expectToken: "token1"},
 		{user: "system:node:existing-host", expectToken: "token2"},
+		{user: "admin", expectToken: "admin-token"},
 	} {
 		t.Run(tc.user, func(t *testing.T) {
 			token, err := util.GetKnownToken(tc.user)
