@@ -20,8 +20,8 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 	server := http.NewServeMux()
 
 	withMiddleware := func(f http.HandlerFunc) http.HandlerFunc {
-		handler := middleware.Timeout(timeout)
-		return handler(f)
+		timeoutMiddleware := middleware.Timeout(timeout)
+		return middleware.Log(timeoutMiddleware(f))
 	}
 
 	// POST /v1/join
