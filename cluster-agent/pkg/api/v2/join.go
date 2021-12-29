@@ -17,8 +17,11 @@ type JoinRequest struct {
 	RemoteHostName string `json:"hostname"`
 	// ClusterAgentPort is the port number where the cluster-agent is listening on the joining node.
 	ClusterAgentPort string `json:"port"`
+	// Worker is the request field set in the Python code. This is false for control-plane nodes, and "as-worker"
+	// for worker-only nodes. We define this as an interface{} to handle both cases. We set WorkerOnly accordingly.
+	Worker interface{} `json:"worker"`
 	// WorkerOnly is true when joining a worker-only node.
-	WorkerOnly bool `json:"worker"`
+	WorkerOnly bool `json:"-"`
 	// HostPort is the hostname and port that accepted the request. This is retrieved directly from the *http.Request object.
 	HostPort string `json:"-"`
 	// RemoteAddress is the remote address from which the join request originates. This is retrieved directly from the *http.Request object.

@@ -121,6 +121,15 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 			return
 		}
 
+		// This is required because the Python code will send either `false` or `"as-worker"`
+		if req.Worker != nil {
+			if v, ok := req.Worker.(bool); ok {
+				req.WorkerOnly = v
+			} else if s, ok := req.Worker.(string); ok {
+				req.WorkerOnly = s == "as-worker"
+			}
+		}
+
 		req.RemoteAddress = r.RemoteAddr
 		req.HostPort = r.Host
 
