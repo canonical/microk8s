@@ -50,8 +50,9 @@ type JoinResponse struct {
 	// This is not included in the response when joining worker-only nodes.
 	AdminToken string `json:"admin_token,omitempty"`
 	// CertificateAuthorityKey is the private key of the Certificate Authority.
+	// Note that this is defined as *string, since the Python code expects this to be explicitly None/nil/null for worker only nodes.
 	// This is not included in the response when joining worker-only nodes.
-	CertificateAuthorityKey string `json:"ca_key,omitempty"`
+	CertificateAuthorityKey *string `json:"ca_key"`
 	// DqliteClusterCertificate is the certificate for connecting to the Dqlite cluster.
 	// This is not included in the response when joining worker-only nodes.
 	DqliteClusterCertificate string `json:"cluster_cert,omitempty"`
@@ -153,10 +154,11 @@ func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
 		// TODO: list of control plane nodes
 		response.ControlPlaneNodes = []string{}
 	} else {
-		response.CertificateAuthorityKey, err = util.ReadFile(util.SnapDataPath("certs", "ca.key"))
+		caKey, err := util.ReadFile(util.SnapDataPath("certs", "ca.key"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve cluster CA key: %w", err)
 		}
+		response.CertificateAuthorityKey = &caKey
 		response.ServiceAccountKey, err = util.ReadFile(util.SnapDataPath("certs", "serviceaccount.key"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve service account key: %w", err)
