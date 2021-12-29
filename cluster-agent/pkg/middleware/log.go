@@ -26,7 +26,7 @@ func (w *responseWriter) WriteHeader(status int) {
 // Log is a middleware function that logs all incoming HTTP requests.
 func Log(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		wrapped := &responseWriter{ResponseWriter: w}
+		wrapped := &responseWriter{ResponseWriter: w, status: http.StatusOK}
 		start := time.Now()
 		next.ServeHTTP(wrapped, req)
 		log.Printf("%s %d %q %d bytes in %v\n", req.Method, wrapped.status, req.RequestURI, wrapped.size, time.Since(start))
