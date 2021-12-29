@@ -24,6 +24,11 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 		return middleware.Log(timeoutMiddleware(f))
 	}
 
+	// Default handler
+	server.HandleFunc("/", withMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		HTTPError(w, http.StatusNotFound, fmt.Errorf("not found"))
+	}))
+
 	// POST /v1/join
 	server.HandleFunc(fmt.Sprintf("%s/join", ClusterApiV1), withMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
