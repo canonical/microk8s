@@ -517,7 +517,7 @@ parts:
       - util-linux
       - zfsutils-linux
 
-  cluster-agent-python:
+  cluster-agent:
     plugin: python
     python-version: python3
     source: .
@@ -533,7 +533,7 @@ parts:
       - python3-click
       - python3-dateutil
 
-  cluster-agent:
+  cluster-agent-go:
     build-snaps: [go]
     source: cluster-agent/
     build-attributes: [no-patchelf]
