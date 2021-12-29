@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	ClusterApiV1 = "/cluster/api/1.0"
-	ClusterApiV2 = "/cluster/api/2.0"
+	ClusterApiV1 = "/cluster/api/v1.0"
+	ClusterApiV2 = "/cluster/api/v2.0"
 )
 
 // NewServer creates a new *http.ServeMux and registers the MicroK8s cluster agent API endpoints.
