@@ -2,6 +2,7 @@ package v2_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -44,7 +45,7 @@ Role: 0
 		"testdata/args/kube-apiserver":             "--secure-port 16443",
 		"testdata/args/cni-network/cni.yaml":       `some random content. "first-found"`,
 		"testdata/args/cluster-agent":              "--bind=0.0.0.0:25000",
-		"testdata/credentials/cluster-tokens.txt":  "worker-token\ncontrol-plane-token\n",
+		"testdata/credentials/cluster-tokens.txt":  "worker-token\ncontrol-plane-token\nother-worker-token",
 		"testdata/credentials/callback-tokens.txt": "",
 		"testdata/credentials/callback-token.txt":  "callback-token",
 		"testdata/credentials/known_tokens.csv": `kube-proxy-token,system:kube-proxy,kube-proxy,
@@ -123,54 +124,63 @@ admin-token-123,admin,admin,"system:masters"
 	})
 
 	t.Run("Worker", func(t *testing.T) {
-		m := &utiltest.MockRunner{}
-		utiltest.WithMockRunner(m, func(t *testing.T) {
+		for _, tc := range []struct {
+			token  string
+			worker interface{}
+		}{
+			{token: "worker-token", worker: true},
+			{token: "other-worker-token", worker: "as-worker"},
+		} {
+			m := &utiltest.MockRunner{}
+			utiltest.WithMockRunner(m, func(t *testing.T) {
+				t.Run(fmt.Sprintf("%v", tc.worker), func(t *testing.T) {
+					resp, err := v2.Join(context.Background(), v2.JoinRequest{
+						ClusterToken:     tc.token,
+						RemoteHostName:   "10.10.10.12",
+						RemoteAddress:    "10.10.10.12:31451",
+						Worker:           tc.worker,
+						HostPort:         "10.10.10.10:25000",
+						ClusterAgentPort: "25000",
+					})
+					if err != nil {
+						t.Fatalf("Expected no errors, but received %q", err)
+					}
+					if resp == nil {
+						t.Fatal("Expected a response but received nil instead")
+					}
+					expectedResponse := &v2.JoinResponse{
+						CertificateAuthority: "CA CERTIFICATE DATA",
+						CallbackToken:        "callback-token",
+						ApiServerPort:        "16443",
+						KubeletArgs:          "kubelet arguments\n",
+						HostNameOverride:     "10.10.10.12",
+						ControlPlaneNodes:    []string{},
+					}
 
-			resp, err := v2.Join(context.Background(), v2.JoinRequest{
-				ClusterToken:     "worker-token",
-				RemoteHostName:   "10.10.10.12",
-				RemoteAddress:    "10.10.10.12:31451",
-				WorkerOnly:       true,
-				HostPort:         "10.10.10.10:25000",
-				ClusterAgentPort: "25000",
-			})
-			if err != nil {
-				t.Fatalf("Expected no errors, but received %q", err)
-			}
-			if resp == nil {
-				t.Fatal("Expected a response but received nil instead")
-			}
-			expectedResponse := &v2.JoinResponse{
-				CertificateAuthority: "CA CERTIFICATE DATA",
-				CallbackToken:        "callback-token",
-				ApiServerPort:        "16443",
-				KubeletArgs:          "kubelet arguments\n",
-				HostNameOverride:     "10.10.10.12",
-				ControlPlaneNodes:    []string{},
-			}
-
-			if !reflect.DeepEqual(*resp, *expectedResponse) {
-				t.Fatalf("Expected response %#v, but received %#v instead", expectedResponse, resp)
-			}
-			if util.IsValidClusterToken("worker-token") {
-				t.Fatalf("Expected worker-token to not be a valid cluster token after being used, but it is")
-			}
-			if !util.IsValidCertificateRequestToken("worker-token-kubelet") {
-				t.Fatal("Expected worker-token-kubelet to be a valid certificate request token, but it is not")
-			}
-			if !util.IsValidCertificateRequestToken("worker-token-proxy") {
-				t.Fatal("Expected worker-token-proxy to be a valid certificate request token, but it is not")
-			}
-			expectedCommands := []string{
-				"testdata/microk8s-kubectl.wrapper apply -f testdata/args/cni-network/cni.yaml",
-			}
-			if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
-				t.Fatalf("Expected commands %#v, but %#v was executed", expectedCommands, m.CalledWithCommand)
-			}
-			if !util.HasNoCertsReissueLock() {
-				t.Fatal("Expected certificate reissue lock to be in place after successful join, but it is not")
-			}
-		})(t)
+					if !reflect.DeepEqual(*resp, *expectedResponse) {
+						t.Fatalf("Expected response %#v, but received %#v instead", expectedResponse, resp)
+					}
+					if util.IsValidClusterToken("worker-token") {
+						t.Fatalf("Expected worker-token to not be a valid cluster token after being used, but it is")
+					}
+					if !util.IsValidCertificateRequestToken("worker-token-kubelet") {
+						t.Fatal("Expected worker-token-kubelet to be a valid certificate request token, but it is not")
+					}
+					if !util.IsValidCertificateRequestToken("worker-token-proxy") {
+						t.Fatal("Expected worker-token-proxy to be a valid certificate request token, but it is not")
+					}
+					expectedCommands := []string{
+						"testdata/microk8s-kubectl.wrapper apply -f testdata/args/cni-network/cni.yaml",
+					}
+					if !reflect.DeepEqual(expectedCommands, m.CalledWithCommand) {
+						t.Fatalf("Expected commands %#v, but %#v was executed", expectedCommands, m.CalledWithCommand)
+					}
+					if !util.HasNoCertsReissueLock() {
+						t.Fatal("Expected certificate reissue lock to be in place after successful join, but it is not")
+					}
+				})
+			})(t)
+		}
 	})
 }
 

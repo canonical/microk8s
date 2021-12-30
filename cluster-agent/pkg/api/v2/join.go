@@ -66,6 +66,15 @@ type JoinResponse struct {
 
 // Join implements "POST v2/join".
 func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
+	// This is required because the Python code will send either `false` or `"as-worker"` in the "worker" parameter.
+	if req.Worker != nil {
+		if v, ok := req.Worker.(bool); ok {
+			req.WorkerOnly = v
+		} else if s, ok := req.Worker.(string); ok {
+			req.WorkerOnly = s == "as-worker"
+		}
+	}
+
 	if !util.IsValidClusterToken(req.ClusterToken) {
 		return nil, fmt.Errorf("invalid cluster token")
 	}
