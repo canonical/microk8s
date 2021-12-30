@@ -53,7 +53,7 @@ type JoinResponse struct {
 	DqliteVoterNodes []string `json:"voters,omitempty"`
 	// ServiceAccountKey is the private key used for signing ServiceAccount tokens.
 	// This is not included in the response when joining worker-only nodes.
-	ServiceAccountKey string `json:"service_account_key,omitempty"`
+	ServiceAccountKey string `json:"service_account_key"`
 	// AdminToken is a static token used to authenticate in the MicroK8s cluster as "admin".
 	// This is not included in the response when joining worker-only nodes.
 	AdminToken string `json:"admin_token,omitempty"`
