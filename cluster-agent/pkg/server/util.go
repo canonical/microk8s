@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -24,6 +25,7 @@ type httpError struct {
 func HTTPError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
 	HTTPResponse(w, &httpError{Error: err.Error()})
+	log.Printf("[ERROR %d] %q\n", status, err)
 }
 
 // HTTPResponse creates an HTTP response for successful calls.
