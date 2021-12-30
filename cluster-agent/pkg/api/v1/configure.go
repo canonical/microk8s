@@ -11,7 +11,7 @@ type ConfigureServiceRequest struct {
 	// Name is the service name.
 	Name string `json:"name"`
 	// UpdateArguments is a map of arguments to be updated.
-	UpdateArguments map[string]string `json:"arguments_update"`
+	UpdateArguments []map[string]string `json:"arguments_update"`
 	// RemoveArguments is a list of arguments to remove.
 	RemoveArguments []string `json:"arguments_remove"`
 	// Restart should be true if the service needs a restart after updating the configuration.

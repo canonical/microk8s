@@ -56,7 +56,7 @@ func TestConfigure(t *testing.T) {
 			req: v1.ConfigureRequest{
 				CallbackToken: "valid-token",
 				ConfigureServices: []v1.ConfigureServiceRequest{
-					{Name: "kube-apiserver", UpdateArguments: map[string]string{"--key": "new-value"}, RemoveArguments: []string{"--old"}, Restart: false},
+					{Name: "kube-apiserver", UpdateArguments: []map[string]string{{"--key": "new-value"}}, RemoveArguments: []string{"--old"}, Restart: false},
 					{Name: "kube-proxy", Restart: true},
 				},
 				ConfigureAddons: []v1.ConfigureAddonRequest{

@@ -126,13 +126,13 @@ func TestUpdateServiceArguments(t *testing.T) {
 `
 	for _, tc := range []struct {
 		name           string
-		update         map[string]string
+		update         []map[string]string
 		delete         []string
 		expectedValues map[string]string
 	}{
 		{
 			name:   "simple-update",
-			update: map[string]string{"--key": "new-value"},
+			update: []map[string]string{{"--key": "new-value"}},
 			delete: []string{},
 			expectedValues: map[string]string{
 				"--key":   "new-value",
@@ -141,12 +141,20 @@ func TestUpdateServiceArguments(t *testing.T) {
 		},
 		{
 			name:   "update-many-delete-one",
-			update: map[string]string{"--key": "new-value", "--other": "other-new-value"},
+			update: []map[string]string{{"--key": "new-value"}, {"--other": "other-new-value"}},
 			delete: []string{"--with-space"},
 			expectedValues: map[string]string{
 				"--key":        "new-value",
 				"--other":      "other-new-value",
 				"--with-space": "",
+			},
+		},
+		{
+			name:   "update-many-single-list",
+			update: []map[string]string{{"--key": "new-value", "--other": "other-new-value"}},
+			expectedValues: map[string]string{
+				"--key":   "new-value",
+				"--other": "other-new-value",
 			},
 		},
 		{

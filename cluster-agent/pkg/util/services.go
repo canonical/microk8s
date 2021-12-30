@@ -62,15 +62,15 @@ func GetServiceArgument(serviceName string, argument string) string {
 // UpdateServiceArguments updates the arguments file for a service.
 // update is a map of key-value pairs. It will replace the argument with the new value (or just append).
 // delete is a list of arguments to remove completely. The argument is removed if present.
-func UpdateServiceArguments(serviceName string, update map[string]string, delete []string) error {
+func UpdateServiceArguments(serviceName string, updateList []map[string]string, delete []string) error {
 	argumentsFile := SnapDataPath("args", serviceName)
 	arguments, err := ReadFile(argumentsFile)
 	if err != nil {
 		return fmt.Errorf("failed to read arguments of service %s: %w", serviceName, err)
 	}
 
-	if update == nil {
-		update = map[string]string{}
+	if updateList == nil {
+		updateList = []map[string]string{}
 	}
 	if delete == nil {
 		delete = []string{}
@@ -79,6 +79,13 @@ func UpdateServiceArguments(serviceName string, update map[string]string, delete
 	deleteMap := make(map[string]struct{}, len(delete))
 	for _, k := range delete {
 		deleteMap[k] = struct{}{}
+	}
+
+	updateMap := make(map[string]string, len(updateList))
+	for _, update := range updateList {
+		for key, value := range update {
+			updateMap[key] = value
+		}
 	}
 
 	newArguments := make([]string, 0, len(arguments))
@@ -91,7 +98,7 @@ func UpdateServiceArguments(serviceName string, update map[string]string, delete
 		// handle "--argument value" and "--argument=value" variants
 		key := strings.SplitN(line, " ", 2)[0]
 		key = strings.SplitN(key, "=", 2)[0]
-		if newValue, ok := update[key]; ok {
+		if newValue, ok := updateMap[key]; ok {
 			// update argument with new value
 			newArguments = append(newArguments, fmt.Sprintf("%s=%s", key, newValue))
 		} else if _, ok := deleteMap[key]; ok {
