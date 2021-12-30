@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
@@ -8,6 +9,16 @@ import (
 
 	"github.com/canonical/microk8s/cluster-agent/pkg/util"
 )
+
+// WorkerOnlyField is the "worker" field of the JoinRequest message.
+type WorkerOnlyField bool
+
+// UnmarshalJSON implements json.Unmarshaler.
+// It handles boolean values, as well as the string value "as-worker".
+func (v *WorkerOnlyField) UnmarshalJSON(b []byte) error {
+	*v = WorkerOnlyField(bytes.Equal(b, []byte("true")) || bytes.Equal(b, []byte(`"as-worker"`)))
+	return nil
+}
 
 // JoinRequest is the request message for the v2/join API endpoint.
 type JoinRequest struct {
@@ -17,11 +28,8 @@ type JoinRequest struct {
 	RemoteHostName string `json:"hostname"`
 	// ClusterAgentPort is the port number where the cluster-agent is listening on the joining node.
 	ClusterAgentPort string `json:"port"`
-	// Worker is the request field set in the Python code. This is false for control-plane nodes, and "as-worker"
-	// for worker-only nodes. We define this as an interface{} to handle both cases. We set WorkerOnly accordingly.
-	Worker interface{} `json:"worker"`
 	// WorkerOnly is true when joining a worker-only node.
-	WorkerOnly bool `json:"-"`
+	WorkerOnly WorkerOnlyField `json:"worker"`
 	// HostPort is the hostname and port that accepted the request. This is retrieved directly from the *http.Request object.
 	HostPort string `json:"-"`
 	// RemoteAddress is the remote address from which the join request originates. This is retrieved directly from the *http.Request object.
@@ -66,15 +74,6 @@ type JoinResponse struct {
 
 // Join implements "POST v2/join".
 func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
-	// This is required because the Python code will send either `false` or `"as-worker"` in the "worker" parameter.
-	if req.Worker != nil {
-		if v, ok := req.Worker.(bool); ok {
-			req.WorkerOnly = v
-		} else if s, ok := req.Worker.(string); ok {
-			req.WorkerOnly = s == "as-worker"
-		}
-	}
-
 	if !util.IsValidClusterToken(req.ClusterToken) {
 		return nil, fmt.Errorf("invalid cluster token")
 	}

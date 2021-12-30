@@ -1,11 +1,22 @@
 package v1
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
 	"github.com/canonical/microk8s/cluster-agent/pkg/util"
 )
+
+// RestartServiceField is the "restart" field of the ConfigureServiceRequest message.
+type RestartServiceField bool
+
+// UnmarshalJSON implements json.Unmarshaler.
+// It handles both boolean values, as well as the string value "yes".
+func (v *RestartServiceField) UnmarshalJSON(b []byte) error {
+	*v = RestartServiceField(bytes.Equal(b, []byte("true")) || bytes.Equal(b, []byte(`"yes"`)))
+	return nil
+}
 
 type ConfigureServiceRequest struct {
 	// Name is the service name.
@@ -14,11 +25,8 @@ type ConfigureServiceRequest struct {
 	UpdateArguments []map[string]string `json:"arguments_update"`
 	// RemoveArguments is a list of arguments to remove.
 	RemoveArguments []string `json:"arguments_remove"`
-	// Restart defines whether the service should be restarted. This is set in the Python code and may be bool, or "yes".
-	// We define this as an interface{} to handle both cases. We set RestartService accordingly.
-	Restart interface{} `json:"restart"`
-	// RestartService should be true if the service needs a restart after updating the configuration.
-	RestartService bool `json:"-"`
+	// Restart defines whether the service should be restarted.
+	Restart RestartServiceField `json:"restart"`
 }
 
 type ConfigureAddonRequest struct {
@@ -48,19 +56,10 @@ func Configure(ctx context.Context, req ConfigureRequest) error {
 		return fmt.Errorf("invalid callback token")
 	}
 	for _, service := range req.ConfigureServices {
-		// This is required because the Python code will set restart to True or "yes"
-		if service.Restart != nil {
-			if v, ok := service.Restart.(bool); ok {
-				service.RestartService = v
-			} else if s, ok := service.Restart.(string); ok {
-				service.RestartService = s == "yes"
-			}
-		}
-
 		if err := util.UpdateServiceArguments(service.Name, service.UpdateArguments, service.RemoveArguments); err != nil {
 			return fmt.Errorf("failed to update arguments of service %q: %w", service.Name, err)
 		}
-		if service.RestartService {
+		if service.Restart {
 			if err := util.RestartService(ctx, service.Name); err != nil {
 				return fmt.Errorf("failed to restart service %q: %w", service.Name, err)
 			}
