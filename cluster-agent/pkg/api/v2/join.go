@@ -66,7 +66,7 @@ type JoinResponse struct {
 	DqliteClusterCertificate string `json:"cluster_cert,omitempty"`
 	// DqliteClusterKey is the key for connecting to the Dqlite cluster.
 	// This is not included in the response when joining worker-only nodes.
-	DqliteClusterkey string `json:"cluster_key,omitempty"`
+	DqliteClusterKey string `json:"cluster_key,omitempty"`
 	// ControlPlaneNodes is a list of known control plane nodes running kube-apiserver.
 	// This is only included in the response when joining worker-only nodes.
 	ControlPlaneNodes []string `json:"control_plane_nodes"`
@@ -179,7 +179,7 @@ func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve dqlite cluster certificate: %w", err)
 		}
-		response.DqliteClusterkey, err = util.ReadFile(util.SnapDataPath("var", "kubernetes", "backend", "cluster.key"))
+		response.DqliteClusterKey, err = util.ReadFile(util.SnapDataPath("var", "kubernetes", "backend", "cluster.key"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve dqlite cluster key: %w", err)
 		}

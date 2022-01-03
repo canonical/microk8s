@@ -102,7 +102,7 @@ admin-token-123,admin,admin,"system:masters"
 				CertificateAuthorityKey:  func(s string) *string { return &s }("CA KEY DATA"),
 				AdminToken:               "admin-token-123",
 				DqliteClusterCertificate: "DQLITE CERTIFICATE DATA",
-				DqliteClusterkey:         "DQLITE KEY DATA",
+				DqliteClusterKey:         "DQLITE KEY DATA",
 			}
 			if !reflect.DeepEqual(*resp, *expectedResponse) {
 				t.Fatalf("Expected response %#v, but received %#v instead", expectedResponse, resp)
@@ -256,7 +256,7 @@ admin-token-123,admin,admin,"system:masters"
 			CertificateAuthorityKey:  func(s string) *string { return &s }("CA KEY DATA"),
 			AdminToken:               "admin-token-123",
 			DqliteClusterCertificate: "DQLITE CERTIFICATE DATA",
-			DqliteClusterkey:         "DQLITE KEY DATA",
+			DqliteClusterKey:         "DQLITE KEY DATA",
 		}
 		if !reflect.DeepEqual(*resp, *expectedResponse) {
 			t.Fatalf("Expected response %#v, but received %#v instead", expectedResponse, resp)
