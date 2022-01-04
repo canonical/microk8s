@@ -30,7 +30,7 @@ fi
 echo "$IP_ADDRESS" > "${SNAP_DATA}/var/lock/host-access-enabled"
 echo "Setting ${IP_ADDRESS} as host-access"
 
-"$SNAP/sbin/ifconfig" lo:microk8s "$IP_ADDRESS" up
+"$SNAP/sbin/ip" addr add "$IP_ADDRESS"/32 dev lo label lo:microk8s
 
 echo "Host-access is enabled"
 

@@ -364,6 +364,39 @@ class TestCluster(object):
                     continue
             break
 
+    def test_worker_noode(self):
+        """
+        Test a worker node is setup
+        """
+        print("Setting up a worker node")
+        vm = VM()
+        vm.setup(channel_to_test)
+        self.VM.append(vm)
+
+        # Form cluster
+        vm_master = self.VM[0]
+        print("Adding machine {} to cluster".format(vm.vm_name))
+        add_node = vm_master.run("/snap/bin/microk8s.add-node")
+        endpoint = [ep for ep in add_node.decode().split() if ":25000/" in ep]
+        vm.run("/snap/bin/microk8s.join {} --worker".format(endpoint[0]))
+        ep_parts = endpoint[0].split(":")
+        master_ip = ep_parts[0]
+
+        # Wait for nodes to be ready
+        print("Waiting for node to register")
+        connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+        while "NotReady" in connected_nodes.decode():
+            time.sleep(5)
+            connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+        print(connected_nodes.decode())
+
+        # Check that kubelet talks to traefik and traefik to the master node
+        print("Checking the worker's configuration")
+        provider = vm.run("cat /var/snap/microk8s/current/args/traefik/provider.yaml")
+        assert master_ip in provider.decode()
+        kubelet = vm.run("cat /var/snap/microk8s/current/credentials/kubelet.config")
+        assert "127.0.0.1" in kubelet.decode()
+
     def test_no_cert_reissue_in_nodes(self):
         """
         Test that each node has the cert no-reissue lock.
