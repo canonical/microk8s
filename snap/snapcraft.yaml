@@ -390,7 +390,7 @@ apps:
       - process-control
       - system-observe
   inspect:
-    command: SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    command: microk8s.wrapper
     plugs:
       - network-observe
       - kubernetes-support
