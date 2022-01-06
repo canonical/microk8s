@@ -333,7 +333,7 @@ parts:
     override-build: |
       set -eux
       . $SNAPCRAFT_PART_SRC/set-env-variables.sh
-      snap refresh go --channel=1.15/stable || true
+      snap refresh go --channel=1.16/stable || true
       go version
       export GOPATH=$(realpath ../go)
       export GO111MODULE=off
