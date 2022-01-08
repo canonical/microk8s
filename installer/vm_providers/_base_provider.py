@@ -128,7 +128,9 @@ class Provider(abc.ABC):
     def _check_connectivity(self) -> None:
         """Check that the VM can access the internet."""
         try:
-            self.run("ping -c 1 snapcraft.io".split(), hide_output=True)
+            self.run("sed -i -e s/^#DNS=.*/DNS=8.8.8.8/ /etc/systemd/resolved.conf".split(), hide_output=True)
+            self.run("systemctl restart systemd-resolved.service".split(), hide_output=True)
+            self.run("nslookup snapcraft.io".split(), hide_output=True)
         except errors.ProviderLaunchError:
             self.destroy()
             url = None
