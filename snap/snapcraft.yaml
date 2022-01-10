@@ -340,6 +340,7 @@ parts:
       snap refresh go --channel=1.16/stable || true
       go version
       export GOPATH=$(realpath ../go)
+      export GO111MODULE=off
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
 
       # Build containerd
@@ -385,6 +386,7 @@ parts:
       snap refresh go --channel=1.16/stable || true
       go version
       export GOPATH=$(realpath ../go)
+      export GO111MODULE=off
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
 
       # Build runc
