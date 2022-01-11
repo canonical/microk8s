@@ -4,17 +4,8 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
-echo "Enabling default storage class"
-run_with_sudo mkdir -p ${SNAP_COMMON}/default-storage
-
-declare -A map
-map[\$SNAP_COMMON]="$SNAP_COMMON"
-use_manifest storage apply "$(declare -p map)"
-echo "Storage will be available soon"
-
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
   echo ""
-  echo "WARNING: The storage class enabled does not persist volumes across nodes"
+  echo "DEPRECIATION WARNING: 'storage' is deprecated and will soon be removed. Please use 'hostpath-storage' instead."
   echo ""
-fi
+
+"$SNAP/microk8s-enable.wrapper" hostpath-storage
