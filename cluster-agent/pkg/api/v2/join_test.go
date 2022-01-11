@@ -293,6 +293,7 @@ func TestUnmarshalWorkerOnlyField(t *testing.T) {
 		{b: "false", expectedValue: false},
 		{b: "null", expectedValue: false},
 		{b: `"as-worker"`, expectedValue: true},
+		{b: `"as-controlplane"`, expectedValue: false},
 	} {
 		t.Run(tc.b, func(t *testing.T) {
 			var v v2.WorkerOnlyField
