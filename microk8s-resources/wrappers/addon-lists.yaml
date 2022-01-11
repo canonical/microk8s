@@ -21,7 +21,7 @@ microk8s-addons:
 
     - name: "dashboard"
       description: "The Kubernetes dashboard"
-      version: "2.2.0"
+      version: "2.3.0"
       check_status: "pod/kubernetes-dashboard"
       supported_architectures:
         - arm64
