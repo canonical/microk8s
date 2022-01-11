@@ -4,8 +4,7 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
-  echo ""
-  echo "DEPRECIATION WARNING: 'storage' is deprecated and will soon be removed. Please use 'hostpath-storage' instead."
-  echo ""
+echo "DEPRECIATION WARNING: 'storage' is deprecated and will soon be removed. Please use 'hostpath-storage' instead."
+echo ""
 
 "$SNAP/microk8s-enable.wrapper" hostpath-storage
