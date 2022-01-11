@@ -909,7 +909,7 @@ def join_etcd(connection_parts, verify=True):
     is_flag=True,
     required=False,
     default=False,
-    help="Disable the low memory guard. (default: false)"
+    help="Disable the low memory guard. (default: false)",
 )
 def join(connection, worker, skip_verify, disable_low_memory_guard):
     """
@@ -924,17 +924,20 @@ def join(connection, worker, skip_verify, disable_low_memory_guard):
         os.remove(os.path.expandvars("$SNAP_DATA/var/lock/low-memory-guard.lock"))
 
     if is_low_memory_guard_enabled() and not worker:
-        print("""
+        print(
+            """
 This node does not have enough RAM to host the Kubernetes control plane services
 and join the database quorum. You may consider joining this node as a worker instead:
 
-    microk8s join %(connection)s --worker
+    microk8s join {connection} --worker
 
 If you would still like to join the cluster as a control plane node, use:
 
-    microk8s join %(connection)s --disable-low-memory-guard
+    microk8s join {connection} --disable-low-memory-guard
 
-""".format(connection=connection)
+""".format(
+                connection=connection
+            )
         )
         sys.exit(1)
 
