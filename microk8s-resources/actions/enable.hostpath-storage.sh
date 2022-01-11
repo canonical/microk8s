@@ -11,7 +11,7 @@ then
 fi
 
 echo "Enabling default storage class."
-echo "WARNING: Hostpath storage is not sutable for production environments."
+echo "WARNING: Hostpath storage is not suitable for production environments."
 echo ""
 run_with_sudo mkdir -p ${SNAP_COMMON}/default-storage
 
