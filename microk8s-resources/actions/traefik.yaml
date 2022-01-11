@@ -31,7 +31,7 @@ spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       containers:
-        - image: traefik:2.3
+        - image: traefik:2.5
           name: traefik-ingress-lb
           ports:
             - name: http
