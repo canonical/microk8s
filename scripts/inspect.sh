@@ -16,7 +16,7 @@ function check_service {
   # Check the service passed as the first argument is up and running and collect its logs.
   local service=$1
   mkdir -p $INSPECT_DUMP/$service
-  journalctl -n $JOURNALCTL_LIMIT -u snap.$service &> $INSPECT_DUMP/$service/journal.log
+  journalctl -n $JOURNALCTL_LIMIT -u $service &> $INSPECT_DUMP/$service/journal.log
   snapctl services $service &> $INSPECT_DUMP/$service/snapctl.log
   if snapctl services $service | grep active &> /dev/null
   then
@@ -362,11 +362,11 @@ then
 fi
 if ! [ -e "${SNAP_DATA}/var/lock/no-traefik" ]
 then
-  check_service "snap.microk8s.daemon-traefik"
+  check_service "microk8s.daemon-traefik"
 fi
 if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  check_service "snap.microk8s.daemon-apiserver-kicker"
+  check_service "microk8s.daemon-apiserver-kicker"
 fi
 
 store_args
