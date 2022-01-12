@@ -12,7 +12,7 @@ if [ -z "${ARGUMENTS[@]}" ]; then
   echo "You can use the \"size\" argument while enabling the registry, eg microk8s.enable registry:size=30Gi"
   declare -A map
   map[\$DISKSIZE]="20Gi"
-  "$SNAP/microk8s-enable.wrapper" storage
+  "$SNAP/microk8s-enable.wrapper" hostpath-storage
   echo "Applying registry manifest"
   use_manifest registry apply "$(declare -p map)"
   echo "The registry is enabled"
@@ -29,7 +29,7 @@ elif [[ ${ARGUMENTS[@]} =~ $regex_args ]]; then
       echo "The size of the registry should be higher or equal to 20Gi and match the regex: (^[2-9][0-9]{1,}|^[1-9][0-9]{2,})(Gi$)"
       exit 1
 		elif [ "$key" = "size" ] && [[ $value =~ $REGEX_DISK_SIZE ]]; then
-      "$SNAP/microk8s-enable.wrapper" storage
+      "$SNAP/microk8s-enable.wrapper" hostpath-storage
       declare -A map
       map[\$DISKSIZE]=$value
     fi
