@@ -410,6 +410,7 @@ apps:
       - network
       - network-control
       - kernel-module-observe
+      - kubernetes-support
       - opengl
   disable:
     command: microk8s-disable.wrapper
@@ -421,6 +422,7 @@ apps:
       - network
       - network-control
       - kernel-module-observe
+      - kubernetes-support
       - opengl
   start:
     command: microk8s-start.wrapper
@@ -455,6 +457,7 @@ apps:
       - home
       - dot-kube
       - dot-config-helm
+      - kubernetes-support
       - network
   helm3:
     command: microk8s-helm3.wrapper
@@ -463,6 +466,7 @@ apps:
       - home
       - dot-kube
       - dot-config-helm
+      - kubernetes-support
       - network
   cilium:
     command: microk8s-cilium.wrapper
