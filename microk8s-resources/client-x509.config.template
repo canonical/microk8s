@@ -15,5 +15,5 @@ preferences: {}
 users:
 - name: NAME
   user:
-    username: NAME
-    AUTHTYPE: PASSWORD
+    client-certificate: PATHTOCERT
+    client-key: PATHTOKEYCERT

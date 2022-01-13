@@ -1,0 +1,15 @@
+tcp:
+  routers:
+    Router-1:
+      rule: "HostSNI(`*`)"
+      service: "kube-apiserver"
+      tls:
+        passthrough: true
+  services:
+    kube-apiserver:
+      loadBalancer:
+        servers:
+# APISERVERS
+#      - address: "10.130.0.2:16443"
+#      - address: "10.130.0.3:16443"
+#      - address: "10.130.0.4:16443"

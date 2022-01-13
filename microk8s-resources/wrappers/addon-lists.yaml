@@ -21,7 +21,7 @@ microk8s-addons:
 
     - name: "dashboard"
       description: "The Kubernetes dashboard"
-      version: "2.2.0"
+      version: "2.3.0"
       check_status: "pod/kubernetes-dashboard"
       supported_architectures:
         - arm64
@@ -203,7 +203,7 @@ microk8s-addons:
 
     - name: "traefik"
       description: "traefik Ingress controller for external access"
-      version: "2.3.0"
+      version: "2.5.0"
       check_status: "pod/traefik-ingress-controller"
       supported_architectures:
         - arm64

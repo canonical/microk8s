@@ -17,7 +17,7 @@ then
   exit 1
 fi
 
-if [ -e  "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ] && [ -e "$SNAP_DATA/args/cni-network/05-cilium-cni.conf" ] ; then 
+if [ -e  "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ] && [ -e "$SNAP_DATA/args/cni-network/05-cilium-cni.conf" ] ; then
   echo "Cilium is enabled and is not suitable for multi node clusters."
   exit 1
 fi
@@ -43,12 +43,14 @@ fi
 exit_if_stopped
 
 if [ ! -f "$SNAP_DATA/credentials/cluster-tokens.txt" ]; then
-  touch $SNAP_DATA/credentials/cluster-tokens.txt 
+  touch $SNAP_DATA/credentials/cluster-tokens.txt
 fi
 
 if getent group snap_microk8s >/dev/null 2>&1
 then
-  chgrp snap_microk8s $SNAP_DATA/credentials/cluster-tokens.txt || true
+  chgrp snap_microk8s $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
+  chmod ug+rw $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
+  chmod o-rwX $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
 fi
 
 # Use python's built-in (3.6+) secrets generator to produce the token.

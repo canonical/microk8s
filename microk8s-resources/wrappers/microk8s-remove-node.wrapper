@@ -10,22 +10,6 @@ export PYTHONNOUSERSITE=false
 
 source $SNAP/actions/common/utils.sh
 
-if echo "$*" | grep -q -- 'help'; then
-  if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
-  then
-    echo "Usage: microk8s remove <node> [--force]"
-    echo ""
-    echo "microk8s remove will remove the node provided from the cluster."
-    echo "--force   Remove node not available anymore (eg crashed)."
-  else
-    echo "Usage: microk8s remove <node>"
-    echo ""
-    echo "microk8s remove will remove the node provided from the cluster."
-  fi
-  exit 0
-fi
-
-exit_if_not_root
 exit_if_no_permissions
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
@@ -44,4 +28,4 @@ if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] && [ "$#" -eq 2 ] && ! [ "$2" == "-
   exit 1
 fi
 
-${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset "$@"
+${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/reset.py "$@"

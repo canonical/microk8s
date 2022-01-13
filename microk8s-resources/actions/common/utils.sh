@@ -331,7 +331,7 @@ wait_for_service_shutdown() {
 
 get_default_ip() {
     # Get the IP of the default interface
-    local DEFAULT_INTERFACE="$($SNAP/bin/netstat -rn | $SNAP/bin/grep '^0.0.0.0' | $SNAP/usr/bin/gawk '{print $NF}' | head -1)"
+    local DEFAULT_INTERFACE="$($SNAP/sbin/ip route show default | $SNAP/usr/bin/gawk '{for(i=1; i<NF; i++) if($i=="dev") print$(i+1)}')"
     local IP_ADDR="$($SNAP/sbin/ip -o -4 addr list "$DEFAULT_INTERFACE" | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
     if [[ -z "$IP_ADDR" ]]
     then
@@ -348,7 +348,7 @@ get_ips() {
     then
         echo "none"
     else
-        if $SNAP/sbin/ifconfig "$CNI_INTERFACE" &> /dev/null
+        if $SNAP/sbin/ip link show "$CNI_INTERFACE" &> /dev/null
         then
           CNI_IP="$($SNAP/sbin/ip -o -4 addr list "$CNI_INTERFACE" | $SNAP/bin/grep -v 'inet 169.254' | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
           local ips="";

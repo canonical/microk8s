@@ -164,7 +164,7 @@ def install(args) -> None:
                 echo.is_tty_connected()
                 and echo.confirm(
                     "Support for {!r} needs to be set up. "
-                    "Would you like to do that it now?".format(provider_error.provider)
+                    "Would you like to do that now?".format(provider_error.provider)
                 )
             ):
                 vm_provider_class.setup_provider(echoer=echo)
