@@ -13,6 +13,12 @@ source $SNAP/actions/common/utils.sh
 
 exit_if_service_not_expected_to_start k8s-dqlite
 
+if [ -e "${SNAP_DATA}/var/lock/low-memory-guard.lock" ]
+then
+	echo "not starting dqlite because of low memory guard lock"
+	exit 0
+fi
+
 app=k8s-dqlite
 
 if ! [ -e "$SNAP_DATA/args/${app}" ]

@@ -124,3 +124,10 @@ else
 fi
 mkdir -p "$SNAP_DATA/opt/cni/bin/"
 cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
+
+# Low memory guard. Enable by default when system RAM is less than 512MB.
+MEMORY=`cat /proc/meminfo | grep MemTotal | awk '{ print $2 }'`
+if [ $MEMORY -le 524288 ]
+then
+  touch ${SNAP_DATA}/var/lock/low-memory-guard.lock
+fi
