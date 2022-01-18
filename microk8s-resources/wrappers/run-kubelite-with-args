@@ -22,6 +22,10 @@ fi
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
   refresh_opt_in_local_config "start-control-plane" "false" kubelite
+elif [ -e ${SNAP_DATA}/var/lock/low-memory-guard.lock ]
+then
+  echo "${app} will not run, memory guard is enabled"
+  exit 0
 else
   refresh_opt_in_local_config "start-control-plane" "true" kubelite
 fi

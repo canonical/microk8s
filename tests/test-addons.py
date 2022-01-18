@@ -134,9 +134,9 @@ class TestAddons(object):
         validate_dashboard_ingress()
         print("Disabling dashboard-ingress")
         microk8s_disable("dashboard-ingress")
-        print("Enabling storage")
-        microk8s_enable("storage")
-        print("Validating storage")
+        print("Enabling hostpath-storage")
+        microk8s_enable("hostpath-storage")
+        print("Validating hostpath-storage")
         validate_storage()
         microk8s_enable("registry")
         print("Validating registry")
@@ -151,8 +151,8 @@ class TestAddons(object):
         microk8s_disable("registry")
         print("Disabling dashboard")
         microk8s_disable("dashboard")
-        print("Disabling storage")
-        microk8s_disable("storage:destroy-storage")
+        print("Disabling hostpath-storage")
+        microk8s_disable("hostpath-storage:destroy-storage")
         """
         We would disable DNS here but this freezes any terminating pods.
         We let microk8s reset to do the cleanup.

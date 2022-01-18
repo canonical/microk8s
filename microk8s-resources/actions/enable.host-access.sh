@@ -33,5 +33,3 @@ echo "Setting ${IP_ADDRESS} as host-access"
 "$SNAP/sbin/ip" addr add "$IP_ADDRESS"/32 dev lo label lo:microk8s
 
 echo "Host-access is enabled"
-
-

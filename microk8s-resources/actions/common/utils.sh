@@ -775,3 +775,19 @@ then
     exit 1
   fi
 fi
+
+exit_if_low_memory_guard() {
+  if [ -e ${SNAP_DATA}/var/lock/low-memory-guard.lock ]
+  then
+    echo ''
+    echo 'This node does not have enough RAM to host the Kubernetes control plane services'
+    echo 'and join the database quorum. You may consider joining this node as a worker'
+    echo 'node to a cluster.'
+    echo ''
+    echo 'If you would still like to start the control plane services, start MicroK8s with:'
+    echo ''
+    echo '    microk8s start --disable-low-memory-guard'
+    echo ''
+    exit 1
+  fi
+}

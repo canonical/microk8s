@@ -130,6 +130,16 @@ def is_node_dqlite_worker():
     )
 
 
+def is_low_memory_guard_enabled():
+    """
+    Check if the low memory guard is enabled on this Node
+
+    :returns: True if enabled, otherwise False
+    """
+    lock = os.path.expandvars("${SNAP_DATA}/var/lock/low-memory-guard.lock")
+    return os.path.isfile(lock)
+
+
 def get_dqlite_port():
     """
     What is the port dqlite listens on
