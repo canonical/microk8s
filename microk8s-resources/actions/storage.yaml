@@ -19,7 +19,7 @@ spec:
       serviceAccountName: microk8s-hostpath
       containers:
         - name: hostpath-provisioner
-          image: cdkbot/hostpath-provisioner-$ARCH:1.0.0
+          image: cdkbot/hostpath-provisioner:1.1.0
           env:
             - name: NODE_NAME
               valueFrom:
