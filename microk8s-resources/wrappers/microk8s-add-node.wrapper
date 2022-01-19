@@ -36,7 +36,7 @@ subject=$(openssl x509 -sha256 -days 365 -noout -subject -in "$SNAP_DATA/certs/c
 if [[ $subject == *"127.0.0.1"* ]]; then
   echo "Clustering requires a fresh MicroK8s installation. Reinstall with:"
   echo "sudo snap remove microk8s"
-  echo "sudo snap install microk8s --classic"
+  echo "sudo snap install microk8s"
   exit 1
 fi
 

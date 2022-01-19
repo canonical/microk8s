@@ -2,7 +2,7 @@
 
 set -eux
 
-if [ -f "${SNAP_DATA}/installed.lock" ]
+if [ -f "${SNAP_DATA}/var/lock/installed.lock" ]
 then
   exit 0
 fi
@@ -135,7 +135,14 @@ then
 else
   cp "${RESOURCES}/calico.yaml" "${SNAP_DATA}/args/cni-network/cni.yaml"
 fi
-mkdir -p "${SNAP_DATA}/opt/cni/bin/"
-cp -R "${SNAP}"/opt/cni/bin/* "${SNAP_DATA}"/opt/cni/bin/
+mkdir -p "$SNAP_DATA/opt/cni/bin/"
+cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
 
-touch "${SNAP_DATA}/installed.lock"
+# Low memory guard. Enable by default when system RAM is less than 512MB.
+MEMORY=`cat /proc/meminfo | grep MemTotal | awk '{ print $2 }'`
+if [ $MEMORY -le 524288 ]
+then
+  touch ${SNAP_DATA}/var/lock/low-memory-guard.lock
+fi
+
+touch "${SNAP_DATA}/var/lock/installed.lock"

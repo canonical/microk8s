@@ -13,4 +13,3 @@ then
 else
   echo "Host-access is not enabled. Nothing to do.."
 fi
-

@@ -121,6 +121,17 @@ function store_dqlite_info {
 }
 
 
+function store_dqlite_info {
+  # Collect some dqlite details
+  printf -- '  Inspect dqlite\n'
+  mkdir -p $INSPECT_DUMP/dqlite
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
+  sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
+}
+
+
 function store_kubeflow_info {
   # Collect some kubeflow details
   printf -- '  Inspect Kubeflow\n'
@@ -323,6 +334,29 @@ function check_certificates {
   fi
 }
 
+function check_memory {
+  MEMORY=`cat /proc/meminfo | grep MemTotal | awk '{ print $2 }'`
+  if [ $MEMORY -le 524288 ]
+  then
+    printf -- "\033[0;33mWARNING: \033[0m This system has ${MEMORY} bytes of RAM available.\n"
+    printf -- "It may not be enough to run the Kubernetes control plane services.\n"
+    printf -- "Consider joining as a worker-only to a cluster.\n"
+  fi
+}
+
+function check_low_memory_guard {
+  if [ -e "${SNAP_DATA}/var/lock/low-memory-guard.lock" ]
+  then
+    printf -- '\033[0;33mWARNING: \033[0m The low memory guard is enabled.\n'
+    printf -- 'This is to protect the server from running out of memory.\n'
+    printf -- 'Consider joining as a worker-only to a cluster.\n'
+    printf -- '\n'
+    printf -- 'Alternatively, to disable the low memory guard, start MicroK8s with:\n'
+    printf -- '\n'
+    printf -- '    microk8s start --disable-low-memory-guard\n'
+  fi
+}
+
 
 if [ ${#@} -ne 0 ] && [ "$*" == "--help" ]; then
   print_help
@@ -336,6 +370,10 @@ fi
 
 rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
+
+printf -- 'Inspecting system\n'
+check_memory
+check_low_memory_guard
 
 printf -- 'Inspecting Certificates\n'
 check_certificates
@@ -368,6 +406,14 @@ if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
   check_service "microk8s.daemon-apiserver-kicker"
 fi
+if ! [ -e "${SNAP_DATA}/var/lock/no-traefik" ]
+then
+  check_service "microk8s.daemon-traefik"
+fi
+if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  check_service "microk8s.daemon-apiserver-kicker"
+fi
 
 store_args
 
@@ -389,6 +435,9 @@ store_kubernetes_info
 
 # printf -- 'Inspecting dqlite\n'
 # store_dqlite_info
+
+printf -- 'Inspecting dqlite\n'
+store_dqlite_info
 
 suggest_fixes
 
