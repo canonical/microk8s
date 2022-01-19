@@ -614,7 +614,6 @@ parts:
         rm actions/*.cilium.sh
         rm actions/*.traefik.sh
         rm actions/*.registry.sh
-        rm actions/*.storage.sh
         rm actions/*.portainer.sh
         rm actions/*.linkerd.sh
         rm -rf "actions/kata"
