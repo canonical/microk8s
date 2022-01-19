@@ -1,6 +1,12 @@
+name: Check common strict merge issues
+
+on:
+  - push
+  - pull_request
+
 jobs:
   strict-common:
-    name: Create snap package
+    name: Check common strict merge issues
     runs-on: ubuntu-20.04
 
     steps:
