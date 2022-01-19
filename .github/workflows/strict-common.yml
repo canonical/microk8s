@@ -1,0 +1,18 @@
+jobs:
+  strict-common:
+    name: Create snap package
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checking out repo
+        uses: actions/checkout@v2.4.0
+
+      - name: Checking run_with_sudo
+        run: |
+          if grep -lr --exclude-dir="workflow" "run_with_sudo" *
+          then
+            echo "run_with_sudo found, failing."
+            exit 1
+          else
+            echo "run_with_sudo not found, passing."
+          fi
