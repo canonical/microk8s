@@ -2,7 +2,7 @@
 
 set -eux
 
-if [ -f "${SNAP_DATA}/installed.lock" ]
+if [ -f "${SNAP_DATA}/var/lock/installed.lock" ]
 then
   exit 0
 fi

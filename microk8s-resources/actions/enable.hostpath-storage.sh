@@ -13,7 +13,7 @@ fi
 echo "Enabling default storage class."
 echo "WARNING: Hostpath storage is not suitable for production environments."
 echo ""
-run_with_sudo mkdir -p ${SNAP_COMMON}/default-storage
+mkdir -p ${SNAP_COMMON}/default-storage
 
 declare -A map
 map[\$SNAP_COMMON]="$SNAP_COMMON"
