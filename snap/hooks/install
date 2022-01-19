@@ -144,3 +144,5 @@ if [ $MEMORY -le 524288 ]
 then
   touch ${SNAP_DATA}/var/lock/low-memory-guard.lock
 fi
+
+touch "${SNAP_DATA}/var/lock/installed.lock"
