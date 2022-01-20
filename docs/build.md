@@ -89,7 +89,7 @@ sudo snap install microk8s_latest_amd64.snap --dangerous
 #### Connecting the required interfaces
 
 ```
-for i in docker-privileged docker-support kubernetes-support k8s-journald k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe home opengl; do sudo snap connect microk8s:$i; done
+for i in docker-privileged docker-support kubernetes-support k8s-journald k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe home opengl dot-config-helm home-read-all log-observe login-session-observe; do sudo snap connect microk8s:$i; done
 ```
 
 After copying it, you can install it with:
@@ -163,4 +163,12 @@ Finally, run the tests themselves. The `test-addons.py` and `test-upgrade.py` fi
 cd tests/
 pytest -s test-addons.py
 pytest -s test-upgrade.py
+```
+
+Note: the `ingress` and `dashboard-ingress` tests make use of nip.io for wildcard ingress domains on localhost. [DNS rebinding protection](https://en.wikipedia.org/wiki/DNS_rebinding) may prevent the resolution of the domains used in the tests. 
+
+A workaround is adding these entries to `/etc/hosts`:
+```
+127.0.0.1 kubernetes-dashboard.127.0.0.1.nip.io
+127.0.0.1 microbot.127.0.0.1.nip.io
 ```

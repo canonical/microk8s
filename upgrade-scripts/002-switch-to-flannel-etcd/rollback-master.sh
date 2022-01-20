@@ -27,9 +27,9 @@ fi
 
 chmod -R ug+rwX "${SNAP_DATA}/args/"
 chmod -R o-rwX "${SNAP_DATA}/args/"
-if getent group microk8s >/dev/null 2>&1
+if getent group snap_microk8s >/dev/null 2>&1
 then
-  chgrp microk8s -R ${SNAP_DATA}/args/ || true
+  chgrp snap_microk8s -R ${SNAP_DATA}/args/ || true
 fi
 
 ${SNAP}/microk8s-start.wrapper || true

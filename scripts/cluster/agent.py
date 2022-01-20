@@ -24,6 +24,7 @@ from .common.utils import (
     try_initialise_cni_autodetect_for_clustering,
     service,
     mark_no_cert_reissue,
+    get_control_plane_nodes_internal_ips,
 )
 
 from flask import Flask, jsonify, request, Response
@@ -123,7 +124,7 @@ def sign_client_cert(cert_request, token):
     sign_cmd = (
         "openssl x509 -sha256 -req -in {csr} -CA {SNAP_DATA}/certs/ca.crt -CAkey"
         " {SNAP_DATA}/certs/ca.key -CAcreateserial -out {SNAP_DATA}/certs/server.{token}.crt"
-        " -days 365".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
+        " -days 3650".format(csr=req_file, SNAP_DATA=snapdata_path, token=token)
     )
 
     with open(req_file, "w") as fp:
@@ -180,6 +181,28 @@ def add_kubelet_token(hostname):
     with open(file, "a") as fp:
         # TODO double check this format. Why is userid unique?
         line = '{},system:node:{},kubelet-{},"system:nodes"'.format(token, hostname, uid)
+        fp.write(line + os.linesep)
+    return token.rstrip()
+
+
+def add_proxy_token(hostname):
+    """
+    Add a kube-proxy token for a node in the known tokens
+
+    :param: hostname the name of the joining host
+    :returns: the token added
+    """
+    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
+    old_token = get_token("system:kube-proxy:{}".format(hostname))
+    if old_token:
+        return old_token.rstrip()
+
+    alpha = string.ascii_letters + string.digits
+    token = "".join(random.SystemRandom().choice(alpha) for _ in range(32))
+    uid = "".join(random.SystemRandom().choice(string.digits) for _ in range(8))
+    with open(file, "a") as fp:
+        # TODO double check this format. Why is userid unique?
+        line = "{},system:kube-proxy:{},kube-proxy-{}".format(token, hostname, uid)
         fp.write(line + os.linesep)
     return token.rstrip()
 
@@ -266,7 +289,6 @@ def get_node_ep(hostname, remote_addr):
         return hostname
     except socket.gaierror:
         return remote_addr
-    return remote_addr
 
 
 @app.route("/{}/join".format(CLUSTER_API), methods=["POST"])
@@ -348,10 +370,6 @@ def sign_cert():
     if not is_valid(token, certs_request_tokens_file):
         error_msg = {"error": "Invalid token"}
         return Response(json.dumps(error_msg), mimetype="application/json", status=500)
-
-    if is_node_running_dqlite():
-        error_msg = {"error": "Not possible to join. This is an HA dqlite cluster."}
-        return Response(json.dumps(error_msg), mimetype="application/json", status=501)
 
     remove_token_from_file(token, certs_request_tokens_file)
     signed_cert = sign_client_cert(cert_request, token)
@@ -466,7 +484,7 @@ def get_dqlite_nodes():
     while waits > 0:
         try:
             with open("{}/info.yaml".format(cluster_dir)) as f:
-                data = yaml.load(f, Loader=yaml.FullLoader)
+                data = yaml.safe_load(f)
                 out = subprocess.check_output(
                     "{snappath}/bin/dqlite -s file://{dbdir}/cluster.yaml -c {dbdir}/cluster.crt "
                     "-k {dbdir}/cluster.key -f json k8s .cluster".format(
@@ -568,9 +586,13 @@ def join_node_dqlite():
     if request.headers["Content-Type"] == "application/json":
         token = request.json["token"]
         port = request.json["port"]
+        hostname = request.json["hostname"]
+        worker = request.json["worker"]
     else:
         token = request.form["token"]
         port = request.form["port"]
+        hostname = request.form["hostname"]
+        worker = request.form["worker"]
 
     if not is_valid(token):
         error_msg = {"error": "Invalid token"}
@@ -610,6 +632,48 @@ def join_node_dqlite():
     callback_token = get_callback_token()
     remove_token_from_file(token, cluster_tokens_file)
     api_port = get_arg("--secure-port", "kube-apiserver")
+
+    ca_key = None
+    admin_token = None
+    control_plane_nodes = []
+    if worker:
+        add_token_to_certs_request("{}-kubelet".format(token))
+        add_token_to_certs_request("{}-proxy".format(token))
+        control_plane_nodes = get_control_plane_nodes_internal_ips()
+    else:
+        ca_key = get_cert("ca.key")
+        admin_token = get_token("admin")
+
+    # Ensure that the joining node hostname resolves to the expected IP address.
+    try:
+        resolved_addr = socket.gethostbyname(hostname)
+        if resolved_addr != request.remote_addr:
+            return Response(
+                json.dumps(
+                    {
+                        "error": "The hostname ({}) of the joining node resolves"
+                        " to {} instead of {}. Refusing join.".format(
+                            hostname,
+                            resolved_addr,
+                            request.remote_addr,
+                        ),
+                    }
+                ),
+                mimetype="application/json",
+                status=400,
+            )
+    except socket.gaierror:
+        return Response(
+            json.dumps(
+                {
+                    "error": "Hostname {} should resolve to {}, but it did not. "
+                    "Refusing join.".format(hostname, request.remote_addr)
+                }
+            ),
+            mimetype="application/json",
+            status=400,
+        )
+
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
     # Make sure calico can autodetect the right interface for packet routing
@@ -618,7 +682,7 @@ def join_node_dqlite():
 
     return jsonify(
         ca=get_cert("ca.crt"),
-        ca_key=get_cert("ca.key"),
+        ca_key=ca_key,
         service_account_key=get_cert("serviceaccount.key"),
         cluster_cert=cluster_cert,
         cluster_key=cluster_key,
@@ -627,7 +691,8 @@ def join_node_dqlite():
         apiport=api_port,
         kubelet_args=kubelet_args,
         hostname_override=node_addr,
-        admin_token=get_token("admin"),
+        admin_token=admin_token,
+        control_plane_nodes=control_plane_nodes,
     )
 
 

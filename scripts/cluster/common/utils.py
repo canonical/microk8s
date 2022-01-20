@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import subprocess
 import time
@@ -20,7 +21,7 @@ def try_set_file_permissions(file):
 
     os.chmod(file, 0o660)
     try:
-        shutil.chown(file, group="microk8s")
+        shutil.chown(file, group="snap_microk8s")
     except LookupError:
         # not setting the group means only the current user can access the file
         pass
@@ -113,6 +114,32 @@ def is_node_running_dqlite():
     return os.path.isfile(ha_lock)
 
 
+def is_node_dqlite_worker():
+    """
+    Check if this is a worker only node
+
+    :returns: True if this is a worker node, otherwise False
+    """
+    ha_lock = os.path.expandvars("${SNAP_DATA}/var/lock/ha-cluster")
+    clustered_lock = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
+    traefik_lock = os.path.expandvars("${SNAP_DATA}/var/lock/no-traefik")
+    return (
+        os.path.isfile(ha_lock)
+        and os.path.isfile(clustered_lock)
+        and not os.path.exists(traefik_lock)
+    )
+
+
+def is_low_memory_guard_enabled():
+    """
+    Check if the low memory guard is enabled on this Node
+
+    :returns: True if enabled, otherwise False
+    """
+    lock = os.path.expandvars("${SNAP_DATA}/var/lock/low-memory-guard.lock")
+    return os.path.isfile(lock)
+
+
 def get_dqlite_port():
     """
     What is the port dqlite listens on
@@ -126,7 +153,7 @@ def get_dqlite_port():
     port = 19001
     if os.path.exists(dqlite_info):
         with open(dqlite_info) as f:
-            data = yaml.load(f, Loader=yaml.FullLoader)
+            data = yaml.safe_load(f)
         if "Address" in data:
             port = data["Address"].split(":")[1]
 
@@ -151,6 +178,26 @@ def get_cluster_agent_port():
                 if len(port_parse) > 1:
                     cluster_agent_port = port_parse[1].rstrip()
     return cluster_agent_port
+
+
+def get_control_plane_nodes_internal_ips():
+    """
+    Return the internal IP of the nodes labeled running the control plane.
+
+    :return: list of node internal IPs
+    """
+    snap_path = os.environ.get("SNAP")
+    nodes_info = subprocess.check_output(
+        "{}/microk8s-kubectl.wrapper get no -o json -l node.kubernetes.io/microk8s-controlplane=microk8s-controlplane".format(
+            snap_path
+        ).split()
+    )
+    info = json.loads(nodes_info.decode())
+    node_ips = []
+    for node_info in info["items"]:
+        node_ip = get_internal_ip_from_get_node(node_info)
+        node_ips.append(node_ip)
+    return node_ips
 
 
 def get_internal_ip_from_get_node(node_info):
@@ -298,3 +345,52 @@ def unmark_no_cert_reissue():
     lock_file = "{}/var/lock/no-cert-reissue".format(snap_data)
     if os.path.exists(lock_file):
         os.unlink(lock_file)
+
+
+def restart_all_services():
+    """
+    Restart all services
+    """
+    snap_path = os.environ.get("SNAP")
+    waits = 10
+    while waits > 0:
+        try:
+            subprocess.check_call(
+                "{}/microk8s-stop.wrapper".format(snap_path).split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+            waits -= 1
+    waits = 10
+    while waits > 0:
+        try:
+            subprocess.check_call(
+                "{}/microk8s-start.wrapper".format(snap_path).split(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(5)
+            waits -= 1
+
+
+def get_token(name, tokens_file="known_tokens.csv"):
+    """
+    Get token from known_tokens file
+
+    :param name: the name of the node
+    :param tokens_file: the file where the tokens should go
+    :returns: the token or None(if name doesn't exist)
+    """
+    snapdata_path = os.environ.get("SNAP_DATA")
+    file = "{}/credentials/{}".format(snapdata_path, tokens_file)
+    with open(file) as fp:
+        for line in fp:
+            if name in line:
+                parts = line.split(",")
+                return parts[0].rstrip()
+    return None

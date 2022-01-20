@@ -21,12 +21,20 @@ microk8s-addons:
 
     - name: "dashboard"
       description: "The Kubernetes dashboard"
-      version: "2.2.0"
+      version: "2.3.0"
       check_status: "pod/kubernetes-dashboard"
       supported_architectures:
         - arm64
         - amd64
         - s390x
+
+    - name: "dashboard-ingress"
+      description: "Ingress definition for Kubernetes dashboard"
+      version: "1.0.0"
+      check_status: "ingress.networking.k8s.io/kubernetes-dashboard-ingress"
+      supported_architectures:
+        - arm64
+        - amd64
 
     - name: "ingress"
       description: "Ingress controller for external access"
@@ -36,7 +44,7 @@ microk8s-addons:
         - arm64
         - amd64
 
-    - name: "storage"
+    - name: "hostpath-storage"
       description: "Storage class; allocates storage from host directory"
       version: "1.0.0"
       check_status: "pod/hostpath-provisioner"
@@ -106,7 +114,7 @@ microk8s-addons:
 
     - name: "linkerd"
       description: "Linkerd is a service mesh for Kubernetes and other frameworks"
-      version: "2.10.2"
+      version: "2.11.1"
       check_status: "pod/linkerd-controller"
       supported_architectures:
         - amd64
@@ -195,7 +203,7 @@ microk8s-addons:
 
     - name: "traefik"
       description: "traefik Ingress controller for external access"
-      version: "2.3.0"
+      version: "2.5.0"
       check_status: "pod/traefik-ingress-controller"
       supported_architectures:
         - arm64

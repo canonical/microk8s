@@ -10,14 +10,8 @@ export PYTHONNOUSERSITE=false
 
 source $SNAP/actions/common/utils.sh
 
-if echo "$*" | grep -q -- 'help'; then
-  echo "Usage: microk8s leave"
-  echo ""
-  echo "With microk8s leave the node will depart from the cluster it is in."
-  exit 0
-fi
-
 exit_if_stopped
+exit_if_not_root
 exit_if_no_permissions
 
 if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ] &&
@@ -27,10 +21,4 @@ then
   exit 1
 fi
 
-if [ "$#" -ne "0" ]
-then
-  echo "This command will remove the node from the cluster. No arguments are needed."
-  exit 1
-fi
-
-${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py reset
+preserve_env ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/leave.py $@

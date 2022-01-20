@@ -16,7 +16,7 @@ function check_service {
   # Check the service passed as the first argument is up and running and collect its logs.
   local service=$1
   mkdir -p $INSPECT_DUMP/$service
-  journalctl -n $JOURNALCTL_LIMIT -u snap.$service &> $INSPECT_DUMP/$service/journal.log
+  journalctl -n $JOURNALCTL_LIMIT -u $service &> $INSPECT_DUMP/$service/journal.log
   snapctl services $service &> $INSPECT_DUMP/$service/snapctl.log
   if snapctl services $service | grep active &> /dev/null
   then
@@ -47,8 +47,8 @@ function store_network {
   # Collect network setup.
   printf -- '  Copy network configuration to the final report tarball\n'
   mkdir -p $INSPECT_DUMP/network
-  netstat -pln &> $INSPECT_DUMP/network/netstat
-  ifconfig &> $INSPECT_DUMP/network/ifconfig
+  ss -pln &> $INSPECT_DUMP/network/ss
+  ip addr &> $INSPECT_DUMP/network/ip-addr
   iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
   iptables -S &> $INSPECT_DUMP/network/iptables-S
   iptables -L &> $INSPECT_DUMP/network/iptables-L
@@ -99,6 +99,39 @@ function store_juju_info {
 }
 
 
+function store_dqlite_info {
+  # Collect some dqlite details
+  printf -- '  Inspect dqlite\n'
+  mkdir -p $INSPECT_DUMP/dqlite
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
+  sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
+}
+
+
+function store_dqlite_info {
+  # Collect some dqlite details
+  printf -- '  Inspect dqlite\n'
+  mkdir -p $INSPECT_DUMP/dqlite
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
+  sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
+}
+
+
+function store_dqlite_info {
+  # Collect some dqlite details
+  printf -- '  Inspect dqlite\n'
+  mkdir -p $INSPECT_DUMP/dqlite
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
+  sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
+}
+
+
 function store_kubeflow_info {
   # Collect some kubeflow details
   printf -- '  Inspect Kubeflow\n'
@@ -119,7 +152,7 @@ function suggest_fixes {
     fi
   fi
 
-  if iptables -L | grep FORWARD | grep DROP &> /dev/null
+  if iptables -L 2>&1 | grep FORWARD | grep DROP &> /dev/null
   then
     printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '
     printf -- 'Consider enabling traffic forwarding with: sudo iptables -P FORWARD ACCEPT \n'
@@ -159,7 +192,7 @@ function suggest_fixes {
 
   # check for docker
   # if docker is installed
-  if [ -d "/etc/docker/" ]; then
+  if [ -d "/etc/docker/" ] && ! [ -z "$(which dockerd)" ]; then
     # if docker/daemon.json file doesn't exist print prompt to create it and mark the registry as insecure
     if [ ! -f "/etc/docker/daemon.json" ]; then
       printf -- '\033[0;33mWARNING: \033[0m Docker is installed. \n'
@@ -249,6 +282,15 @@ function suggest_fixes {
     printf -- "\t  https://microk8s.io/docs/troubleshooting#heading--common-issues \n"
   fi
 
+  if grep Raspberry /proc/cpuinfo -q &&
+    [ -e /etc/os-release ] &&
+    grep impish /etc/os-release -q &&
+    ! dpkg -l | grep linux-modules-extra-raspi -q
+  then
+    printf -- "\033[0;33mWARNING: \033[0m On Raspberry Pi consider installing the linux-modules-extra-raspi package with: \n"
+    printf -- "\t  'sudo apt install linux-modules-extra-raspi' and reboot.\n"
+  fi
+
 }
 
 function fedora_release {
@@ -292,6 +334,29 @@ function check_certificates {
   fi
 }
 
+function check_memory {
+  MEMORY=`cat /proc/meminfo | grep MemTotal | awk '{ print $2 }'`
+  if [ $MEMORY -le 524288 ]
+  then
+    printf -- "\033[0;33mWARNING: \033[0m This system has ${MEMORY} bytes of RAM available.\n"
+    printf -- "It may not be enough to run the Kubernetes control plane services.\n"
+    printf -- "Consider joining as a worker-only to a cluster.\n"
+  fi
+}
+
+function check_low_memory_guard {
+  if [ -e "${SNAP_DATA}/var/lock/low-memory-guard.lock" ]
+  then
+    printf -- '\033[0;33mWARNING: \033[0m The low memory guard is enabled.\n'
+    printf -- 'This is to protect the server from running out of memory.\n'
+    printf -- 'Consider joining as a worker-only to a cluster.\n'
+    printf -- '\n'
+    printf -- 'Alternatively, to disable the low memory guard, start MicroK8s with:\n'
+    printf -- '\n'
+    printf -- '    microk8s start --disable-low-memory-guard\n'
+  fi
+}
+
 
 if [ ${#@} -ne 0 ] && [ "$*" == "--help" ]; then
   print_help
@@ -306,13 +371,16 @@ fi
 rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
 
+printf -- 'Inspecting system\n'
+check_memory
+check_low_memory_guard
+
 printf -- 'Inspecting Certificates\n'
 check_certificates
 
 printf -- 'Inspecting services\n'
 check_service "microk8s.daemon-cluster-agent"
 check_service "microk8s.daemon-containerd"
-check_service "microk8s.daemon-apiserver-kicker"
 check_service "microk8s.daemon-k8s-dqlite"
 if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
 then
@@ -330,6 +398,22 @@ then
   check_service "microk8s.daemon-flanneld"
   check_service "microk8s.daemon-etcd"
 fi
+if ! [ -e "${SNAP_DATA}/var/lock/no-traefik" ]
+then
+  check_service "microk8s.daemon-traefik"
+fi
+if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  check_service "microk8s.daemon-apiserver-kicker"
+fi
+if ! [ -e "${SNAP_DATA}/var/lock/no-traefik" ]
+then
+  check_service "microk8s.daemon-traefik"
+fi
+if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  check_service "microk8s.daemon-apiserver-kicker"
+fi
 
 store_args
 
@@ -343,17 +427,21 @@ store_network
 printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info
 
-### Juju and kubeflow are out of scope of the strict confinement work for now
-#
-#printf -- 'Inspecting juju\n'
-#store_juju_info
-#
-#printf -- 'Inspecting kubeflow\n'
-#store_kubeflow_info
-#
+# printf -- 'Inspecting juju\n'
+# store_juju_info
+
+# printf -- 'Inspecting kubeflow\n'
+# store_kubeflow_info
+
+# printf -- 'Inspecting dqlite\n'
+# store_dqlite_info
+
+printf -- 'Inspecting dqlite\n'
+store_dqlite_info
+
 suggest_fixes
-#
-#printf -- 'Building the report tarball\n'
+
+printf -- 'Building the report tarball\n'
 build_report_tarball
 
 exit $RETURN_CODE

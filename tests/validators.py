@@ -42,6 +42,29 @@ def validate_dns_dashboard():
     assert attempt > 0
 
 
+def validate_dashboard_ingress():
+    """
+    Validate the ingress for dashboard addon by trying to access the kubernetes dashboard
+    using ingress ports. The dashboard will return HTTP 200 and HTML indicating that it is
+    up and running.
+    """
+    service_ok = False
+    attempt = 50
+    while attempt >= 0:
+        try:
+            resp = requests.get(
+                "https://kubernetes-dashboard.127.0.0.1.nip.io/#/login", verify=False
+            )
+            if resp.status_code == 200 and "Kubernetes Dashboard" in resp.content.decode("utf-8"):
+                service_ok = True
+                break
+        except requests.RequestException:
+            time.sleep(5)
+            attempt -= 1
+
+    assert service_ok
+
+
 def validate_storage():
     """
     Validate storage by creating a PVC.
@@ -156,7 +179,9 @@ def validate_gpu():
         print("GPU tests are only relevant in x86 architectures")
         return
 
-    wait_for_pod_state("", "kube-system", "running", label="name=nvidia-device-plugin-ds")
+    wait_for_pod_state(
+        "", "gpu-operator-resources", "running", label="app=nvidia-device-plugin-daemonset"
+    )
     here = os.path.dirname(os.path.abspath(__file__))
     manifest = os.path.join(here, "templates", "cuda-add.yaml")
 
@@ -174,7 +199,7 @@ def validate_gpu():
 
 def validate_inaccel():
     """
-    Validate inaccel
+    Validate inaccel by trying a vadd.
     """
     if platform.machine() != "x86_64":
         print("FPGA tests are only relevant in x86 architectures")

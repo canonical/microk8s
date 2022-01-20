@@ -4,12 +4,20 @@ exit_if_no_permissions() {
   # test if we can access the default kubeconfig
   if [ ! -r $SNAP_DATA/credentials/client.config ]; then
     echo "Insufficient permissions to access MicroK8s." >&2
-    echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:" >&2
+    echo "You can either try again with sudo or add the user $USER to the 'snap_microk8s' group:" >&2
     echo "" >&2
-    echo "    sudo usermod -a -G microk8s $USER" >&2
+    echo "    sudo usermod -a -G snap_microk8s $USER" >&2
     echo "    sudo chown -f -R $USER ~/.kube" >&2
     echo "" >&2
-    echo "After this, reload the user groups either via a reboot or by running 'newgrp microk8s'." >&2
+    echo "After this, reload the user groups either via a reboot or by running 'newgrp snap_microk8s'." >&2
+    exit 1
+  fi
+}
+
+exit_if_not_root() {
+  # test if we run with sudo
+  if [ "$EUID" -ne 0 ]
+  then echo "Elevated permissions are needed for this command. Please use sudo."
     exit 1
   fi
 }
@@ -323,7 +331,7 @@ wait_for_service_shutdown() {
 
 get_default_ip() {
     # Get the IP of the default interface
-    local DEFAULT_INTERFACE="$($SNAP/bin/netstat -rn | $SNAP/bin/grep '^0.0.0.0' | $SNAP/usr/bin/gawk '{print $NF}' | head -1)"
+    local DEFAULT_INTERFACE="$($SNAP/sbin/ip route show default | $SNAP/usr/bin/gawk '{for(i=1; i<NF; i++) if($i=="dev") print$(i+1)}')"
     local IP_ADDR="$($SNAP/sbin/ip -o -4 addr list "$DEFAULT_INTERFACE" | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
     if [[ -z "$IP_ADDR" ]]
     then
@@ -340,7 +348,7 @@ get_ips() {
     then
         echo "none"
     else
-        if $SNAP/sbin/ifconfig "$CNI_INTERFACE" &> /dev/null
+        if $SNAP/sbin/ip link show "$CNI_INTERFACE" &> /dev/null
         then
           CNI_IP="$($SNAP/sbin/ip -o -4 addr list "$CNI_INTERFACE" | $SNAP/bin/grep -v 'inet 169.254' | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
           local ips="";
@@ -536,9 +544,9 @@ init_cluster() {
   $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
   ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
   chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
-  if getent group microk8s >/dev/null 2>&1
+  if getent group snap_microk8s >/dev/null 2>&1
   then
-    chgrp microk8s -R ${SNAP_DATA}/var/kubernetes/backend/ || true
+    chgrp snap_microk8s -R ${SNAP_DATA}/var/kubernetes/backend/ || true
   fi
 }
 
@@ -767,3 +775,19 @@ then
     exit 1
   fi
 fi
+
+exit_if_low_memory_guard() {
+  if [ -e ${SNAP_DATA}/var/lock/low-memory-guard.lock ]
+  then
+    echo ''
+    echo 'This node does not have enough RAM to host the Kubernetes control plane services'
+    echo 'and join the database quorum. You may consider joining this node as a worker'
+    echo 'node to a cluster.'
+    echo ''
+    echo 'If you would still like to start the control plane services, start MicroK8s with:'
+    echo ''
+    echo '    microk8s start --disable-low-memory-guard'
+    echo ''
+    exit 1
+  fi
+}

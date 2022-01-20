@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v2.3.5
+        uses: actions/checkout@v2.4.0
       - name: Install lxd
         run: |
           sudo lxd init --auto
@@ -50,6 +50,8 @@ jobs:
           sudo pip3 install -U pytest sh
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
+          # Remove the snapd refresh as soon as v2.52 lands
+          sudo snap refresh snapd --channel=latest/edge
       - name: Check branches
         run: |
           set -x

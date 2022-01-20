@@ -106,7 +106,7 @@ def kubectl_get(target, timeout_insec=300):
     """
     cmd = "get -o yaml " + target
     output = kubectl(cmd, timeout_insec)
-    return yaml.load(output)
+    return yaml.safe_load(output)
 
 
 def wait_for_pod_state(

@@ -6,6 +6,7 @@ import yaml
 
 from validators import (
     validate_dns_dashboard,
+    validate_dashboard_ingress,
     validate_storage,
     validate_ingress,
     validate_ambassador,
@@ -58,7 +59,7 @@ class TestAddons(object):
             sh.microk8s.enable.foo()
 
     def test_help_text(self):
-        status = yaml.load(sh.microk8s.status(format="yaml").stdout)
+        status = yaml.safe_load(sh.microk8s.status(format="yaml").stdout)
         expected = {a["name"]: "disabled" for a in status["addons"]}
         expected["ha-cluster"] = "enabled"
 
@@ -127,9 +128,15 @@ class TestAddons(object):
         microk8s_enable("dashboard")
         print("Validating dashboard")
         validate_dns_dashboard()
-        print("Enabling storage")
-        microk8s_enable("storage")
-        print("Validating storage")
+        print("Enabling dashboard-ingress")
+        microk8s_enable("dashboard-ingress")
+        print("Validating dashboard-ingress")
+        validate_dashboard_ingress()
+        print("Disabling dashboard-ingress")
+        microk8s_disable("dashboard-ingress")
+        print("Enabling hostpath-storage")
+        microk8s_enable("hostpath-storage")
+        print("Validating hostpath-storage")
         validate_storage()
         microk8s_enable("registry")
         print("Validating registry")
@@ -144,8 +151,8 @@ class TestAddons(object):
         microk8s_disable("registry")
         print("Disabling dashboard")
         microk8s_disable("dashboard")
-        print("Disabling storage")
-        microk8s_disable("storage:destroy-storage")
+        print("Disabling hostpath-storage")
+        microk8s_disable("hostpath-storage:destroy-storage")
         """
         We would disable DNS here but this freezes any terminating pods.
         We let microk8s reset to do the cleanup.

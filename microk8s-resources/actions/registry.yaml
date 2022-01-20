@@ -36,7 +36,7 @@ spec:
     spec:
       containers:
         - name: registry
-          image: cdkbot/registry-$ARCH:2.6
+          image: registry:2.7.1
           env:
             - name: REGISTRY_HTTP_ADDR
               value: :5000

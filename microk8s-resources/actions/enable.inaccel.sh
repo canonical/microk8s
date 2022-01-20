@@ -9,6 +9,7 @@ source $SNAP/actions/common/utils.sh
 echo "Enabling InAccel FPGA Operator"
 
 "$SNAP/microk8s-helm3.wrapper" install inaccel fpga-operator \
+  --namespace kube-system \
   --repo https://setup.inaccel.com/helm \
   --set kubelet=$SNAP_COMMON/var/lib/kubelet \
   $@

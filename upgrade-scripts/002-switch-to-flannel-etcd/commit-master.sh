@@ -39,9 +39,9 @@ find "$SNAP_DATA"/args/cni-network/* -not -name '*multus*' -exec rm -f {} \;
 cp "$SNAP"/default-args/cni-network/* "$SNAP_DATA"/args/cni-network/
 chmod -R 660 "$SNAP_DATA"/args/cni-network
 
-if getent group microk8s >/dev/null 2>&1
+if getent group snap_microk8s >/dev/null 2>&1
 then
-  chgrp microk8s -R ${SNAP_DATA}/args/ || true
+  chgrp snap_microk8s -R ${SNAP_DATA}/args/ || true
 fi
 
 set_service_expected_to_start etcd

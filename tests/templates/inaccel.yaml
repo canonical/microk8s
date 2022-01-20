@@ -1,6 +1,11 @@
 apiVersion: v1
 kind: Pod
 metadata:
+  annotations:
+    inaccel/cli: |
+      bitstream install https://store.inaccel.com/artifactory/bitstreams/xilinx/aws-vu9p-f1/shell-v04261818_201920.2/aws/vector/1/1addition
+  labels:
+    inaccel/fpga: enabled
   name: inaccel-vadd
 spec:
   containers:
@@ -9,23 +14,6 @@ spec:
       resources:
         limits:
           xilinx/aws-vu9p-f1: 1
-      volumeMounts:
-        - mountPath: /var/lib/inaccel
-          name: inaccel
-  initContainers:
-    - args:
-        - bitstream
-        - install
-        - https://store.inaccel.com/artifactory/bitstreams/xilinx/aws-vu9p-f1/shell-v04261818_201920.2/aws/vector/1/1addition
-      image: inaccel/cli
-      name: init
-      volumeMounts:
-        - mountPath: /var/lib/inaccel
-          name: inaccel
   nodeSelector:
     xilinx/aws-vu9p-f1: shell-v04261818_201920.2
   restartPolicy: OnFailure
-  volumes:
-    - csi:
-        driver: inaccel
-      name: inaccel

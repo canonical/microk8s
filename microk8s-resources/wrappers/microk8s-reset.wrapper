@@ -27,7 +27,7 @@ disable_addons() {
     fi
     echo "Disabling addon : $action"
     addon_arguments=""
-    if [ "$action" = "storage" ] && [ ${destroy_storage_enabled} ]
+    if [ "$action" = "hostpath-storage" ] && [ ${destroy_storage_enabled} ]
     then
        microk8s disable $action:destroy-storage > /dev/null 2>&1 || true
     else
@@ -190,6 +190,7 @@ if [ $(( $# - $OPTIND )) -ge 0 ]; then
 fi
 
 exit_if_stopped
+exit_if_not_root
 exit_if_no_permissions
 
 disable_addons

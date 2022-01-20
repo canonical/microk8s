@@ -16,6 +16,7 @@ reuse_vms = None
 # Channel we want to test. A full path to a local snap can be used for local builds
 channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/edge")
 backend = os.environ.get("BACKEND", None)
+profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
 
 
 class VM:
@@ -60,7 +61,7 @@ class VM:
             profiles = subprocess.check_output("/snap/bin/lxc profile list".split())
             if "microk8s" not in profiles.decode():
                 subprocess.check_call("/snap/bin/lxc profile copy default microk8s".split())
-                with open("lxc/microk8s-zfs.profile", "r+") as fp:
+                with open(profile, "r+") as fp:
                     profile_string = fp.read()
                     process = subprocess.Popen(
                         "/snap/bin/lxc profile edit microk8s".split(),
@@ -362,6 +363,39 @@ class TestCluster(object):
                     time.sleep(2)
                     continue
             break
+
+    def test_worker_noode(self):
+        """
+        Test a worker node is setup
+        """
+        print("Setting up a worker node")
+        vm = VM()
+        vm.setup(channel_to_test)
+        self.VM.append(vm)
+
+        # Form cluster
+        vm_master = self.VM[0]
+        print("Adding machine {} to cluster".format(vm.vm_name))
+        add_node = vm_master.run("/snap/bin/microk8s.add-node")
+        endpoint = [ep for ep in add_node.decode().split() if ":25000/" in ep]
+        vm.run("/snap/bin/microk8s.join {} --worker".format(endpoint[0]))
+        ep_parts = endpoint[0].split(":")
+        master_ip = ep_parts[0]
+
+        # Wait for nodes to be ready
+        print("Waiting for node to register")
+        connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+        while "NotReady" in connected_nodes.decode():
+            time.sleep(5)
+            connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+        print(connected_nodes.decode())
+
+        # Check that kubelet talks to traefik and traefik to the master node
+        print("Checking the worker's configuration")
+        provider = vm.run("cat /var/snap/microk8s/current/args/traefik/provider.yaml")
+        assert master_ip in provider.decode()
+        kubelet = vm.run("cat /var/snap/microk8s/current/credentials/kubelet.config")
+        assert "127.0.0.1" in kubelet.decode()
 
     def test_no_cert_reissue_in_nodes(self):
         """

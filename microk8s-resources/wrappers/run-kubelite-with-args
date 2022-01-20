@@ -22,6 +22,10 @@ fi
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
   refresh_opt_in_local_config "start-control-plane" "false" kubelite
+elif [ -e ${SNAP_DATA}/var/lock/low-memory-guard.lock ]
+then
+  echo "${app} will not run, memory guard is enabled"
+  exit 0
 else
   refresh_opt_in_local_config "start-control-plane" "true" kubelite
 fi
@@ -166,12 +170,20 @@ if [ -f "${SNAP_DATA}/var/lock/host-access-enabled" ] &&
    ! ip link show lo:microk8s &> /dev/null
 then
   IP_ADDRESS=$(<"${SNAP_DATA}/var/lock/host-access-enabled")
-  if ! "$SNAP/sbin/ifconfig" lo:microk8s "$IP_ADDRESS" up
+  if ! "$SNAP/sbin/ip" addr add "$ip_ADDRESS" dev lo label lo:microk8s
   then
     echo "Failed to enable host-access"
   else
     echo "Host-access enabled [${IP_ADDRESS}]"
   fi
+fi
+
+# on lxc containers do not try to change the conntrack configuration
+# see https://github.com/ubuntu/microk8s/issues/1438
+if grep -E lxc /proc/1/environ &&
+  ! grep -E "conntrack-max-per-core" $SNAP_DATA/args/kube-proxy
+then
+  refresh_opt_in_local_config "conntrack-max-per-core" "0" kube-proxy
 fi
 
 if ! [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ]
