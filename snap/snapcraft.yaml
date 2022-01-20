@@ -69,12 +69,10 @@ hooks:
   connect-plug-network-control:
     plugs:
       - dot-kube
-      - kernel-module-control
       - network-control
   disconnect-plug-network-control:
     plugs:
       - dot-kube
-      - kernel-module-control
       - network-control
   connect-plug-docker-privileged:
     plugs:
@@ -234,7 +232,6 @@ apps:
     daemon: simple
     install-mode: disable
     plugs:
-      - kernel-module-control
       - network-bind
       - network-observe
       - network-control
@@ -245,7 +242,6 @@ apps:
     install-mode: disable
     daemon: simple
     plugs:
-      - kernel-module-control
       - network-bind
       - network-observe
       - network-control
