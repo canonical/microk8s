@@ -644,6 +644,36 @@ def join_node_dqlite():
         ca_key = get_cert("ca.key")
         admin_token = get_token("admin")
 
+    # ensure that the joining node hostname resolves to the expected IP address.
+    try:
+        resolved_addr = socket.gethostbyname(hostname)
+        if resolved_addr != request.remote_addr:
+            return Response(
+                json.dumps(
+                    {
+                        "error": "The hostname ({}) of the joining node resolves"
+                        " to {} instead of {}. Refusing join.".format(
+                            hostname,
+                            resolved_addr,
+                            request.remote_addr,
+                        ),
+                    }
+                ),
+                mimetype="application/json",
+                status=400,
+            )
+    except socket.gaierror:
+        return Response(
+            json.dumps(
+                {
+                    "error": "Hostname {} should resolve to {}, but it did not. "
+                    "Refusing join.".format(hostname, request.remote_addr)
+                }
+            ),
+            mimetype="application/json",
+            status=400,
+        )
+
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
     # Make sure calico can autodetect the right interface for packet routing

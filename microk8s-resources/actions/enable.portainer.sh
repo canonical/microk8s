@@ -10,8 +10,13 @@ MANIFEST_PTR="https://raw.githubusercontent.com/portainer/k8s/master/deploy/mani
 
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
+<<<<<<< HEAD
 microk8s enable hostpath-storage
 microk8s enable dns
+=======
+"$SNAP/microk8s-enable.wrapper" hostpath-storage
+"$SNAP/microk8s-enable.wrapper" dns
+>>>>>>> upstream/master
 
 echo "Enabling portainer"
 

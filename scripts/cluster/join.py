@@ -19,6 +19,7 @@ import yaml
 import json
 
 from common.utils import (
+    is_low_memory_guard_enabled,
     try_set_file_permissions,
     is_node_running_dqlite,
     get_cluster_agent_port,
@@ -903,7 +904,14 @@ def join_etcd(connection_parts, verify=True):
     default=False,
     help="Skip the certificate verification of the node we are joining to. (default: false)",
 )
-def join(connection, worker, skip_verify):
+@click.option(
+    "--disable-low-memory-guard",
+    is_flag=True,
+    required=False,
+    default=False,
+    help="Disable the low memory guard. (default: false)",
+)
+def join(connection, worker, skip_verify, disable_low_memory_guard):
     """
     Join the node to a cluster
 
@@ -911,6 +919,28 @@ def join(connection, worker, skip_verify):
     """
     connection_parts = connection.split("/")
     verify = not skip_verify
+
+    if is_low_memory_guard_enabled() and disable_low_memory_guard:
+        os.remove(os.path.expandvars("$SNAP_DATA/var/lock/low-memory-guard.lock"))
+
+    if is_low_memory_guard_enabled() and not worker:
+        print(
+            """
+This node does not have enough RAM to host the Kubernetes control plane services
+and join the database quorum. You may consider joining this node as a worker instead:
+
+    microk8s join {connection} --worker
+
+If you would still like to join the cluster as a control plane node, use:
+
+    microk8s join {connection} --disable-low-memory-guard
+
+""".format(
+                connection=connection
+            )
+        )
+        sys.exit(1)
+
     if is_node_running_dqlite():
         join_dqlite(connection_parts, verify, worker)
     else:

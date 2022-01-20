@@ -14,17 +14,22 @@ fi
 
 exit_if_no_permissions
 
-PARSED=$(getopt --options=lho: --longoptions=help,output: --name "$@" -- "$@")
+PARSED=$(getopt --options=lho: --longoptions=help,output:,disable-low-memory-guard --name "$@" -- "$@")
 eval set -- "$PARSED"
 while true; do
     case "$1" in
+        --disable-low-memory-guard)
+            rm "${SNAP_DATA}/var/lock/low-memory-guard.lock" || true
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 [OPTIONS]"
             echo
             echo "Start Kubernetes services"
             echo
             echo "Options:"
-            echo " -h, --help          Show this help"
+            echo " -h, --help                   Show this help"
+            echo " --disable-low-memory-guard   Start MicroK8s in machines with RAM < 512MB"
             exit 0
             ;;
         --)
@@ -37,6 +42,7 @@ while true; do
     esac
 done
 
+exit_if_low_memory_guard
 
 if ! run_with_sudo snap start ${SNAP_NAME} --enable
 then

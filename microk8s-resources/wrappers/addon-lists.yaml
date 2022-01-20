@@ -44,7 +44,7 @@ microk8s-addons:
         - arm64
         - amd64
 
-    - name: "storage"
+    - name: "hostpath-storage"
       description: "Storage class; allocates storage from host directory"
       version: "1.0.0"
       check_status: "pod/hostpath-provisioner"

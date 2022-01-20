@@ -277,7 +277,7 @@ function suggest_fixes {
   if grep Raspberry /proc/cpuinfo -q &&
     [ -e /etc/os-release ] &&
     grep impish /etc/os-release -q &&
-    ! dpkg -l | grep linux-modules-extra-raspi -q 
+    ! dpkg -l | grep linux-modules-extra-raspi -q
   then
     printf -- "\033[0;33mWARNING: \033[0m On Raspberry Pi consider installing the linux-modules-extra-raspi package with: \n"
     printf -- "\t  'sudo apt install linux-modules-extra-raspi' and reboot.\n"
@@ -326,6 +326,29 @@ function check_certificates {
   fi
 }
 
+function check_memory {
+  MEMORY=`cat /proc/meminfo | grep MemTotal | awk '{ print $2 }'`
+  if [ $MEMORY -le 524288 ]
+  then
+    printf -- "\033[0;33mWARNING: \033[0m This system has ${MEMORY} bytes of RAM available.\n"
+    printf -- "It may not be enough to run the Kubernetes control plane services.\n"
+    printf -- "Consider joining as a worker-only to a cluster.\n"
+  fi
+}
+
+function check_low_memory_guard {
+  if [ -e "${SNAP_DATA}/var/lock/low-memory-guard.lock" ]
+  then
+    printf -- '\033[0;33mWARNING: \033[0m The low memory guard is enabled.\n'
+    printf -- 'This is to protect the server from running out of memory.\n'
+    printf -- 'Consider joining as a worker-only to a cluster.\n'
+    printf -- '\n'
+    printf -- 'Alternatively, to disable the low memory guard, start MicroK8s with:\n'
+    printf -- '\n'
+    printf -- '    microk8s start --disable-low-memory-guard\n'
+  fi
+}
+
 
 if [ ${#@} -ne 0 ] && [ "$*" == "--help" ]; then
   print_help
@@ -334,6 +357,10 @@ fi;
 
 rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
+
+printf -- 'Inspecting system\n'
+check_memory
+check_low_memory_guard
 
 printf -- 'Inspecting Certificates\n'
 check_certificates
