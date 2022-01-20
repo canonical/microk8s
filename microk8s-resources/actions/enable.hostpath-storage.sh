@@ -4,12 +4,6 @@ set -e
 
 source $SNAP/actions/common/utils.sh
 
-if [ -d "$SNAP_COMMON/default-storage" ]
-then
-  echo "Hostpath storage is already enabled."
-  exit 0
-fi
-
 echo "Enabling default storage class."
 echo "WARNING: Hostpath storage is not suitable for production environments."
 echo ""
