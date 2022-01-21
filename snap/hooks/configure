@@ -418,10 +418,10 @@ then
   need_api_restart=true
 fi
 
-# Needed by the storage addon
-if ! grep -e "RemoveSelfLink" ${SNAP_DATA}/args/kube-apiserver
+# RemoveSelfLink feature flag is removed after 1.24
+if grep -e "feature-gates=RemoveSelfLink" ${SNAP_DATA}/args/kube-apiserver
 then
-  echo "--feature-gates=RemoveSelfLink=false" >> ${SNAP_DATA}/args/kube-apiserver
+  "${SNAP}/bin/sed" -i '/feature-gates=RemoveSelfLink/d' "$SNAP_DATA/args/kube-apiserver"
   need_api_restart=true
 fi
 
