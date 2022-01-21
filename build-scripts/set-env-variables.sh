@@ -45,7 +45,7 @@ else
 fi
 
 export KUBERNETES_TAG="${KUBE_VERSION}"
-export K8S_DQLITE_TAG="${K8S_DQLITE_TAG:-v1.0.2}"
+export K8S_DQLITE_TAG="${K8S_DQLITE_TAG:-v1.0.3-dev2}"
 
 export KUBE_SNAP_ROOT="$(readlink -f .)"
 
