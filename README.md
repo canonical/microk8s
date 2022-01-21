@@ -42,7 +42,6 @@ flavours of Linux](https://snapcraft.io/microk8s). Perfect for:
   - Ingress, DNS, Dashboard, Clustering
   - Automatic updates to the latest Kubernetes version
   - GPGPU bindings for AI/ML
-  - Kubeflow!
 
 Drop us a line at [MicroK8s in the Wild](docs/community.md) if you are
 doing something fun with MicroK8s!

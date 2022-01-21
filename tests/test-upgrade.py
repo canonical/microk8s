@@ -122,17 +122,6 @@ class TestUpgrade(object):
                 test_matrix['prometheus'] = validate_prometheus
             except:
                 print('Will not test the prometheus')
-
-            # The kubeflow deployment is huge. It will not fit comfortably
-            # with the rest of the addons on the same machine during an upgrade
-            # we will need to find another way to test it.
-            try:
-                enable = microk8s_enable("kubeflow", timeout_insec=30)
-                assert "Nothing to do for" not in enable
-                validate_kubeflow()
-                test_matrix['kubeflow'] = validate_kubeflow
-            except:
-                print('Will not test kubeflow')
             """
 
             try:
