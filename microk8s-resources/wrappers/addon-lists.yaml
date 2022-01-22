@@ -152,13 +152,6 @@ microk8s-addons:
         - arm64
         - s390x
 
-    - name: "kubeflow"
-      description: "Kubeflow for easy ML deployments"
-      version: ""
-      check_status: "pod/ambassador-operator-0"
-      supported_architectures:
-        - amd64
-
     - name: "metallb"
       description: "Loadbalancer for your Kubernetes cluster"
       version: "0.9.3"
