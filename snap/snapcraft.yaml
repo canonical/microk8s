@@ -392,6 +392,7 @@ apps:
       - process-control
       - system-observe
   inspect:
+<<<<<<< HEAD
     command: microk8s.wrapper
     plugs:
       - network-observe
@@ -402,6 +403,9 @@ apps:
       - mount-observe
       - log-observe
       - firewall-control
+=======
+    command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+>>>>>>> master
   enable:
     command: microk8s-enable.wrapper
     plugs:
@@ -1026,7 +1030,6 @@ parts:
         rm actions/*.cilium.sh
         rm actions/*.traefik.sh
         rm actions/*.registry.sh
-        rm actions/*.storage.sh
         rm actions/*.portainer.sh
         rm actions/*.linkerd.sh
         rm -rf "actions/kata"
