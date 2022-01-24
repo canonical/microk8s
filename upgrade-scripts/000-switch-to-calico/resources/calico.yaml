@@ -4039,6 +4039,10 @@ spec:
         - name: cni-net-dir
           hostPath:
             path: /var/snap/microk8s/current/args/cni-network
+        # Used to access CNI logs.
+        - name: cni-log-dir
+          hostPath:
+            path: /var/snap/microk8s/common/var/log/calico/cni
         # Mount in the directory for host-local IPAM allocations. This is
         # used when upgrading from host-local to calico-ipam, and can be removed
         # if not using the upgrade-ipam init container.
@@ -4099,20 +4103,32 @@ spec:
           effect: NoSchedule
       serviceAccountName: calico-kube-controllers
       priorityClassName: system-cluster-critical
+      # The controllers must run in the host network namespace so that
+      # it isn't governed by policy that would prevent it from working.
+      hostNetwork: true
       containers:
         - name: calico-kube-controllers
-          image: docker.io/calico/kube-controllers:v3.17.3
+          image: docker.io/calico/kube-controllers:v3.19.3
           env:
             # Choose which controllers to run.
             - name: ENABLED_CONTROLLERS
-              value: node
+              value: policy,namespace,serviceaccount,workloadendpoint,node
             - name: DATASTORE_TYPE
               value: kubernetes
+          livenessProbe:
+            exec:
+              command:
+                - /usr/bin/check-status
+                - -l
+            periodSeconds: 10
+            initialDelaySeconds: 10
+            failureThreshold: 6
           readinessProbe:
             exec:
               command:
                 - /usr/bin/check-status
                 - -r
+            periodSeconds: 10
 
 ---
 apiVersion: v1
