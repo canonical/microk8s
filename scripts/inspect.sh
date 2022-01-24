@@ -103,7 +103,7 @@ function store_kubernetes_info {
 }
 
 function check_storage_addon {
-  image=`sudo -E /snap/bin/microk8s kubectl get deploy -n kube-system hostpath-provisioner -o jsonpath='{.spec.template.spec.containers[0].image}'`
+  image=`sudo -E /snap/bin/microk8s kubectl get deploy -n kube-system hostpath-provisioner -o jsonpath='{.spec.template.spec.containers[0].image}' 2>&1`
 
   case "$image" in
     cdkbot/hostpath-provisioner-amd64:1.0.0|cdkbot/hostpath-provisioner-arm64:1.0.0)
