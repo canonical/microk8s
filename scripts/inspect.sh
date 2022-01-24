@@ -88,6 +88,24 @@ function store_kubernetes_info {
   /snap/bin/microk8s kubectl get pvc 2>&1 | tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
 
+function check_storage_addon {
+  image=`sudo -E /snap/bin/microk8s kubectl get deploy -n kube-system hostpath-provisioner -o jsonpath='{.spec.template.spec.containers[0].image}' 2>&1`
+
+  case "$image" in
+    cdkbot/hostpath-provisioner-amd64:1.0.0|cdkbot/hostpath-provisioner-arm64:1.0.0)
+      printf -- '\n'
+      printf -- '\033[0;33mWARNING: \033[0m You are using an outdated version of the hostpath-provisioner.\n'
+      printf -- 'Existing PersistentVolumes are not affected, but you may be unable to create new ones.\n'
+      printf -- "Image currently in use: ${image}\n"
+      printf -- '\n'
+      printf -- 'Consider updating the hostpath-provisioner with:\n'
+      printf -- '    microk8s disable hostpath-storage\n'
+      printf -- '    microk8s enable hostpath-storage\n'
+      printf -- '\n'
+      ;;
+  esac
+}
+
 
 function store_juju_info {
   # Collect some juju details
@@ -129,6 +147,17 @@ function store_dqlite_info {
   cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
   cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
   ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
+}
+
+
+function store_dqlite_info {
+  # Collect some dqlite details
+  printf -- '  Inspect dqlite\n'
+  mkdir -p $INSPECT_DUMP/dqlite
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
+  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
+  sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
 }
 
 
@@ -414,6 +443,14 @@ if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
   check_service "microk8s.daemon-apiserver-kicker"
 fi
+if ! [ -e "${SNAP_DATA}/var/lock/no-traefik" ]
+then
+  check_service "snap.microk8s.daemon-traefik"
+fi
+if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  check_service "snap.microk8s.daemon-apiserver-kicker"
+fi
 
 store_args
 
@@ -426,6 +463,7 @@ store_network
 
 printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info
+check_storage_addon
 
 # printf -- 'Inspecting juju\n'
 # store_juju_info
@@ -435,6 +473,9 @@ store_kubernetes_info
 
 # printf -- 'Inspecting dqlite\n'
 # store_dqlite_info
+
+printf -- 'Inspecting dqlite\n'
+store_dqlite_info
 
 printf -- 'Inspecting dqlite\n'
 store_dqlite_info
