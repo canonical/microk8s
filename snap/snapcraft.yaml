@@ -392,7 +392,6 @@ apps:
       - process-control
       - system-observe
   inspect:
-<<<<<<< HEAD
     command: microk8s.wrapper
     plugs:
       - network-observe
@@ -403,9 +402,6 @@ apps:
       - mount-observe
       - log-observe
       - firewall-control
-=======
-    command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
->>>>>>> master
   enable:
     command: microk8s-enable.wrapper
     plugs:
