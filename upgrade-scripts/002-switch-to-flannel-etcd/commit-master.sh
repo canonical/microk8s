@@ -24,6 +24,7 @@ cp "$SNAP_DATA"/args/kube-apiserver "$BACKUP_DIR/args"
 
 "${SNAP}/bin/sed" -i '/--storage-backend/d' "$SNAP_DATA/args/kube-apiserver"
 "${SNAP}/bin/sed" -i '/--storage-dir/d' "$SNAP_DATA/args/kube-apiserver"
+"${SNAP}/bin/sed" -i '/--etcd-servers/d' "$SNAP_DATA/args/kube-apiserver"
 
 echo "--etcd-servers=https://127.0.0.1:12379" >> "$SNAP_DATA/args/kube-apiserver"
 echo "--etcd-cafile=\${SNAP_DATA}/certs/ca.crt" >> "$SNAP_DATA/args/kube-apiserver"
