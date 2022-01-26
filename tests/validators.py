@@ -529,7 +529,7 @@ def validate_traefik():
     """
     Validate traefik
     """
-    wait_for_pod_state("", "traefik", "running", label="name=traefik-ingress-lb")
+    wait_for_pod_state("", "traefik", "running", label="app.kubernetes.io/name=traefik")
 
 
 def validate_portainer():
