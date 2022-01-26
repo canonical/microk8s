@@ -75,6 +75,18 @@ rules:
       - create
       - delete
   - apiGroups: [""]
+    resourceNames:
+      - microk8s.io-hostpath
+    resources:
+      - endpoints
+    verbs:
+      - list
+      - get
+      - update
+      - watch
+      - create
+      - delete
+  - apiGroups: [""]
     resources:
       - events
     verbs:
