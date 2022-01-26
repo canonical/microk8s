@@ -51,6 +51,7 @@ microk8s-addons:
       supported_architectures:
         - arm64
         - amd64
+        - s390x
 
     - name: "registry"
       description: "Private image registry exposed on localhost:32000"
