@@ -20,7 +20,9 @@ def fetch_addons():
         info = yaml.safe_load(f)
 
     for addon in info["microk8s-addons"]["addons"]:
-        print("Addon {} is available for {}".format(addon["name"], addon["supported_architectures"]))
+        print(
+            "Addon {} is available for {}".format(addon["name"], addon["supported_architectures"])
+        )
         if arch not in addon["supported_architectures"]:
             print("Removing addon {}".format(addon["name"]))
             subprocess.check_call("rm -rf {}/addons/{}".format(org, addon["name"]).split())
@@ -29,6 +31,5 @@ def fetch_addons():
     subprocess.check_call(cmd.split())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     fetch_addons()
-
