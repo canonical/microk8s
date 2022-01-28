@@ -178,7 +178,7 @@ def kubectl_get_clusterroles():
 
 
 def get_available_addons(arch):
-    addon_dataset = os.path.expandvars("${SNAP}/addon-lists.yaml")
+    addon_dataset = os.path.expandvars("${SNAP}/canonical/addon-lists.yaml")
     available = []
     with open(addon_dataset, "r") as file:
         # The FullLoader parameter handles the conversion from YAML
@@ -246,19 +246,25 @@ def xable(action: str, addons: list, xabled_addons: list):
     Collated into a single function since the logic is identical other than
     the script names.
     """
-    actions = Path(__file__).absolute().parent / "../../../actions"
-    existing_addons = {sh.with_suffix("").name[7:] for sh in actions.glob("enable.*.sh")}
+    arch = get_current_arch()
+    addons_list = get_available_addons(arch)
+    addon_names = []
+    for addon in addons_list:
+        addon_names.append(addon["name"])
+
+    addons_root = Path(__file__).absolute().parent / "../../../canonical/addons"
 
     # Backwards compatibility with enabling multiple addons at once, e.g.
     # `microk8s.enable foo bar:"baz"`
-    if all(a.split(":")[0] in existing_addons for a in addons) and len(addons) > 1:
+    if all(a.split(":")[0] in addon_names for a in addons) and len(addons) > 1:
         for addon in addons:
             if addon in xabled_addons:
                 click.echo("Addon %s is already %sd." % (addon, action))
             else:
                 addon, *args = addon.split(":")
                 wait_for_ready(timeout=30)
-                p = subprocess.run([str(actions / ("%s.%s.sh" % (action, addon)))] + args)
+                cmd = "{}/{}/{}.sh".format(addons_root, addon, action)
+                p = subprocess.run(cmd.split() + args)
                 if p.returncode:
                     sys.exit(p.returncode)
                 wait_for_ready(timeout=30)
@@ -272,7 +278,7 @@ def xable(action: str, addons: list, xabled_addons: list):
             click.echo("Addon %s is already %sd." % (addon, action))
             sys.exit(0)
 
-        if addon not in existing_addons:
+        if addon not in addon_names:
             click.echo("Nothing to do for `%s`." % addon, err=True)
             sys.exit(1)
 
@@ -288,7 +294,7 @@ def xable(action: str, addons: list, xabled_addons: list):
             sys.exit(1)
 
         wait_for_ready(timeout=30)
-        script = [str(actions / ("%s.%s.sh" % (action, addon)))]
+        script = "{}/{}/{}.sh".format(addons_root, addon, action).split()
         if args:
             p = subprocess.run(script + args)
         else:
