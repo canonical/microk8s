@@ -109,7 +109,6 @@ apps:
     command: microk8s-dbctl.wrapper
 
 parts:
-
   raft:
     source: https://github.com/canonical/raft
     build-attributes: [no-patchelf]
@@ -520,7 +519,6 @@ parts:
       - python3-click
       - python3-dateutil
 
-
   microk8s-addons:
     plugin: dump
     build-attributes: [no-patchelf]
@@ -535,7 +533,6 @@ parts:
       . build-scripts/set-env-variables.sh
       python3 build-scripts/fetch-addons.py
       snapcraftctl build
-
 
   microk8s:
     plugin: dump
@@ -586,7 +583,6 @@ parts:
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
       snapcraftctl build
-
 
 
 slots:
