@@ -584,7 +584,6 @@ parts:
 
       snapcraftctl build
 
-
 slots:
   microk8s:
     interface: content
