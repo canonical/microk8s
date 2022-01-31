@@ -178,7 +178,7 @@ def kubectl_get_clusterroles():
 
 
 def get_available_addons(arch):
-    addon_dataset = os.path.expandvars("${SNAP}/canonical/addon-lists.yaml")
+    addon_dataset = os.path.expandvars("${SNAP}/addons/core/addon-lists.yaml")
     available = []
     with open(addon_dataset, "r") as file:
         # The FullLoader parameter handles the conversion from YAML
@@ -252,7 +252,7 @@ def xable(action: str, addons: list, xabled_addons: list):
     for addon in addons_list:
         addon_names.append(addon["name"])
 
-    addons_root = Path(__file__).absolute().parent / "../../../canonical/addons"
+    addons_root = Path(__file__).absolute().parent / "../../../addons/core/addons"
 
     # Backwards compatibility with enabling multiple addons at once, e.g.
     # `microk8s.enable foo bar:"baz"`

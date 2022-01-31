@@ -261,7 +261,7 @@ use_manifest() {
     items[\$ARCH]=$(arch)
 
     mkdir -p ${SNAP_USER_DATA}/tmp
-    cp "${SNAP}/canonical/addons/${manifest}" "${tmp_manifest}"
+    cp "${SNAP}/addons/core/addons/${manifest}" "${tmp_manifest}"
     for i in "${!items[@]}"
     do
         "$SNAP/bin/sed" -i 's@'$i'@'"${items[$i]}"'@g' "${tmp_manifest}"

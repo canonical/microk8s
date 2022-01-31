@@ -38,7 +38,7 @@ jobs:
           sudo apt-get install python3-click
           source ./build-scripts/set-env-variables.sh
           python3 build-scripts/fetch-addons.py
-          cp -r canonical/tests ./tests/addon-tests
+          cp -r core/tests ./tests/addon-tests
       # TEMPORARY WHILE GITHUB FIXES THIS https://github.com/actions/virtual-environments/issues/3185
       - name: Add the current IP address, long hostname and short hostname record to /etc/hosts file
         run: |

@@ -64,7 +64,7 @@ LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHAN
 # Download the addons
 source ./build-scripts/set-env-variables.sh
 python3 build-scripts/fetch-addons.py
-cp -r canonical/tests ./tests/addon-tests
+cp -r core/tests ./tests/addon-tests
 
 # TODO Handle local in the upgrade
 create_machine $NAME $PROXY

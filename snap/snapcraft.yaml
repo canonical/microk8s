@@ -525,11 +525,14 @@ parts:
     build-packages:
       - python3
       - python3-yaml
+      - python3-click
     source: .
     override-build: |
       set -eux
       . build-scripts/set-env-variables.sh
+      mkdir addons
       python3 build-scripts/fetch-addons.py --addons-only
+      mv core addons/
       snapcraftctl build
 
   microk8s:

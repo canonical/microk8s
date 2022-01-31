@@ -17,7 +17,7 @@ import yaml
 @click.option(
     "--target-directory",
     required=False,
-    default="canonical",
+    default="core",
     help="The output directory (relative to the current path) we want the addons to be placed in. WARNING: a pre-existing directory will be removed",
 )
 def fetch_addons(addons_only, target_directory):
