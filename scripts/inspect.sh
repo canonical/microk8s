@@ -121,16 +121,6 @@ function check_storage_addon {
 }
 
 
-function store_juju_info {
-  # Collect some juju details
-  printf -- '  Inspect Juju\n'
-  mkdir -p $INSPECT_DUMP/juju
-  sudo -E /snap/bin/microk8s juju status 2>&1 | sudo tee $INSPECT_DUMP/juju/status > /dev/null
-  sudo -E /snap/bin/microk8s juju debug-log 2>&1 | sudo tee $INSPECT_DUMP/juju/debug.log > /dev/null
-  sudo -E /snap/bin/microk8s kubectl logs -n controller-uk8s --tail 10000 -c api-server controller-0 2>&1 | sudo tee $INSPECT_DUMP/juju/controller.log > /dev/null
-}
-
-
 function store_dqlite_info {
   # Collect some dqlite details
   printf -- '  Inspect dqlite\n'
@@ -139,15 +129,6 @@ function store_dqlite_info {
   sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
   sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
   sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
-}
-
-
-function store_kubeflow_info {
-  # Collect some kubeflow details
-  printf -- '  Inspect Kubeflow\n'
-  mkdir -p $INSPECT_DUMP/kubeflow
-  sudo -E /snap/bin/microk8s kubectl get pods -nkubeflow -oyaml 2>&1 | sudo tee $INSPECT_DUMP/kubeflow/pods.yaml > /dev/null
-  sudo -E /snap/bin/microk8s kubectl describe pods -nkubeflow 2>&1 | sudo tee $INSPECT_DUMP/kubeflow/pods.describe > /dev/null
 }
 
 
@@ -424,12 +405,6 @@ store_network
 printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info
 check_storage_addon
-
-printf -- 'Inspecting juju\n'
-store_juju_info
-
-printf -- 'Inspecting kubeflow\n'
-store_kubeflow_info
 
 printf -- 'Inspecting dqlite\n'
 store_dqlite_info

@@ -476,17 +476,6 @@ def validate_multus():
     wait_for_pod_state("", "kube-system", "running", label="app=multus")
 
 
-def validate_kubeflow():
-    """
-    Validate kubeflow
-    """
-    if platform.machine() != "x86_64":
-        print("Kubeflow tests are only relevant in x86 architectures")
-        return
-
-    wait_for_pod_state("ambassador-operator-0", "kubeflow", "running")
-
-
 def validate_metallb_config(ip_ranges="192.168.0.105"):
     """
     Validate Metallb

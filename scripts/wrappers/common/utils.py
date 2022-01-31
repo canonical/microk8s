@@ -233,7 +233,7 @@ def check_help_flag(addons: list) -> bool:
     calls to print help text and print out a generic message to that effect.
     """
     addon = addons[0]
-    if any(arg in addons for arg in ("-h", "--help")) and addon != "kubeflow":
+    if any(arg in addons for arg in ("-h", "--help")):
         print("Addon %s does not yet have a help message." % addon)
         print("For more information about it, visit https://microk8s.io/docs/addons")
         return True
@@ -253,7 +253,7 @@ def xable(action: str, addons: list, xabled_addons: list):
     # `microk8s.enable foo bar:"baz"`
     if all(a.split(":")[0] in existing_addons for a in addons) and len(addons) > 1:
         for addon in addons:
-            if addon in xabled_addons and addon != "kubeflow":
+            if addon in xabled_addons:
                 click.echo("Addon %s is already %sd." % (addon, action))
             else:
                 addon, *args = addon.split(":")
@@ -268,7 +268,7 @@ def xable(action: str, addons: list, xabled_addons: list):
     else:
         addon, *args = addons[0].split(":")
 
-        if addon in xabled_addons and addon != "kubeflow":
+        if addon in xabled_addons:
             click.echo("Addon %s is already %sd." % (addon, action))
             sys.exit(0)
 

@@ -24,7 +24,6 @@ from validators import (
     validate_rbac,
     validate_cilium,
     validate_multus,
-    validate_kubeflow,
     validate_metallb_config,
     validate_prometheus,
     validate_traefik,
@@ -336,28 +335,6 @@ class TestAddons(object):
         validate_rbac()
         print("Disabling RBAC")
         microk8s_disable("rbac")
-
-    @pytest.mark.skip("disabling the kubelfow addon until the new bundle becomes available")
-    @pytest.mark.skipif(
-        platform.machine() != "x86_64",
-        reason="Kubeflow tests are only relevant in x86 architectures",
-    )
-    @pytest.mark.skipif(
-        os.environ.get("UNDER_TIME_PRESSURE") == "True",
-        reason="Skipping kubeflow test as we are under time pressure",
-    )
-    def test_kubeflow_addon(self):
-        """
-        Test kubeflow.
-
-        """
-
-        print("Enabling Kubeflow")
-        microk8s_enable("kubeflow")
-        print("Validating Kubeflow")
-        validate_kubeflow()
-        print("Disabling kubeflow")
-        microk8s_disable("kubeflow")
 
     @pytest.mark.skipif(
         platform.machine() != "x86_64",
