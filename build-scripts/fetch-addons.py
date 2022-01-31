@@ -39,10 +39,14 @@ def fetch_addons(addons_only, target_directory):
         )
         if arch not in addon["supported_architectures"]:
             print("Removing addon {}".format(addon["name"]))
-            subprocess.check_call("rm -rf {}/addons/{}".format(target_directory, addon["name"]).split())
+            subprocess.check_call(
+                "rm -rf {}/addons/{}".format(target_directory, addon["name"]).split()
+            )
 
     if addons_only:
-        cmd = "rm -rf {0}/.git {0}/.gitignore {0}/tests {0}/README.md {0}/LICENSE".format(target_directory)
+        cmd = "rm -rf {0}/.git {0}/.gitignore {0}/tests {0}/README.md {0}/LICENSE".format(
+            target_directory
+        )
         subprocess.check_call(cmd.split())
 
 
