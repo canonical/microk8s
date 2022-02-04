@@ -30,7 +30,7 @@ def fetch_addons(addons_only, target_directory):
     subprocess.check_call(cmd.split())
     cmd = "git clone --depth 1 {} {} -b {}".format(repo, target_directory, branch)
     subprocess.check_call(cmd.split())
-    with open("{}/addon-lists.yaml".format(target_directory)) as f:
+    with open("{}/addons.yaml".format(target_directory)) as f:
         info = yaml.safe_load(f)
 
     for addon in info["microk8s-addons"]["addons"]:

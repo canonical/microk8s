@@ -27,6 +27,13 @@ def snap_data() -> Path:
         return Path("/var/snap/microk8s/current")
 
 
+def snap_common() -> Path:
+    try:
+        return Path(os.environ["SNAP_COMMON"])
+    except KeyError:
+        return Path("/var/snap/microk8s/common")
+
+
 def run(*args, die=True):
     # Add wrappers to $PATH
     env = os.environ.copy()
@@ -178,11 +185,8 @@ def kubectl_get_clusterroles():
 
 
 def get_available_addons(arch):
-    addon_dataset = os.path.expandvars("${SNAP}/addons/core/addon-lists.yaml")
     available = []
-    with open(addon_dataset, "r") as file:
-        # The FullLoader parameter handles the conversion from YAML
-        # scalar values to Python the dictionary format
+    with open(snap_common() / "addons/core/addons.yaml", "r") as file:
         addons = yaml.safe_load(file)
         for addon in addons["microk8s-addons"]["addons"]:
             if arch in addon["supported_architectures"]:
@@ -248,11 +252,9 @@ def xable(action: str, addons: list, xabled_addons: list):
     """
     arch = get_current_arch()
     addons_list = get_available_addons(arch)
-    addon_names = []
-    for addon in addons_list:
-        addon_names.append(addon["name"])
+    addon_names = [addon["name"] for addon in addons_list]
 
-    addons_root = Path(__file__).absolute().parent / "../../../addons/core/addons"
+    addons_root = snap_common() / "addons/core/addons"
 
     # Backwards compatibility with enabling multiple addons at once, e.g.
     # `microk8s.enable foo bar:"baz"`
@@ -263,8 +265,7 @@ def xable(action: str, addons: list, xabled_addons: list):
             else:
                 addon, *args = addon.split(":")
                 wait_for_ready(timeout=30)
-                cmd = "{}/{}/{}.sh".format(addons_root, addon, action)
-                p = subprocess.run(cmd.split() + args)
+                p = subprocess.run(["{}/{}/{}".format(addons_root, addon, action), *args])
                 if p.returncode:
                     sys.exit(p.returncode)
                 wait_for_ready(timeout=30)
@@ -294,11 +295,11 @@ def xable(action: str, addons: list, xabled_addons: list):
             sys.exit(1)
 
         wait_for_ready(timeout=30)
-        script = "{}/{}/{}.sh".format(addons_root, addon, action).split()
+        script = "{}/{}/{}".format(addons_root, addon, action)
         if args:
-            p = subprocess.run(script + args)
+            p = subprocess.run([script, *args])
         else:
-            p = subprocess.run(script + list(addons[1:]))
+            p = subprocess.run([script, *list(addons[1:])])
 
         if p.returncode:
             sys.exit(p.returncode)
