@@ -10,6 +10,12 @@ need_kubelet_restart=false
 need_controller_restart=false
 need_scheduler_restart=false
 
+# If the addons directory is missing from SNAP_COMMON, then we are upgrading from an older MicroK8s version.
+if [ ! -d "${SNAP_COMMON}/addons/core" ]
+then
+  cp -rv ${SNAP}/addons ${SNAP_COMMON}/addons
+fi
+
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
 # and make sure the respective services use them.
