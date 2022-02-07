@@ -61,10 +61,15 @@ pip3 install -U pytest requests pyyaml sh
 LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHANNEL} pytest -s tests/test-cluster.py
 
 # Test addons upgrade
+# Download the addons
+source ./build-scripts/set-env-variables.sh
+python3 build-scripts/fetch-addons.py
+cp -r core/tests ./tests/addon-tests
+
 # TODO Handle local in the upgrade
 create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade.py"
+lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/addon-tests/test-upgrade.py"
 lxc delete $NAME --force
 
 # Test upgrade-path
@@ -87,6 +92,6 @@ fi
 lxc exec $NAME -- /var/tmp/tests/patch-kube-proxy.sh
 lxc exec $NAME -- /var/tmp/tests/smoke-test.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "pytest -s /var/tmp/tests/test-addons.py"
+lxc exec $NAME -- script -e -c "pytest -s /var/tmp/tests/addon-tests/test-addons.py"
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
