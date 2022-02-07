@@ -9,14 +9,14 @@ echo "Enabling Knative"
 
 KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
 
-declare -a yamls=("https://github.com/knative/serving/releases/download/knative-v1.2.0/serving-crds.yaml"
-                  "https://github.com/knative/eventing/releases/download/knative-v1.2.0/eventing-crds.yaml"
-                  "https://github.com/knative/serving/releases/download/knative-v1.2.0/serving-core.yaml"
+declare -a yamls=("https://github.com/knative/serving/releases/download/knative-v1.2.0/serving-core.yaml"
                   "https://github.com/knative-sandbox/net-kourier/releases/download/knative-v1.2.0/kourier.yaml"
                   "https://github.com/knative/serving/releases/download/knative-v1.2.0/serving-default-domain.yaml"
                   "https://github.com/knative/eventing/releases/download/knative-v1.2.0/eventing-core.yaml"
                   "https://github.com/knative/eventing/releases/download/knative-v1.2.0/in-memory-channel.yaml"
                   "https://github.com/knative/eventing/releases/download/knative-v1.2.0/mt-channel-broker.yaml"
+                  "https://github.com/knative/serving/releases/download/knative-v1.2.0/serving-crds.yaml"
+                  "https://github.com/knative/eventing/releases/download/knative-v1.2.0/eventing-crds.yaml"
                  )
 
 for yaml in "${yamls[@]}"
