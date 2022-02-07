@@ -214,25 +214,21 @@ class TestAddons(object):
     )
     @pytest.mark.skipif(
         os.environ.get("UNDER_TIME_PRESSURE") == "True",
-        reason="Skipping istio and knative tests as we are under time pressure",
+        reason="Skipping knative tests as we are under time pressure",
     )
-    def test_knative_istio(self):
+    def test_knative(self):
         """
-        Sets up and validate istio.
+        Sets up knative
 
         """
 
-        print("Enabling Knative and Istio")
+        print("Enabling Knative")
         microk8s_enable("knative")
-        print("Validating Istio")
-        validate_istio()
         print("Validating Knative")
         validate_knative()
         print("Disabling Knative")
         microk8s_disable("knative")
         wait_for_namespace_termination("knative-serving", timeout_insec=600)
-        print("Disabling Istio")
-        microk8s_disable("istio")
 
     @pytest.mark.skipif(
         platform.machine() != "x86_64",

@@ -79,10 +79,12 @@ microk8s-addons:
 
     - name: "knative"
       description: "The Knative framework on Kubernetes."
-      version: "0.24.0"
+      version: "1.2.0"
       check_status: "deployment.apps/eventing-webhook"
       supported_architectures:
+        - arm64
         - amd64
+        - s390x
 
     - name: "gpu"
       description: "Automatic enablement of Nvidia CUDA"

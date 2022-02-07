@@ -572,7 +572,6 @@ parts:
         rm actions/*.gpu.sh
         rm "actions/gpu.yaml"
         rm actions/*.istio.sh
-        rm actions/*.knative.sh
         rm actions/*.fluentd.sh
         rm -rf "actions/fluentd"
         rm actions/*.jaeger.sh
@@ -592,7 +591,6 @@ parts:
         rm actions/*.gpu.sh
         rm actions/gpu.yaml
         rm actions/*.istio.sh
-        rm actions/*.knative.sh
         rm actions/*.fluentd.sh
         rm -rf "actions/fluentd"
         rm actions/*.jaeger.sh
