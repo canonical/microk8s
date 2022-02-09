@@ -3531,8 +3531,6 @@ status:
   storedVersions: []
 
 ---
-
----
 # Source: calico/templates/calico-kube-controllers-rbac.yaml
 
 # Include a clusterrole for the kube-controllers component,
