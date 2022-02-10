@@ -13,7 +13,6 @@
 --allow-privileged=true
 --service-account-issuer='https://kubernetes.default.svc'
 --service-account-signing-key-file=${SNAP_DATA}/certs/serviceaccount.key
---feature-gates=RemoveSelfLink=false
 --event-ttl=5m
 --profiling=false
 

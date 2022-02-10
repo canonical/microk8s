@@ -158,7 +158,7 @@ do
       then
         if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kube-public &> /dev/null
         then
-          use_manifest registry-help apply
+          use_manifest registry/registry-help apply
         fi
 
         installed_registry_help=1

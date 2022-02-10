@@ -37,6 +37,13 @@ jobs:
         with:
           name: microk8s.snap
           path: microk8s.snap
+      - name: Fetch addon tests
+        run: |
+          set -x
+          sudo apt-get install python3-click
+          source ./build-scripts/set-env-variables.sh
+          python3 build-scripts/fetch-addons.py
+          cp -r core/tests ./tests/addon-tests
       # TEMPORARY WHILE GITHUB FIXES THIS https://github.com/actions/virtual-environments/issues/3185
       - name: Add the current IP address, long hostname and short hostname record to /etc/hosts file
         run: |
@@ -72,7 +79,8 @@ jobs:
           export UNDER_TIME_PRESSURE="True"
           export SKIP_OPENEBS="True"
           export SKIP_PROMETHEUS="False"
-          (cd tests; sudo -E pytest -s -ra test-addons.py)
+          (cd tests; pytest -s verify-branches.py)
+          (cd tests; sudo -E pytest -s -ra addon-tests/test-addons.py)
           sudo microk8s inspect |
           grep -Po "Report tarball is at \K.+" |
           sudo xargs -I {} mv {} inspection-report-strict-${{ strategy.job-index }}.tar.gz

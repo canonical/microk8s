@@ -14,7 +14,6 @@ command_descriptions = {
     "inspect": "Checks the cluster and gathers logs",
     "istioctl": "The istio client",
     "join": "Joins this instance as a node to a cluster",
-    "juju": "The Juju client",
     "kubectl": "The kubernetes client",
     "leave": "Disconnects this node from any cluster it has joined",
     "linkerd": "The linkerd client",
