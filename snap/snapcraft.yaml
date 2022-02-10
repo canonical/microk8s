@@ -996,10 +996,3 @@ parts:
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
       snapcraftctl build
-
-slots:
-  microk8s:
-    interface: content
-    content: microk8s
-    source:
-      read: [$SNAP/.microk8s-info/microk8s]
