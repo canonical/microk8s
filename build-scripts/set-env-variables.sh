@@ -50,7 +50,7 @@ export K8S_DQLITE_TAG="${K8S_DQLITE_TAG:-v1.0.3}"
 export KUBE_SNAP_ROOT="$(readlink -f .)"
 
 export ADDONS_REPO="${ADDONS_REPO:-https://github.com/canonical/microk8s-addons}"
-export ADDONS_REPO_BRANCH="${ADDONS_REPO_BRANCH:-main}"
+export ADDONS_REPO_BRANCH="${ADDONS_REPO_BRANCH:-strict}"
 
 
 echo "Building with:"
