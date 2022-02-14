@@ -94,6 +94,7 @@ def get_dqlite_info():
                         snappath=snap_path, dbdir=cluster_dir
                     ).split(),
                     timeout=4,
+                    stderr=subprocess.DEVNULL,
                 )
                 if data["Address"] in out.decode():
                     break
