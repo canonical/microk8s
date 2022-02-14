@@ -3,7 +3,6 @@
 --root-ca-file=${SNAP_DATA}/certs/ca.crt
 --cluster-signing-cert-file=${SNAP_DATA}/certs/ca.crt
 --cluster-signing-key-file=${SNAP_DATA}/certs/ca.key
---address=127.0.0.1
 --use-service-account-credentials
 --leader-elect-lease-duration=60s
 --leader-elect-renew-deadline=30s
