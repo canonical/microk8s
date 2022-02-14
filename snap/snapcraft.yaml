@@ -943,6 +943,9 @@ parts:
       . build-scripts/set-env-variables.sh
       python3 build-scripts/fetch-addons.py --addons-only --target-directory core
 
+      if [ -d "addons" ]; then
+        rm -rf addons
+      fi
       mkdir addons
       mv core addons/
       snapcraftctl build
