@@ -33,10 +33,7 @@ def disable(addons):
     ensure_started()
     wait_for_ready(timeout=30)
 
-    _, disabled_addons = get_status(get_available_addons(get_current_arch()), True)
-    disabled_addons = {a["name"] for a in disabled_addons}
-
-    xable("disable", addons, disabled_addons)
+    xable("enable", addons)
 
 
 if __name__ == "__main__":

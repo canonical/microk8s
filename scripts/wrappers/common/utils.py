@@ -6,9 +6,12 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+import logging
 
 import click
 import yaml
+
+LOG = logging.getLogger(__name__)
 
 kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/client.config")
 
@@ -256,64 +259,154 @@ def check_help_flag(addons: list) -> bool:
     return False
 
 
-def xable(action: str, addons: list, xabled_addons: list):
+def parse_xable_addon_args(addon_args: list, available_addons: list):
+    """
+    Parse the list of addons passed into the microk8s enable or disable commands.
+    Further, it will infer the repository name for addons when possible.
+    If any errors are encountered, we print them to stderr and exit.
+
+    :param addon_args: The parameters passed to the microk8s enable command
+    :param available_addons: List of available addons as (repository_name, addon_name) tuples
+
+    Handles the following cases:
+    - microk8s enable foo bar:--baz      # enable many addons, inline arguments
+    - microk8s enable bar --baz          # enable one addon, unix style command line arguments
+
+    :return: a list of (repository_name, addon_name, args) tuples
+    """
+
+    # Backwards compatibility with enabling multiple addons at once, e.g.
+    # `microk8s.enable foo bar:"baz"`
+    available_addon_names = [addon_name for (_, addon_name) in available_addons]
+    addon_names = [arg.split(":")[0] for arg in addon_args]
+    if set(addon_names) < set(available_addon_names):
+        return [parse_xable_single_arg(addon_arg, available_addons) for addon_arg in addon_args]
+
+    # The new way of xabling addons, that allows for unix-style argument passing,
+    # such as `microk8s.enable foo --bar`.
+    repository_name, addon_name, args = parse_xable_single_arg(addon_args[0], available_addons)
+    if args and addon_args[1:]:
+        click.echo(
+            "Can't pass string arguments and flag arguments simultaneously!\n"
+            "Enable or disable addons with only one argument style at a time:\n"
+            "\n"
+            "    microk8s enable foo:'bar'\n"
+            "or\n"
+            "    microk8s enable foo --bar\n"
+        )
+        sys.exit(1)
+
+    return [(repository_name, addon_name, args)]
+
+
+def parse_xable_single_arg(addon_arg: str, available_addons: list):
+    """
+    Parse an addon arg of the following form: `(repository_name/)addon_name(:args)`
+    It will automatically infer the repository name if not specified. If multiple repositories
+    are found for the addon, we print an error and exit.
+
+    :param addon_arg: A parameter passed to the microk8s enable command
+    :param available_addons: List of available addons as (repository_name, addon_name) tuples
+
+    :return: a (repository_name, addon_name, args) tuple
+    """
+    addon_name, *args = addon_arg.split(":")
+    parts = addon_name.split("/")
+    if len(parts) == 2:
+        return (parts[0], parts[1], args)
+    elif len(parts) == 1:
+        matching_addons = list(filter((lambda x: x[1] == addon_name), available_addons))
+        matching_repositories = [x[0] for x in matching_addons]
+        if len(matching_repositories) == 0:
+            click.echo("Addon {} was not found in any repository".format(addon_name), err=True)
+            sys.exit(1)
+        elif len(matching_repositories) == 1:
+            click.echo(
+                "Infer repository {} for addon {}".format(matching_repositories[0], addon_name),
+                err=True,
+            )
+            return (matching_repositories[0], addon_name, args)
+        else:
+            click.echo(
+                "Addon {} exists in more than repository. Please explicitly specify\n"
+                "the repository using any of:\n".format(addon_name),
+                err=True,
+            )
+            for repository in matching_repositories:
+                click.echo("    {}/{}".format(repository, addon_name), err=True)
+            click.echo("", err=True)
+            sys.exit(1)
+
+    else:
+        click.echo("Invalid addon name {}".format(addon_name))
+        sys.exit(1)
+
+
+def xable(action: str, addon_args: list):
     """Enables or disables the given addons.
 
     Collated into a single function since the logic is identical other than
     the script names.
+
+    :param action: "enable" or "disable"
+    :param addons: List of addons to enable. Each addon may be prefixed with `repository/`
+                   to specify which addon repository it will be sourced from.
     """
-    arch = get_current_arch()
-    addons_list = get_available_addons(arch)
-    addon_names = [addon["name"] for addon in addons_list]
-
-    addons_root = snap_common() / "addons/core/addons"
-
-    # Backwards compatibility with enabling multiple addons at once, e.g.
-    # `microk8s.enable foo bar:"baz"`
-    if all(a.split(":")[0] in addon_names for a in addons) and len(addons) > 1:
-        for addon in addons:
-            if addon in xabled_addons:
-                click.echo("Addon %s is already %sd." % (addon, action))
-            else:
-                addon, *args = addon.split(":")
-                wait_for_ready(timeout=30)
-                p = subprocess.run(["{}/{}/{}".format(addons_root, addon, action), *args])
-                if p.returncode:
-                    sys.exit(p.returncode)
-                wait_for_ready(timeout=30)
-
-    # The new way of xabling addons, that allows for unix-style argument passing,
-    # such as `microk8s.enable foo --bar`.
+    available_addons_info = get_available_addons(get_current_arch())
+    enabled_addons_info, disabled_addons_info = get_status(available_addons_info, True)
+    if action == "enable":
+        xabled_addons_info = enabled_addons_info
+    elif action == "disable":
+        xabled_addons_info = disabled_addons_info
     else:
-        addon, *args = addons[0].split(":")
+        click.echo("Invalid action {}. Only enable and disable are supported".format(action))
+        sys.exit(1)
 
-        if addon in xabled_addons:
-            click.echo("Addon %s is already %sd." % (addon, action))
-            sys.exit(0)
+    # available_addons is a list of (repository_name, addon_name) tuples for all available addons
+    available_addons = [(addon["repository"], addon["name"]) for addon in available_addons_info]
+    # xabled_addons is a list (repository_name, addon_name) tuples of already xabled addons
+    xabled_addons = [(addon["repository"], addon["name"]) for addon in xabled_addons_info]
 
-        if addon not in addon_names:
-            click.echo("Nothing to do for `%s`." % addon, err=True)
-            sys.exit(1)
+    addons = parse_xable_addon_args(addon_args, available_addons)
 
-        if args and addons[1:]:
-            click.echo(
-                "Can't pass string arguments and flag arguments simultaneously!\n"
-                "{0} an addon with only one argument style at a time:\n"
-                "\n"
-                "    microk8s {1} foo:'bar'\n"
-                "or\n"
-                "    microk8s {1} foo --bar\n".format(action.title(), action)
-            )
-            sys.exit(1)
+    for repository_name, addon_name, args in addons:
+        if (repository_name, addon_name) in xabled_addons:
+            click.echo("Addon {}/{} is already {}d".format(repository_name, addon_name, action))
+            continue
 
         wait_for_ready(timeout=30)
-        script = "{}/{}/{}".format(addons_root, addon, action)
-        if args:
-            p = subprocess.run([script, *args])
-        else:
-            p = subprocess.run([script, *list(addons[1:])])
-
+        p = subprocess.run(
+            [snap_common() / "addons" / repository_name / "addons" / addon_name / action, *args]
+        )
         if p.returncode:
             sys.exit(p.returncode)
-
         wait_for_ready(timeout=30)
+
+
+def is_enabled(addon, item):
+    if addon in item:
+        return True
+    else:
+        filepath = os.path.expandvars(addon)
+        return os.path.isfile(filepath)
+
+
+def get_status(available_addons, isReady):
+    enabled = []
+    disabled = []
+    if isReady:
+        # 'all' does not include ingress
+        kube_output = kubectl_get("all,ingress")
+        cluster_output = kubectl_get_clusterroles()
+        kube_output = kube_output + cluster_output
+        for addon in available_addons:
+            found = False
+            for row in kube_output.split("\n"):
+                if is_enabled(addon["check_status"], row):
+                    enabled.append(addon)
+                    found = True
+                    break
+            if not found:
+                disabled.append(addon)
+
+    return enabled, disabled
