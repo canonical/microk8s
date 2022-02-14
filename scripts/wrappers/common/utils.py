@@ -187,13 +187,24 @@ def kubectl_get_clusterroles():
 
 def get_available_addons(arch):
     available = []
-    with open(snap_common() / "addons/core/addons.yaml", "r") as file:
-        addons = yaml.safe_load(file)
-        for addon in addons["microk8s-addons"]["addons"]:
-            if arch in addon["supported_architectures"]:
-                available.append(addon)
+    for dir in os.listdir(snap_common() / "addons"):
+        try:
+            addons_yaml = snap_common() / "addons" / dir / "addons.yaml"
+            with open(addons_yaml, "r") as fin:
+                addons = yaml.safe_load(fin)
 
-    available = sorted(available, key=lambda k: k["name"])
+            for addon in addons["microk8s-addons"]["addons"]:
+                if arch in addon["supported_architectures"]:
+                    available.append(
+                        {
+                            **addon,
+                            "repository": dir,
+                        }
+                    )
+        except Exception:
+            LOG.exception("could not load addons from %s", addons_yaml)
+
+    available = sorted(available, key=lambda k: (k["repository"], k["name"]))
     return available
 
 
