@@ -105,7 +105,7 @@ At the time of the v3.23.4 release. The `calico.yaml` manifest is a slightly mod
   1. `policysync` to `/var/snap/microk8s/current/var/run/nodeagent`
 - We enabled vxlan following the instructions in [the official docs.](https://docs.projectcalico.org/getting-started/kubernetes/installation/config-options#switching-from-ip-in-ip-to-vxlan)
 - `FELIX_LOGSEVERITYSCREEN` was set to "error"
-- The `livenessProbe` `bird-live` was commented out 
+- The `liveness` and `readiness` probes of `bird-live` was commented out 
 - We set the IP autodetection method to
 
   ```dtd
@@ -113,9 +113,10 @@ At the time of the v3.23.4 release. The `calico.yaml` manifest is a slightly mod
               value: "first-found"
   ```
 - In the `cni_network_config` in the calico manifest we also set:
-
+  ```dtd
           "nodename_file_optional": true,
-- The sys mountpath is commented out. This disables eBPF support but allows the CNI to deploy inside an LXC container. 
+  ```
+- The sys `mountpath` is commented out. This disables eBPF support but allows the CNI to deploy inside an LXC container. 
 
 ## Running the tests locally
 
