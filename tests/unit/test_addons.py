@@ -27,6 +27,22 @@ ADDONS = [
                 ("community", "addon3", []),
             ],
         ),
+        (
+            ["addon1:arg1", "addon2:arg2", "community/conflict"],
+            [
+                ("core", "addon1", ["arg1"]),
+                ("core", "addon2", ["arg2"]),
+                ("community", "conflict", []),
+            ],
+        ),
+        (
+            ["core/addon1:arg1", "addon2:arg2", "community/conflict:arg3"],
+            [
+                ("core", "addon1", ["arg1"]),
+                ("core", "addon2", ["arg2"]),
+                ("community", "conflict", ["arg3"]),
+            ],
+        ),
     ],
 )
 def test_parse_addons_args(args, result):
