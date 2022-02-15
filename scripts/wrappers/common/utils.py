@@ -266,25 +266,28 @@ def parse_xable_addon_args(addon_args: list, available_addons: list):
     If any errors are encountered, we print them to stderr and exit.
 
     :param addon_args: The parameters passed to the microk8s enable command
-    :param available_addons: List of available addons as (repository_name, addon_name) tuples
+    :param available_addons: List of available addons as (repo_name, addon_name) tuples
 
     Handles the following cases:
     - microk8s enable foo bar:--baz      # enable many addons, inline arguments
     - microk8s enable bar --baz          # enable one addon, unix style command line arguments
 
-    :return: a list of (repository_name, addon_name, args) tuples
+    :return: a list of (repo_name, addon_name, args) tuples
     """
 
     # Backwards compatibility with enabling multiple addons at once, e.g.
     # `microk8s.enable foo bar:"baz"`
     available_addon_names = [addon_name for (_, addon_name) in available_addons]
+    available_addon_names += [
+        "/".join([repo_name, addon_name]) for (repo_name, addon_name) in available_addons
+    ]
     addon_names = [arg.split(":")[0] for arg in addon_args]
     if set(addon_names) < set(available_addon_names):
         return [parse_xable_single_arg(addon_arg, available_addons) for addon_arg in addon_args]
 
     # The new way of xabling addons, that allows for unix-style argument passing,
     # such as `microk8s.enable foo --bar`.
-    repository_name, addon_name, args = parse_xable_single_arg(addon_args[0], available_addons)
+    repo_name, addon_name, args = parse_xable_single_arg(addon_args[0], available_addons)
     if args and addon_args[1:]:
         click.echo(
             "Can't pass string arguments and flag arguments simultaneously!\n"
@@ -296,19 +299,19 @@ def parse_xable_addon_args(addon_args: list, available_addons: list):
         )
         sys.exit(1)
 
-    return [(repository_name, addon_name, addon_args[1:])]
+    return [(repo_name, addon_name, addon_args[1:])]
 
 
 def parse_xable_single_arg(addon_arg: str, available_addons: list):
     """
-    Parse an addon arg of the following form: `(repository_name/)addon_name(:args)`
+    Parse an addon arg of the following form: `(repo_name/)addon_name(:args)`
     It will automatically infer the repository name if not specified. If multiple repositories
     are found for the addon, we print an error and exit.
 
     :param addon_arg: A parameter passed to the microk8s enable command
-    :param available_addons: List of available addons as (repository_name, addon_name) tuples
+    :param available_addons: List of available addons as (repo_name, addon_name) tuples
 
-    :return: a (repository_name, addon_name, args) tuple
+    :return: a (repo_name, addon_name, args) tuple
     """
     addon_name, *args = addon_arg.split(":")
     parts = addon_name.split("/")
@@ -362,21 +365,24 @@ def xable(action: str, addon_args: list):
         click.echo("Invalid action {}. Only enable and disable are supported".format(action))
         sys.exit(1)
 
-    # available_addons is a list of (repository_name, addon_name) tuples for all available addons
+    # available_addons is a list of (repo_name, addon_name) tuples for all available addons
     available_addons = [(addon["repository"], addon["name"]) for addon in available_addons_info]
-    # xabled_addons is a list (repository_name, addon_name) tuples of already xabled addons
+    # xabled_addons is a list (repo_name, addon_name) tuples of already xabled addons
     xabled_addons = [(addon["repository"], addon["name"]) for addon in xabled_addons_info]
 
     addons = parse_xable_addon_args(addon_args, available_addons)
 
-    for repository_name, addon_name, args in addons:
-        if (repository_name, addon_name) in xabled_addons:
-            click.echo("Addon {}/{} is already {}d".format(repository_name, addon_name, action))
+    for repo_name, addon_name, args in addons:
+        if (repo_name, addon_name) not in available_addons:
+            click.echo("Addon {}/{} not found".format(repo_name, addon_name))
+            continue
+        if (repo_name, addon_name) in xabled_addons:
+            click.echo("Addon {}/{} is already {}d".format(repo_name, addon_name, action))
             continue
 
         wait_for_ready(timeout=30)
         p = subprocess.run(
-            [snap_common() / "addons" / repository_name / "addons" / addon_name / action, *args]
+            [snap_common() / "addons" / repo_name / "addons" / addon_name / action, *args]
         )
         if p.returncode:
             sys.exit(p.returncode)

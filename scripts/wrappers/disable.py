@@ -33,7 +33,7 @@ def disable(addons):
     ensure_started()
     wait_for_ready(timeout=30)
 
-    xable("enable", addons)
+    xable("disable", addons)
 
 
 if __name__ == "__main__":
