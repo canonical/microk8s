@@ -4314,7 +4314,7 @@ spec:
             path: /run/xtables.lock
             type: FileOrCreate
         - name: sysfs
-        hostPath:
+          hostPath:
             path: /sys/fs/
             type: DirectoryOrCreate
         # Used to install CNI.
