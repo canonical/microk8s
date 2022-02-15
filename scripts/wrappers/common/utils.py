@@ -296,7 +296,7 @@ def parse_xable_addon_args(addon_args: list, available_addons: list):
         )
         sys.exit(1)
 
-    return [(repository_name, addon_name, args)]
+    return [(repository_name, addon_name, addon_args[1:])]
 
 
 def parse_xable_single_arg(addon_arg: str, available_addons: list):
