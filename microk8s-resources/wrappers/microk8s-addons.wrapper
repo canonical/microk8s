@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -eu
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+ARCH="$($SNAP/bin/uname -m)"
+export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+export PYTHONNOUSERSITE=false
+
+LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/addons.py $@
