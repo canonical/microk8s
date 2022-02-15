@@ -146,6 +146,18 @@ def wait_ready(debug: bool, extra: bool = True):
         )
 
 
+def report_discontinued():
+    """The Kubeflow addon is officially deprecated.
+    Fail gracefully informing the user where to install kubeflow now.
+    """
+
+    print("")
+    print("This addon is no longer supported, instead please follow the quick start guide to install Charmed Kubeflow on Microk8s: ")
+    print("https://bit.ly/ckf-start")
+    print("")
+    sys.exit(1)
+
+
 def check_user():
     """Ensures that user isn't root.
 
@@ -475,6 +487,8 @@ def print_info(hostname, password):
     help="The Kubeflow dashboard password.",
 )
 def kubeflow(bundle, channel, debug, hostname, ignore_min_mem, no_proxy, password):
+    report_discontinued()
+
     check_user()
     check_memory(bundle, ignore_min_mem)
     check_enabled()
