@@ -73,7 +73,7 @@ def remove(name: str):
         sys.exit(1)
 
     click.echo("Updating repository {}".format(name))
-    subprocess.check_call(["git", "pull", "-v"], cwd=repo_dir)
+    subprocess.check_call(["git", "pull"], cwd=repo_dir)
 
     if not (repo_dir / "addons.yaml").exists():
         click.echo(

@@ -318,25 +318,23 @@ def parse_xable_single_arg(addon_arg: str, available_addons: list):
     if len(parts) == 2:
         return (parts[0], parts[1], args)
     elif len(parts) == 1:
-        matching_addons = list(filter((lambda x: x[1] == addon_name), available_addons))
-        matching_repositories = [x[0] for x in matching_addons]
-        if len(matching_repositories) == 0:
+        matching_repos = [repo for (repo, addon) in available_addons if addon == addon_name]
+        if len(matching_repos) == 0:
             click.echo("Addon {} was not found in any repository".format(addon_name), err=True)
             sys.exit(1)
-        elif len(matching_repositories) == 1:
+        elif len(matching_repos) == 1:
             click.echo(
-                "Infer repository {} for addon {}".format(matching_repositories[0], addon_name),
-                err=True,
+                "Infer repository {} for addon {}".format(matching_repos[0], addon_name), err=True
             )
-            return (matching_repositories[0], addon_name, args)
+            return (matching_repos[0], addon_name, args)
         else:
             click.echo(
                 "Addon {} exists in more than repository. Please explicitly specify\n"
                 "the repository using any of:\n".format(addon_name),
                 err=True,
             )
-            for repository in matching_repositories:
-                click.echo("    {}/{}".format(repository, addon_name), err=True)
+            for repo in matching_repos:
+                click.echo("    {}/{}".format(repo, addon_name), err=True)
             click.echo("", err=True)
             sys.exit(1)
 
