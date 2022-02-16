@@ -22,33 +22,66 @@ addons.add_command(repository)
 @click.option("--reference")
 @click.option("--force", is_flag=True, default=False)
 def add(name: str, repository: str, reference: str, force: bool):
-    destination_path = snap_common() / "addons" / name
-    if destination_path.exists():
+    repo_dir = snap_common() / "addons" / name
+    if repo_dir.exists():
         if not force:
-            click.echo("Error: repository '{}' already exists!".format(name))
-            click.echo("Use the --force flag to overwrite it".format(name))
+            click.echo("Error: repository '{}' already exists!".format(name), err=True)
+            click.echo("Use the --force flag to overwrite it".format(name), err=True)
             sys.exit(1)
 
-        print("Removing", destination_path)
-        shutil.rmtree(destination_path)
+        click.echo("Removing {}".format(repo_dir))
+        shutil.rmtree(repo_dir)
 
-    cmd = ["git", "clone", repository, destination_path]
+    cmd = ["git", "clone", repository, repo_dir]
     if reference is not None:
         cmd += ["-b", reference]
 
     subprocess.check_call(cmd)
+    subprocess.check_call(["chgrp", "microk8s", "-R", repo_dir])
+
+    if not (repo_dir / "addons.yaml").exists():
+        click.echo(
+            "Error: repository '{}' does not contain an addons.yaml file".format(name), err=True
+        )
+        click.echo("Remove it with:", err=True)
+        click.echo("    microk8s addons repo remove {}".format(name), err=True)
+        sys.exit(1)
 
 
 @repository.command("remove", help="Remove a MicroK8s addons repository")
 @click.argument("name")
 def remove(name: str):
-    destination_path = snap_common() / "addons" / name
-    if not destination_path.exists():
-        click.echo("Error: repository '{}' does not exist".format(name))
+    repo_dir = snap_common() / "addons" / name
+    if not repo_dir.exists():
+        click.echo("Error: repository '{}' does not exist".format(name), err=True)
         sys.exit(1)
 
-    print("Removing repository {} from {}", name, destination_path)
-    shutil.rmtree(destination_path)
+    click.echo("Removing {}".format(repo_dir))
+    shutil.rmtree(repo_dir)
+
+
+@repository.command("update", help="Update a MicroK8s addons repository")
+@click.argument("name")
+def remove(name: str):
+    repo_dir = snap_common() / "addons" / name
+    if not repo_dir.exists():
+        click.echo("Error: repository '{}' does not exist".format(name), err=True)
+        sys.exit(1)
+
+    if not (repo_dir / ".git").exists():
+        click.echo("Error: built-in repository '{}' cannot be updated".format(name), err=True)
+        sys.exit(1)
+
+    click.echo("Updating repository {}".format(name))
+    subprocess.check_call(["git", "pull", "-v"], cwd=repo_dir)
+
+    if not (repo_dir / "addons.yaml").exists():
+        click.echo(
+            "Error: repository '{}' does not contain an addons.yaml file".format(name), err=True
+        )
+        click.echo("Remove it with:", err=True)
+        click.echo("    microk8s addons repo remove {}".format(name), err=True)
+        sys.exit(1)
 
 
 @repository.command("list", help="List configured MicroK8s addons repositories")
@@ -59,16 +92,16 @@ def list(format: str):
     for dir in os.listdir(snap_common() / "addons"):
         try:
             repo_dir = snap_common() / "addons" / dir
-            count = 0
             addons_yaml = repo_dir / "addons.yaml"
             with open(addons_yaml, "r") as fin:
                 addons = yaml.safe_load(fin)
 
+            count = 0
             for addon in addons["microk8s-addons"]["addons"]:
                 if arch in addon["supported_architectures"]:
                     count += 1
 
-            source = "(builtin)"
+            source = "(built-in)"
             try:
                 remote_url = subprocess.check_output(
                     ["git", "remote", "get-url", "origin"], cwd=repo_dir, stderr=subprocess.DEVNULL
