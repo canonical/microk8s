@@ -529,18 +529,18 @@ parts:
       - python3
       - python3-yaml
       - python3-click
+      - git
     source: .
     override-build: |
       set -eux
 
       . build-scripts/set-env-variables.sh
-      python3 build-scripts/fetch-addons.py --addons-only --target-directory core
 
       if [ -d "addons" ]; then
         rm -rf addons
       fi
-      mkdir addons
-      mv core addons/
+      mkdir -p addons
+      git clone $ADDONS_REPO -b $ADDONS_REPO_BRANCH addons/core
       snapcraftctl build
 
   microk8s:
