@@ -781,5 +781,5 @@ exit_if_low_memory_guard() {
 
 refresh_calico_if_needed() {
     # Call the python script that does the calico update if needed
-    "$SNAP/usr/bin/python3" "$SNAP/upgrade-scripts/003-upgrade-calico/upgrade.py"
+    "$SNAP/usr/bin/python3" "$SNAP/scripts/upgrade-calico/upgrade.py"
 }
