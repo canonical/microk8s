@@ -581,6 +581,9 @@ then
   snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
 fi
 
+# Refresh calico if needed
+refresh_calico_if_needed
+
 # Restart reconfigured services
 if ${need_api_restart} ||
    ${need_proxy_restart} ||
