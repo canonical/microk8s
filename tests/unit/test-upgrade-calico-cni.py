@@ -1,8 +1,7 @@
 import os
 import shutil
-import sys
 
-from upgrade import (
+from calico.upgrade import (
     try_upgrade,
     get_installed_version_of_calico,
     get_calicos_autodetection_method,
@@ -13,12 +12,12 @@ from upgrade import (
 class TestCNIUpgrade(object):
     def setup_class(self):
         dirname, filename = os.path.split(os.path.abspath(__file__))
-        self._invalid_yaml = os.path.join(dirname, "testing/invalid.yaml")
-        self._calico_new_yaml = os.path.join(dirname, "testing/calico-new.yaml")
-        self._calico_old_yaml = os.path.join(dirname, "testing/cni.yaml")
-        self._calico_old_copy_yaml = os.path.join(dirname, "testing/cni.yaml.copy")
-        self._calico_old_copy_backup_yaml = os.path.join(dirname, "testing/cni.yaml.copy.backup")
-        self._lock_file = os.path.join(dirname, "testing/lock_file")
+        self._invalid_yaml = os.path.join(dirname, "yamls/invalid.yaml")
+        self._calico_new_yaml = os.path.join(dirname, "yamls/calico-new.yaml")
+        self._calico_old_yaml = os.path.join(dirname, "yamls/cni.yaml")
+        self._calico_old_copy_yaml = os.path.join(dirname, "yamls/cni.yaml.copy")
+        self._calico_old_copy_backup_yaml = os.path.join(dirname, "yamls/cni.yaml.copy.backup")
+        self._lock_file = os.path.join(dirname, "yamls/lock_file")
 
     def test_no_op(self):
         """
