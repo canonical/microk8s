@@ -491,6 +491,7 @@ parts:
       - diffutils
       - ethtool
       - gawk
+      - git
       - grep
       - hostname
       - iproute2
