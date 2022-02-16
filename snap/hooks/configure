@@ -327,7 +327,7 @@ then
 fi
 
 # Securing important directories
-for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock
+for dir in ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
@@ -341,7 +341,7 @@ fi
 
 if getent group microk8s >/dev/null 2>&1
 then
-  chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ || true
+  chgrp microk8s -R ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ || true
 fi
 
 try_copy_users_to_snap_microk8s
