@@ -62,7 +62,7 @@ def remove(name: str):
 
 @repository.command("update", help="Update a MicroK8s addons repository")
 @click.argument("name")
-def remove(name: str):
+def update(name: str):
     repo_dir = snap_common() / "addons" / name
     if not repo_dir.exists():
         click.echo("Error: repository '{}' does not exist".format(name), err=True)
