@@ -1,4 +1,4 @@
-from common.utils import parse_xable_addon_args
+from wrappers.common.utils import parse_xable_addon_args
 
 import pytest
 
