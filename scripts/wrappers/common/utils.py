@@ -213,9 +213,20 @@ def get_available_addons(arch):
 
 def get_addon_by_name(addons, name):
     filtered_addon = []
+
+    parts = name.split("/")
+    if len(parts) == 1:
+        repo_name, addon_name = None, parts[0]
+    elif len(parts) == 2:
+        repo_name, addon_name = parts[0], parts[1]
+    else:
+        # just fallback to the addon name
+        repo_name, addon_name = None, name
+
     for addon in addons:
-        if name == addon["name"]:
+        if addon_name == addon["name"] and (repo_name == addon["repository"] or not repo_name):
             filtered_addon.append(addon)
+
     return filtered_addon
 
 
