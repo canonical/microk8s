@@ -11,9 +11,11 @@ need_controller_restart=false
 need_scheduler_restart=false
 
 # If the addons directory is missing from SNAP_COMMON, then we are upgrading from an older MicroK8s version.
-if [ ! -d "${SNAP_COMMON}/addons/core" ]
+if [ ! -d "${SNAP_COMMON}/addons" ]
 then
-  cp -rv ${SNAP}/addons ${SNAP_COMMON}/addons
+  mkdir -p ${SNAP_COMMON}/addons
+  snap_current=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
+  git clone "${snap_current}/addons/core" "${SNAP_COMMON}/addons/core"
 fi
 
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
@@ -327,7 +329,7 @@ then
 fi
 
 # Securing important directories
-for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock
+for dir in ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
@@ -341,7 +343,7 @@ fi
 
 if getent group microk8s >/dev/null 2>&1
 then
-  chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ || true
+  chgrp microk8s -R ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ || true
 fi
 
 try_copy_users_to_snap_microk8s

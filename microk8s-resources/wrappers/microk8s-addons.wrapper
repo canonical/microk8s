@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -eu
+
+source $SNAP/actions/common/utils.sh
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export GIT_EXEC_PATH="$SNAP/usr/lib/git-core"
+export GIT_TEMPLATE_DIR="$SNAP/usr/share/git-core/templates"
+
+ARCH="$($SNAP/bin/uname -m)"
+export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+export PYTHONNOUSERSITE=false
+
+exit_if_no_permissions
+
+LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/addons.py $@

@@ -23,7 +23,8 @@ else
 fi
 
 # Install the core addons
-cp -rv ${SNAP}/addons ${SNAP_COMMON}/addons
+snap_current=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
+git clone "${snap_current}/addons/core" "${SNAP_COMMON}/addons/core"
 
 # Create the certificates
 mkdir ${SNAP_DATA}/certs
