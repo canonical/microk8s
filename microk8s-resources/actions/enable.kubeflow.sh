@@ -152,7 +152,7 @@ def report_discontinued():
     """
 
     print("")
-    print("This addon is no longer supported, instead please follow the quick start guide to install Charmed Kubeflow on Microk8s: ")
+    print("This addon is no longer supported, instead please follow the quick start guide to install Charmed Kubeflow on MicroK8s: ")
     print("https://bit.ly/ckf-start")
     print("")
     sys.exit(1)
