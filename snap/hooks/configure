@@ -83,6 +83,9 @@ fi
 # Create the locks directory
 mkdir -p ${SNAP_DATA}/var/lock/
 
+# Create tmp directory
+mkdir -p ${SNAP_DATA}/tmp/
+
 # This will allow us to refresh the snap to the more secure version.
 # We need to make sure the client certificate used in microk8s kubectl is available under $SNAP_DATA
 if [ ! -f ${SNAP_DATA}/credentials/client.config ]
@@ -328,8 +331,7 @@ then
   mv ${CD_TOML_TMP} ${CD_TOML}
 fi
 
-# Securing important directories
-for dir in ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock
+for dir in ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock ${SNAP_DATA}/tmp/
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
@@ -343,7 +345,7 @@ fi
 
 if getent group microk8s >/dev/null 2>&1
 then
-  chgrp microk8s -R ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ || true
+  chgrp microk8s -R ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
 fi
 
 try_copy_users_to_snap_microk8s
