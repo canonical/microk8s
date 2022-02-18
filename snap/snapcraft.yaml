@@ -107,6 +107,7 @@ apps:
 parts:
   raft:
     source: https://github.com/canonical/raft
+    source-tag: v0.11.3
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
@@ -151,6 +152,7 @@ parts:
       - raft
       - sqlite
     source: https://github.com/canonical/dqlite
+    source-tag: v1.9.1
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
@@ -170,22 +172,29 @@ parts:
   dqlite-client:
     build-snaps: [go]
     after: [sqlite, dqlite]
-    source: https://github.com/canonical/go-dqlite
-    source-type: git
-    plugin: go
-    go-channel: 1.15/stable
-    go-importpath: github.com/canonical/go-dqlite
+    source: build-scripts/
+    plugin: dump
     override-build: |
       set -eux
       snap refresh go --channel=1.15/stable || true
       go version
+      export TAG=v1.10.2
       export GOPATH=${SNAPCRAFT_STAGE}
       export CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" 
       export CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" 
       export CGO_LDFLAGS_ALLOW="-Wl,-z,now"
-      go get -tags libsqlite3 github.com/canonical/go-dqlite/cmd/dqlite
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      cp $GOPATH/bin/dqlite $SNAPCRAFT_PART_INSTALL/bin/
+      mkdir -p $GOPATH/src/github.com/canonical/
+      (
+        cd $GOPATH/src/github.com/canonical/
+        rm -rf go-dqlite
+        git clone https://github.com/canonical/go-dqlite
+        cd go-dqlite
+        git checkout tags/"${TAG}" -b build
+        go build -v -tags libsqlite3 ./cmd/dqlite
+        cd ..
+      )
+      cp $GOPATH/src/github.com/canonical/go-dqlite/dqlite $SNAPCRAFT_PART_INSTALL/bin/
 
   etcd:
     plugin: dump
