@@ -10,6 +10,14 @@ need_kubelet_restart=false
 need_controller_restart=false
 need_scheduler_restart=false
 
+# If the addons directory is missing from SNAP_COMMON, then we are upgrading from an older MicroK8s version.
+if [ ! -d "${SNAP_COMMON}/addons" ]
+then
+  mkdir -p ${SNAP_COMMON}/addons
+  snap_current=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
+  git clone "${snap_current}/addons/core" "${SNAP_COMMON}/addons/core"
+fi
+
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
 # and make sure the respective services use them.
@@ -323,8 +331,7 @@ then
   mv ${CD_TOML_TMP} ${CD_TOML}
 fi
 
-# Securing important directories
-for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock ${SNAP_DATA}/tmp/
+for dir in ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock ${SNAP_DATA}/tmp/
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
@@ -338,7 +345,7 @@ fi
 
 if getent group microk8s >/dev/null 2>&1
 then
-  chgrp microk8s -R ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
+  chgrp microk8s -R ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
 fi
 
 try_copy_users_to_snap_microk8s
@@ -425,6 +432,19 @@ fi
 if grep -e "feature-gates=RemoveSelfLink" ${SNAP_DATA}/args/kube-apiserver
 then
   "${SNAP}/bin/sed" -i '/feature-gates=RemoveSelfLink/d' "$SNAP_DATA/args/kube-apiserver"
+  need_api_restart=true
+fi
+
+# scheduler --address flag is removed after 1.24
+if grep -e "--address=" ${SNAP_DATA}/args/kube-scheduler
+then
+  "${SNAP}/bin/sed" -i '/--address=/d' "$SNAP_DATA/args/kube-scheduler"
+fi
+
+# controller-manager --address flag is removed after 1.24
+if grep -e "--address=" ${SNAP_DATA}/args/kube-controller-manager
+then
+  "${SNAP}/bin/sed" -i '/--address=/d' "$SNAP_DATA/args/kube-controller-manager"
   need_api_restart=true
 fi
 
@@ -564,6 +584,9 @@ then
 
   snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
 fi
+
+# Refresh calico if needed
+refresh_calico_if_needed
 
 # Restart reconfigured services
 if ${need_api_restart} ||

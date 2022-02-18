@@ -13,19 +13,8 @@ from common.utils import (
     get_available_addons,
     get_current_arch,
     get_addon_by_name,
-    kubectl_get,
-    kubectl_get_clusterroles,
+    get_status,
 )
-
-
-def is_enabled(addon, item):
-    if addon in item:
-        return True
-    else:
-        filepath = os.path.expandvars(addon)
-        return os.path.isfile(filepath)
-
-    return False
 
 
 def print_short(isReady, enabled_addons, disabled_addons):
@@ -34,16 +23,16 @@ def print_short(isReady, enabled_addons, disabled_addons):
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
             for enabled in enabled_addons:
-                print("{}: enabled".format(enabled["name"]))
+                print("{}/{}: enabled".format(enabled["repository"], enabled["name"]))
         if disabled_addons and len(disabled_addons) > 0:
             for disabled in disabled_addons:
-                print("{}: disabled".format(disabled["name"]))
+                print("{}/{}: disabled".format(disabled["repository"], disabled["name"]))
     else:
         print("microk8s is not running. Use microk8s inspect for a deeper inspection.")
 
 
 def print_pretty(isReady, enabled_addons, disabled_addons):
-    console_formatter = "{:>3} {:<20} # {}"
+    console_formatter = "{:>3} {:<20} # ({}) {}"
     if isReady:
         print("microk8s is running")
         if not is_ha_enabled():
@@ -76,11 +65,19 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
         if enabled_addons and len(enabled_addons) > 0:
             print("{:>2}{}".format("", "enabled:"))
             for enabled in enabled_addons:
-                print(console_formatter.format("", enabled["name"], enabled["description"]))
+                print(
+                    console_formatter.format(
+                        "", enabled["name"], enabled["repository"], enabled["description"]
+                    )
+                )
         if disabled_addons and len(disabled_addons) > 0:
             print("{:>2}{}".format("", "disabled:"))
             for disabled in disabled_addons:
-                print(console_formatter.format("", disabled["name"], disabled["description"]))
+                print(
+                    console_formatter.format(
+                        "", disabled["name"], disabled["repository"], disabled["description"]
+                    )
+                )
     else:
         print("microk8s is not running. Use microk8s inspect for a deeper inspection.")
 
@@ -92,10 +89,10 @@ def print_short_yaml(isReady, enabled_addons, disabled_addons):
     if isReady:
         print("addons:")
         for enabled in enabled_addons:
-            print("  {}: enabled".format(enabled["name"]))
+            print("  {}/{}: enabled".format(enabled["repository"], enabled["name"]))
 
         for disabled in disabled_addons:
-            print("  {}: disabled".format(disabled["name"]))
+            print("  {}/{}: disabled".format(disabled["repository"], disabled["name"]))
     else:
         print(
             "{:>2}{} {}".format(
@@ -124,12 +121,14 @@ def print_yaml(isReady, enabled_addons, disabled_addons):
         print("{:>2}".format("addons:"))
         for enabled in enabled_addons:
             print("{:>4}name: {:<1}".format("- ", enabled["name"]))
+            print("{:>4}repository: {:<1}".format("", enabled["repository"]))
             print("{:>4}description: {:<1}".format("", enabled["description"]))
             print("{:>4}version: {:<1}".format("", enabled["version"]))
             print("{:>4}status: enabled".format(""))
 
         for disabled in disabled_addons:
             print("{:>4}name: {:<1}".format("- ", disabled["name"]))
+            print("{:>4}repository: {:<1}".format("", enabled["repository"]))
             print("{:>4}description: {:<1}".format("", disabled["description"]))
             print("{:>4}version: {:<1}".format("", disabled["version"]))
             print("{:>4}status: disabled".format(""))
@@ -148,27 +147,6 @@ def print_addon_status(enabled):
         print("enabled")
     else:
         print("disabled")
-
-
-def get_status(available_addons, isReady):
-    enabled = []
-    disabled = []
-    if isReady:
-        # 'all' does not include ingress
-        kube_output = kubectl_get("all,ingress")
-        cluster_output = kubectl_get_clusterroles()
-        kube_output = kube_output + cluster_output
-        for addon in available_addons:
-            found = False
-            for row in kube_output.split("\n"):
-                if is_enabled(addon["check_status"], row):
-                    enabled.append(addon)
-                    found = True
-                    break
-            if not found:
-                disabled.append(addon)
-
-    return enabled, disabled
 
 
 def ha_cluster_formed(info):

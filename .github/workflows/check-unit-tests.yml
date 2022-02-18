@@ -1,0 +1,22 @@
+name: Unit Tests
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  check-unit-tests:
+    name: Check Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.4.0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install tox --fix-missing
+      - name: Check Units
+        run: |
+          tox -e unit

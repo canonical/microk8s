@@ -257,11 +257,11 @@ use_manifest() {
     else
         declare -A items
     fi
-    local tmp_manifest="${SNAP_USER_DATA}/tmp/temp.${manifest}"
+    local tmp_manifest="${SNAP_USER_DATA}/tmp/temp.yaml"
     items[\$ARCH]=$(arch)
 
     mkdir -p ${SNAP_USER_DATA}/tmp
-    cp "${SNAP}/actions/${manifest}" "${tmp_manifest}"
+    cp "${SNAP}/addons/core/addons/${manifest}" "${tmp_manifest}"
     for i in "${!items[@]}"
     do
         "$SNAP/bin/sed" -i 's@'$i'@'"${items[$i]}"'@g' "${tmp_manifest}"
@@ -776,4 +776,9 @@ exit_if_low_memory_guard() {
     echo ''
     exit 1
   fi
+}
+
+refresh_calico_if_needed() {
+    # Call the python script that does the calico update if needed
+    "$SNAP/usr/bin/python3" "$SNAP/scripts/calico/upgrade.py"
 }

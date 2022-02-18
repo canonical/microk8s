@@ -26,4 +26,7 @@ jobs:
         run: |
           set -eux
           prettier --check $(find . -name "*.yaml" -o -name "*.yml" | \
-            grep -v "./microk8s-resources/actions/ingress.yaml" | grep -v "./microk8s-resources/actions/metallb.yaml")
+            grep -v "./microk8s-resources/actions/ingress.yaml" | \
+            grep -v "./microk8s-resources/actions/metallb.yaml" | \
+            grep -v invalid.yaml | \
+            grep -v calico)
