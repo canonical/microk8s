@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import time
@@ -97,6 +98,19 @@ def print_pretty(token, check):
         print(f"microk8s join {ip}:{port}/{token}/{check}")
 
 
+def print_json(token, check):
+    _, all_ips, port = get_network_info()
+    print(
+        json.dumps(
+            {
+                "token": f"{token}/{check}",
+                "urls": [f"{ip}:{port}/{token}/{check}" for ip in all_ips],
+            },
+            indent=2,
+        )
+    )
+
+
 def print_short(token, check):
     default_ip, all_ips, port = get_network_info()
 
@@ -131,7 +145,7 @@ if __name__ == "__main__":
         "--format",
         help="Format the output of the token in pretty, short, token, or token-check",
         default="pretty",
-        choices={"pretty", "short", "token", "token-check"},
+        choices={"pretty", "short", "token", "token-check", "json"},
     )
 
     # read arguments from the command line
@@ -157,5 +171,7 @@ if __name__ == "__main__":
         print_short(token, check)
     elif args.format == "token-check":
         print(f"{token}/{check}")
+    elif args.format == "json":
+        print_json(token, check)
     else:
         print(token)
