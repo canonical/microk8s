@@ -101,29 +101,21 @@ def print_pretty(token, check):
 def get_output_dict(token, check):
     _, all_ips, port = get_network_info()
     info = {
-                "token": f"{token}/{check}",
-                "urls": [f"{ip}:{port}/{token}/{check}" for ip in all_ips],
+        "token": f"{token}/{check}",
+        "urls": [f"{ip}:{port}/{token}/{check}" for ip in all_ips],
     }
     return info
 
 
 def print_json(token, check):
     info = get_output_dict(token, check)
-    print(
-        json.dumps(
-            info,
-            indent=2,
-        )
-    )
+    print(json.dumps(info, indent=2))
+
 
 def print_yaml(token, check):
     info = get_output_dict(token, check)
-    print(
-        yaml.dump(
-            info,
-            indent=2,
-        )
-    )
+    print(yaml.dump(info, indent=2))
+
 
 def print_short(token, check):
     default_ip, all_ips, port = get_network_info()
