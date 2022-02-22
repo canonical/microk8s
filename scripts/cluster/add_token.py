@@ -98,6 +98,7 @@ def print_pretty(token, check):
     for ip in all_ips:
         print(f"microk8s join {ip}:{port}/{token}/{check}")
 
+
 def get_output_dict(token, check):
     _, all_ips, port = get_network_info()
     info = {
