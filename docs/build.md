@@ -31,7 +31,7 @@ sudo usermod -a -G lxd ${USER}
 Build the snap with:
 
 ```shell
-git clone http://github.com/ubuntu/microk8s
+git clone http://github.com/canonical/microk8s
 cd ./microk8s/
 snapcraft --use-lxd
 ```
@@ -51,7 +51,7 @@ To produce a custom build with specific component versions you cannot use the sn
 lxc launch ubuntu:16.04 --ephemeral test-build
 lxc exec test-build -- snap install snapcraft --classic
 lxc exec test-build -- apt update
-lxc exec test-build -- git clone https://github.com/ubuntu/microk8s
+lxc exec test-build -- git clone https://github.com/canonical/microk8s
 ```
 
 You can then set the following environment variables prior to building:

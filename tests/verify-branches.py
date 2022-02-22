@@ -31,7 +31,7 @@ class TestMicrok8sBranches(object):
                 major_minor_upstream_version, prev_major_minor_version
             )
         )
-        cmd = "git ls-remote --heads http://github.com/ubuntu/microk8s.git {}".format(
+        cmd = "git ls-remote --heads http://github.com/canonical/microk8s.git {}".format(
             prev_major_minor_version
         )
         branch = check_output(cmd.split()).decode("utf-8")

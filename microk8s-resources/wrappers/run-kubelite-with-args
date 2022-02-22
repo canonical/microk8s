@@ -115,7 +115,7 @@ then
   done
 fi
 
-# Handle non-unified cgroups https://github.com/ubuntu/microk8s/issues/519
+# Handle non-unified cgroups https://github.com/canonical/microk8s/issues/519
 if [ -e /proc/$$/cgroup ] &&
  [[ $(gawk -F '[:]' '(/cpu/ && !/cpuset/) || /memory/ {print $3}' /proc/$$/cgroup | uniq | wc -l) -eq "2" ]] &&
  ! grep -e "runtime-cgroups" $SNAP_DATA/args/kubelet &> /dev/null &&
@@ -179,7 +179,7 @@ then
 fi
 
 # on lxc containers do not try to change the conntrack configuration
-# see https://github.com/ubuntu/microk8s/issues/1438
+# see https://github.com/canonical/microk8s/issues/1438
 if grep -E lxc /proc/1/environ &&
   ! grep -E "conntrack-max-per-core" $SNAP_DATA/args/kube-proxy
 then

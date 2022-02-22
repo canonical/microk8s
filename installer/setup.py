@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name="microk8s",
     version="1.0.2",
-    url="https://github.com/ubuntu/microk8s",
+    url="https://github.com/canonical/microk8s",
     license="Apache-2.0",
     author="Joe Borg",
     author_email="joseph.borg@canonical.com",
