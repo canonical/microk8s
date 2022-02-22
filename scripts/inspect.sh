@@ -88,58 +88,6 @@ function store_kubernetes_info {
   /snap/bin/microk8s kubectl get pvc 2>&1 | tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
 }
 
-<<<<<<< HEAD
-
-function store_juju_info {
-  # Collect some juju details
-  printf -- '  Inspect Juju\n'
-  mkdir -p $INSPECT_DUMP/juju
-  /snap/bin/microk8s juju status 2>&1 | tee $INSPECT_DUMP/juju/status > /dev/null
-  /snap/bin/microk8s juju debug-log 2>&1 | tee $INSPECT_DUMP/juju/debug.log > /dev/null
-  /snap/bin/microk8s kubectl logs -n controller-uk8s --tail 10000 -c api-server controller-0 2>&1 | tee $INSPECT_DUMP/juju/controller.log > /dev/null
-}
-
-
-function store_dqlite_info {
-  # Collect some dqlite details
-  printf -- '  Inspect dqlite\n'
-  mkdir -p $INSPECT_DUMP/dqlite
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
-  sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
-}
-
-
-function store_dqlite_info {
-  # Collect some dqlite details
-  printf -- '  Inspect dqlite\n'
-  mkdir -p $INSPECT_DUMP/dqlite
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
-  sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
-}
-
-
-function store_dqlite_info {
-  # Collect some dqlite details
-  printf -- '  Inspect dqlite\n'
-  mkdir -p $INSPECT_DUMP/dqlite
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
-  sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
-}
-
-
-function store_kubeflow_info {
-  # Collect some kubeflow details
-  printf -- '  Inspect Kubeflow\n'
-  mkdir -p $INSPECT_DUMP/kubeflow
-  /snap/bin/microk8s kubectl get pods -nkubeflow -oyaml 2>&1 | tee $INSPECT_DUMP/kubeflow/pods.yaml > /dev/null
-  /snap/bin/microk8s kubectl describe pods -nkubeflow 2>&1 | tee $INSPECT_DUMP/kubeflow/pods.describe > /dev/null
-=======
 function check_storage_addon {
   image=`sudo -E /snap/bin/microk8s kubectl get deploy -n kube-system hostpath-provisioner -o jsonpath='{.spec.template.spec.containers[0].image}' 2>&1`
 
@@ -167,7 +115,6 @@ function store_dqlite_info {
   sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
   sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
   sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
->>>>>>> master
 }
 
 
