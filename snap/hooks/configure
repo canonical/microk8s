@@ -68,13 +68,13 @@ then
   need_api_restart=true
 fi
 
-# Patch for issue: https://github.com/ubuntu/microk8s/issues/121
+# Patch for issue: https://github.com/canonical/microk8s/issues/121
 if grep -e  "requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt"  ${SNAP_DATA}/args/kube-apiserver
 then
   "$SNAP/bin/sed" -i 's@requestheader-client-ca-file=/var/snap/microk8s/.../certs/ca.crt@requestheader-client-ca-file=\${SNAP_DATA}/certs/ca.crt@g' ${SNAP_DATA}/args/kube-apiserver
 fi
 
-# Patch for issue: https://github.com/ubuntu/microk8s/issues/721
+# Patch for issue: https://github.com/canonical/microk8s/issues/721
 if grep -F 'requestheader-client-ca-file=${SNAP_DATA}/certs/ca.crt' ${SNAP_DATA}/args/kube-apiserver
 then
   "$SNAP/bin/sed" -i 's@requestheader-client-ca-file=${SNAP_DATA}/certs/ca.crt@requestheader-client-ca-file=${SNAP_DATA}/certs/front-proxy-ca.crt@g' ${SNAP_DATA}/args/kube-apiserver

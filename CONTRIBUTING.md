@@ -22,7 +22,7 @@ MicroK8s has adopted the Ubuntu code of Conduct. You can read this in full [here
 
 The workflow for contributing code is as follows:
 
-1. **Create/choose an issue**: MicroK8s tracks issues at [https://github.com/ubuntu/microk8s/issues](https://github.com/ubuntu/microk8s/issues). If you
+1. **Create/choose an issue**: MicroK8s tracks issues at [https://github.com/canonical/microk8s/issues](https://github.com/canonical/microk8s/issues). If you
    want to work on a new feature, create an issue first! This gives everyone a place to discuss scope and implementation.
 2. **Create a fork of the MicroK8s repo**
 3. **Make a new branch for your contribution**. Write your code there.
