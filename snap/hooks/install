@@ -27,6 +27,9 @@ else
   echo "\`/var/lib/kubelet\` already exists.  Will not be linking to ${SNAP_COMMON}"
 fi
 
+# Install the core addons
+cp -rv ${SNAP}/addons ${SNAP_COMMON}/addons
+
 # Create the certificates
 mkdir ${SNAP_DATA}/certs
 # Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA

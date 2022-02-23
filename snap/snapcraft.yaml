@@ -69,10 +69,12 @@ hooks:
   connect-plug-network-control:
     plugs:
       - dot-kube
+      - kernel-module-control
       - network-control
   disconnect-plug-network-control:
     plugs:
       - dot-kube
+      - kernel-module-control
       - network-control
   connect-plug-docker-privileged:
     plugs:
@@ -232,6 +234,7 @@ apps:
     daemon: simple
     install-mode: disable
     plugs:
+      - kernel-module-control
       - network-bind
       - network-observe
       - network-control
@@ -242,6 +245,7 @@ apps:
     install-mode: disable
     daemon: simple
     plugs:
+      - kernel-module-control
       - network-bind
       - network-observe
       - network-control
@@ -469,13 +473,9 @@ apps:
   cilium:
     command: microk8s-cilium.wrapper
     plugs:
-      - network
-  juju:
-    command: microk8s-juju.wrapper
-    plugs:
-      - home-read-all
-      - home
-      - network
+      - network-bind
+      - network-control
+      - firewall-control
   dbctl:
     command: microk8s-dbctl.wrapper
     plugs:
@@ -929,8 +929,28 @@ parts:
       - python3-click
       - python3-dateutil
 
+  microk8s-addons:
+    plugin: dump
+    build-attributes: [no-patchelf]
+    build-packages:
+      - python3
+      - python3-yaml
+      - python3-click
+    source: .
+    override-build: |
+      set -eux
+
+      . build-scripts/set-env-variables.sh
+      python3 build-scripts/fetch-addons.py --addons-only --target-directory core
+
+      if [ -d "addons" ]; then
+        rm -rf addons
+      fi
+      mkdir addons
+      mv core addons/
+      snapcraftctl build
+
   microk8s:
-    after: [containerd, dqlite, k8s-binaries]
     plugin: dump
     build-attributes: [no-patchelf]
     build-packages:
@@ -975,70 +995,7 @@ parts:
 
       cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
 
-      # Remove addons that do not work on arm64
-      if [ "${ARCH}" = "arm64" ]
-      then
-        # Some actions are only available on amd64
-        rm actions/*.gpu.sh
-        rm "actions/gpu.yaml"
-        rm actions/*.istio.sh
-        rm actions/*.knative.sh
-        rm actions/*.fluentd.sh
-        rm -rf "actions/fluentd"
-        rm actions/*.jaeger.sh
-        rm -rf "actions/jaeger"
-        rm actions/*.juju.sh
-        rm actions/*.kubeflow.sh
-        rm actions/*.multus.sh
-        rm "actions/multus.yaml"
-        rm actions/*.keda.sh
-        rm actions/*.openfaas.sh
-        rm -rf "actions/kata"
-        rm actions/*.kata.sh
-        rm actions/*.inaccel.sh
-      fi
-
-      # Remove addons that do not work on s390x
-      if [ "${ARCH}" = "s390x" ]
-      then
-        rm actions/*.gpu.sh
-        rm actions/gpu.yaml
-        rm actions/*.istio.sh
-        rm actions/*.knative.sh
-        rm actions/*.fluentd.sh
-        rm -rf "actions/fluentd"
-        rm actions/*.jaeger.sh
-        rm -rf "actions/jaeger"
-        rm actions/*.juju.sh
-        rm actions/*.kubeflow.sh
-        rm actions/*.multus.sh
-        rm actions/multus.yaml
-        rm actions/*.keda.sh
-        rm actions/*.openebs.sh
-        rm actions/*.openfaas.sh
-        rm actions/*.prometheus.sh
-        rm -rf "actions/prometheus"
-        rm actions/*.ambassador.sh
-        rm actions/*.cilium.sh
-        rm actions/*.traefik.sh
-        rm actions/*.registry.sh
-        rm actions/*.portainer.sh
-        rm actions/*.linkerd.sh
-        rm -rf "actions/kata"
-        rm actions/*.kata.sh
-        rm actions/*.inaccel.sh
-      fi
-
       echo "Creating inspect hook"
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
       snapcraftctl build
-
-  juju:
-    plugin: dump
-    source: https://launchpad.net/juju/2.9/2.9.0/+download/juju-2.9.0-k8s.tar.xz
-    source-type: tar
-    organize:
-      juju: bin/juju
-    prime:
-      - bin/juju

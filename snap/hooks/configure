@@ -17,10 +17,10 @@ need_kubelet_restart=false
 need_controller_restart=false
 need_scheduler_restart=false
 
-#Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
-if [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
+# If the addons directory is missing from SNAP_COMMON, then we are upgrading from an older MicroK8s version.
+if [ ! -d "${SNAP_COMMON}/addons/core" ]
 then
-  cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
+  cp -rv ${SNAP}/addons ${SNAP_COMMON}/addons
 fi
 
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
@@ -475,15 +475,6 @@ if ! grep -e "\-\-timeout" ${SNAP_DATA}/args/cluster-agent
 then
   refresh_opt_in_config timeout 240 cluster-agent
   snapctl restart ${SNAP_NAME}.daemon-containerd
-fi
-
-mkdir -p "$SNAP_DATA/juju/share/juju" "$SNAP_DATA/juju-home"
-chmod -R ug+rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"
-chmod -R o-rwX "$SNAP_DATA/juju" "$SNAP_DATA/juju-home"
-
-if getent group snap_microk8s >/dev/null 2>&1
-then
-    chgrp snap_microk8s -R "$SNAP_DATA/juju" "$SNAP_DATA/juju-home" || true
 fi
 
 if ! grep -e "\-\-ip-masq" ${SNAP_DATA}/args/flanneld
