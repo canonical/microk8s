@@ -22,7 +22,7 @@ devices:
   aadisable2:
     path: /dev/kmsg
     source: /dev/kmsg
-    type: disk
+    type: unix-char
   aadisable3:
     path: /sys/fs/bpf
     source: /sys/fs/bpf
