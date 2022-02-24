@@ -14,3 +14,4 @@
 --containerd=${SNAP_COMMON}/run/containerd.sock
 --node-labels="microk8s.io/cluster=true,node.kubernetes.io/microk8s-controlplane=microk8s-controlplane"
 --authentication-token-webhook=true
+--read-only-port=0
