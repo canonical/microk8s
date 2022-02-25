@@ -212,6 +212,10 @@ if __name__ == "__main__":
     if args.addon != "all":
         print_addon_status(enabled)
     else:
+        # filter out addon aliases
+        enabled = [a for a in enabled if not a.get("alias_of")]
+        disabled = [a for a in disabled if not a.get("alias_of")]
+
         if args.format == "yaml":
             print_yaml(isReady, enabled, disabled)
         elif args.format == "short":

@@ -379,9 +379,27 @@ def xable(action: str, addon_args: list):
     # xabled_addons is a list (repo_name, addon_name) tuples of already xabled addons
     xabled_addons = [(addon["repository"], addon["name"]) for addon in xabled_addons_info]
 
+    # addon_aliases is a map of (repo_name, addon_name) -> alias_name
+    addon_aliases = {}
+    for addon in available_addons_info:
+        if addon.get("alias_of"):
+            addon_aliases[(addon["repository"], addon["name"])] = addon["alias_of"]
+
     addons = parse_xable_addon_args(addon_args, available_addons)
 
     for repo_name, addon_name, args in addons:
+
+        # handle addon aliases
+        visited = []
+        while (repo_name, addon_name) in addon_aliases:
+            visited.append(addon_name)
+            alias_name = addon_aliases[(repo_name, addon_name)]
+            click.echo("{0}/{1} is an alias for {0}/{2}".format(repo_name, addon_name, alias_name))
+            if alias_name in visited:
+                click.echo("Error: Cycle found: {}".format(" -> ".join([*visited, alias_name])))
+
+            addon_name = alias_name
+
         if (repo_name, addon_name) not in available_addons:
             click.echo("Addon {}/{} not found".format(repo_name, addon_name))
             continue
