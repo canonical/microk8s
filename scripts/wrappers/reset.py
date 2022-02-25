@@ -15,7 +15,7 @@ from common.utils import (
     is_cluster_locked,
     exit_if_no_permission,
     ensure_started,
-    kubeconfig
+    kubeconfig,
 )
 
 
@@ -30,12 +30,14 @@ def exit_if_multinode():
         sys.exit(1)
     nodes = res.split()
     if len(nodes) > 1:
-        print("This is a multi-node MicroK8s deployment. Reset is applicable for single node clusters.")
+        print(
+            "This is a multi-node MicroK8s deployment. Reset is applicable for single node clusters."
+        )
         print("Please remove all joined nodes before calling reset.")
         sys.exit(0)
 
 
-def disable_addon(repo, addon, args = []):
+def disable_addon(repo, addon, args=[]):
     """
     Try to disable an addon. Ignore any errors and/or silence any output.
     """
@@ -43,7 +45,7 @@ def disable_addon(repo, addon, args = []):
     subprocess.run(
         [snap_common() / "addons" / repo / "addons" / addon / "disable", *args],
         stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
+        stderr=subprocess.DEVNULL,
     )
     wait_for_ready(timeout=30)
 
@@ -58,7 +60,7 @@ def disable_addons(destroy_storage):
     enabled, disabled = get_status(available_addons_info, True)
     for addon in available_addons_info:
         # Do not disable HA
-        if addon['name'] == "ha-cluster":
+        if addon["name"] == "ha-cluster":
             continue
 
         print(f"Disabling addon : {addon['repository']}/{addon['name']}")
@@ -66,13 +68,10 @@ def disable_addons(destroy_storage):
         if addon in disabled:
             continue
 
-        if (
-            (addon['name'] == "hostpath-storage" or addon['name'] == "storage") and 
-            destroy_storage
-        ):
-            disable_addon(addon['repository'], f"{addon['name']}", ["destroy-storage"])
+        if (addon["name"] == "hostpath-storage" or addon["name"] == "storage") and destroy_storage:
+            disable_addon(addon["repository"], f"{addon['name']}", ["destroy-storage"])
         else:
-            disable_addon(addon['repository'], addon['name'])
+            disable_addon(addon["repository"], addon["name"])
     print("All addons are disabled.")
 
 
@@ -82,13 +81,14 @@ def cni(operation="apply"):
     """
     cni_yaml = f"{snap_data()}/args/cni-network/cni.yaml"
     if os.path.exists(cni_yaml):
-        if operation=="apply":
+        if operation == "apply":
             print("Setting up the CNI")
         else:
             print("Deleting the CNI")
-        subprocess.run([f"{os.environ['SNAP']}/kubectl", kubeconfig, operation, "-f", cni_yaml],
+        subprocess.run(
+            [f"{os.environ['SNAP']}/kubectl", kubeconfig, operation, "-f", cni_yaml],
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.DEVNULL,
         )
 
 
@@ -106,24 +106,18 @@ def clean_cluster():
         nss = res.split()
     resources = ["replicationcontrollers", "daemonsets", "deployments"]
     for ns in nss:
-        ns_name = ns.split('/')[-1]
+        ns_name = ns.split("/")[-1]
         print(f"Cleaning resources in namespace {ns_name}")
         for rs in resources:
             # we remove first resources that are automatically recreated so we do not risk race conditions
             # during which a deployment for example is recreated while any tokens are missing
             cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete --all {rs} -n {ns_name} --timeout=60s"
-            p = subprocess.run(cmd.split(),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+            p = subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         remove_extra_resources(ns_name)
-    
+
     print("Removing CRDs")
     cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete --all customresourcedefinitions.apiextensions.k8s.io --timeout=60s"
-    subprocess.run(cmd.split(),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
+    subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     remove_priority_classes()
     remove_storage_classes()
@@ -138,10 +132,7 @@ def clean_cluster():
         if should_remove:
             print(f"Removing {ns}")
             cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete {ns} --timeout=60s"
-            subprocess.run(cmd.split(),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+            subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     restart_cluster()
     remove_binaries()
@@ -162,10 +153,7 @@ def remove_storage_classes():
         if "microk8s-hostpath" in cs:
             continue
         cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete {cs} --timeout=60s"
-        subprocess.run(cmd.split(),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+        subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def remove_priority_classes():
@@ -182,10 +170,7 @@ def remove_priority_classes():
         if "system-cluster-critical" in cs or "system-node-critical" in cs:
             continue
         cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete {cs} --timeout=60s"
-        p = subprocess.run(cmd.split(),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+        p = subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def reset_cert_reissue():
@@ -227,24 +212,18 @@ def remove_extra_resources(ns_name):
     cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} api-resources -o name --verbs=delete --namespaced=true"
     res = run_silently(cmd)
     if not res:
-        return;
+        return
     extra_resources = res.split()
     for rs in extra_resources:
         if rs.startswith("apiservices"):
             continue
         cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete --all -n {ns_name} --timeout=60s"
-        subprocess.run(cmd.split(),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+        subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def run_silently(cmd):
     result = subprocess.run(
-        cmd.split(),
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
+        cmd.split(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
 
     try:
@@ -268,7 +247,7 @@ def preflight_check():
 
 @click.command()
 @click.option(
-    '--destroy-storage',
+    "--destroy-storage",
     is_flag=True,
     required=False,
     default=True,
