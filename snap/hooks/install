@@ -24,7 +24,9 @@ fi
 
 # Install the core addons
 snap_current=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
-git clone "${snap_current}/addons/core" "${SNAP_COMMON}/addons/core"
+for addon in $(cat "${SNAP}/addons/.auto-enable"); do
+  git clone "${snap_current}/addons/${addon}" "${SNAP_COMMON}/addons/${addon}"
+done
 
 # Create the certificates
 mkdir ${SNAP_DATA}/certs

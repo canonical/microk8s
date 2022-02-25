@@ -15,7 +15,9 @@ if [ ! -d "${SNAP_COMMON}/addons" ]
 then
   mkdir -p ${SNAP_COMMON}/addons
   snap_current=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
-  git clone "${snap_current}/addons/core" "${SNAP_COMMON}/addons/core"
+  for addon in $(cat "${SNAP}/addons/.auto-enable"); do
+    git clone "${snap_current}/addons/${addon}" "${SNAP_COMMON}/addons/${addon}"
+  done
 fi
 
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
