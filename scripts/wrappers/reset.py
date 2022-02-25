@@ -62,7 +62,7 @@ def disable_addons(destroy_storage):
             continue
 
         print(f"Disabling addon : {addon['repository']}/{addon['name']}")
-        # Do not disable disbaled addons
+        # Do not disable disabled addons
         if addon in disabled:
             continue
 
