@@ -9,6 +9,7 @@ import (
 	"github.com/canonical/microk8s/cluster-agent/pkg/util"
 )
 
+// MockRunner is a mock implementation of CommandRunner context.
 type MockRunner struct {
 	CalledWithCtx     context.Context
 	CalledWithCommand []string
@@ -16,6 +17,7 @@ type MockRunner struct {
 	Err               error
 }
 
+// Run is a mock implementation of CommandRunner.
 func (m *MockRunner) Run(ctx context.Context, command []string) error {
 	if m.Log {
 		log.Printf("mock execute %#v", command)

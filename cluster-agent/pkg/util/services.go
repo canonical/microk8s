@@ -38,7 +38,7 @@ func StartService(ctx context.Context, serviceName string) error {
 }
 
 // GetServiceArgument retrieves the value of a specific argument from the $SNAP_DATA/args/$service file.
-// The argument name should include preceeding dashes (e.g. "--secure-port").
+// The argument name should include preceding dashes (e.g. "--secure-port").
 // If any errors occur, or the argument is not present, an empty string is returned.
 func GetServiceArgument(serviceName string, argument string) string {
 	arguments, err := ReadFile(SnapDataPath("args", serviceName))

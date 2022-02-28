@@ -18,6 +18,7 @@ func (v *RestartServiceField) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// ConfigureServiceRequest is a configuration request for MicroK8s.
 type ConfigureServiceRequest struct {
 	// Name is the service name.
 	Name string `json:"name"`
@@ -29,6 +30,7 @@ type ConfigureServiceRequest struct {
 	Restart RestartServiceField `json:"restart"`
 }
 
+// ConfigureAddonRequest is a configuration request for a MicroK8s addon.
 type ConfigureAddonRequest struct {
 	// Name is the name of the addon.
 	Name string `json:"name"`

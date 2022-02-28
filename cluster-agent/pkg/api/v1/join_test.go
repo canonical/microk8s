@@ -88,7 +88,7 @@ admin-token,admin,admin,"system:masters"
 			expectedResponse := &v1.JoinResponse{
 				CertificateAuthority: "CA CERTIFICATE DATA",
 				EtcdEndpoint:         "https://0.0.0.0:12379",
-				ApiServerPort:        "16443",
+				APIServerPort:        "16443",
 				KubeProxyToken:       "kube-proxy-token",
 				KubeletArgs:          "kubelet arguments\n\n--hostname-override=10.10.10.10",
 				KubeletToken:         resp.KubeletToken,

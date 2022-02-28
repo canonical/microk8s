@@ -94,7 +94,7 @@ admin-token-123,admin,admin,"system:masters"
 			expectedResponse := &v2.JoinResponse{
 				CertificateAuthority:     "CA CERTIFICATE DATA",
 				CallbackToken:            "callback-token",
-				ApiServerPort:            "16443",
+				APIServerPort:            "16443",
 				KubeletArgs:              "kubelet arguments\n\n--hostname-override=10.10.10.13",
 				HostNameOverride:         "10.10.10.13",
 				DqliteVoterNodes:         []string{"10.10.10.10:19001", "10.10.10.11:19001"},
@@ -143,7 +143,7 @@ admin-token-123,admin,admin,"system:masters"
 			expectedResponse := &v2.JoinResponse{
 				CertificateAuthority: "CA CERTIFICATE DATA",
 				CallbackToken:        "callback-token",
-				ApiServerPort:        "16443",
+				APIServerPort:        "16443",
 				KubeletArgs:          "kubelet arguments\n",
 				HostNameOverride:     "10.10.10.12",
 				ControlPlaneNodes:    []string{},
@@ -248,7 +248,7 @@ admin-token-123,admin,admin,"system:masters"
 		expectedResponse := &v2.JoinResponse{
 			CertificateAuthority:     "CA CERTIFICATE DATA",
 			CallbackToken:            "callback-token",
-			ApiServerPort:            "16443",
+			APIServerPort:            "16443",
 			KubeletArgs:              "kubelet arguments\n\n--hostname-override=10.10.10.13",
 			HostNameOverride:         "10.10.10.13",
 			DqliteVoterNodes:         []string{"10.10.10.10:19001"},

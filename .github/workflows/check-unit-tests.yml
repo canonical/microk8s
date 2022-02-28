@@ -13,10 +13,23 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2.4.0
 
-      - name: Install dependencies
+      - name: Install Python
+        uses: actions/setup-python@v2
+
+      - name: Check Python unit tests
         run: |
-          sudo apt-get update
-          sudo apt-get install tox --fix-missing
-      - name: Check Units
-        run: |
+          python3 -m pip install tox
           tox -e unit
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17.6"
+
+      - name: Run Go unit tests
+        run: |
+          set -eux
+          (
+            cd cluster-agent
+            go test -v ./...
+          )

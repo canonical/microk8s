@@ -17,6 +17,7 @@ func RunCommand(ctx context.Context, command []string) error {
 	return CommandRunner(ctx, command)
 }
 
+// DefaultCommandRunner executes a shell command.
 func DefaultCommandRunner(ctx context.Context, command []string) error {
 	var args []string
 	if len(command) > 1 {

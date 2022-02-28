@@ -36,14 +36,14 @@ type JoinRequest struct {
 	RemoteAddress string `json:"-"`
 }
 
-// JoinResponsee is the response message for the v2/join API endpoint.
+// JoinResponse is the response message for the v2/join API endpoint.
 type JoinResponse struct {
 	// CertificateAuthority is the root CertificateAuthority certificate for the Kubernetes cluster.
 	CertificateAuthority string `json:"ca"`
 	// CallbackToken is a callback token used to authenticate requests with the cluster agent on the joining node.
 	CallbackToken string `json:"callback_token"`
-	// ApiServerPort is the port where the kube-apiserver is listening.
-	ApiServerPort string `json:"apiport"`
+	// APIServerPort is the port where the kube-apiserver is listening.
+	APIServerPort string `json:"apiport"`
 	// KubeletArgs is a string with arguments for the kubelet service on the joining node.
 	KubeletArgs string `json:"kubelet_args"`
 	// HostNameOverride is the host name the joining node will be known as in the MicroK8s cluster.
@@ -146,7 +146,7 @@ func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
 	response := &JoinResponse{
 		CertificateAuthority: ca,
 		CallbackToken:        callbackToken,
-		ApiServerPort:        util.GetServiceArgument("kube-apiserver", "--secure-port"),
+		APIServerPort:        util.GetServiceArgument("kube-apiserver", "--secure-port"),
 		HostNameOverride:     hostname,
 		KubeletArgs:          kubeletArgs,
 	}

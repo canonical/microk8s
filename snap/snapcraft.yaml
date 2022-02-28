@@ -518,22 +518,6 @@ parts:
       - zfsutils-linux
 
   cluster-agent:
-    plugin: python
-    python-version: python3
-    source: .
-    python-packages:
-      - flask == 1.1.2
-      - PyYAML == 5.3.1
-      - netifaces == 0.10.9
-    stage-packages:
-      - python3-openssl
-      - openssl
-      - python3-requests
-      - gunicorn3
-      - python3-click
-      - python3-dateutil
-
-  cluster-agent-go:
     build-snaps: [go]
     source: cluster-agent/
     build-attributes: [no-patchelf]
@@ -638,6 +622,21 @@ parts:
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
       snapcraftctl build
+
+  python-requirements:
+    plugin: python
+    python-version: python3
+    source: .
+    python-packages:
+      - flask == 1.1.2
+      - PyYAML == 5.3.1
+      - netifaces == 0.10.9
+    stage-packages:
+      - openssl
+      - python3-openssl
+      - python3-requests
+      - python3-click
+      - python3-dateutil
 
 slots:
   microk8s:
