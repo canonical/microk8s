@@ -50,8 +50,8 @@ jobs:
           export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
           (cd tests; pytest -s verify-branches.py)
-          sudo -E bash -c "cd /var/snap/microk8s/common/addons/core/tests; sudo -E pytest -s -ra test-addons.py"
-          sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/tests; sudo -E pytest -s -ra test-addons.py"
+          sudo -E bash -c "cd /var/snap/microk8s/common/addons/core/tests; pytest -s -ra test-addons.py"
+          sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/tests; pytest -s -ra test-addons.py"
           sudo snap remove microk8s --purge
       - name: Running upgrade tests
         run: |
