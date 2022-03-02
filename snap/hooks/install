@@ -24,7 +24,7 @@ fi
 
 # Install the core addons
 snap_current=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
-for addon in $(cat "${SNAP}/addons/.auto-enable"); do
+for addon in $(cat "${SNAP}/addons/.auto-add"); do
   git clone "${snap_current}/addons/${addon}" "${SNAP_COMMON}/addons/${addon}"
 done
 
