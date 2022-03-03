@@ -48,9 +48,7 @@ def disable_addon(repo, addon, args=[]):
     if not script.exists():
         return
 
-    subprocess.run(
-        [script, *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
+    subprocess.run([script, *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     wait_for_ready(timeout=30)
 
@@ -121,7 +119,13 @@ def clean_cluster():
         remove_extra_resources(ns_name)
 
     print("Removing CRDs")
-    cmd = [KUBECTL, "delete", "--all", "customresourcedefinitions.apiextensions.k8s.io", "--timeout=60s"]
+    cmd = [
+        KUBECTL,
+        "delete",
+        "--all",
+        "customresourcedefinitions.apiextensions.k8s.io",
+        "--timeout=60s",
+    ]
     subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     remove_priority_classes()
@@ -130,7 +134,7 @@ def clean_cluster():
     for ns in nss:
         ns_name = ns.split("/")[-1]
         if ns_name in ["default", "kube-public", "kube-system", "kube-node-lease"]:
-             continue
+            continue
         print(f"Removing {ns}")
         cmd = [KUBECTL, "delete", ns, "--timeout=60s"]
         subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
