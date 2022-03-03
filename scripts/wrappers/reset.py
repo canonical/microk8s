@@ -15,15 +15,17 @@ from common.utils import (
     is_cluster_locked,
     exit_if_no_permission,
     ensure_started,
-    kubeconfig,
 )
+
+
+KUBECTL = os.path.expandvars("$SNAP/microk8s.kubectl-wrapper")
 
 
 def exit_if_multinode():
     """
     Exit if we cannot get the list of nodes or if we are in a multinode cluster
     """
-    cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} get no -o name"
+    cmd = [KUBECTL, "get", "no", "-o", "name"]
     res = run_silently(cmd)
     if not res:
         print("Failed to query the cluster nodes.")
@@ -102,7 +104,7 @@ def clean_cluster():
     2. Restart so the cluster resets
     3. Delete any locks and addon binaries.
     """
-    cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} get  ns -o=name"
+    cmd = [KUBECTL, "get", "ns", "-o=name"]
     res = run_silently(cmd)
     nss = []
     if res:
@@ -114,13 +116,13 @@ def clean_cluster():
         for rs in resources:
             # we remove first resources that are automatically recreated so we do not risk race conditions
             # during which a deployment for example is recreated while any tokens are missing
-            cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete --all {rs} -n {ns_name} --timeout=60s"
-            p = subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            cmd = [KUBECTL, "delete", "--all", rs, "-n", ns_name, "--timeout=60s"]
+            p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         remove_extra_resources(ns_name)
 
     print("Removing CRDs")
-    cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete --all customresourcedefinitions.apiextensions.k8s.io --timeout=60s"
-    subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    cmd = [KUBECTL, "delete", "--all", "customresourcedefinitions.apiextensions.k8s.io", "--timeout=60s"]
+    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     remove_priority_classes()
     remove_storage_classes()
@@ -130,8 +132,8 @@ def clean_cluster():
         if ns_name in ["default", "kube-public", "kube-system", "kube-node-lease"]:
              continue
         print(f"Removing {ns}")
-        cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete {ns} --timeout=60s"
-        subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        cmd = [KUBECTL, "delete", ns, "--timeout=60s"]
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     restart_cluster()
     remove_binaries()
@@ -143,7 +145,7 @@ def remove_storage_classes():
     Remove storage classes. Silence any output.
     """
     print("Removing StorageClasses")
-    cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} get storageclasses -o=name"
+    cmd = [KUBECTL, "get", "storageclasses", "-o=name"]
     res = run_silently(cmd)
     classes = []
     if res:
@@ -151,8 +153,8 @@ def remove_storage_classes():
     for cs in classes:
         if "microk8s-hostpath" in cs:
             continue
-        cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete {cs} --timeout=60s"
-        subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        cmd = [KUBECTL, "delete", cs, "--timeout=60s"]
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def remove_priority_classes():
@@ -160,7 +162,7 @@ def remove_priority_classes():
     Remove priority classes. Silence any output.
     """
     print("Removing PriorityClasses")
-    cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} get priorityclasses -o=name"
+    cmd = [KUBECTL, "get", "priorityclasses", "-o=name"]
     res = run_silently(cmd)
     classes = []
     if res:
@@ -168,8 +170,8 @@ def remove_priority_classes():
     for cs in classes:
         if "system-cluster-critical" in cs or "system-node-critical" in cs:
             continue
-        cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete {cs} --timeout=60s"
-        p = subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        cmd = [KUBECTL, "delete", cs, "--timeout=60s"]
+        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def reset_cert_reissue():
@@ -197,18 +199,18 @@ def restart_cluster():
     Restart a cluster by calling the stop and start wrappers.
     """
     print("Restarting cluster")
-    cmd = f"{os.environ['SNAP']}/microk8s-stop.wrapper"
-    subprocess.run(cmd.split())
+    cmd = [f"{os.environ['SNAP']}/microk8s-stop.wrapper"]
+    subprocess.run(cmd)
     time.sleep(5)
-    cmd = f"{os.environ['SNAP']}/microk8s-start.wrapper"
-    subprocess.run(cmd.split())
+    cmd = [f"{os.environ['SNAP']}/microk8s-start.wrapper"]
+    subprocess.run(cmd)
     wait_for_ready(timeout=30)
     ensure_started()
 
 
 def remove_extra_resources(ns_name):
     # Remove all resource types except the standard k8s apiservices themselves
-    cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} api-resources -o name --verbs=delete --namespaced=true"
+    cmd = [KUBECTL, "api-resources", "-o", "name", "--verbs=delete", "--namespaced=true"]
     res = run_silently(cmd)
     if not res:
         return
@@ -216,13 +218,13 @@ def remove_extra_resources(ns_name):
     for rs in extra_resources:
         if rs.startswith("apiservices"):
             continue
-        cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete --all -n {ns_name} --timeout=60s"
-        subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        cmd = [KUBECTL, "delete", "--all", "-n", ns_name, "--timeout=60s"]
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def run_silently(cmd):
     result = subprocess.run(
-        cmd.split(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
 
     try:
