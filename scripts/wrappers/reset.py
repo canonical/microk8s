@@ -2,6 +2,7 @@
 import click
 import os
 import subprocess
+import shutil
 import sys
 import time
 
@@ -15,10 +16,11 @@ from common.utils import (
     is_cluster_locked,
     exit_if_no_permission,
     ensure_started,
+    exit_if_no_root,
 )
 
 
-KUBECTL = os.path.expandvars("$SNAP/microk8s.kubectl-wrapper")
+KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
 
 
 def exit_if_multinode():
@@ -245,6 +247,7 @@ def preflight_check():
     """
     Preliminary checks to see if we can proceed with cluster reset
     """
+    exit_if_no_root()
     exit_if_no_permission()
     is_cluster_locked()
     ensure_started()

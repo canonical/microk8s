@@ -141,6 +141,17 @@ def wait_for_ready(timeout):
             time.sleep(2)
 
 
+def exit_if_no_root():
+    """
+    Exit if the user is not root
+    """
+    if not os.geteuid() == 0:
+        click.echo(
+            "Elevated permissions is needed for this operation. Please run this command with sudo."
+        )
+        exit(50)
+
+
 def exit_if_stopped():
     stoppedLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/stopped.lock")
     if os.path.isfile(stoppedLockFile):
