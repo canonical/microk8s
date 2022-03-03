@@ -92,7 +92,7 @@ def cni(operation="apply"):
         else:
             print("Deleting the CNI")
         subprocess.run(
-            [f"{os.environ['SNAP']}/kubectl", kubeconfig, operation, "-f", cni_yaml],
+            [KUBECTL, operation, "-f", cni_yaml],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
