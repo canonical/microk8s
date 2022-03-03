@@ -42,11 +42,14 @@ def disable_addon(repo, addon, args=[]):
     Try to disable an addon. Ignore any errors and/or silence any output.
     """
     wait_for_ready(timeout=30)
+    script = snap_common() / "addons" / repo / "addons" / addon / "disable"
+    if not script.exists():
+        return
+
     subprocess.run(
-        [snap_common() / "addons" / repo / "addons" / addon / "disable", *args],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        [script, *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
+
     wait_for_ready(timeout=30)
 
 
@@ -123,16 +126,12 @@ def clean_cluster():
     remove_storage_classes()
 
     for ns in nss:
-        non_removable = ["default", "kube-public", "kube-system", "kube-node-lease"]
-        should_remove = True
-        for keep in non_removable:
-            if keep in ns:
-                should_remove = False
-                break
-        if should_remove:
-            print(f"Removing {ns}")
-            cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete {ns} --timeout=60s"
-            subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        ns_name = ns.split("/")[-1]
+        if ns_name in ["default", "kube-public", "kube-system", "kube-node-lease"]:
+             continue
+        print(f"Removing {ns}")
+        cmd = f"{os.environ['SNAP']}/kubectl {kubeconfig} delete {ns} --timeout=60s"
+        subprocess.run(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     restart_cluster()
     remove_binaries()
