@@ -48,7 +48,10 @@ def disable_addon(repo, addon, args=[]):
     if not script.exists():
         return
 
-    subprocess.run([script, *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        subprocess.run([script, *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except (FileNotFoundError, PermissionDenied, subprocess.CalledProcessError) as e:
+        print(f"Ignoring error: {e}", file=sys.stderr)
 
     wait_for_ready(timeout=30)
 
@@ -192,10 +195,9 @@ def remove_binaries():
     """
     Remove binaries pulled in by addons.
     """
-    bins_dir = f"snap_data()/bin/"
-    if os.path.exists(bins_dir):
-        cmd = f"rm -rf {bins_dir}"
-        subprocess.run(cmd.split())
+    bins_dir = snap_data() / "bin"
+    if bins_dir.exists():
+        shutil.rmtree(bins_dir)
 
 
 def restart_cluster():
