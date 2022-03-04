@@ -52,7 +52,7 @@ def disable_addon(repo, addon, args=[]):
 
     try:
         subprocess.run([script, *args], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except (FileNotFoundError, PermissionDenied, subprocess.CalledProcessError) as e:
+    except (FileNotFoundError, PermissionError, subprocess.CalledProcessError) as e:
         print(f"Ignoring error: {e}", file=sys.stderr)
 
     wait_for_ready(timeout=30)
