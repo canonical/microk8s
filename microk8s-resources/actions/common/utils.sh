@@ -515,12 +515,6 @@ uncordon_node() {
     fi
 }
 
-get_all_addons() {
-    actions="$(find "$SNAP/actions" -maxdepth 1 ! -name 'coredns.yaml' -name '*.yaml' -or -name 'enable.*.sh')"
-    actions="$(echo "$actions" | sed -e 's/.*[/.]\([^.]*\)\..*/\1/' | sort | uniq)"
-    echo $actions
-}
-
 
 function valid_ip() {
 # Test an IP address for validity:

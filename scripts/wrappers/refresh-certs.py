@@ -4,20 +4,12 @@ import subprocess
 from dateutil.parser import parse
 import datetime
 
+from common.utils import exit_if_no_root
+
+
 snapdata_path = os.environ.get("SNAP_DATA")
 snap_path = os.environ.get("SNAP")
 backup_dir = "{}/var/log/ca-backup/".format(snapdata_path)
-
-
-def exit_if_no_root():
-    """
-    Exit if the user is not root
-    """
-    if not os.geteuid() == 0:
-        click.echo(
-            "Elevated permissions is needed for this operation. Please run this command with sudo."
-        )
-        exit(50)
 
 
 def check_certificate():
