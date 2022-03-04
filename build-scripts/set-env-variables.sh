@@ -49,9 +49,11 @@ export K8S_DQLITE_TAG="${K8S_DQLITE_TAG:-v1.0.4}"
 
 export KUBE_SNAP_ROOT="$(readlink -f .)"
 
-export ADDONS_REPO="${ADDONS_REPO:-https://github.com/canonical/microk8s-addons}"
-export ADDONS_REPO_BRANCH="${ADDONS_REPO_BRANCH:-main}"
-
+export ADDONS_REPOS="
+core,${CORE_ADDONS_REPO:-https://github.com/canonical/microk8s-core-addons},${CORE_ADDONS_REPO_BRANCH:-main}
+community,${COMMUNITY_ADDONS_REPO:-https://github.com/canonical/microk8s-addons},${COMMUNITY_ADDONS_REPO_BRANCH:-main}
+"
+export ADDONS_REPOS_ENABLED="core community"
 
 echo "Building with:"
 echo "KUBE_VERSION=${KUBE_VERSION}"
@@ -68,5 +70,6 @@ echo "CONTAINERD_COMMIT=${CONTAINERD_COMMIT}"
 echo "KUBERNETES_REPOSITORY=${KUBERNETES_REPOSITORY}"
 echo "KUBERNETES_TAG=${KUBERNETES_TAG}"
 echo "K8S_DQLITE_TAG=${K8S_DQLITE_TAG}"
-echo "ADDONS_REPO=${ADDONS_REPO}"
-echo "ADDONS_REPO_BRANCH=${ADDONS_REPO_BRANCH}"
+
+echo "ADDONS_REPOS=${ADDONS_REPOS}"
+echo "ADDONS_REPOS_ENABLED=${ADDONS_REPOS_ENABLED}"

@@ -549,7 +549,19 @@ parts:
         rm -rf addons
       fi
       mkdir -p addons
-      git clone $ADDONS_REPO -b $ADDONS_REPO_BRANCH addons/core
+
+      IFS=';'
+      echo "${ADDONS_REPOS}" | while read line; do
+        if [ -z "${line}" ];
+          then continue
+        fi
+        name="$(echo ${line} | cut -f1 -d',')"
+        repository="$(echo ${line} | cut -f2 -d',')"
+        reference="$(echo ${line} | cut -f3 -d',')"
+        git clone "${repository}" -b "${reference}" "addons/${name}"
+      done
+      echo "${ADDONS_REPOS_ENABLED}" > addons/.auto-add
+
       snapcraftctl build
 
   microk8s:

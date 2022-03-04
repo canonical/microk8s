@@ -58,40 +58,44 @@ fi
 # therefore we do not need to run it inside a VM/container
 apt-get install python3-pip -y
 pip3 install -U pytest requests pyyaml sh
-LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHANNEL} pytest -s tests/test-cluster.py
+#LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHANNEL} pytest -s tests/test-cluster.py
 
 # Test addons upgrade
-# Download the addons
-source ./build-scripts/set-env-variables.sh
-python3 build-scripts/fetch-addons.py
-cp -r core/tests ./tests/addon-tests
 
-# TODO Handle local in the upgrade
 create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/addon-tests/test-upgrade.py"
+if lxc exec $NAME -- script -e -c "ls /var/snap/microk8s/common/addons/core/tests/test-upgrade.py"
+then
+  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/snap/microk8s/common/addons/core/tests/test-upgrade.py"
+fi
 lxc delete $NAME --force
 
 # Test upgrade-path
 NAME=machine-$RANDOM
 create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade-path.py"
+if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
+then
+  lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
+  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=/tmp/microk8s_latest_amd64.snap pytest -s /var/tmp/tests/test-upgrade-path.py"
+else
+  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade-path.py"
+fi
 lxc delete $NAME --force
 
 # Test addons
 NAME=machine-$RANDOM
 create_machine $NAME $PROXY
-if [ ${TO_CHANNEL} == "local" ]
+if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
-  lxc file push ./microk8s_latest_amd64.snap $VM2_NAME/tmp/
-  lxc exec $VM1_NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+  lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
+  lxc exec $NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
 else
   lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL} --classic
 fi
-lxc exec $NAME -- /var/tmp/tests/patch-kube-proxy.sh
 lxc exec $NAME -- /var/tmp/tests/smoke-test.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "pytest -s /var/tmp/tests/addon-tests/test-addons.py"
+lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
+lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
