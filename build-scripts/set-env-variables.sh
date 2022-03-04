@@ -51,7 +51,7 @@ export KUBE_SNAP_ROOT="$(readlink -f .)"
 
 export ADDONS_REPOS="
 core,${CORE_ADDONS_REPO:-https://github.com/canonical/microk8s-core-addons},${CORE_ADDONS_REPO_BRANCH:-main}
-community,${COMMUNITY_ADDONS_REPO:-https://github.com/canonical/microk8s-addons},${COMMUNITY_ADDONS_REPO_BRANCH:-MK-342/split-core-addons}
+community,${COMMUNITY_ADDONS_REPO:-https://github.com/canonical/microk8s-addons},${COMMUNITY_ADDONS_REPO_BRANCH:-main}
 "
 export ADDONS_REPOS_ENABLED="core community"
 
