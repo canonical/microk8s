@@ -21,7 +21,7 @@ while true; do
     --from-channel ) FROM_CHANNEL="$2"; shift 2 ;;
     --to-channel ) TO_CHANNEL="$2"; shift 2 ;;
     --proxy ) PROXY="$2"; shift 2 ;;
-    -h | --help ) 
+    -h | --help )
       prog=$(basename -s.wrapper "$0")
       echo "Usage: $prog [options...] <distro> <from-channel> <to-channel> <proxy>"
       echo "     --distro <distro> Distro image to be used for LXD containers Eg. ubuntu:18.04"
