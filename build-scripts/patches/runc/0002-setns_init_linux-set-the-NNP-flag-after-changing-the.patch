@@ -1,0 +1,44 @@
+From 66fd3c5129599834de8262ee90a1ab2bf6b68ff0 Mon Sep 17 00:00:00 2001
+From: Alberto Mardegan <mardy@users.sourceforge.net>
+Date: Wed, 16 Jun 2021 15:04:40 +0300
+Subject: [PATCH 2/3] setns_init_linux: set the NNP flag after changing the
+ apparmor profile
+
+With the current version of the AppArmor kernel module, it's not
+possible to switch the AppArmor profile if the NoNewPrivileges flag is
+set. So, we invert the order of the two operations.
+---
+ libcontainer/setns_init_linux.go | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/libcontainer/setns_init_linux.go b/libcontainer/setns_init_linux.go
+index 97987f1d..eec427a0 100644
+--- a/libcontainer/setns_init_linux.go
++++ b/libcontainer/setns_init_linux.go
+@@ -57,11 +57,6 @@ func (l *linuxSetnsInit) Init() error {
+ 			return err
+ 		}
+ 	}
+-	if l.config.NoNewPrivileges {
+-		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+-			return err
+-		}
+-	}
+ 	if err := selinux.SetExecLabel(l.config.ProcessLabel); err != nil {
+ 		return err
+ 	}
+@@ -80,6 +75,11 @@ func (l *linuxSetnsInit) Init() error {
+ 	if err := apparmor.ApplyProfile(l.config.AppArmorProfile); err != nil {
+ 		return err
+ 	}
++	if l.config.NoNewPrivileges {
++		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
++			return err
++		}
++	}
+ 	// Set seccomp as close to execve as possible, so as few syscalls take
+ 	// place afterward (reducing the amount of syscalls that users need to
+ 	// enable in their seccomp profiles).
+-- 
+2.25.1
+
