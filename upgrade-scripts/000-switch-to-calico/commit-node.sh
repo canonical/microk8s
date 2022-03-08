@@ -5,7 +5,6 @@ set -ex
 echo "Switching master to calico"
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 RESOURCES="$SNAP/upgrade-scripts/000-switch-to-calico/resources"
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
@@ -21,7 +20,7 @@ if [ "$ARCH" == "s390x" ]
 then
   CALICO_MANIFEST="$RESOURCES/calico.s390x.yaml"
 fi
-run_with_sudo cp "$CALICO_MANIFEST" "$SNAP_DATA/args/cni-network/cni.yaml"
+cp "$CALICO_MANIFEST" "$SNAP_DATA/args/cni-network/cni.yaml"
 
 cp "$SNAP_DATA"/args/kube-apiserver "$BACKUP_DIR/args"
 refresh_opt_in_config "allow-privileged" "true" kube-apiserver
