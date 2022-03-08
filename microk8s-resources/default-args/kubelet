@@ -3,6 +3,7 @@
 --client-ca-file=${SNAP_DATA}/certs/ca.crt
 --anonymous-auth=false
 --root-dir=${SNAP_COMMON}/var/lib/kubelet
+--log-dir=${SNAP_COMMON}/var/log
 --fail-swap-on=false
 --feature-gates=DevicePlugins=true
 --eviction-hard="memory.available<100Mi,nodefs.available<1Gi,imagefs.available<1Gi"
