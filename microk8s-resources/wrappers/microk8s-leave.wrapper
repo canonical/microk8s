@@ -11,6 +11,7 @@ export PYTHONNOUSERSITE=false
 source $SNAP/actions/common/utils.sh
 
 exit_if_stopped
+exit_if_not_root
 exit_if_no_permissions
 
 if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ] &&
@@ -20,4 +21,4 @@ then
   exit 1
 fi
 
-run_with_sudo preserve_env ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/leave.py $@
+run_with_sudo ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/leave.py $@

@@ -25,7 +25,7 @@ fi
 declare -a args="($(cat $SNAP_DATA/args/kubectl))"
 if [ -n "${args[@]-}" ]
 then
-  "${SNAP}/kubectl" "${args[@]}" "$@"
+  EDITOR="${SNAP}/bin/nano" "${SNAP}/kubectl" "${args[@]}" "$@"
 else
-  "${SNAP}/kubectl" "$@"
+  EDITOR="${SNAP}/bin/nano" "${SNAP}/kubectl" "$@"
 fi
