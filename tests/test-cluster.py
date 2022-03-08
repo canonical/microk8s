@@ -21,7 +21,7 @@ from utils import (
 reuse_vms = None
 
 # Channel we want to test. A full path to a local snap can be used for local builds
-channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/stable")
+channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/edge/strict")
 backend = os.environ.get("BACKEND", None)
 profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
 snap_data = os.environ.get("SNAP_DATA", "/var/snap/microk8s/current")
@@ -106,7 +106,7 @@ extraSANs:
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
-                cmd = "snap install microk8s --classic --channel {}".format(channel_or_snap)
+                cmd = "snap install microk8s --channel {}".format(channel_or_snap)
                 time.sleep(20)
                 print("About to run {}".format(cmd))
                 output = ""
@@ -156,7 +156,10 @@ extraSANs:
                 channel_or_snap, self.vm_name
             ).split()
             subprocess.check_output(cmd)
-            cmd = ["snap install /var/tmp/microk8s.snap --dangerous --classic"]
+            cmd = ["snap install /var/tmp/microk8s.snap --dangerous"]
+            subprocess.check_output(cmd_prefix + cmd)
+            time.sleep(20)
+            cmd = ["/snap/microk8s/current/connect-all-interfaces.sh"]
             subprocess.check_output(cmd_prefix + cmd)
             time.sleep(20)
         except subprocess.CalledProcessError as e:
@@ -176,7 +179,7 @@ extraSANs:
             else:
                 subprocess.check_call(
                     "/snap/bin/multipass exec {}  -- sudo "
-                    "snap install microk8s --classic --channel {}".format(
+                    "snap install microk8s --channel {}".format(
                         self.vm_name, channel_or_snap
                     ).split()
                 )
@@ -220,8 +223,13 @@ extraSANs:
         )
         subprocess.check_call(
             "/snap/bin/multipass exec {}  -- sudo "
-            "snap install /var/tmp/microk8s.snap --classic --dangerous".format(self.vm_name).split()
+            "snap install /var/tmp/microk8s.snap --dangerous".format(self.vm_name).split()
         )
+        subprocess.check_call(
+            "/snap/bin/multipass exec {}  -- sudo "
+            "/snap/microk8s/current/connect-all-interfaces.sh".format(self.vm_name).split()
+        )
+        time.sleep(20)
 
     def run(self, cmd):
         """
