@@ -83,8 +83,15 @@ lxc file pull test-build/root/microk8s/microk8s_v1.9.6_amd64.snap .
 After copying it, you can install it with:
 
 ```shell
-snap install microk8s_*_amd64.snap --classic --dangerous
+sudo snap install microk8s_latest_amd64.snap --dangerous
 ```
+
+Finally, you need to connect the interfaces. To this end you can use the `connect-all-interfaces.sh` under the `tests` directory:
+
+```shell
+sudo tests/connect-all-interfaces.sh
+```
+
 
 ## Assembling the Calico CNI manifest
 
