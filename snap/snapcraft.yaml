@@ -9,7 +9,7 @@ description: |-
   them to MicroK8s on your boxes.
 license: Apache-2.0
 grade: stable
-confinement: classic
+confinement: strict
 base: core20
 assumes: [snapd2.52]
 environment:
@@ -240,6 +240,7 @@ parts:
       fi
 
       cp microk8s.default.yaml "${SNAPCRAFT_PART_INSTALL}/microk8s.default.yaml"
+      cp connect-all-interfaces.sh "${SNAPCRAFT_PART_INSTALL}/connect-all-interfaces.sh"
 
       cp -r default-args "${SNAPCRAFT_PART_INSTALL}/default-args"
       cp -r default-hooks "${SNAPCRAFT_PART_INSTALL}/default-hooks"
@@ -319,12 +320,38 @@ apps:
   microk8s:
     command: microk8s.wrapper
     completer: microk8s.bash
+    plugs:
+      - account-control
+      - docker-unprivileged
+      - dot-config-helm
+      - dot-kube
+      - firewall-control
+      - home-read-all
+      - home
+      - kernel-module-observe
+      - kubernetes-support
+      - login-session-observe
+      - log-observe
+      - mount-observe
+      - network
+      - network-control
+      - network-observe
+      - opengl
+      - system-observe
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
+    install-mode: disable
+    plugs:
+      - network-bind
   daemon-flanneld:
     command: run-flanneld-with-args
     daemon: simple
+    install-mode: disable
+    plugs:
+      - network-bind
+      - network-control
+      - firewall-control
   daemon-containerd:
     command: run-containerd-with-args
     daemon: notify
@@ -333,70 +360,504 @@ apps:
     stop-mode: sigterm
     restart-condition: always
     start-timeout: 5m
+    install-mode: disable
+    plugs:
+      - k8s-journald
+      - network-bind
+      - docker-privileged
+      - firewall-control
+      - network-control
+      - mount-observe
+      - kubernetes-support
+      - opengl
+      - cifs-mount
+      - fuse-support
+      - kernel-crypto-api
   daemon-kubelite:
     command: run-kubelite-with-args
     daemon: simple
     after: [daemon-containerd]
+    install-mode: disable
+    plugs:
+      - dot-kube
+      - docker-privileged
+      - firewall-control
+      - hardware-observe
+      - kubernetes-support
+      - mount-observe
+      - network-bind
+      - network-observe
+      - network-control
+      - process-control
+      - system-observe
+      - opengl
+      - kernel-module-observe
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
+    install-mode: disable
+    plugs:
+      - kernel-module-control
+      - network-bind
+      - network-observe
+      - network-control
+      - k8s-journald
+      - kubernetes-support
   daemon-apiserver-proxy:
     command: run-apiserver-proxy-with-args
     daemon: simple
+    install-mode: disable
+    plugs:
+      - network-bind
+      - network-observe
+      - network-control
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
+    install-mode: disable
+    plugs:
+      - mount-observe
+      - network-bind
+      - network-observe
+      - network-control
   daemon-k8s-dqlite:
     command: run-k8s-dqlite-with-args
     daemon: simple
+    install-mode: disable
+    plugs:
+      - network-bind
+      - docker-privileged
+      - firewall-control
+      - k8s-journald
+      - network-control
   dashboard-proxy:
     command: microk8s-dashboard-proxy.wrapper
+    plugs:
+      - network-bind
+      - network-control
+      - network-observe
+      - firewall-control
+      - k8s-kubeproxy
+      - kernel-module-observe
+      - mount-observe
+      - system-observe
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
+    plugs:
+      - docker-unprivileged
+      - dot-kube
+      - network
+      - home-read-all
+      - firewall-control
+      - network-bind
+      - k8s-kubelet
+      - hardware-observe
+      - mount-observe
+      - network-control
+      - process-control
+      - system-observe
   add-node:
     command: microk8s-add-node.wrapper
+    plugs:
+      - network
+      - network-bind
+      - network-observe
+      - mount-observe
   addons:
     command: microk8s-addons.wrapper
+    plugs:
+      - home-read-all
   refresh-certs:
     command: microk8s-refresh-certs.wrapper
   images:
     command: microk8s-images.wrapper
   join:
     command: microk8s-join.wrapper
+    plugs:
+      - network
+      - mount-observe
   remove-node:
     command: microk8s-remove-node.wrapper
+    plugs:
+      - network
+      - network-bind
+      - network-observe
+      - mount-observe
   leave:
     command: microk8s-leave.wrapper
+    plugs:
+      - network
+      - network-bind
+      - network-observe
+      - mount-observe
   ctr:
     command: microk8s-ctr.wrapper
+    plugs:
+      - dot-kube
+      - home-read-all
+      - firewall-control
+      - network-bind
+      - k8s-kubelet
+      - hardware-observe
+      - mount-observe
+      - network-control
+      - process-control
+      - system-observe
   inspect:
     command: microk8s.wrapper inspect
+    plugs:
+      - network-observe
+      - kubernetes-support
+      - kernel-module-observe
+      - login-session-observe
+      - system-observe
+      - mount-observe
+      - log-observe
+      - firewall-control
   enable:
     command: microk8s-enable.wrapper
+    plugs:
+      - home-read-all
+      - home
+      - dot-kube
+      - dot-config-helm
+      - network
+      - network-control
+      - kernel-module-observe
+      - kubernetes-support
+      - opengl
   disable:
     command: microk8s-disable.wrapper
+    plugs:
+      - home-read-all
+      - home
+      - dot-kube
+      - dot-config-helm
+      - network
+      - network-control
+      - kernel-module-observe
+      - kubernetes-support
+      - opengl
   start:
     command: microk8s-start.wrapper
+    plugs:
+      - network
   stop:
     command: microk8s-stop.wrapper
+    plugs:
+      - network
   status:
     command: microk8s-status.wrapper
+    plugs:
+      - network
   config:
     command: microk8s-config.wrapper
+    plugs:
+      - network-observe
   reset:
     command: microk8s-reset.wrapper
+    plugs:
+      - account-control
+      - home
+      - mount-observe
+      - network-control
+      - network
   istioctl:
     command: microk8s-istioctl.wrapper
+    plugs:
+      - network
   linkerd:
     command: microk8s-linkerd.wrapper
+    plugs:
+      - network
   helm:
     command: microk8s-helm.wrapper
     completer: helm.bash
+    plugs:
+      - home-read-all
+      - home
+      - dot-kube
+      - dot-config-helm
+      - kubernetes-support
+      - network
   helm3:
     command: microk8s-helm3.wrapper
     completer: helm3.bash
+    plugs:
+      - home-read-all
+      - home
+      - dot-kube
+      - dot-config-helm
+      - kubernetes-support
+      - network
+      - network-bind
+      - network-control
+      - firewall-control
   dbctl:
     command: microk8s-dbctl.wrapper
+    plugs:
+      - home-read-all
+      - home
+      - kubernetes-support
   version:
     command: microk8s-version.wrapper
+
+passthrough:
+  system-usernames:
+    snap_microk8s: shared
+  layout:
+    /usr/libexec:
+      bind: $SNAP_COMMON/usr/libexec
+    /usr/local/lib:
+      bind: $SNAP_COMMON/usr/local/lib
+    /var/lib/cni:
+      bind: $SNAP_COMMON/var/lib/cni
+    /var/log/pods:
+      bind: $SNAP_COMMON/var/log/pods
+    /var/log/containers:
+      bind: $SNAP_COMMON/var/log/containers
+    /var/lib/kubelet:
+      bind: $SNAP_COMMON/var/lib/kubelet
+    /var/lib/calico:
+      bind: $SNAP_DATA/var/lib/calico
+    /var/lib/kube-proxy:
+      bind: $SNAP_DATA/kube-proxy
+    /etc/service/enabled:
+      bind: $SNAP_COMMON/etc/service/enabled
+    /etc/nanorc:
+      bind-file: $SNAP_COMMON/etc/nanorc
+    /etc/cni/net.d:
+      bind: $SNAP_DATA/args/cni-network
+    /opt/cni/bin:
+      bind: $SNAP_DATA/opt/cni/bin
+
+plugs:
+  home-read-all:
+    interface: home
+    read: all
+  docker-privileged:
+    interface: docker-support
+    privileged-containers: true
+  docker-unprivileged:
+    interface: docker-support
+    privileged-containers: false
+  k8s-kubelet:
+    interface: kubernetes-support
+    flavor: kubelet
+  k8s-kubeproxy:
+    interface: kubernetes-support
+    flavor: kubeproxy
+  k8s-journald:
+    interface: kubernetes-support
+    flavor: autobind-unix
+  dot-kube:
+    interface: personal-files
+    write:
+      - $HOME/.kube
+  dot-config-helm:
+    interface: personal-files
+    write:
+      - $HOME/.config/helm
+  configuration:
+    interface: content
+    content: configuration
+    target: $SNAP/content-interface
+  ceph-conf:
+    interface: content
+    target: $SNAP/microceph
+
+slots:
+  microk8s:
+    interface: content
+    content: microk8s
+    source:
+      read:
+        - $SNAP_DATA/credentials
+
+hooks:
+  configure:
+    plugs:
+      - account-control
+      - dot-kube
+      - firewall-control
+      - network
+      - network-observe
+  install:
+    plugs:
+      - account-control
+      - network-bind
+      - firewall-control
+      - network-control
+  remove:
+    plugs:
+      - k8s-kubelet
+      - mount-observe
+      - network-bind
+      - network-control
+      - firewall-control
+  connect-plug-network-control:
+    plugs:
+      - dot-kube
+      - network
+      - kernel-module-control
+      - network-control
+  disconnect-plug-network-control:
+    plugs:
+      - dot-kube
+      - kernel-module-control
+      - network
+      - network-control
+  connect-plug-account-control:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-docker-privileged:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-kubernetes-support:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-k8s-kubelet:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-k8s-kubeproxy:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-dot-kube:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-network:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-network-bind:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-network-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-firewall-control:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-process-control:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-kernel-module-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-mount-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-hardware-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-system-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-home:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-opengl:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-k8s-journald:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-cifs-mount:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+  connect-plug-fuse-support:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+  connect-plug-kernel-crypto-api:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+  connect-plug-dot-config-helm:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-log-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-login-session-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-home-read-all:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-configuration:
+    plugs:
+      - configuration
+  disconnect-plug-configuration:
+    plugs:
+      - configuration
