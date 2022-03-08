@@ -51,6 +51,7 @@ addons:
   then
     lxc file push "${TO_CHANNEL}" "$NAME"/tmp/microk8s_latest_amd64.snap
     lxc exec "$NAME" -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+    lxc exec "$NAME" -- bash -c '/snap/microk8s/current/connect-all-interfaces.sh'
   else
     lxc exec "$NAME" -- snap install microk8s --channel="${TO_CHANNEL}" --classic
   fi
@@ -142,6 +143,7 @@ addons:
   while ! snap install /tmp/microk8s.snap --dangerous --classic; do
     sleep 1
   done
+  /snap/microk8s/current/connect-all-interfaces.sh
   '
 }
 
