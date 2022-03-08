@@ -11,6 +11,7 @@ function setup_addons_tests() {
   then
     lxc file push "${TO_CHANNEL}" "$NAME"/tmp/microk8s_latest_amd64.snap
     lxc exec "$NAME" -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+    lxc exec "$NAME" -- bash -c '/snap/microk8s/current/connect-all-interfaces.sh'
   else
     lxc exec "$NAME" -- snap install microk8s --channel="${TO_CHANNEL}" --classic
   fi
@@ -25,13 +26,13 @@ function run_smoke_test() {
 function run_core_addons_tests() {
   local NAME=$1
   # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-  lxc exec "$NAME" -- script -e -c "pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
+  lxc exec "$NAME" -- script -e -c "STRICT=yes pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
 }
 
 function run_community_addons_tests() {
   local NAME=$1
   lxc exec "$NAME" -- microk8s enable community
-  lxc exec "$NAME" -- script -e -c "pytest -s /var/snap/microk8s/common/addons/community/tests/"
+  lxc exec "$NAME" -- script -e -c "STRICT=yes pytest -s /var/snap/microk8s/common/addons/community/tests/"
 }
 
 function run_gpu_addon_test() {
@@ -97,6 +98,5 @@ then
   if [ "x${DISABLE_COMMUNITY_TESTS}" != "x1" ]; then
     run_community_addons_tests "$NAME"
   fi
-  run_gpu_addon_test
   post_addons_tests "$NAME"
 fi
