@@ -1,0 +1,55 @@
+From 728d989c7643a87ca9d57e3135e35c7af833bae0 Mon Sep 17 00:00:00 2001
+From: Alberto Mardegan <mardy@users.sourceforge.net>
+Date: Thu, 17 Jun 2021 14:31:35 +0300
+Subject: [PATCH 3/3] standard_init_linux: change AppArmor profile as late as
+ possible
+
+---
+ libcontainer/standard_init_linux.go | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/libcontainer/standard_init_linux.go b/libcontainer/standard_init_linux.go
+index d77022ad..6f43da5f 100644
+--- a/libcontainer/standard_init_linux.go
++++ b/libcontainer/standard_init_linux.go
+@@ -114,10 +114,6 @@ func (l *linuxStandardInit) Init() error {
+ 			return errors.Wrap(err, "sethostname")
+ 		}
+ 	}
+-	if err := apparmor.ApplyProfile(l.config.AppArmorProfile); err != nil {
+-		return errors.Wrap(err, "apply apparmor profile")
+-	}
+-
+ 	for key, value := range l.config.Config.Sysctl {
+ 		if err := writeSystemProperty(key, value); err != nil {
+ 			return errors.Wrapf(err, "write sysctl key %s", key)
+@@ -137,17 +133,21 @@ func (l *linuxStandardInit) Init() error {
+ 	if err != nil {
+ 		return errors.Wrap(err, "get pdeath signal")
+ 	}
+-	if l.config.NoNewPrivileges {
+-		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+-			return errors.Wrap(err, "set nonewprivileges")
+-		}
+-	}
+ 	// Tell our parent that we're ready to Execv. This must be done before the
+ 	// Seccomp rules have been applied, because we need to be able to read and
+ 	// write to a socket.
+ 	if err := syncParentReady(l.pipe); err != nil {
+ 		return errors.Wrap(err, "sync ready")
+ 	}
++	if err := apparmor.ApplyProfile(l.config.AppArmorProfile); err != nil {
++		return errors.Wrap(err, "apply apparmor profile")
++	}
++	if l.config.NoNewPrivileges {
++		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
++			return errors.Wrap(err, "set nonewprivileges")
++		}
++	}
++
+ 	if err := selinux.SetExecLabel(l.config.ProcessLabel); err != nil {
+ 		return errors.Wrap(err, "set process label")
+ 	}
+-- 
+2.25.1
+
