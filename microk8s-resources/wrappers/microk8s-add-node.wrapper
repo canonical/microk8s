@@ -28,13 +28,15 @@ if echo "$*" | grep -q -- 'help'; then
   exit 0
 fi
 
+exit_if_not_root
+
 exit_if_no_permissions
 
 subject=$(openssl x509 -sha256 -days 365 -noout -subject -in "$SNAP_DATA/certs/ca.crt")
 if [[ $subject == *"127.0.0.1"* ]]; then
   echo "Clustering requires a fresh MicroK8s installation. Reinstall with:"
   echo "sudo snap remove microk8s"
-  echo "sudo snap install microk8s --classic"
+  echo "sudo snap install microk8s"
   exit 1
 fi
 
@@ -44,9 +46,9 @@ if [ ! -f "$SNAP_DATA/credentials/cluster-tokens.txt" ]; then
   touch $SNAP_DATA/credentials/cluster-tokens.txt 
 fi
 
-if getent group microk8s >/dev/null 2>&1
+if getent group snap_microk8s >/dev/null 2>&1
 then
-  chgrp microk8s $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
+  chgrp snap_microk8s $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
   chmod ug+rw $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
   chmod o-rwX $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
 fi

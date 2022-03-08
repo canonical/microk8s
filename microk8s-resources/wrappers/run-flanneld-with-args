@@ -44,6 +44,4 @@ fi
 
 # This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/flanneld))"
-export CORE_LD_LIBRARY_PATH="$SNAP/../../core18/current/lib/$ARCH-linux-gnu"
-export LD_LIBRARY_PATH="$CORE_LD_LIBRARY_PATH:$LD_LIBRARY_PATH"
 exec "$SNAP_DATA/opt/cni/bin/flanneld" "${args[@]}"

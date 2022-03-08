@@ -83,8 +83,16 @@ lxc file pull test-build/root/microk8s/microk8s_v1.9.6_amd64.snap .
 After copying it, you can install it with:
 
 ```shell
-snap install microk8s_*_amd64.snap --classic --dangerous
+sudo snap install microk8s_latest_amd64.snap --dangerous
 ```
+
+Finally, you need to connect the interfaces:
+
+```shell
+for i in account-control docker-privileged kubernetes-support k8s-journald k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe home opengl dot-config-helm home-read-all log-observe login-session-observe; do sudo snap connect microk8s:$i; done
+
+```
+
 
 ## Assembling the Calico CNI manifest
 
