@@ -11,7 +11,6 @@ then
 else
   snapctl stop ${SNAP_NAME}.daemon-kubelet 2>&1 || true
 fi
-snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
 
 # Sym link the host's /var/lib/kubelet to the Snap's.  This will be fixed with layouts when
 # this Snap is strictly confined.
@@ -52,21 +51,15 @@ rm -rf ${SNAP_COMMON}/run/containerd/* || true
 (cat /proc/mounts | grep ${SNAP_COMMON}/var/run/docker | cut -d ' ' -f 2 | xargs umount) || true
 (cat /proc/mounts | grep ${SNAP_COMMON}/var/lib/kubelet | cut -d ' ' -f 2 | xargs umount) || true
 
-if $SNAP/sbin/ip link show cni0
+if snapctl is-connected network-control
 then
-  $SNAP/sbin/ip link delete cni0
+  for link in cni0 cilium_vxlan
+  do
+    if $SNAP/sbin/ip link show ${link}
+    then
+      $SNAP/sbin/ip link delete ${link}
+    fi
+  done
 fi
 
-kill_all_container_shims
-
-# Cleanup calico interface.
-if "${SNAP}/sbin/ip" link show vxlan.calico
-then
-  "${SNAP}/sbin/ip" link delete vxlan.calico || true
-fi
-
-# Cleanup cni network namespaces.
-for ns in `"${SNAP}/sbin/ip" netns list | grep "^cni-" | awk '{print $1}'`
-do
-  $SNAP/sbin/ip netns delete "${ns}" || true
-done
+remove_all_containers

@@ -176,7 +176,7 @@ def add(name: str, repository: str, reference: str, force: bool):
     if reference is not None:
         cmd += ["-b", reference]
     subprocess.check_call(cmd)
-    subprocess.check_call(["chgrp", "microk8s", "-R", repo_dir])
+    subprocess.check_call(["chgrp", "snap_microk8s", "-R", repo_dir])
 
     try:
         validate_addons_repo(repo_dir)
