@@ -22,6 +22,7 @@ function create_machine() {
   cat tests/lxc/microk8s.profile | lxc profile edit microk8s
 
   lxc launch -p default -p microk8s $DISTRO $NAME
+  lxc config device override $NAME root size=50GB
 
   # Allow for the machine to boot and get an IP
   sleep 20
@@ -71,6 +72,7 @@ ARCH=$(uname -m)
 export LXC_PROFILE="tests/lxc/microk8s.profile"
 export BACKEND="lxc"
 export CHANNEL_TO_TEST=${TO_CHANNEL}
+export STRICT="yes"
 TRY_ATTEMPT=0
 while ! (timeout 3600 pytest -s tests/test-cluster.py) &&
       ! [ ${TRY_ATTEMPT} -eq 3 ]
@@ -98,9 +100,9 @@ create_machine $NAME $PROXY
 if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
   lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
-  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=/tmp/microk8s_latest_amd64.snap pytest -s /root/tests/test-upgrade-path.py"
+  lxc exec $NAME -- script -e -c "STRICT=\"yes\" UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=/tmp/microk8s_latest_amd64.snap pytest -s /root/tests/test-upgrade-path.py"
 else
-  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /root/tests/test-upgrade-path.py"
+  lxc exec $NAME -- script -e -c "STRICT=\"yes\" UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /root/tests/test-upgrade-path.py"
 fi
 lxc delete $NAME --force
 
@@ -111,14 +113,15 @@ if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
   lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
   lxc exec $NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+  lxc exec $NAME -- bash -c '/root/tests/connect-all-interfaces.sh'
 else
-  lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL} --classic
+  lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL}
 fi
 lxc exec $NAME -- /root/tests/smoke-test.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
+lxc exec $NAME -- script -e -c "STRICT=\"yes\" pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
 lxc exec $NAME -- microk8s enable community
-lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
+lxc exec $NAME -- script -e -c "STRICT=\"yes\" pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
 

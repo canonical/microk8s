@@ -8,6 +8,33 @@ from subprocess import check_output, CalledProcessError, check_call
 
 arch_translate = {"aarch64": "arm64", "x86_64": "amd64"}
 
+# List of interfaces we need to manually connect in the case we test a local build
+snap_interfaces = [
+    "account-control",
+    "docker-privileged",
+    "kubernetes-support",
+    "k8s-journald",
+    "k8s-kubelet",
+    "k8s-kubeproxy",
+    "dot-kube",
+    "dot-config-helm",
+    "network",
+    "network-bind",
+    "network-control",
+    "network-observe",
+    "firewall-control",
+    "process-control",
+    "kernel-module-observe",
+    "mount-observe",
+    "hardware-observe",
+    "system-observe",
+    "home",
+    "opengl",
+    "home-read-all",
+    "login-session-observe",
+    "log-observe",
+]
+
 
 def get_arch():
     """
