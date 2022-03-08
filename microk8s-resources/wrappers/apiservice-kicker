@@ -84,10 +84,12 @@ do
     # If no local-registry-hosting documentation has been installed,
     # install a help guide that points to the microk8s registry docs.
     #
-    # Wait until the apiserver is up and is successfully responding to
-    # namespace checks before we check for the registry configmap.
     if snapctl services microk8s.daemon-kubelite | grep active &> /dev/null
     then
+
+      # Wait until the apiserver is up and is successfully responding to
+      # namespace checks before we check for the registry configmap and/or
+      # apply the launch configuration.
       if [ $installed_registry_help -eq 0 ] &&
          "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get namespace kube-public &> /dev/null
       then
@@ -95,8 +97,13 @@ do
         then
           use_manifest registry/registry-help apply
         fi
-
         installed_registry_help=1
+      fi
+
+      if [ -e $SNAP_COMMON/etc/launcher/configuration/config.yaml ] &&
+         $SNAP/usr/bin/python3 $SNAP/scripts/launcher.py $SNAP_COMMON/etc/launcher/configuration/config.yaml
+      then
+        mv $SNAP_COMMON/etc/launcher/configuration/config.yaml $SNAP_COMMON/etc/launcher/configuration/config.yaml.applied
       fi
     fi
 done
