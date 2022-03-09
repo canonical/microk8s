@@ -96,3 +96,7 @@ contribute to MicroK8s.
 <a href="https://snapcraft.io/microk8s" title="Get it from the Snap Store">
             <img src="https://snapcraft.io/static/images/badges/en/snap-store-white.svg" alt="Get it from the Snap Store" width="200" />
           </a>
+
+<a href="https://github.com/canonical/microk8s/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=canonical/microk8s" />
+</a>
