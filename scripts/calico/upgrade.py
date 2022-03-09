@@ -12,7 +12,7 @@ def get_calico_node_spec(cni_file):
     return: The container section of the calico node, None otherwise
     """
     try:
-        with open(cni_file, "r") as f:
+        with open(cni_file, "r", encoding="utf8") as f:
             for doc in yaml.safe_load_all(f):
                 if doc and doc["kind"] == "DaemonSet" and doc["metadata"]["name"] == "calico-node":
                     # Reach for the containers
@@ -39,7 +39,7 @@ def is_calico_cni_manifest(cni_file):
     return: True if the provided manifest is a Calico one, False otherwise
     """
     try:
-        with open(cni_file, "r") as f:
+        with open(cni_file, "r", encoding="utf8") as f:
             for doc in yaml.safe_load_all(f):
                 if doc and doc["kind"] == "DaemonSet" and doc["metadata"]["name"] == "calico-node":
                     return True
@@ -99,7 +99,7 @@ def patch_manifest(cni_file, autodetection):
     yaml.add_representer(str, repr_str, Dumper=yaml.SafeDumper)
 
     try:
-        with open(cni_file, "r") as f:
+        with open(cni_file, "r", encoding="utf8") as f:
             to_remove = []
             docs = list(yaml.safe_load_all(f))
             for doc in docs:
@@ -119,7 +119,7 @@ def patch_manifest(cni_file, autodetection):
             for d in to_remove:
                 docs.remove(d)
 
-        with open(cni_file, "w") as fout:
+        with open(cni_file, "w", encoding="utf8") as fout:
             yaml.safe_dump_all(docs, fout)
 
     except (yaml.YAMLError, TypeError) as e:
