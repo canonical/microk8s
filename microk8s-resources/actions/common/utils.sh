@@ -69,24 +69,33 @@ remove_vxlan_interfaces() {
 
 run_with_sudo() {
   # As we call the sudo binary of the host we have to make sure we do not change the LD_LIBRARY_PATH used
-  if [ -n "${LD_LIBRARY_PATH-}" ]
+  if (is_strict)
   then
-    GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
-    local LD_LIBRARY_PATH=""
     if [ "$1" == "preserve_env" ]
     then
       shift
-      sudo -E LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
-    else
-      sudo LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
     fi
+    eval "$@"
   else
-    if [ "$1" == "preserve_env" ]
+    if [ -n "${LD_LIBRARY_PATH-}" ]
     then
-      shift
-      sudo -E "$@"
+      GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
+      local LD_LIBRARY_PATH=""
+      if [ "$1" == "preserve_env" ]
+      then
+        shift
+        sudo -E LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+      else
+        sudo LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
+      fi
     else
-      sudo "$@"
+      if [ "$1" == "preserve_env" ]
+      then
+        shift
+        sudo -E "$@"
+      else
+        sudo "$@"
+      fi
     fi
   fi
 }
@@ -112,7 +121,7 @@ refresh_opt_in_local_config() {
     local config_file="$SNAP_DATA/args/$3"
     local replace_line="$opt=$value"
     if $(grep -qE "^$opt=" $config_file); then
-        run_with_sudo "$SNAP/bin/sed" -i "s;^$opt=.*;$replace_line;" $config_file
+        run_with_sudo "$SNAP/bin/sed" -i "s@^$opt=.*@$replace_line@" $config_file
     else
         run_with_sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
     fi
@@ -775,4 +784,67 @@ exit_if_low_memory_guard() {
 refresh_calico_if_needed() {
     # Call the python script that does the calico update if needed
     "$SNAP/usr/bin/python3" "$SNAP/scripts/calico/upgrade.py"
+}
+
+############################# Strict functions ######################################
+
+is_strict() {
+  # Return 0 if we are in strict mode
+  if cat $SNAP/meta/snap.yaml | grep confinement | grep strict
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
+check_snap_interfaces() {
+    # Check whether all of the required interfaces are connected before proceeding.
+    # This is to address https://forum.snapcraft.io/t/mimic-sequence-of-hook-calls-with-auto-connected-interfaces/19618
+    declare -ra interfaces=(
+        "docker-privileged"
+        "docker-support"
+        "dot-kube"
+        "dot-config-helm"
+        "firewall-control"
+        "hardware-observe"
+        "home"
+        "home-read-all"
+        "k8s-journald"
+        "k8s-kubelet"
+        "k8s-kubeproxy"
+        "kernel-module-observe"
+        "kubernetes-support"
+        "log-observe"
+        "login-session-observe"
+        "mount-observe"
+        "network"
+        "network-bind"
+        "network-control"
+        "network-observe"
+        "opengl"
+        "process-control"
+        "system-observe"
+    )
+    declare -a missing=()
+
+    for interface in ${interfaces[@]}
+    do
+        if ! snapctl is-connected ${interface}
+        then
+            missing+=("${interface}")
+        fi
+    done
+
+    if [ ${#missing[@]} -gt 0 ]
+    then
+        snapctl set-health blocked "You must connect ${missing[*]} before proceeding"
+        exit 0
+    else
+        if [ $1 -gt 0 ]
+        then
+            snapctl start --enable ${SNAP_NAME}
+            snapctl set-health okay
+        fi
+    fi
 }
