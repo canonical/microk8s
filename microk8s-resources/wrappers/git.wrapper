@@ -1,0 +1,8 @@
+#!/bin/bash
+
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+export GIT_EXEC_PATH="$SNAP/usr/lib/git-core"
+export GIT_TEMPLATE_DIR="$SNAP/usr/share/git-core/templates"
+export GIT_CONFIG_NOSYSTEM=1
+
+"$SNAP/usr/bin/git" $@
