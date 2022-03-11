@@ -311,6 +311,7 @@ def join_node_etcd():
     ca = getCA()
     etcd_ep = get_arg("--listen-client-urls", "etcd")
     api_port = get_arg("--secure-port", "kube-apiserver")
+    api_authz_mode = get_arg("--authorization-mode", "kube-apiserver")
     proxy_token = get_token("kube-proxy")
     kubelet_token = add_kubelet_token(node_addr)
     service("restart", "apiserver")
@@ -326,6 +327,7 @@ def join_node_etcd():
         etcd=etcd_ep,
         kubeproxy=proxy_token,
         apiport=api_port,
+        api_authz_mode=api_authz_mode,
         kubelet=kubelet_token,
         kubelet_args=kubelet_args,
         hostname_override=node_addr,
@@ -606,6 +608,7 @@ def join_node_dqlite():
     callback_token = get_callback_token()
     remove_token_from_file(token, cluster_tokens_file)
     api_port = get_arg("--secure-port", "kube-apiserver")
+    api_authz_mode = get_arg("--authorization-mode", "kube-apiserver")
     kubelet_args = read_kubelet_args_file()
     cluster_cert, cluster_key = get_cluster_certs()
     # Make sure calico can autodetect the right interface for packet routing
@@ -621,6 +624,7 @@ def join_node_dqlite():
         voters=voters,
         callback_token=callback_token,
         apiport=api_port,
+        api_authz_mode=api_authz_mode,
         kubelet_args=kubelet_args,
         hostname_override=node_addr,
         admin_token=get_token("admin"),

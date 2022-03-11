@@ -315,6 +315,16 @@ def update_kubelet(token, ca, master_ip, api_port):
     service("restart", "kubelet")
 
 
+def update_apiserver(api_authz_mode):
+    """
+    Configure the API server
+
+    :param api_authz_mode: the authorization mode to be used
+    """
+    set_arg("--authorization-mode", api_authz_mode, "kube-apiserver")
+    service("restart", "apiserver")
+
+
 def store_remote_ca(ca):
     """
     Store the remote ca
@@ -980,6 +990,9 @@ def join_dqlite(connection_parts, verify=False):
         )
     if "admin_token" in info:
         replace_admin_token(info["admin_token"])
+    if "api_authz_mode" in info:
+        update_apiserver(info["api_authz_mode"])
+
     create_admin_kubeconfig(info["ca"], info["admin_token"])
     store_base_kubelet_args(info["kubelet_args"])
     store_callback_token(info["callback_token"])
