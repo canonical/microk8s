@@ -22,12 +22,6 @@ else
   echo "\`/var/lib/kubelet\` already exists.  Will not be linking to $SNAP_COMMON"
 fi
 
-# Install the core addons
-snap_current=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
-for addon in $(cat "${SNAP}/addons/.auto-add"); do
-  git clone "${snap_current}/addons/${addon}" "${SNAP_COMMON}/addons/${addon}"
-done
-
 # Create the certificates
 mkdir ${SNAP_DATA}/certs
 # Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA

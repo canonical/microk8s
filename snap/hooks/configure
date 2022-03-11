@@ -16,7 +16,7 @@ then
   mkdir -p ${SNAP_COMMON}/addons
   snap_current=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
   for addon in $(cat "${SNAP}/addons/.auto-add"); do
-    git clone "${snap_current}/addons/${addon}" "${SNAP_COMMON}/addons/${addon}"
+    "${SNAP}/git.wrapper" clone "${snap_current}/addons/${addon}" "${SNAP_COMMON}/addons/${addon}"
   done
 fi
 
