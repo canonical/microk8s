@@ -42,7 +42,7 @@ Role: 0
 		"testdata/certs/ca.key":                    "CA KEY DATA",
 		"testdata/certs/serviceaccount.key":        "SERVICE ACCOUNT KEY DATA",
 		"testdata/args/kubelet":                    "kubelet arguments\n",
-		"testdata/args/kube-apiserver":             "--secure-port 16443",
+		"testdata/args/kube-apiserver":             "--secure-port 16443\n--authorization-mode=Node,RBAC",
 		"testdata/args/cni-network/cni.yaml":       `some random content. "first-found"`,
 		"testdata/args/cluster-agent":              "--bind=0.0.0.0:25000",
 		"testdata/credentials/cluster-tokens.txt":  "worker-token\ncontrol-plane-token",
@@ -92,17 +92,18 @@ admin-token-123,admin,admin,"system:masters"
 			}
 
 			expectedResponse := &v2.JoinResponse{
-				CertificateAuthority:     "CA CERTIFICATE DATA",
-				CallbackToken:            "callback-token",
-				APIServerPort:            "16443",
-				KubeletArgs:              "kubelet arguments\n\n--hostname-override=10.10.10.13",
-				HostNameOverride:         "10.10.10.13",
-				DqliteVoterNodes:         []string{"10.10.10.10:19001", "10.10.10.11:19001"},
-				ServiceAccountKey:        "SERVICE ACCOUNT KEY DATA",
-				CertificateAuthorityKey:  func(s string) *string { return &s }("CA KEY DATA"),
-				AdminToken:               "admin-token-123",
-				DqliteClusterCertificate: "DQLITE CERTIFICATE DATA",
-				DqliteClusterKey:         "DQLITE KEY DATA",
+				CertificateAuthority:       "CA CERTIFICATE DATA",
+				CallbackToken:              "callback-token",
+				APIServerPort:              "16443",
+				APIServerAuthorizationMode: "Node,RBAC",
+				KubeletArgs:                "kubelet arguments\n\n--hostname-override=10.10.10.13",
+				HostNameOverride:           "10.10.10.13",
+				DqliteVoterNodes:           []string{"10.10.10.10:19001", "10.10.10.11:19001"},
+				ServiceAccountKey:          "SERVICE ACCOUNT KEY DATA",
+				CertificateAuthorityKey:    func(s string) *string { return &s }("CA KEY DATA"),
+				AdminToken:                 "admin-token-123",
+				DqliteClusterCertificate:   "DQLITE CERTIFICATE DATA",
+				DqliteClusterKey:           "DQLITE KEY DATA",
 			}
 			if !reflect.DeepEqual(*resp, *expectedResponse) {
 				t.Fatalf("Expected response %#v, but received %#v instead", expectedResponse, resp)
@@ -141,12 +142,13 @@ admin-token-123,admin,admin,"system:masters"
 				t.Fatal("Expected a response but received nil instead")
 			}
 			expectedResponse := &v2.JoinResponse{
-				CertificateAuthority: "CA CERTIFICATE DATA",
-				CallbackToken:        "callback-token",
-				APIServerPort:        "16443",
-				KubeletArgs:          "kubelet arguments\n",
-				HostNameOverride:     "10.10.10.12",
-				ControlPlaneNodes:    []string{},
+				CertificateAuthority:       "CA CERTIFICATE DATA",
+				CallbackToken:              "callback-token",
+				APIServerAuthorizationMode: "Node,RBAC",
+				APIServerPort:              "16443",
+				KubeletArgs:                "kubelet arguments\n",
+				HostNameOverride:           "10.10.10.12",
+				ControlPlaneNodes:          []string{},
 			}
 
 			if !reflect.DeepEqual(*resp, *expectedResponse) {
@@ -198,7 +200,7 @@ Role: 0
 			"testdata/certs/ca.key":                    "CA KEY DATA",
 			"testdata/certs/serviceaccount.key":        "SERVICE ACCOUNT KEY DATA",
 			"testdata/args/kubelet":                    "kubelet arguments\n",
-			"testdata/args/kube-apiserver":             "--secure-port 16443",
+			"testdata/args/kube-apiserver":             "--secure-port 16443\n--authorization-mode=Node",
 			"testdata/args/cluster-agent":              "--bind=0.0.0.0:25000",
 			"testdata/args/cni-network/cni.yaml":       `some content here. "first-found"`,
 			"testdata/credentials/cluster-tokens.txt":  "control-plane-token\n",
@@ -246,17 +248,18 @@ admin-token-123,admin,admin,"system:masters"
 		}
 
 		expectedResponse := &v2.JoinResponse{
-			CertificateAuthority:     "CA CERTIFICATE DATA",
-			CallbackToken:            "callback-token",
-			APIServerPort:            "16443",
-			KubeletArgs:              "kubelet arguments\n\n--hostname-override=10.10.10.13",
-			HostNameOverride:         "10.10.10.13",
-			DqliteVoterNodes:         []string{"10.10.10.10:19001"},
-			ServiceAccountKey:        "SERVICE ACCOUNT KEY DATA",
-			CertificateAuthorityKey:  func(s string) *string { return &s }("CA KEY DATA"),
-			AdminToken:               "admin-token-123",
-			DqliteClusterCertificate: "DQLITE CERTIFICATE DATA",
-			DqliteClusterKey:         "DQLITE KEY DATA",
+			CertificateAuthority:       "CA CERTIFICATE DATA",
+			CallbackToken:              "callback-token",
+			APIServerPort:              "16443",
+			APIServerAuthorizationMode: "Node",
+			KubeletArgs:                "kubelet arguments\n\n--hostname-override=10.10.10.13",
+			HostNameOverride:           "10.10.10.13",
+			DqliteVoterNodes:           []string{"10.10.10.10:19001"},
+			ServiceAccountKey:          "SERVICE ACCOUNT KEY DATA",
+			CertificateAuthorityKey:    func(s string) *string { return &s }("CA KEY DATA"),
+			AdminToken:                 "admin-token-123",
+			DqliteClusterCertificate:   "DQLITE CERTIFICATE DATA",
+			DqliteClusterKey:           "DQLITE KEY DATA",
 		}
 		if !reflect.DeepEqual(*resp, *expectedResponse) {
 			t.Fatalf("Expected response %#v, but received %#v instead", expectedResponse, resp)

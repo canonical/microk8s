@@ -44,6 +44,8 @@ type JoinResponse struct {
 	CallbackToken string `json:"callback_token"`
 	// APIServerPort is the port where the kube-apiserver is listening.
 	APIServerPort string `json:"apiport"`
+	// APIServerAuthorizationMode is the AuthorizationMode used by kube-apiserver.
+	APIServerAuthorizationMode string `json:"api_authz_mode"`
 	// KubeletArgs is a string with arguments for the kubelet service on the joining node.
 	KubeletArgs string `json:"kubelet_args"`
 	// HostNameOverride is the host name the joining node will be known as in the MicroK8s cluster.
@@ -144,11 +146,12 @@ func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
 		return nil, fmt.Errorf("failed to create lock file to disable certificate reissuing: %w", err)
 	}
 	response := &JoinResponse{
-		CertificateAuthority: ca,
-		CallbackToken:        callbackToken,
-		APIServerPort:        util.GetServiceArgument("kube-apiserver", "--secure-port"),
-		HostNameOverride:     hostname,
-		KubeletArgs:          kubeletArgs,
+		CertificateAuthority:       ca,
+		CallbackToken:              callbackToken,
+		APIServerPort:              util.GetServiceArgument("kube-apiserver", "--secure-port"),
+		APIServerAuthorizationMode: util.GetServiceArgument("kube-apiserver", "--authorization-mode"),
+		HostNameOverride:           hostname,
+		KubeletArgs:                kubeletArgs,
 	}
 
 	if req.WorkerOnly {
