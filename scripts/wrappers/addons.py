@@ -10,6 +10,8 @@ import yaml
 
 from common.utils import get_current_arch, snap_common
 
+GIT = os.path.expandvars("$SNAP/git.wrapper")
+
 addons = click.Group()
 
 repository = click.Group("repo")
@@ -32,7 +34,7 @@ def add(name: str, repository: str, reference: str, force: bool):
         click.echo("Removing {}".format(repo_dir))
         shutil.rmtree(repo_dir)
 
-    cmd = ["git", "clone", repository, repo_dir]
+    cmd = [GIT, "clone", repository, repo_dir]
     if reference is not None:
         cmd += ["-b", reference]
 
@@ -73,7 +75,7 @@ def update(name: str):
         sys.exit(1)
 
     click.echo("Updating repository {}".format(name))
-    subprocess.check_call(["git", "pull"], cwd=repo_dir)
+    subprocess.check_call([GIT, "pull"], cwd=repo_dir)
 
     if not (repo_dir / "addons.yaml").exists():
         click.echo(
@@ -104,10 +106,10 @@ def list(format: str):
             source = "(built-in)"
             try:
                 remote_url = subprocess.check_output(
-                    ["git", "remote", "get-url", "origin"], cwd=repo_dir, stderr=subprocess.DEVNULL
+                    [GIT, "remote", "get-url", "origin"], cwd=repo_dir, stderr=subprocess.DEVNULL
                 ).decode()
                 revision = subprocess.check_output(
-                    ["git", "rev-parse", "HEAD"], cwd=repo_dir, stderr=subprocess.DEVNULL
+                    [GIT, "rev-parse", "HEAD"], cwd=repo_dir, stderr=subprocess.DEVNULL
                 ).decode()[:6]
                 source = "{}@{}".format(remote_url.strip(), revision.strip())
             except (subprocess.CalledProcessError, TypeError, ValueError):
