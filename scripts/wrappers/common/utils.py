@@ -369,7 +369,7 @@ def parse_xable_single_arg(addon_arg: str, available_addons: list):
             if is_community_addon(get_current_arch(), addon_name):
                 click.echo("To use the community maintained flavor enable the respective repository:")
                 click.echo("")
-                click.echo("    mcirok8s enable community")
+                click.echo("    microk8s enable community")
                 click.echo("")
 
             sys.exit(1)
