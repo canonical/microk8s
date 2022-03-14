@@ -134,6 +134,8 @@ parts:
     source-depth: 1
     source-tag: version-3.33.0
     build-attributes: [no-patchelf]
+    build-environment:
+      - CFLAGS: "-DSQLITE_ENABLE_DBSTAT_VTAB=1"
     plugin: autotools
     build-packages:
       - tcl
