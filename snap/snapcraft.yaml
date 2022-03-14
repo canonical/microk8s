@@ -560,7 +560,7 @@ parts:
         reference="$(echo ${line} | cut -f3 -d',')"
         git clone "${repository}" -b "${reference}" "addons/${name}"
       done
-      echo "${ADDONS_REPOS_ENABLED}" > addons/.auto-add
+      echo "core" > addons/.auto-add
 
       snapcraftctl build
 
