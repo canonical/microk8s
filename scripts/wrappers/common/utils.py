@@ -199,6 +199,29 @@ def kubectl_get_clusterroles():
     )
 
 
+def is_community_addon(arch, addon_name):
+    """
+    Check if an addon is part of the community repo.
+
+    :param arch: architecture of the addon we are looking for
+    :param addon_name: name of the addon we are looking for
+    :return: True if the addon is in the community repo
+    """
+    try:
+        addons_yaml = f"{os.environ['SNAP']}/addons/community/addons.yaml"
+        with open(addons_yaml, "r") as fin:
+            addons = yaml.safe_load(fin)
+
+        for addon in addons["microk8s-addons"]["addons"]:
+            if arch in addon["supported_architectures"]:
+                if addon_name == addon["name"]:
+                    return True
+    except Exception:
+        LOG.exception("could not load addons from %s", addons_yaml)
+
+    return False
+
+
 def get_available_addons(arch):
     available = []
     for dir in os.listdir(snap_common() / "addons"):
@@ -209,12 +232,7 @@ def get_available_addons(arch):
 
             for addon in addons["microk8s-addons"]["addons"]:
                 if arch in addon["supported_architectures"]:
-                    available.append(
-                        {
-                            **addon,
-                            "repository": dir,
-                        }
-                    )
+                    available.append({**addon, "repository": dir})
         except Exception:
             LOG.exception("could not load addons from %s", addons_yaml)
 
@@ -343,6 +361,14 @@ def parse_xable_single_arg(addon_arg: str, available_addons: list):
         matching_repos = [repo for (repo, addon) in available_addons if addon == addon_name]
         if len(matching_repos) == 0:
             click.echo("Addon {} was not found in any repository".format(addon_name), err=True)
+            if is_community_addon(get_current_arch(), addon_name):
+                click.echo(
+                    "To use the community maintained flavor enable the respective repository:"
+                )
+                click.echo("")
+                click.echo("    microk8s enable community")
+                click.echo("")
+
             sys.exit(1)
         elif len(matching_repos) == 1:
             click.echo(

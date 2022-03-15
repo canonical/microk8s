@@ -71,6 +71,10 @@ def disable_addons(destroy_storage):
         if addon["name"] == "ha-cluster":
             continue
 
+        # Do not disable the community repository
+        if addon["name"] == "community":
+            continue
+
         print(f"Disabling addon : {addon['repository']}/{addon['name']}")
         # Do not disable disabled addons
         if addon in disabled:
