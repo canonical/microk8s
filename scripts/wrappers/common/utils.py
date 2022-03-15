@@ -232,12 +232,7 @@ def get_available_addons(arch):
 
             for addon in addons["microk8s-addons"]["addons"]:
                 if arch in addon["supported_architectures"]:
-                    available.append(
-                        {
-                            **addon,
-                            "repository": dir,
-                        }
-                    )
+                    available.append({**addon, "repository": dir})
         except Exception:
             LOG.exception("could not load addons from %s", addons_yaml)
 
@@ -367,7 +362,9 @@ def parse_xable_single_arg(addon_arg: str, available_addons: list):
         if len(matching_repos) == 0:
             click.echo("Addon {} was not found in any repository".format(addon_name), err=True)
             if is_community_addon(get_current_arch(), addon_name):
-                click.echo("To use the community maintained flavor enable the respective repository:")
+                click.echo(
+                    "To use the community maintained flavor enable the respective repository:"
+                )
                 click.echo("")
                 click.echo("    microk8s enable community")
                 click.echo("")
