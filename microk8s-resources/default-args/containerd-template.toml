@@ -64,6 +64,12 @@ oom_score = 0
       [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata.options]
         BinaryName = "kata-runtime"
 
+   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun]
+      runtime_type = "${RUNTIME_TYPE}"
+      pod_annotations = ["*.wasm.*", "wasm.*", "module.wasm.image/*", "*.module.wasm.image", "module.wasm.image/variant.*", "run.oci.handler"]
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.crun.options]
+        BinaryName = "crun"
+
   # 'plugins."io.containerd.grpc.v1.cri".cni' contains config related to cni
   [plugins."io.containerd.grpc.v1.cri".cni]
     # bin_dir is the directory in which the binaries for the plugin is kept.
