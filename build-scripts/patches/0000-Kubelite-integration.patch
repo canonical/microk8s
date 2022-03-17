@@ -1,4 +1,4 @@
-From 6583648f325f98bf5aed35b3a90ef9132bead309 Mon Sep 17 00:00:00 2001
+From 3198c607c243bd4363eadc7d9223e3a743f85215 Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
@@ -19,10 +19,10 @@ Subject: [PATCH] Kubelite integration
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index 8c2d2a94d99..2351c86fa78 100644
+index 411567a4175..a871cc9c975 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
-@@ -91,7 +91,7 @@ func checkNonZeroInsecurePort(fs *pflag.FlagSet) error {
+@@ -96,7 +96,7 @@ func checkNonZeroInsecurePort(fs *pflag.FlagSet) error {
  }
  
  // NewAPIServerCommand creates a *cobra.Command object with default parameters
@@ -31,7 +31,7 @@ index 8c2d2a94d99..2351c86fa78 100644
  	s := options.NewServerRunOptions()
  	cmd := &cobra.Command{
  		Use: "kube-apiserver",
-@@ -127,8 +127,11 @@ cluster's shared state through which all other components interact.`,
+@@ -138,8 +138,11 @@ cluster's shared state through which all other components interact.`,
  			if errs := completedOptions.Validate(); len(errs) != 0 {
  				return utilerrors.NewAggregate(errs)
  			}
@@ -46,10 +46,10 @@ index 8c2d2a94d99..2351c86fa78 100644
  		Args: func(cmd *cobra.Command, args []string) error {
  			for _, arg := range args {
 diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
-index dc6cc055415..d7674db4b01 100644
+index b65f4e74d09..0885de22da1 100644
 --- a/cmd/kube-scheduler/app/server.go
 +++ b/cmd/kube-scheduler/app/server.go
-@@ -117,7 +117,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
+@@ -120,7 +120,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
  	ctx, cancel := context.WithCancel(context.Background())
  	defer cancel()
  	go func() {
@@ -63,7 +63,7 @@ index dc6cc055415..d7674db4b01 100644
  		cancel()
  	}()
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 59662e425bb..c3e4408685a 100644
+index 43dfd8d4f45..015a3df23f3 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
 @@ -112,7 +112,7 @@ const (
@@ -75,7 +75,7 @@ index 59662e425bb..c3e4408685a 100644
  	cleanFlagSet := pflag.NewFlagSet(componentKubelet, pflag.ContinueOnError)
  	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
  	kubeletFlags := options.NewKubeletFlags()
-@@ -279,7 +279,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -287,7 +287,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
  				klog.ErrorS(err, "kubelet running with insufficient permissions")
  			}
  			// set up signal context here in order to be reused by kubelet and docker shim
@@ -89,8 +89,8 @@ index 59662e425bb..c3e4408685a 100644
  
  			// make the kubelet's config safe for logging
  			config := kubeletServer.KubeletConfiguration.DeepCopy()
-@@ -290,7 +295,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
- 			klog.V(5).InfoS("KubeletConfiguration", "configuration", kubeletServer.KubeletConfiguration)
+@@ -298,7 +303,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+ 			klog.V(5).InfoS("KubeletConfiguration", "configuration", config)
  
  			// run the kubelet
 -			if err := Run(ctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate); err != nil {
@@ -394,10 +394,10 @@ index 00000000000..667b24f68e6
 +	println("Stopping kubelite")
 +}
 diff --git a/pkg/volume/csi/csi_plugin.go b/pkg/volume/csi/csi_plugin.go
-index e48b3d6deb7..a64d9d045e0 100644
+index 0ae6d084f0e..f27f9e1b812 100644
 --- a/pkg/volume/csi/csi_plugin.go
 +++ b/pkg/volume/csi/csi_plugin.go
-@@ -237,20 +237,24 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
+@@ -243,20 +243,24 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
  	}
  
  	// Initializing the label management channels
