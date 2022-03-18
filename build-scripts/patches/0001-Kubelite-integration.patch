@@ -1,4 +1,4 @@
-From 77bc6a29c8efcbafc57003e8e89208317b2bec78 Mon Sep 17 00:00:00 2001
+From a6ea69a5904350dd4bd28e33371fa587b199d474 Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
@@ -19,7 +19,7 @@ Subject: [PATCH] Kubelite integration
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index 776389f93e4..ca39da8a4c0 100644
+index d822a09132a..bd4aee5765e 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
 @@ -102,7 +102,7 @@ func checkNonZeroInsecurePort(fs *pflag.FlagSet) error {
@@ -46,10 +46,10 @@ index 776389f93e4..ca39da8a4c0 100644
  		Args: func(cmd *cobra.Command, args []string) error {
  			for _, arg := range args {
 diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
-index dc6cc055415..d7674db4b01 100644
+index a953d3a371d..07b12437cac 100644
 --- a/cmd/kube-scheduler/app/server.go
 +++ b/cmd/kube-scheduler/app/server.go
-@@ -117,7 +117,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
+@@ -116,7 +116,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
  	ctx, cancel := context.WithCancel(context.Background())
  	defer cancel()
  	go func() {
@@ -63,7 +63,7 @@ index dc6cc055415..d7674db4b01 100644
  		cancel()
  	}()
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 59662e425bb..c3e4408685a 100644
+index 9496b576999..685f69226d6 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
 @@ -112,7 +112,7 @@ const (
@@ -90,7 +90,7 @@ index 59662e425bb..c3e4408685a 100644
  			// make the kubelet's config safe for logging
  			config := kubeletServer.KubeletConfiguration.DeepCopy()
 @@ -290,7 +295,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
- 			klog.V(5).InfoS("KubeletConfiguration", "configuration", kubeletServer.KubeletConfiguration)
+ 			klog.V(5).InfoS("KubeletConfiguration", "configuration", config)
  
  			// run the kubelet
 -			if err := Run(ctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate); err != nil {
@@ -394,7 +394,7 @@ index 00000000000..667b24f68e6
 +	println("Stopping kubelite")
 +}
 diff --git a/pkg/volume/csi/csi_plugin.go b/pkg/volume/csi/csi_plugin.go
-index e48b3d6deb7..a64d9d045e0 100644
+index 70a57448511..7989bd88338 100644
 --- a/pkg/volume/csi/csi_plugin.go
 +++ b/pkg/volume/csi/csi_plugin.go
 @@ -237,20 +237,24 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
