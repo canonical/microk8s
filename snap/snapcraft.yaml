@@ -320,6 +320,7 @@ apps:
     install-mode: disable
     daemon: simple
     plugs:
+      - k8s-journald
       - network-bind
       - network-control
       - network-observe
