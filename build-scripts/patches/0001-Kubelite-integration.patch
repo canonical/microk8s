@@ -1,4 +1,4 @@
-From de618434d4a4168f11bec34c062700b3ad17d2ca Mon Sep 17 00:00:00 2001
+From 9d1bdecebe0284f03d3af039f2e3b0f4353c6424 Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
@@ -45,7 +45,7 @@ index 9fb54ec9a64..ade92c7337b 100644
  		Args: func(cmd *cobra.Command, args []string) error {
  			for _, arg := range args {
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 2dc10a512b3..40d01f347ce 100644
+index e6836cb94ca..17b2174bf29 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
 @@ -110,7 +110,7 @@ const (
@@ -72,7 +72,7 @@ index 2dc10a512b3..40d01f347ce 100644
  			// make the kubelet's config safe for logging
  			config := kubeletServer.KubeletConfiguration.DeepCopy()
 @@ -288,7 +293,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
- 			klog.V(5).InfoS("KubeletConfiguration", "configuration", kubeletServer.KubeletConfiguration)
+ 			klog.V(5).InfoS("KubeletConfiguration", "configuration", config)
  
  			// run the kubelet
 -			if err := Run(ctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate); err != nil {
