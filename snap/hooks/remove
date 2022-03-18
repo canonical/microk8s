@@ -61,4 +61,4 @@ then
   done
 fi
 
-kill_all_container_shims
+remove_all_containers

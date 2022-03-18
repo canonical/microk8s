@@ -58,9 +58,8 @@ do
             echo "CSR change detected. Reconfiguring the kube-apiserver"
             rm -rf .srl
             snapctl stop microk8s.daemon-kubelite
-            snapctl stop microk8s.daemon-containerd
-            kill_all_container_shims
-            snapctl start microk8s.daemon-containerd
+            remove_all_containers
+            snapctl restart microk8s.daemon-containerd
             snapctl start microk8s.daemon-kubelite
             start_all_containers
             restart_attempt=$[$restart_attempt+1]
