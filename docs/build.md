@@ -86,11 +86,10 @@ After copying it, you can install it with:
 sudo snap install microk8s_latest_amd64.snap --dangerous
 ```
 
-Finally, you need to connect the interfaces:
+Finally, you need to connect the interfaces. To this end you can use the `connect-all-interfaces.sh` under the `tests` directory:
 
 ```shell
-for i in account-control docker-privileged kubernetes-support k8s-journald k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe home opengl dot-config-helm home-read-all log-observe login-session-observe; do sudo snap connect microk8s:$i; done
-
+sudo tests/connect-all-interfaces.sh
 ```
 
 

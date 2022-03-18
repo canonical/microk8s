@@ -58,14 +58,7 @@ jobs:
         run: |
           set -x
           sudo snap install microk8s.snap --dangerous
-          for i in account-control docker-privileged kubernetes-support k8s-journald k8s-kubelet \
-                   k8s-kubeproxy dot-kube network network-bind network-control network-observe \
-                   firewall-control process-control kernel-module-observe mount-observe \
-                   hardware-observe system-observe home opengl home-read-all \
-                   login-session-observe log-observe dot-config-helm
-          do
-            sudo snap connect microk8s:$i
-          done
+          sudo ./tests/connect-all-interfaces.sh
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
           export SKIP_OPENEBS="True"
@@ -96,14 +89,7 @@ jobs:
           ################ Until devmode of docker-support is fixed we skip this part of the tests #######
           exit 0
           sudo snap install microk8s.snap --devmode --dangerous
-          for i in account-control docker-privileged kubernetes-support k8s-journald k8s-kubelet \
-                   k8s-kubeproxy dot-kube network network-bind network-control network-observe \
-                   firewall-control process-control kernel-module-observe mount-observe \
-                   hardware-observe system-observe home opengl home-read-all \
-                   login-session-observe log-observe dot-config-helm
-          do
-            sudo snap connect microk8s:$i
-          done
+          sudo ./tests/connect-all-interfaces.sh
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
           export SKIP_OPENEBS="False"
