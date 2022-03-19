@@ -1,6 +1,6 @@
 module github.com/canonical/microk8s/cluster-agent
 
-go 1.17
+go 1.18
 
 require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
