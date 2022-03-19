@@ -33,39 +33,3 @@ jobs:
             grep -v "./microk8s-resources/actions/metallb.yaml" | \
             grep -v invalid.yaml | \
             grep -v calico)
-
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: "1.17.6"
-
-      - name: Check Go vet
-        run: |
-          set -eux
-          (
-            cd cluster-agent
-            go vet ./...
-          )
-
-      - name: Check Go linter
-        run: |
-          set -eux
-          (
-            GOPATH=$(go env GOPATH)
-            PATH=$PATH:$GOPATH/bin
-            go install golang.org/x/lint/golint@latest
-            cd cluster-agent
-            golint ./...
-          )
-
-      - name: Check Go staticcheck
-        run: |
-          set -eux
-          unset GOPATH
-          (
-            GOPATH=$(go env GOPATH)
-            PATH=$PATH:$GOPATH/bin
-            go install honnef.co/go/tools/cmd/staticcheck@latest
-            cd cluster-agent
-            staticcheck ./...
-          )

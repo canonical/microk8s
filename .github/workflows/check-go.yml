@@ -1,0 +1,59 @@
+name: Go Tests
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.4.0
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.18"
+
+      - name: go fmt
+        run: |
+          (cd cluster-agent && go mod tidy)
+          (cd cluster-agent/tools && go mod tidy)
+          (cd cluster-agent && go fmt ./...)
+
+      - name: check diff
+        run: |
+          if ! git diff; then
+            echo "Detected changes that have not been committed to the repository"
+            exit 1
+          fi
+
+      - name: go vet
+        run: (cd cluster-agent && go vet ./...)
+
+      - name: go lint
+        run: (cd cluster-agent/tools && go run golang.org/x/lint/golint -set_exit_status ../...)
+
+      - name: go staticcheck
+        run: |
+          (cd cluster-agent/tools && go install honnef.co/go/tools/cmd/staticcheck)
+          (cd cluster-agent && $(go env GOPATH)/bin/staticcheck)
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Code
+        uses: actions/checkout@v2.4.0
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.18"
+
+      - name: Run tests
+        run: (cd cluster-agent && go test ./... -v)
