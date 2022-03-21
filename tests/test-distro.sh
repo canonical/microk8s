@@ -91,7 +91,7 @@ if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
   lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
   lxc exec $NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
-  lxc exec $NAME -- bash -c 'for i in docker-privileged docker-support kubernetes-support k8s-journald k8s-kubelet k8s-kubeproxy dot-kube network network-bind network-control network-observe firewall-control process-control kernel-module-observe mount-observe hardware-observe system-observe dot-config-helm home-read-all log-observe login-session-observe home opengl; do snap connect microk8s:$i; done'
+  lxc exec $NAME -- bash -c '/root/tests/connect-all-interfaces.sh'
 else
   lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL}
 fi
