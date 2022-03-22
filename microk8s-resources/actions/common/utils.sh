@@ -175,13 +175,23 @@ nodes_addon() {
 }
 
 
-skip_opt_in_config() {
+skip_opt_in_local_config() {
     # remove an option inside the config file.
     # argument $1 is the option to be removed
     # argument $2 is the configuration file under $SNAP_DATA/args
     local opt="--$1"
     local config_file="$SNAP_DATA/args/$2"
     run_with_sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
+}
+
+
+skip_opt_in_config() {
+    # remove an option inside the config file.
+    # argument $1 is the option to be removed
+    # argument $2 is the configuration file under $SNAP_DATA/args
+    skip_opt_in_local_config "$1" "$2"
+
+    local opt="--$1"
 
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
     then
@@ -784,6 +794,21 @@ exit_if_low_memory_guard() {
 refresh_calico_if_needed() {
     # Call the python script that does the calico update if needed
     "$SNAP/usr/bin/python3" "$SNAP/scripts/calico/upgrade.py"
+}
+
+remove_docker_specific_args() {
+  # Remove docker specific arguments and return 0 if kubelet needs to be restarted 
+  if grep -e "\-\-network-plugin" ${SNAP_DATA}/args/kubelet ||
+    grep -e "\-\-cni-conf-dir" ${SNAP_DATA}/args/kubelet ||
+    grep -e "\-\-cni-bin-dir" ${SNAP_DATA}/args/kubelet
+  then
+    skip_opt_in_local_config network-plugin kubelet
+    skip_opt_in_local_config cni-conf-dir kubelet
+    skip_opt_in_local_config cni-bin-dir kubelet
+    return 0
+  fi
+
+  return 1
 }
 
 ############################# Strict functions ######################################
