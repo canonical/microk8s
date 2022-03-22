@@ -437,6 +437,11 @@ then
   need_api_restart=true
 fi
 
+if remove_docker_specific_args
+then
+  need_kubelet_restart=true
+fi
+
 # scheduler --address flag is removed after 1.24
 if grep -e "--address=" ${SNAP_DATA}/args/kube-scheduler
 then
