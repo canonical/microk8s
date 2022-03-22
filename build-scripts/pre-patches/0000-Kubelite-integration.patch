@@ -1,4 +1,4 @@
-From 3198c607c243bd4363eadc7d9223e3a743f85215 Mon Sep 17 00:00:00 2001
+From 827aebf68936ebb77ac239025a7281240a3c903b Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
@@ -19,11 +19,11 @@ Subject: [PATCH] Kubelite integration
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index 411567a4175..a871cc9c975 100644
+index 317cd4659b2..8664dfd97b2 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
-@@ -96,7 +96,7 @@ func checkNonZeroInsecurePort(fs *pflag.FlagSet) error {
- }
+@@ -81,7 +81,7 @@ import (
+ )
  
  // NewAPIServerCommand creates a *cobra.Command object with default parameters
 -func NewAPIServerCommand() *cobra.Command {
@@ -31,7 +31,7 @@ index 411567a4175..a871cc9c975 100644
  	s := options.NewServerRunOptions()
  	cmd := &cobra.Command{
  		Use: "kube-apiserver",
-@@ -138,8 +138,11 @@ cluster's shared state through which all other components interact.`,
+@@ -119,8 +119,11 @@ cluster's shared state through which all other components interact.`,
  			if errs := completedOptions.Validate(); len(errs) != 0 {
  				return utilerrors.NewAggregate(errs)
  			}
@@ -46,10 +46,10 @@ index 411567a4175..a871cc9c975 100644
  		Args: func(cmd *cobra.Command, args []string) error {
  			for _, arg := range args {
 diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
-index b65f4e74d09..0885de22da1 100644
+index fe065c80cc2..43407bd3ba2 100644
 --- a/cmd/kube-scheduler/app/server.go
 +++ b/cmd/kube-scheduler/app/server.go
-@@ -120,7 +120,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
+@@ -122,7 +122,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
  	ctx, cancel := context.WithCancel(context.Background())
  	defer cancel()
  	go func() {
@@ -63,10 +63,10 @@ index b65f4e74d09..0885de22da1 100644
  		cancel()
  	}()
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 43dfd8d4f45..015a3df23f3 100644
+index 7500510e3b6..ff330e3f205 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
-@@ -112,7 +112,7 @@ const (
+@@ -109,7 +109,7 @@ const (
  )
  
  // NewKubeletCommand creates a *cobra.Command object with default parameters
@@ -75,7 +75,7 @@ index 43dfd8d4f45..015a3df23f3 100644
  	cleanFlagSet := pflag.NewFlagSet(componentKubelet, pflag.ContinueOnError)
  	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
  	kubeletFlags := options.NewKubeletFlags()
-@@ -287,7 +287,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -248,7 +248,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
  				klog.ErrorS(err, "kubelet running with insufficient permissions")
  			}
  			// set up signal context here in order to be reused by kubelet and docker shim
@@ -89,15 +89,15 @@ index 43dfd8d4f45..015a3df23f3 100644
  
  			// make the kubelet's config safe for logging
  			config := kubeletServer.KubeletConfiguration.DeepCopy()
-@@ -298,7 +303,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
- 			klog.V(5).InfoS("KubeletConfiguration", "configuration", config)
+@@ -259,7 +264,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+ 			klog.V(5).InfoS("KubeletConfiguration", "configuration", kubeletServer.KubeletConfiguration)
  
  			// run the kubelet
--			if err := Run(ctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate); err != nil {
-+			if err := Run(runctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate); err != nil {
- 				klog.ErrorS(err, "Failed to run kubelet")
- 				os.Exit(1)
- 			}
+-			return Run(ctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate)
++			return Run(runctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate)
+ 		},
+ 	}
+ 
 diff --git a/cmd/kubelite/app/daemons/daemon.go b/cmd/kubelite/app/daemons/daemon.go
 new file mode 100644
 index 00000000000..dbef03cf07e
@@ -394,7 +394,7 @@ index 00000000000..667b24f68e6
 +	println("Stopping kubelite")
 +}
 diff --git a/pkg/volume/csi/csi_plugin.go b/pkg/volume/csi/csi_plugin.go
-index 0ae6d084f0e..f27f9e1b812 100644
+index 3b0a5773e58..6da5e3d4ea1 100644
 --- a/pkg/volume/csi/csi_plugin.go
 +++ b/pkg/volume/csi/csi_plugin.go
 @@ -243,20 +243,24 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
