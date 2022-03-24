@@ -94,16 +94,18 @@ func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
 	}
 
 	// Sanity check node is not in cluster already.
-	hostname := util.GetRemoteHost(req.RemoteHostName, req.RemoteAddress)
+	remoteIP, _, _ := net.SplitHostPort(req.RemoteAddress)
 	dqliteCluster, err := util.GetDqliteCluster()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve dqlite cluster nodes: %w", err)
 	}
 	for _, node := range dqliteCluster {
-		if strings.HasPrefix(node.Address, hostname+":") {
-			return nil, fmt.Errorf("joining node %q is already known to dqlite", hostname)
+		if strings.HasPrefix(node.Address, remoteIP+":") {
+			return nil, fmt.Errorf("joining node %q is already known to dqlite", remoteIP)
 		}
 	}
+
+	// TODO(akolaitis): Sanity check that hostname resolves to expected IP address.
 
 	// Update dqlite cluster if needed
 	if len(dqliteCluster) == 1 && strings.HasPrefix(dqliteCluster[0].Address, "127.0.0.1:") {
@@ -134,11 +136,11 @@ func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read arguments of kubelet service: %w", err)
 	}
-	if hostname != req.RemoteHostName {
-		kubeletArgs = fmt.Sprintf("%s\n--hostname-override=%s", kubeletArgs, hostname)
+	if util.GetRemoteHost(req.RemoteHostName, req.RemoteAddress) != req.RemoteHostName {
+		kubeletArgs = fmt.Sprintf("%s\n--hostname-override=%s", kubeletArgs, remoteIP)
 	}
 
-	if err := util.MaybePatchCalicoAutoDetectionMethod(ctx, hostname, true); err != nil {
+	if err := util.MaybePatchCalicoAutoDetectionMethod(ctx, remoteIP, true); err != nil {
 		return nil, fmt.Errorf("failed to update cni configuration: %w", err)
 	}
 
@@ -150,7 +152,7 @@ func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
 		CallbackToken:              callbackToken,
 		APIServerPort:              util.GetServiceArgument("kube-apiserver", "--secure-port"),
 		APIServerAuthorizationMode: util.GetServiceArgument("kube-apiserver", "--authorization-mode"),
-		HostNameOverride:           hostname,
+		HostNameOverride:           remoteIP,
 		KubeletArgs:                kubeletArgs,
 	}
 
@@ -162,7 +164,7 @@ func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
 			return nil, fmt.Errorf("failed adding certificate request token for kube-proxy: %w", err)
 		}
 
-		// TODO: list of control plane nodes
+		// TODO (akolaitis): list of control plane nodes
 		response.ControlPlaneNodes = []string{}
 	} else {
 		caKey, err := util.ReadFile(util.SnapDataPath("certs", "ca.key"))
