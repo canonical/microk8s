@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
+	v1 "github.com/canonical/microk8s/cluster-agent/pkg/api/v1"
+	v2 "github.com/canonical/microk8s/cluster-agent/pkg/api/v2"
 	"github.com/canonical/microk8s/cluster-agent/pkg/server"
 	"github.com/canonical/microk8s/cluster-agent/pkg/util"
 	utiltest "github.com/canonical/microk8s/cluster-agent/pkg/util/test"
@@ -25,13 +28,23 @@ lifecycle of a MicroK8s cluster.`,
 		timeout, _ := cmd.Flags().GetInt("timeout")
 		devMode, _ := cmd.Flags().GetBool("devmode")
 
+		apiv1 := &v1.API{}
+		apiv2 := &v2.API{
+			ListControlPlaneNodeIPs: util.ListControlPlaneNodeIPs,
+		}
+
+		// devMode is used for debugging
 		if devMode {
 			log.Println("Running in development mode")
 			util.SnapData = "data"
 			util.Snap = "data"
 			util.CommandRunner = (&utiltest.MockRunner{Log: true}).Run
+			apiv2.ListControlPlaneNodeIPs = func(context.Context) ([]string, error) {
+				return []string{"10.0.0.1", "10.0.0.2"}, nil
+			}
 		}
-		s := server.NewServer(time.Duration(timeout) * time.Second)
+
+		s := server.NewServer(time.Duration(timeout)*time.Second, apiv1, apiv2)
 		log.Printf("Starting cluster agent on https://%s\n", bind)
 		if err := http.ListenAndServeTLS(bind, cert, key, s); err != nil {
 			log.Fatalf("Failed to listen: %s", err)

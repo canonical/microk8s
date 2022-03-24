@@ -164,8 +164,11 @@ func (a *API) Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) 
 			return nil, fmt.Errorf("failed adding certificate request token for kube-proxy: %w", err)
 		}
 
-		// TODO (akolaitis): list of control plane nodes
-		response.ControlPlaneNodes = []string{}
+		controlPlaneNodes, err := a.ListControlPlaneNodeIPs(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to retrieve list of control plane nodes: %w", err)
+		}
+		response.ControlPlaneNodes = controlPlaneNodes
 	} else {
 		caKey, err := util.ReadFile(util.SnapDataPath("certs", "ca.key"))
 		if err != nil {

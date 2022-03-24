@@ -17,7 +17,9 @@ import (
 
 // TestJoin tests responses when joining control plane and worker nodes in an existing cluster.
 func TestJoin(t *testing.T) {
-	apiv2 := &v2.API{}
+	apiv2 := &v2.API{
+		ListControlPlaneNodeIPs: mockListControlPlaneNodes("10.0.0.1", "10.0.0.2"),
+	}
 	// Create test data
 	for file, contents := range map[string]string{
 		"testdata/var/lock/ha-cluster":                "",
@@ -149,7 +151,7 @@ admin-token-123,admin,admin,"system:masters"
 				APIServerPort:              "16443",
 				KubeletArgs:                "kubelet arguments\n",
 				HostNameOverride:           "10.10.10.12",
-				ControlPlaneNodes:          []string{},
+				ControlPlaneNodes:          []string{"10.0.0.1", "10.0.0.2"},
 			}
 
 			if !reflect.DeepEqual(*resp, *expectedResponse) {

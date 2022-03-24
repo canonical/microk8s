@@ -18,7 +18,7 @@ const (
 )
 
 // NewServer creates a new *http.ServeMux and registers the MicroK8s cluster agent API endpoints.
-func NewServer(timeout time.Duration) *http.ServeMux {
+func NewServer(timeout time.Duration, apiv1 *v1.API, apiv2 *v2.API) *http.ServeMux {
 	server := http.NewServeMux()
 
 	withMiddleware := func(f http.HandlerFunc) http.HandlerFunc {
@@ -30,8 +30,6 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 	server.HandleFunc("/", withMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		HTTPError(w, http.StatusNotFound, fmt.Errorf("not found"))
 	}))
-
-	apiv1 := &v1.API{}
 
 	// POST /v1/join
 	server.HandleFunc(fmt.Sprintf("%s/join", ClusterAPIV1), withMiddleware(func(w http.ResponseWriter, r *http.Request) {
@@ -117,8 +115,6 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 		}
 		HTTPResponse(w, map[string]string{"result": "ok"})
 	}))
-
-	apiv2 := &v2.API{}
 
 	// POST v2/join
 	server.HandleFunc(fmt.Sprintf("%s/join", ClusterAPIV2), withMiddleware(func(w http.ResponseWriter, r *http.Request) {
