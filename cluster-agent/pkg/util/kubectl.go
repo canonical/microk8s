@@ -7,12 +7,9 @@ import (
 	"os/exec"
 )
 
-// kubectlGetNodesJson parses the output of the "kubectl get nodes -o json" command.
-type kubectlGetNodesJson struct {
+// kubectlGetNodesJSON parses the output of the "kubectl get nodes -o json" command.
+type kubectlGetNodesJSON struct {
 	Items []struct {
-		Metadata struct {
-			Name string `json:"name"`
-		} `json:"metadata"`
 		Status struct {
 			Addresses []struct {
 				Address string `json:"address"`
@@ -23,7 +20,7 @@ type kubectlGetNodesJson struct {
 }
 
 func parseControlPlaneNodeIPs(jsonOutput []byte) ([]string, error) {
-	var response kubectlGetNodesJson
+	var response kubectlGetNodesJSON
 	if err := json.Unmarshal(jsonOutput, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse kubectl command output: %w", err)
 	}
