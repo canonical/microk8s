@@ -524,7 +524,7 @@ parts:
     plugin: dump
     override-build: |
       set -eux
-      snap refresh go --channel=1.17/stable || true
+      snap refresh go --channel=1.18/stable || true
       go version
       export GOPATH=$(realpath ../go)
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
