@@ -84,6 +84,7 @@ OQ==
 )
 
 func TestSignCert(t *testing.T) {
+	apiv1 := &v1.API{}
 	for file, contents := range map[string]string{
 		"testdata/certs/ca.crt":                         caCrt,
 		"testdata/certs/ca.key":                         caKey,
@@ -99,7 +100,7 @@ func TestSignCert(t *testing.T) {
 	}
 
 	t.Run("InvalidToken", func(t *testing.T) {
-		resp, err := v1.SignCert(context.Background(), v1.SignCertRequest{
+		resp, err := apiv1.SignCert(context.Background(), v1.SignCertRequest{
 			Token:                     "invalid-token",
 			CertificateSigningRequest: csr,
 		})
@@ -112,7 +113,7 @@ func TestSignCert(t *testing.T) {
 	})
 
 	t.Run("InvalidRequest", func(t *testing.T) {
-		resp, err := v1.SignCert(context.Background(), v1.SignCertRequest{
+		resp, err := apiv1.SignCert(context.Background(), v1.SignCertRequest{
 			Token:                     "valid-token",
 			CertificateSigningRequest: "invalid-request",
 		})
@@ -128,7 +129,7 @@ func TestSignCert(t *testing.T) {
 	})
 
 	t.Run("Success", func(t *testing.T) {
-		resp, err := v1.SignCert(context.Background(), v1.SignCertRequest{
+		resp, err := apiv1.SignCert(context.Background(), v1.SignCertRequest{
 			Token:                     "other-token",
 			CertificateSigningRequest: csr,
 		})

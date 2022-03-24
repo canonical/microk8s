@@ -12,6 +12,7 @@ import (
 )
 
 func TestJoin(t *testing.T) {
+	apiv1 := &v1.API{}
 	m := &utiltest.MockRunner{}
 	utiltest.WithMockRunner(m, func(t *testing.T) {
 		// Create test data
@@ -36,7 +37,7 @@ admin-token,admin,admin,"system:masters"
 		}
 
 		t.Run("InvalidToken", func(t *testing.T) {
-			resp, err := v1.Join(context.Background(), v1.JoinRequest{
+			resp, err := apiv1.Join(context.Background(), v1.JoinRequest{
 				ClusterToken: "invalid-token",
 			})
 			if resp != nil {
@@ -55,7 +56,7 @@ admin-token,admin,admin,"system:masters"
 				os.RemoveAll("testdata/var")
 				t.Fatalf("Failed to create dqlite lock file: %s", err)
 			}
-			resp, err := v1.Join(context.Background(), v1.JoinRequest{
+			resp, err := apiv1.Join(context.Background(), v1.JoinRequest{
 				ClusterToken: "valid-other-token",
 			})
 			os.RemoveAll("testdata/var")
@@ -72,7 +73,7 @@ admin-token,admin,admin,"system:masters"
 				t.Fatalf("Failed to create lock directory: %s", err)
 			}
 			defer os.RemoveAll("testdata/var")
-			resp, err := v1.Join(context.Background(), v1.JoinRequest{
+			resp, err := apiv1.Join(context.Background(), v1.JoinRequest{
 				ClusterToken:     "valid-cluster-token",
 				HostName:         "my-hostname",
 				ClusterAgentPort: "25000",

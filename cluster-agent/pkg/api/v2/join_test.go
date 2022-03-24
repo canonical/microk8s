@@ -17,6 +17,7 @@ import (
 
 // TestJoin tests responses when joining control plane and worker nodes in an existing cluster.
 func TestJoin(t *testing.T) {
+	apiv2 := &v2.API{}
 	// Create test data
 	for file, contents := range map[string]string{
 		"testdata/var/lock/ha-cluster":                "",
@@ -63,7 +64,7 @@ admin-token-123,admin,admin,"system:masters"
 	defer os.RemoveAll("testdata/var")
 
 	t.Run("InvalidToken", func(t *testing.T) {
-		resp, err := v2.Join(context.Background(), v2.JoinRequest{ClusterToken: "invalid-token"})
+		resp, err := apiv2.Join(context.Background(), v2.JoinRequest{ClusterToken: "invalid-token"})
 		if err == nil {
 			t.Fatalf("Expected error but did not receive any")
 		}
@@ -76,7 +77,7 @@ admin-token-123,admin,admin,"system:masters"
 		m := &utiltest.MockRunner{}
 		utiltest.WithMockRunner(m, func(t *testing.T) {
 
-			resp, err := v2.Join(context.Background(), v2.JoinRequest{
+			resp, err := apiv2.Join(context.Background(), v2.JoinRequest{
 				ClusterToken:     "control-plane-token",
 				RemoteHostName:   "some-invalid-hostname",
 				ClusterAgentPort: "25000",
@@ -127,7 +128,7 @@ admin-token-123,admin,admin,"system:masters"
 	t.Run("Worker", func(t *testing.T) {
 		m := &utiltest.MockRunner{}
 		utiltest.WithMockRunner(m, func(t *testing.T) {
-			resp, err := v2.Join(context.Background(), v2.JoinRequest{
+			resp, err := apiv2.Join(context.Background(), v2.JoinRequest{
 				ClusterToken:     "worker-token",
 				RemoteHostName:   "10.10.10.12",
 				RemoteAddress:    "10.10.10.12:31451",
@@ -179,6 +180,7 @@ admin-token-123,admin,admin,"system:masters"
 // TestJoinFirstNode tests responses when joining a control plane node on a new cluster.
 // TestJoinFirstNode mocks the dqlite bind address update and verifies that is is handled properly.
 func TestJoinFirstNode(t *testing.T) {
+	apiv2 := &v2.API{}
 	m := &utiltest.MockRunner{}
 	utiltest.WithMockRunner(m, func(t *testing.T) {
 		// Create test data
@@ -232,7 +234,7 @@ admin-token-123,admin,admin,"system:masters"
 			}
 		}()
 
-		resp, err := v2.Join(context.Background(), v2.JoinRequest{
+		resp, err := apiv2.Join(context.Background(), v2.JoinRequest{
 			ClusterToken:     "control-plane-token",
 			RemoteHostName:   "some-invalid-hostname",
 			ClusterAgentPort: "25000",

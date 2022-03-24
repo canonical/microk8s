@@ -75,7 +75,7 @@ type JoinResponse struct {
 }
 
 // Join implements "POST v2/join".
-func Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
+func (a *API) Join(ctx context.Context, req JoinRequest) (*JoinResponse, error) {
 	if !util.IsValidClusterToken(req.ClusterToken) {
 		return nil, fmt.Errorf("invalid cluster token")
 	}

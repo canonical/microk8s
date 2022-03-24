@@ -31,6 +31,8 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 		HTTPError(w, http.StatusNotFound, fmt.Errorf("not found"))
 	}))
 
+	apiv1 := &v1.API{}
+
 	// POST /v1/join
 	server.HandleFunc(fmt.Sprintf("%s/join", ClusterAPIV1), withMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -46,7 +48,7 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 		// Set remote address from request object.
 		req.RemoteAddress = r.RemoteAddr
 
-		resp, err := v1.Join(r.Context(), req)
+		resp, err := apiv1.Join(r.Context(), req)
 		if err != nil {
 			HTTPError(w, http.StatusInternalServerError, err)
 			return
@@ -67,7 +69,7 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 			return
 		}
 
-		resp, err := v1.SignCert(r.Context(), req)
+		resp, err := apiv1.SignCert(r.Context(), req)
 		if err != nil {
 			HTTPError(w, http.StatusInternalServerError, err)
 			return
@@ -88,7 +90,7 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 			return
 		}
 
-		err := v1.Configure(r.Context(), req)
+		err := apiv1.Configure(r.Context(), req)
 		if err != nil {
 			HTTPError(w, http.StatusInternalServerError, err)
 			return
@@ -108,13 +110,15 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 			return
 		}
 
-		err := v1.Upgrade(r.Context(), req)
+		err := apiv1.Upgrade(r.Context(), req)
 		if err != nil {
 			HTTPError(w, http.StatusInternalServerError, err)
 			return
 		}
 		HTTPResponse(w, map[string]string{"result": "ok"})
 	}))
+
+	apiv2 := &v2.API{}
 
 	// POST v2/join
 	server.HandleFunc(fmt.Sprintf("%s/join", ClusterAPIV2), withMiddleware(func(w http.ResponseWriter, r *http.Request) {
@@ -131,7 +135,7 @@ func NewServer(timeout time.Duration) *http.ServeMux {
 		req.RemoteAddress = r.RemoteAddr
 		req.HostPort = r.Host
 
-		response, err := v2.Join(r.Context(), req)
+		response, err := apiv2.Join(r.Context(), req)
 		if err != nil {
 			HTTPError(w, http.StatusInternalServerError, err)
 			return

@@ -22,7 +22,7 @@ type SignCertResponse struct {
 }
 
 // SignCert implements "POST CLUSTER_API_V1/sign-cert".
-func SignCert(ctx context.Context, req SignCertRequest) (*SignCertResponse, error) {
+func (a *API) SignCert(ctx context.Context, req SignCertRequest) (*SignCertResponse, error) {
 	if !util.IsValidCertificateRequestToken(req.Token) {
 		return nil, fmt.Errorf("invalid certificate request token")
 	}

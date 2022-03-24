@@ -1,22 +1,11 @@
 package v1
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
 	"github.com/canonical/microk8s/cluster-agent/pkg/util"
 )
-
-// RestartServiceField is the "restart" field of the ConfigureServiceRequest message.
-type RestartServiceField bool
-
-// UnmarshalJSON implements json.Unmarshaler.
-// It handles both boolean values, as well as the string value "yes".
-func (v *RestartServiceField) UnmarshalJSON(b []byte) error {
-	*v = RestartServiceField(bytes.Equal(b, []byte("true")) || bytes.Equal(b, []byte(`"yes"`)))
-	return nil
-}
 
 // ConfigureServiceRequest is a configuration request for MicroK8s.
 type ConfigureServiceRequest struct {
@@ -53,7 +42,7 @@ type ConfigureRequest struct {
 }
 
 // Configure implements "POST /CLUSTER_API_V1/configure".
-func Configure(ctx context.Context, req ConfigureRequest) error {
+func (a *API) Configure(ctx context.Context, req ConfigureRequest) error {
 	if !util.IsValidSelfCallbackToken(req.CallbackToken) {
 		return fmt.Errorf("invalid callback token")
 	}

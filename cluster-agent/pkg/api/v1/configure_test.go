@@ -2,7 +2,6 @@ package v1_test
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -28,10 +27,12 @@ func TestConfigure(t *testing.T) {
 		defer os.RemoveAll(filepath.Dir(file))
 	}
 
+	apiv1 := &v1.API{}
+
 	m := &utiltest.MockRunner{}
 	utiltest.WithMockRunner(m, func(t *testing.T) {
 		t.Run("InvalidToken", func(t *testing.T) {
-			err := v1.Configure(context.Background(), v1.ConfigureRequest{
+			err := apiv1.Configure(context.Background(), v1.ConfigureRequest{
 				CallbackToken: "invalid-token",
 				ConfigureServices: []v1.ConfigureServiceRequest{
 					{Name: "kube-apiserver", Restart: true},
@@ -82,7 +83,7 @@ func TestConfigure(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			m := &utiltest.MockRunner{}
 			utiltest.WithMockRunner(m, func(t *testing.T) {
-				if err := v1.Configure(context.Background(), tc.req); err != nil {
+				if err := apiv1.Configure(context.Background(), tc.req); err != nil {
 					t.Fatalf("Expected no errors but received %q", err)
 				}
 				for serviceName, expectedArguments := range tc.expectedArguments {
@@ -96,28 +97,6 @@ func TestConfigure(t *testing.T) {
 					t.Fatalf("Expected commands %#v but %#v was executed instead", tc.expectedCommands, m.CalledWithCommand)
 				}
 			})(t)
-		})
-	}
-}
-
-func TestUnmarshalRestartServiceField(t *testing.T) {
-	for _, tc := range []struct {
-		b             string
-		expectedValue v1.RestartServiceField
-	}{
-		{b: "true", expectedValue: true},
-		{b: "false", expectedValue: false},
-		{b: "null", expectedValue: false},
-		{b: `"yes"`, expectedValue: true},
-	} {
-		t.Run(tc.b, func(t *testing.T) {
-			var v v1.RestartServiceField
-			if err := json.Unmarshal([]byte(tc.b), &v); err != nil {
-				t.Fatalf("Expected no error but received %q", err)
-			}
-			if v != tc.expectedValue {
-				t.Fatalf("Expected value to be %v, but it was %v", tc.expectedValue, v)
-			}
 		})
 	}
 }

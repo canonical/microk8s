@@ -20,7 +20,7 @@ type UpgradeRequest struct {
 }
 
 // Upgrade implements "POST v1/upgrade".
-func Upgrade(ctx context.Context, req UpgradeRequest) error {
+func (a *API) Upgrade(ctx context.Context, req UpgradeRequest) error {
 	if !util.IsValidSelfCallbackToken(req.CallbackToken) {
 		return fmt.Errorf("invalid callback token")
 	}

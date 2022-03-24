@@ -12,6 +12,7 @@ import (
 )
 
 func TestUpgrade(t *testing.T) {
+	apiv1 := &v1.API{}
 	for file, contents := range map[string]string{
 		"testdata/credentials/callback-token.txt":                      "valid-token",
 		"testdata/upgrade-scripts/001-custom-upgrade/prepare-node.sh":  "",
@@ -40,7 +41,7 @@ func TestUpgrade(t *testing.T) {
 			m := &utiltest.MockRunner{}
 			utiltest.WithMockRunner(m, func(t *testing.T) {
 				t.Run(tc.name, func(t *testing.T) {
-					err := v1.Upgrade(context.Background(), tc.req)
+					err := apiv1.Upgrade(context.Background(), tc.req)
 					if err == nil {
 						t.Fatal("Expected an error but did not receive any")
 					}
@@ -57,7 +58,7 @@ func TestUpgrade(t *testing.T) {
 			m := &utiltest.MockRunner{}
 			utiltest.WithMockRunner(m, func(t *testing.T) {
 				t.Run(phase, func(t *testing.T) {
-					err := v1.Upgrade(context.Background(), v1.UpgradeRequest{
+					err := apiv1.Upgrade(context.Background(), v1.UpgradeRequest{
 						CallbackToken: "valid-token",
 						UpgradeName:   "001-custom-upgrade",
 						UpgradePhase:  phase,
