@@ -60,20 +60,20 @@ func GetServiceArgument(serviceName string, argument string) string {
 }
 
 // UpdateServiceArguments updates the arguments file for a service.
-// update is a map of key-value pairs. It will replace the argument with the new value (or just append).
+// UpdateServiceArguments is a no-op if updateList and delete are empty.
+// updateList is a map of key-value pairs. It will replace the argument with the new value (or just append).
 // delete is a list of arguments to remove completely. The argument is removed if present.
 func UpdateServiceArguments(serviceName string, updateList []map[string]string, delete []string) error {
-	argumentsFile := SnapDataPath("args", serviceName)
-	arguments, err := ReadFile(argumentsFile)
-	if err != nil {
-		return fmt.Errorf("failed to read arguments of service %s: %w", serviceName, err)
-	}
-
 	if updateList == nil {
 		updateList = []map[string]string{}
 	}
 	if delete == nil {
 		delete = []string{}
+	}
+
+	// If no updates are requested, exit early
+	if len(updateList) == 0 && len(delete) == 0 {
+		return nil
 	}
 
 	deleteMap := make(map[string]struct{}, len(delete))
@@ -86,6 +86,12 @@ func UpdateServiceArguments(serviceName string, updateList []map[string]string, 
 		for key, value := range update {
 			updateMap[key] = value
 		}
+	}
+
+	argumentsFile := SnapDataPath("args", serviceName)
+	arguments, err := ReadFile(argumentsFile)
+	if err != nil {
+		return fmt.Errorf("failed to read arguments of service %s: %w", serviceName, err)
 	}
 
 	newArguments := make([]string, 0, len(arguments))
