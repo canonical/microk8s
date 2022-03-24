@@ -9,14 +9,14 @@ import (
 
 func TestExec(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		err := util.RunCommand(context.Background(), []string{"/bin/bash", "-c", "exit 0"})
+		err := util.RunCommand(context.Background(), "/bin/bash", "-c", "exit 0")
 		if err != nil {
 			t.Fatalf("Expected no errors, but received %q", err)
 		}
 	})
 
 	t.Run("Failure", func(t *testing.T) {
-		err := util.RunCommand(context.Background(), []string{"/bin/bash", "-c", "exit 1"})
+		err := util.RunCommand(context.Background(), "/bin/bash", "-c", "exit 1")
 		if err == nil {
 			t.Fatal("Expected an error, but did not receive any")
 		}
@@ -27,7 +27,7 @@ func TestExec(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		var err error
 		go func() {
-			err = util.RunCommand(ctx, []string{"sleep", "10"})
+			err = util.RunCommand(ctx, "sleep", "10")
 			ch <- struct{}{}
 		}()
 		cancel()

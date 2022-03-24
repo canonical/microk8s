@@ -19,7 +19,7 @@ func service(ctx context.Context, action, serviceName string) error {
 			serviceName = "kubelite"
 		}
 	}
-	return RunCommand(ctx, []string{"snapctl", action, fmt.Sprintf("microk8s.daemon-%s", serviceName)})
+	return RunCommand(ctx, "snapctl", action, fmt.Sprintf("microk8s.daemon-%s", serviceName))
 }
 
 // RestartService restarts a MicroK8s service, handling the case where the MicroK8s cluster is running Kubelite.

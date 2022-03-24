@@ -18,7 +18,7 @@ type MockRunner struct {
 }
 
 // Run is a mock implementation of CommandRunner.
-func (m *MockRunner) Run(ctx context.Context, command []string) error {
+func (m *MockRunner) Run(ctx context.Context, command ...string) error {
 	if m.Log {
 		log.Printf("mock execute %#v", command)
 	}

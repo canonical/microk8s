@@ -34,7 +34,7 @@ func Upgrade(ctx context.Context, req UpgradeRequest) error {
 		return fmt.Errorf("could not find script %s", scriptName)
 	}
 
-	if err := util.RunCommand(ctx, []string{scriptName}); err != nil {
+	if err := util.RunCommand(ctx, scriptName); err != nil {
 		return fmt.Errorf("failed to execute %s: %q", scriptName, err)
 	}
 	return nil

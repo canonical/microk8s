@@ -71,11 +71,11 @@ func Configure(ctx context.Context, req ConfigureRequest) error {
 	for _, addon := range req.ConfigureAddons {
 		switch {
 		case addon.Enable:
-			if err := util.RunCommand(ctx, []string{util.SnapPath("microk8s-enable.wrapper"), addon.Name}); err != nil {
+			if err := util.RunCommand(ctx, util.SnapPath("microk8s-enable.wrapper"), addon.Name); err != nil {
 				return fmt.Errorf("failed to enable addon %q: %w", addon.Name, err)
 			}
 		case addon.Disable:
-			if err := util.RunCommand(ctx, []string{util.SnapPath("microk8s-disable.wrapper"), addon.Name}); err != nil {
+			if err := util.RunCommand(ctx, util.SnapPath("microk8s-disable.wrapper"), addon.Name); err != nil {
 				return fmt.Errorf("failed to disable addon %q: %w", addon.Name, err)
 			}
 		}

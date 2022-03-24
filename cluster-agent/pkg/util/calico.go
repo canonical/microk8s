@@ -28,7 +28,7 @@ func MaybePatchCalicoAutoDetectionMethod(ctx context.Context, canReachHost strin
 		}
 	}
 	if apply {
-		if err := RunCommand(ctx, []string{SnapPath("microk8s-kubectl.wrapper"), "apply", "-f", cniYamlPath}); err != nil {
+		if err := RunCommand(ctx, SnapPath("microk8s-kubectl.wrapper"), "apply", "-f", cniYamlPath); err != nil {
 			return fmt.Errorf("failed to apply new cni configuration: %w", err)
 		}
 	}
