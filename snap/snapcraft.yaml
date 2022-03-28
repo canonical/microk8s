@@ -53,7 +53,9 @@ slots:
 hooks:
   configure:
     plugs:
+      - account-control
       - dot-kube
+      - network
   install:
     plugs:
       - network-bind
