@@ -58,6 +58,7 @@ hooks:
       - network
   install:
     plugs:
+      - account-control
       - network-bind
       - firewall-control
       - network-control
@@ -71,93 +72,162 @@ hooks:
   connect-plug-network-control:
     plugs:
       - dot-kube
+      - network
       - kernel-module-control
       - network-control
   disconnect-plug-network-control:
     plugs:
       - dot-kube
       - kernel-module-control
+      - network
+      - network-control
+  connect-plug-account-control:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
       - network-control
   connect-plug-docker-privileged:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-kubernetes-support:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-k8s-kubelet:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-k8s-kubeproxy:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-dot-kube:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-network:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-network-bind:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-network-observe:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-firewall-control:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-process-control:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-kernel-module-observe:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-mount-observe:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-hardware-observe:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-system-observe:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-home:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-opengl:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-k8s-journald:
     plugs:
       - dot-kube
+      - network
       - network-bind
+      - network-control
   connect-plug-cifs-mount:
     plugs:
       - dot-kube
+      - network
       - network-bind
   connect-plug-fuse-support:
     plugs:
       - dot-kube
+      - network
       - network-bind
   connect-plug-kernel-crypto-api:
     plugs:
       - dot-kube
+      - network
       - network-bind
+  connect-plug-dot-config-helm:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-log-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-login-session-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-home-read-all:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
 
 apps:
   microk8s:
@@ -338,6 +408,7 @@ apps:
     plugs:
       - docker-unprivileged
       - dot-kube
+      - network
       - home-read-all
       - firewall-control
       - network-bind
