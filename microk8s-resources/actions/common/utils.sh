@@ -811,6 +811,18 @@ remove_docker_specific_args() {
   return 1
 }
 
+fetch_as() {
+  # download from location $1 to location $2
+  if is_strict
+  then
+    ARCH="$($SNAP/bin/uname -m)"
+    LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu" "${SNAP}/usr/bin/curl" -L $1 -o $2
+  else
+    CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
+    run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $1 -o $2
+  fi
+}
+
 ############################# Strict functions ######################################
 
 is_strict() {
