@@ -28,7 +28,7 @@ def add(name: str, repository: str, reference: str, force: bool):
     if repo_dir.exists():
         if not force:
             click.echo("Error: repository '{}' already exists!".format(name), err=True)
-            click.echo("Use the --force flag to overwrite it".format(name), err=True)
+            click.echo("Use the --force flag to overwrite it", err=True)
             sys.exit(1)
 
         click.echo("Removing {}".format(repo_dir))

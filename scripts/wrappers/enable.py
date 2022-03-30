@@ -10,7 +10,6 @@ from common.utils import (
     wait_for_ready,
     xable,
 )
-from status import get_available_addons, get_current_arch, get_status
 
 
 @click.command(context_settings={"ignore_unknown_options": True})

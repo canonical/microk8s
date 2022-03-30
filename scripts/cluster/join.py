@@ -270,7 +270,6 @@ def get_client_cert(master_ip, master_port, fname, token, username, group=None):
 
     cmd_cert = "{snap}/usr/bin/openssl req -new -sha256 -key {key} -out {csr} -subj {info}".format(
         snap=snap_path,
-        snapdata=snapdata_path,
         key=cer_key_file,
         csr=cer_req_file,
         info=info,

@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import os
 import argparse
 
 from common.utils import (

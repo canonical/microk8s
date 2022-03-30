@@ -124,7 +124,7 @@ def clean_cluster():
             # we remove first resources that are automatically recreated so we do not risk race conditions
             # during which a deployment for example is recreated while any tokens are missing
             cmd = [KUBECTL, "delete", "--all", rs, "-n", ns_name, "--timeout=60s"]
-            p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         remove_extra_resources(ns_name)
 
     print("Removing CRDs")
@@ -184,15 +184,15 @@ def remove_priority_classes():
         if "system-cluster-critical" in cs or "system-node-critical" in cs:
             continue
         cmd = [KUBECTL, "delete", cs, "--timeout=60s"]
-        p = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def reset_cert_reissue():
     """
     Remove the certificate no refresh lock.
     """
-    lock = f"snap_data()/var/lock/no-cert-reissue"
-    if os.path.exists(lock):
+    lock = snap_data() / "var" / "lock" / "no-cert-reissue"
+    if lock.exists():
         cmd = f"rm -rf {lock}"
         subprocess.run(cmd.split())
 
