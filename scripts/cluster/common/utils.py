@@ -187,9 +187,10 @@ def get_control_plane_nodes_internal_ips():
     :return: list of node internal IPs
     """
     snap_path = os.environ.get("SNAP")
+    control_plane_label = "node.kubernetes.io/microk8s-controlplane=microk8s-controlplane"
     nodes_info = subprocess.check_output(
-        "{}/microk8s-kubectl.wrapper get no -o json -l node.kubernetes.io/microk8s-controlplane=microk8s-controlplane".format(
-            snap_path
+        "{}/microk8s-kubectl.wrapper get no -o json -l {}".format(
+            snap_path, control_plane_label
         ).split()
     )
     info = json.loads(nodes_info.decode())
