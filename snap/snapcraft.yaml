@@ -163,6 +163,7 @@ apps:
     plugs:
       - account-control
       - docker-unprivileged
+      - home-read-all
       - network-control
   daemon-etcd:
     command: run-etcd-with-args
