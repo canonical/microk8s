@@ -1,7 +1,6 @@
 import pytest
 import os
 import time
-import requests
 from utils import (
     wait_for_installation,
     run_until_success,
