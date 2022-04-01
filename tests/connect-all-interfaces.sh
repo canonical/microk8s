@@ -10,7 +10,8 @@ fi
 for i in account-control \
          docker-privileged \
          kubernetes-support \
-         k8s-journald k8s-kubelet \
+         k8s-journald \
+         k8s-kubelet \
          k8s-kubeproxy \
          dot-kube \
          network \
@@ -23,7 +24,8 @@ for i in account-control \
          mount-observe \
          hardware-observe \
          system-observe \
-         home opengl \
+         home \
+         opengl \
          home-read-all \
          login-session-observe \
          log-observe \

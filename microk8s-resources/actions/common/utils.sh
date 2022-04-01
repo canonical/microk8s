@@ -825,6 +825,15 @@ fetch_as() {
 
 ############################# Strict functions ######################################
 
+log_init () {
+  echo `date +"[%m-%d %H:%M:%S]" start logging` > $SNAP_COMMON/var/log/microk8s.log
+}
+
+log () {
+  echo -n `date +"[%m-%d %H:%M:%S]"` >> $SNAP_COMMON/var/log/microk8s.log
+  echo ": $@" >> $SNAP_COMMON/var/log/microk8s.log
+}
+
 is_strict() {
   # Return 0 if we are in strict mode
   if cat $SNAP/meta/snap.yaml | grep confinement | grep -q strict
@@ -878,13 +887,12 @@ check_snap_interfaces() {
     then
         snapctl set-health blocked "You must connect ${missing[*]} before proceeding"
         exit 0
-    else
-        if [ $1 -gt 0 ]
-        then
-            snapctl start --enable ${SNAP_NAME}
-            snapctl set-health okay
-        fi
     fi
+}
+
+enable_snap() {
+  snapctl start --enable ${SNAP_NAME}
+  snapctl set-health okay
 }
 
 exit_if_not_root() {
