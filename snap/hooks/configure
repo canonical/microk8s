@@ -9,7 +9,10 @@ fi
 
 source $SNAP/actions/common/utils.sh
 
-check_snap_interfaces 0  # Check for interfaces but do not start until this script has run.
+ARCH="$($SNAP/bin/uname -m)"
+export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+
+check_snap_interfaces # Check for interfaces but do not start until this script has run.
 
 need_api_restart=false
 need_proxy_restart=false
@@ -358,8 +361,6 @@ then
   chgrp snap_microk8s -R ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
 fi
 
-try_copy_users_to_snap_microk8s
-
 if ! [ -e "${SNAP_DATA}/opt/cni/bin/flanneld" ]
 then
   # cover situation where cilium was installed prior to this update
@@ -603,6 +604,8 @@ fi
 # Refresh calico if needed
 refresh_calico_if_needed
 
+enable_snap
+
 # Restart reconfigured services
 if ${need_api_restart} ||
    ${need_proxy_restart} ||
@@ -654,4 +657,3 @@ then
   fi
 fi
 
-check_snap_interfaces 1  # Check for interfaces and enable all services.
