@@ -1,4 +1,4 @@
-From 79051a67981210d7ed3195b50980bb8b7f6d30c5 Mon Sep 17 00:00:00 2001
+From 16262f01a972ef4f2f88c5953e8114106e834351 Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
@@ -19,11 +19,11 @@ Subject: [PATCH] Kubelite integration
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index 2e3f9b8ad76..d6602bd297d 100644
+index 0887d9124ba..c7ece2136a1 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
-@@ -81,7 +81,7 @@ import (
- )
+@@ -86,7 +86,7 @@ func init() {
+ }
  
  // NewAPIServerCommand creates a *cobra.Command object with default parameters
 -func NewAPIServerCommand() *cobra.Command {
@@ -31,7 +31,7 @@ index 2e3f9b8ad76..d6602bd297d 100644
  	s := options.NewServerRunOptions()
  	cmd := &cobra.Command{
  		Use: "kube-apiserver",
-@@ -119,8 +119,11 @@ cluster's shared state through which all other components interact.`,
+@@ -124,8 +124,11 @@ cluster's shared state through which all other components interact.`,
  			if errs := completedOptions.Validate(); len(errs) != 0 {
  				return utilerrors.NewAggregate(errs)
  			}
@@ -46,10 +46,10 @@ index 2e3f9b8ad76..d6602bd297d 100644
  		Args: func(cmd *cobra.Command, args []string) error {
  			for _, arg := range args {
 diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
-index b5bcb6be9f7..75f718e293b 100644
+index e6bda61b6e6..049b52fefaa 100644
 --- a/cmd/kube-scheduler/app/server.go
 +++ b/cmd/kube-scheduler/app/server.go
-@@ -122,7 +122,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
+@@ -128,7 +128,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
  	ctx, cancel := context.WithCancel(context.Background())
  	defer cancel()
  	go func() {
@@ -63,10 +63,10 @@ index b5bcb6be9f7..75f718e293b 100644
  		cancel()
  	}()
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 17b544033c4..9bf8ec44f8e 100644
+index 86c73b030d5..efeb017e92f 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
-@@ -109,7 +109,7 @@ const (
+@@ -114,7 +114,7 @@ const (
  )
  
  // NewKubeletCommand creates a *cobra.Command object with default parameters
@@ -75,7 +75,7 @@ index 17b544033c4..9bf8ec44f8e 100644
  	cleanFlagSet := pflag.NewFlagSet(componentKubelet, pflag.ContinueOnError)
  	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
  	kubeletFlags := options.NewKubeletFlags()
-@@ -248,7 +248,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -253,7 +253,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
  				klog.ErrorS(err, "kubelet running with insufficient permissions")
  			}
  			// set up signal context here in order to be reused by kubelet and docker shim
@@ -89,7 +89,7 @@ index 17b544033c4..9bf8ec44f8e 100644
  
  			// make the kubelet's config safe for logging
  			config := kubeletServer.KubeletConfiguration.DeepCopy()
-@@ -259,7 +264,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -264,7 +269,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
  			klog.V(5).InfoS("KubeletConfiguration", "configuration", config)
  
  			// run the kubelet
