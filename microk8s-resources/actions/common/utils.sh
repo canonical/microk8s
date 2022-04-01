@@ -75,7 +75,7 @@ run_with_sudo() {
     then
       shift
     fi
-    eval "$@"
+    "$@"
   else
     if [ -n "${LD_LIBRARY_PATH-}" ]
     then
