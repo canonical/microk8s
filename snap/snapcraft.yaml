@@ -518,20 +518,34 @@ parts:
       - zfsutils-linux
 
   cluster-agent:
-    plugin: python
-    python-version: python3
+    build-snaps: [go]
+    build-packages: [make]
+    build-attributes: [no-patchelf]
+    plugin: dump
     source: .
-    python-packages:
-      - flask == 1.1.2
-      - PyYAML == 5.3.1
-      - netifaces == 0.10.9
-    stage-packages:
-      - python3-openssl
-      - openssl
-      - python3-requests
-      - gunicorn3
-      - python3-click
-      - python3-dateutil
+    override-build: |
+      set -eux
+      snap refresh go --channel=1.18/stable || true
+
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      . build-scripts/set-env-variables.sh
+
+      go version
+      export GOPATH=$(realpath ../go)
+
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      if [ -d ${GOPATH}/cluster-agent ]; then
+        rm -rf ${GOPATH}/cluster-agent
+      fi
+      git clone ${CLUSTER_AGENT_REPO} -b ${CLUSTER_AGENT_TAG} ${GOPATH}/cluster-agent
+      (
+        cd ${GOPATH}/cluster-agent
+        make cluster-agent
+      )
+      cp ${GOPATH}/cluster-agent/cluster-agent $SNAPCRAFT_PART_INSTALL/bin
+
+      # Assemble the snap
+      snapcraftctl build
 
   microk8s-addons:
     plugin: dump
@@ -615,6 +629,20 @@ parts:
       cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
 
       snapcraftctl build
+
+  python-requirements:
+    plugin: python
+    python-version: python3
+    source: .
+    python-packages:
+      - PyYAML == 5.3.1
+      - netifaces == 0.10.9
+    stage-packages:
+      - openssl
+      - python3-openssl
+      - python3-requests
+      - python3-click
+      - python3-dateutil
 
 slots:
   microk8s:

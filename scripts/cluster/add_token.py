@@ -5,6 +5,9 @@ import sys
 import time
 import argparse
 import subprocess
+import hashlib
+import ssl
+import http.client
 
 from common.utils import is_node_running_dqlite
 
@@ -171,6 +174,20 @@ if __name__ == "__main__":
 
     add_token_with_expiry(token, cluster_tokens_file, ttl)
     check = run_util("server_cert_check")
+
+    # NOTE(akolaitis): if the server certificate has changed after the cluster-agent
+    # service started, the server hash will be out of date. make sure to restart
+    # the cluster-agent in this case, otherwise the joining nodes will be unable
+    # to verify.
+    context = ssl._create_unverified_context()
+    conn = http.client.HTTPSConnection("127.0.0.1:25000", context=context)
+    conn.connect()
+    der_cert_bin = conn.sock.getpeercert(True)
+    conn.close()
+    peer_cert_hash = hashlib.sha256(der_cert_bin).hexdigest()
+    if not peer_cert_hash.startswith(check):
+        print("Restarting cluster-agent to load new server certificate")
+        subprocess.check_call(["snapctl", "restart", "microk8s.daemon-cluster-agent"])
 
     if args.format == "pretty":
         print_pretty(token, check)
