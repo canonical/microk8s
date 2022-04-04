@@ -56,7 +56,7 @@ community,${COMMUNITY_ADDONS_REPO:-https://github.com/canonical/microk8s-addons}
 export ADDONS_REPOS_ENABLED="core"
 
 export CLUSTER_AGENT_REPO="${CLUSTER_AGENT_REPO:-https://github.com/canonical/microk8s-cluster-agent}"
-export CLUSTER_AGENT_TAG="${CLUSTER_AGENT_TAG:-feature/init}"
+export CLUSTER_AGENT_TAG="${CLUSTER_AGENT_TAG:-main}"
 
 echo "Building with:"
 echo "KUBE_VERSION=${KUBE_VERSION}"
