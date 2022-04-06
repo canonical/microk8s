@@ -13,18 +13,17 @@ from refresh_certs import (
 
 
 class TestRefreshCerts(object):
-
-    @patch('subprocess.check_call')
+    @patch("subprocess.check_call")
     def test_restart(self, mock_check_call):
         restart()
         # We stop and start microk8s
         assert mock_check_call.call_count == 2
 
-    @patch('subprocess.Popen')
-    @patch('subprocess.check_call')
+    @patch("subprocess.Popen")
+    @patch("subprocess.check_call")
     def test_reproduce_all_root_ca_certs(self, mock_check_call, mock_subproc_popen):
         process_mock = Mock()
-        mock_subproc_popen.return_value = process_mock 
+        mock_subproc_popen.return_value = process_mock
 
         reproduce_all_root_ca_certs()
 
@@ -35,18 +34,23 @@ class TestRefreshCerts(object):
         3. call update_configs that also restarts microk8s
         """
         snapdata_path = os.environ.get("SNAP_DATA")
-        assert call("rm -rf {}/certs/ca.crt".format(snapdata_path).split()) in mock_check_call.call_args_list
+        assert (
+            call("rm -rf {}/certs/ca.crt".format(snapdata_path).split())
+            in mock_check_call.call_args_list
+        )
         assert mock_check_call.called
         assert mock_subproc_popen.called
         assert self.is_argument_in_call(mock_subproc_popen, "produce_certs")
         assert self.is_argument_in_call(mock_subproc_popen, "update_configs")
 
-    @patch('refresh_certs.restart')
-    @patch('subprocess.Popen')
-    @patch('subprocess.check_call')
-    def test_reproduce_front_proxy_client_cert(self, mock_check_call, mock_subproc_popen, mock_restart):
+    @patch("refresh_certs.restart")
+    @patch("subprocess.Popen")
+    @patch("subprocess.check_call")
+    def test_reproduce_front_proxy_client_cert(
+        self, mock_check_call, mock_subproc_popen, mock_restart
+    ):
         process_mock = Mock()
-        mock_subproc_popen.return_value = process_mock 
+        mock_subproc_popen.return_value = process_mock
 
         reproduce_front_proxy_client_cert()
 
@@ -57,21 +61,22 @@ class TestRefreshCerts(object):
         3. restart microk8s
         """
         snapdata_path = os.environ.get("SNAP_DATA")
-        assert call("rm -rf {}/certs/front-proxy-client.crt".format(snapdata_path).split()) in mock_check_call.call_args_list
+        cmd = "rm -rf {}/certs/front-proxy-client.crt".format(snapdata_path).split()
+        assert call(cmd) in mock_check_call.call_args_list
         assert mock_check_call.called
         assert mock_subproc_popen.called
         assert mock_restart.called
         assert self.is_argument_in_call(mock_subproc_popen, "gen_proxy_client_cert")
 
-    @patch('refresh_certs.restart')
-    @patch('subprocess.Popen')
-    @patch('subprocess.check_call')
+    @patch("refresh_certs.restart")
+    @patch("subprocess.Popen")
+    @patch("subprocess.check_call")
     def test_reproduce_server_cert(self, mock_check_call, mock_subproc_popen, mock_restart):
         process_mock = Mock()
-        mock_subproc_popen.return_value = process_mock 
+        mock_subproc_popen.return_value = process_mock
 
         reproduce_server_cert()
-        
+
         """
         Make sure we:
         1. remove the server.crt
@@ -79,7 +84,10 @@ class TestRefreshCerts(object):
         3. restart microk8s
         """
         snapdata_path = os.environ.get("SNAP_DATA")
-        assert call("rm -rf {}/certs/server.crt".format(snapdata_path).split()) in mock_check_call.call_args_list
+        assert (
+            call("rm -rf {}/certs/server.crt".format(snapdata_path).split())
+            in mock_check_call.call_args_list
+        )
         assert mock_check_call.called
         assert mock_subproc_popen.called
         assert mock_restart.called
@@ -89,24 +97,28 @@ class TestRefreshCerts(object):
         """Search for a substring in the list of arguments in all calls of a mocked function"""
         for calls in mock_function.call_args_list:
             # calls is the list of calls
-            for arglist in calls.args:                
+            for arglist in calls.args:
                 # list of arguments in call
                 for arg in arglist:
                     if argument_substring in arg:
                         return True
         return False
 
-    @pytest.mark.parametrize("ca_dir,undo,check,cert,help,expected_output,expected_err_code", 
-    [
-        (None, None, True, "ca.crt", None, "Please select only one of the options", 2),
-        (None, True, True, None, None, "Please select only one of the options", 2),
-        (None, True, None, "ca.crt", None, "Please select only one of the options", 2),
-        (None, True, None, "ca.crt", True, "Usage:", 0),
-        ("/some/path", True, None, None, None, "does not exist", 2),
-        ("/", True, None, None, None, "options in combination", 1),
-        (None, True, None, "wrong_file", None, "Invalid value", 2),
-    ])
-    def test_refresh_cert_errors(self, ca_dir, undo, check, cert, help, expected_output, expected_err_code):
+    @pytest.mark.parametrize(
+        "ca_dir,undo,check,cert,help,expected_output,expected_err_code",
+        [
+            (None, None, True, "ca.crt", None, "Please select only one of the options", 2),
+            (None, True, True, None, None, "Please select only one of the options", 2),
+            (None, True, None, "ca.crt", None, "Please select only one of the options", 2),
+            (None, True, None, "ca.crt", True, "Usage:", 0),
+            ("/some/path", True, None, None, None, "does not exist", 2),
+            ("/", True, None, None, None, "options in combination", 1),
+            (None, True, None, "wrong_file", None, "Invalid value", 2),
+        ],
+    )
+    def test_refresh_cert_errors(
+        self, ca_dir, undo, check, cert, help, expected_output, expected_err_code
+    ):
         """
         Test conditions under which the upgrade should not continue
         """
@@ -115,14 +127,14 @@ class TestRefreshCerts(object):
         if ca_dir:
             args.append(ca_dir)
         if undo:
-            args.append('-u')
+            args.append("-u")
         if check:
-            args.append('-c')
+            args.append("-c")
         if cert:
-            args.append('-e')
+            args.append("-e")
             args.append(cert)
         if help:
-            args.append('-h')
+            args.append("-h")
         result = runner.invoke(refresh_certs, args)
         assert result.exit_code == expected_err_code
         assert expected_output in result.output
