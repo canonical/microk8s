@@ -136,5 +136,5 @@ class TestRefreshCerts(object):
         if help:
             args.append("-h")
         result = runner.invoke(refresh_certs, args)
-        assert result.exit_code == expected_err_code
         assert expected_output in result.output
+        assert result.exit_code == expected_err_code

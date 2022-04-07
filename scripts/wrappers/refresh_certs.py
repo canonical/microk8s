@@ -56,19 +56,27 @@ def undo_refresh():
     restart()
 
 
-def restart():
-    """Restart microk8s"""
-    click.echo("Restarting, please wait.")
-    try:
-        subprocess.check_call("{}/microk8s-stop.wrapper".format(snap_path).split())
-    except subprocess.CalledProcessError:
-        pass
+def restart(service="all"):
+    """Restart microk8s services"""
+    if service == "all":
+        click.echo("Restarting, please wait.")
+        try:
+            subprocess.check_call("{}/microk8s-stop.wrapper".format(snap_path).split())
+        except subprocess.CalledProcessError:
+            pass
 
-    try:
-        subprocess.check_call("{}/microk8s-start.wrapper".format(snap_path).split())
-    except subprocess.CalledProcessError:
-        click.echo("Failed to start MicroK8s after reverting the certificates")
-        exit(4)
+        try:
+            subprocess.check_call("{}/microk8s-start.wrapper".format(snap_path).split())
+        except subprocess.CalledProcessError:
+            click.echo("Failed to start MicroK8s after reverting the certificates")
+            exit(4)
+    else:
+        click.echo("Restarting service {}.".format(service))
+        try:
+            subprocess.check_call("snapctl restart microk8s.daemon-{}".format(service).split())
+        except subprocess.CalledProcessError:
+            click.echo("Failed to restart service microk8s.daemon-{}.".format(service))
+            exit(4)
 
 
 def update_configs():
@@ -125,7 +133,7 @@ def reproduce_front_proxy_client_cert():
     )
     p.communicate()
     subprocess.check_call("rm -rf .slr".split())
-    restart()
+    restart("kubelite")
 
 
 def reproduce_server_cert():
@@ -138,7 +146,8 @@ def reproduce_server_cert():
     )
     p.communicate()
     subprocess.check_call("rm -rf .slr".split())
-    restart()
+    restart("kubelite")
+    restart("cluster-agent")
 
 
 def refresh_cert(cert):
@@ -288,7 +297,16 @@ def refresh_certs(ca_dir, undo, check, cert, help):
         exit(0)
 
     if not ca_dir:
-        refresh_cert(cert)
+        if not cert:
+            click.echo("Please use the '--cert' flag to select the certificate you need refreshed.")
+            click.echo("Available certificate options:")
+            click.echo("- 'server.crt': refreshes the server certificate")
+            click.echo("- 'front-proxy-client.crt': refreshes the front proxy client certificate")
+            click.echo("- 'ca.crt': refreshes the root CA and all certificates created from it.")
+            click.echo("            Warning: refreshing the root CA requires nodes to leave and re-join the cluster")
+            exit(3)
+        else:
+            refresh_cert(cert)
     else:
         install_ca(ca_dir)
 
