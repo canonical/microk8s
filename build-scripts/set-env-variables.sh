@@ -16,8 +16,8 @@ export CNI_VERSION="${CNI_VERSION:-v0.8.7}"
 export KNATIVE_SERVING_VERSION="${KNATIVE_SERVING_VERSION:-v0.13.0}"
 export KNATIVE_EVENTING_VERSION="${KNATIVE_EVENTING_VERSION:-v0.13.0}"
 # RUNC commit matching the containerd release commit
-# Tag 1.4.4 
-export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-05f951a3781f4f2c1911b05e61c160e9c30eaa8e}"
+# Tag 1.4.13
+export CONTAINERD_COMMIT="${CONTAINERD_COMMIT:-9cc61520f4cd876b86e77edfeb88fbcd536d1f9d}"
 # Release v1.0.0-rc92
 export RUNC_COMMIT="${RUNC_COMMIT:-ff819c7e9184c13b7c2607fe6c30ae19403a7aff}"
 # Set this to the kubernetes fork you want to build binaries from
