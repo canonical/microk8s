@@ -303,7 +303,9 @@ def refresh_certs(ca_dir, undo, check, cert, help):
             click.echo("- 'server.crt': refreshes the server certificate")
             click.echo("- 'front-proxy-client.crt': refreshes the front proxy client certificate")
             click.echo("- 'ca.crt': refreshes the root CA and all certificates created from it.")
-            click.echo("            Warning: refreshing the root CA requires nodes to leave and re-join the cluster")
+            click.echo(
+                "            Warning: refreshing the root CA requires nodes to leave and re-join the cluster"
+            )
             exit(3)
         else:
             refresh_cert(cert)
