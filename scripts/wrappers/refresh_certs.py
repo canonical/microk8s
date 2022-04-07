@@ -318,7 +318,8 @@ def show_help():
     msg = """Usage: microk8s refresh-certs [OPTIONS] [CA_DIR]
 
   Replace the CA certificates with the ca.crt and ca.key found in CA_DIR.
-  Omit the CA_DIR argument to auto-generate a new CA.
+  Omit the CA_DIR argument and use the '--cert' flag to auto-generate a new CA
+  or any other certificate.
 
 Options:
   -c, --check  Check the expiration time of the installed certificates
