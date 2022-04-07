@@ -10,7 +10,7 @@ from common.utils import exit_if_no_root
 
 snapdata_path = os.environ.get("SNAP_DATA")
 snap_path = os.environ.get("SNAP")
-backup_dir = "{}/certs/ca-backup/".format(snapdata_path)
+backup_dir = "{}/certs-backup/".format(snapdata_path)
 
 certs = {
     "ca.crt": "CA",
@@ -299,10 +299,11 @@ def refresh_certs(ca_dir, undo, check, cert, help):
     if not ca_dir:
         if not cert:
             click.echo("Please use the '--cert' flag to select the certificate you need refreshed.")
+            click.echo("")
             click.echo("Available certificate options:")
-            click.echo("- 'server.crt': refreshes the server certificate")
-            click.echo("- 'front-proxy-client.crt': refreshes the front proxy client certificate")
-            click.echo("- 'ca.crt': refreshes the root CA and all certificates created from it.")
+            click.echo("'server.crt': refreshes the server certificate")
+            click.echo("'front-proxy-client.crt': refreshes the front proxy client certificate")
+            click.echo("'ca.crt': refreshes the root CA and all certificates created from it.")
             click.echo(
                 "            Warning: refreshing the root CA requires nodes to leave and re-join the cluster"
             )
