@@ -10,7 +10,7 @@ from common.utils import exit_if_no_root
 
 snapdata_path = os.environ.get("SNAP_DATA")
 snap_path = os.environ.get("SNAP")
-backup_dir = "{}/var/log/ca-backup/".format(snapdata_path)
+backup_dir = "{}/certs/ca-backup/".format(snapdata_path)
 
 certs = {
     "ca.crt": "CA",
