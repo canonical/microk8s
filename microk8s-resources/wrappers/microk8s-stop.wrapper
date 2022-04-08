@@ -21,7 +21,7 @@ eval set -- "$PARSED"
 while true; do
     case "$1" in
         -h|--help)
-            echo "Usage: $0 [OPTIONS]"
+            echo "Usage: microk8s stop [OPTIONS]"
             echo
             echo "Stop Kubernetes services"
             echo
@@ -34,7 +34,7 @@ while true; do
             break
             ;;
         *)
-            echo "$0: invalid option -- $1"
+            echo "microk8s stop: invalid option -- $1"
             exit 1
     esac
 done
