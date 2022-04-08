@@ -19,4 +19,5 @@ jobs:
           sudo apt-get install tox --fix-missing
       - name: Check Units
         run: |
-          tox -e unit
+          tox -e scripts
+          tox -e wrappers
