@@ -349,7 +349,7 @@ function check_low_memory_guard {
 }
 
 
-if [ ${#@} -ne 0 ] && [ "$*" == "--help" ]; then
+if [ ${#@} -ne 0 ] && [ "$*" == "--help" || "$*" == "-h" ]; then
   print_help
   exit 0;
 fi;

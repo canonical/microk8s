@@ -292,7 +292,7 @@ def check_help_flag(addons: list) -> bool:
     calls to print help text and print out a generic message to that effect.
     """
     addon = addons[0]
-    if any(arg in addons for arg in ("-h", "--help")):
+    if any(help_arg in addons for help_arg in ("-h", "--help")):
         print("Addon %s does not yet have a help message." % addon)
         print("For more information about it, visit https://microk8s.io/docs/addons")
         return True

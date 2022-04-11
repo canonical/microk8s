@@ -9,4 +9,4 @@ source $SNAP/actions/common/utils.sh
 
 exit_if_no_permissions
 
-LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH  ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/dashboard-proxy.py
+LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH  ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/dashboard_proxy.py
