@@ -55,6 +55,9 @@ do
         csr_modified="$(produce_certs)"
         if [[ "$csr_modified" -eq "1" ]];
         then
+            echo "CSR change detected. Restarting the cluster-agent"
+            snapctl restart microk8s.cluster-agent
+
             echo "CSR change detected. Reconfiguring the kube-apiserver"
             rm -rf .srl
             snapctl stop microk8s.daemon-kubelite
