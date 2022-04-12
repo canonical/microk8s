@@ -12,14 +12,16 @@ import pytest
     [
         (enable_command, True, "Enables a MicroK8s addon"),
         (disable_command, True, "Disables one or more MicroK8s addons."),
-        (dashboard_proxy_command, False, "Enables the dashboard add-on and configures port-forwarding"),
+        (
+            dashboard_proxy_command,
+            False,
+            "Enables the dashboard add-on and configures port-forwarding",
+        ),
         (reset_command, False, "Returns the MicroK8s node to the default initial state"),
         (refresh_certs_command, False, "Replace the CA certificates with the ca.crt and ca.key"),
     ],
 )
-def test_help_arguments_are_consistent_across_commands(
-    command, no_args_should_error, help_string
-):
+def test_help_arguments_are_consistent_across_commands(command, no_args_should_error, help_string):
     runner = CliRunner()
     for help_arg in ("-h", "--help"):
         result = runner.invoke(command, [help_arg])
