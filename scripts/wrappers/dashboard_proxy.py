@@ -3,10 +3,10 @@ from subprocess import check_output
 import click
 
 
-@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
 def dashboard_proxy():
     """
-    Enables the dashboard add-on and configures port-forwarding
+    Enable the dashboard add-on and configures port-forwarding
     to allow accessing the dashboard from the local machine.
     """
     print("Checking if Dashboard is running.")

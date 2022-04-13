@@ -7,4 +7,4 @@ def test_command_help_arguments():
     for help_arg in ("-h", "--help"):
         result = runner.invoke(command, [help_arg])
         assert result.exit_code == 0
-        assert "Enables the dashboard add-on and configures port-forwarding" in result.output
+        assert "Enable the dashboard add-on and configures port-forwarding" in result.output

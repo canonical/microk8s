@@ -8,7 +8,7 @@ def test_command_help_arguments():
     for help_arg in ("-h", "--help"):
         result = runner.invoke(command, [help_arg])
         assert result.exit_code == 0
-        assert "Disables one or more MicroK8s addons" in result.output
+        assert "Disable one or more MicroK8s addons" in result.output
 
 
 def test_command_errors_if_no_arguments():
