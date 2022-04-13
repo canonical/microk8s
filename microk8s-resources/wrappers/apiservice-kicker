@@ -24,7 +24,7 @@ fi
 restart_attempt=0
 installed_registry_help=0
 nic_name="vxlan.calico"
-# This flag is used so we do not perform the offload check everytime.
+# This flag is used so we do not perform the offload check every time.
 # This check is shown to cause issues on rpi, see
 # https://bugs.launchpad.net/ubuntu/+source/linux-raspi/+bug/1955174
 installed_offloading=0
