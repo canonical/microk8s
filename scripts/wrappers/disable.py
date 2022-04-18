@@ -12,10 +12,15 @@ from common.utils import (
 )
 
 
-@click.command(context_settings={"ignore_unknown_options": True})
+@click.command(
+    context_settings={
+        "ignore_unknown_options": True,
+        "help_option_names": ["-h", "--help"],
+    },
+)
 @click.argument("addons", nargs=-1, required=True)
 def disable(addons):
-    """Disables one or more MicroK8s addons.
+    """Disable one or more MicroK8s addons.
 
     For a list of available addons, run `microk8s status`.
 

@@ -12,10 +12,13 @@ from common.utils import (
 )
 
 
-@click.command(context_settings={"ignore_unknown_options": True})
+@click.command(
+    context_settings={"ignore_unknown_options": True, "help_option_names": ["-h", "--help"]},
+)
 @click.argument("addons", nargs=-1, required=True)
-def enable(addons):
-    """Enables a MicroK8s addon.
+def enable(addons) -> None:
+    """
+    Enable a MicroK8s addon.
 
     For a list of available addons, run `microk8s status`.
 
@@ -23,7 +26,6 @@ def enable(addons):
 
         microk8s enable ADDON -- --help
     """
-
     if check_help_flag(addons):
         return
 

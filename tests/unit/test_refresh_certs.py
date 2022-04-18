@@ -138,3 +138,11 @@ class TestRefreshCerts(object):
         result = runner.invoke(refresh_certs, args)
         assert expected_output in result.output
         assert result.exit_code == expected_err_code
+
+
+def test_command_help_arguments():
+    runner = CliRunner()
+    for help_arg in ("-h", "--help"):
+        result = runner.invoke(refresh_certs, [help_arg])
+        assert result.exit_code == 0
+        assert "Replace the CA certificates with the ca.crt and ca.key" in result.output

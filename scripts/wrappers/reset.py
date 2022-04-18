@@ -259,7 +259,7 @@ def preflight_check():
     exit_if_multinode()
 
 
-@click.command()
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "--destroy-storage",
     is_flag=True,
@@ -269,7 +269,10 @@ def preflight_check():
 )
 def reset(destroy_storage):
     """
-    Main reset flow
+    Return the MicroK8s node to the default initial state.
+
+    This process may take some time. All addons will be disabled and
+    the configuration will be reinitialized.
     """
     preflight_check()
     disable_addons(destroy_storage)
