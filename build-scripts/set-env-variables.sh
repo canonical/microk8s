@@ -58,9 +58,9 @@ export ADDONS_REPOS_ENABLED="core"
 export CLUSTER_AGENT_REPO="${CLUSTER_AGENT_REPO:-https://github.com/canonical/microk8s-cluster-agent}"
 export CLUSTER_AGENT_TAG="${CLUSTER_AGENT_TAG:-main}"
 
-
 write_versions_file() {
-  VERSIONS_FILE="${SNAP_DATA}/versions.json"
+  # This will be used by `microk8s version` command
+  VERSIONS_FILE="${SNAP}/versions.json"
   echo "Writing versions at ${VERSIONS_FILE} ..."
   rm -rf $VERSIONS_FILE
   echo "{\"kube\":\"${KUBE_VERSION}\",\"cni\":\"${CNI_VERSION}\"}" > $VERSIONS_FILE

@@ -2,44 +2,34 @@
 
 import click
 import json
-from common.utils import snap_data
-from common.utils import run
+from os import environ
+from pathlib import Path
 
 
-VERSIONS_FILE = snap_data() / "versions.json"
-VERSIONS = None
-
-
-def get_upstream_version(upstream: str) -> str:
-    global VERSIONS
-
-    if VERSIONS is None:
-        # Cache versions
-        VERSIONS = _read_versions_file()
-    return VERSIONS[upstream]
-
-
-def _read_versions_file():
-    with open(VERSIONS_FILE, mode="r") as versions_file:
-        versions = json.loads(versions_file.read())
+def get_upstream_versions() -> str:
+    versions_file = Path(environ["SNAP"]) / "versions.json"
+    with open(versions_file, mode="r") as file:
+        versions = json.loads(file.read())
         return versions
 
 
-def get_snap_version_data():
-    output = run("snap", "list", "microk8s")
-    snap_info = output.split("\n")[1]
-    version, revision = snap_info.split()[1:3]
-    return version, revision
+def get_snap_version() -> str:
+    return environ["SNAP_VERSION"]
+
+
+def get_snap_revision() -> str:
+    return environ["SNAP_REVISION"]
 
 
 def print_versions() -> None:
-    version, revision = get_snap_version_data()
+    version = get_snap_version()
+    revision = get_snap_revision()
     print(f"MicroK8s {version} revision: {revision}")
 
-    kube_version = get_upstream_version("kube")
+    upstream_versions = get_upstream_versions()
+    kube_version = upstream_versions["kube"]
+    cni_version = upstream_versions["cni"]
     print(f"  - K8s: {kube_version}")
-
-    cni_version = get_upstream_version("cni")
     print(f"  - CNI: {cni_version}")
 
 
