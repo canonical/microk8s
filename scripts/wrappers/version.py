@@ -6,10 +6,7 @@ from common.utils import snap_data
 from common.utils import run
 
 
-VERSIONS_FILE_NAME = "versions.json"
-VERSIONS_FILE_PATH = snap_data() / VERSIONS_FILE_NAME
-
-
+VERSIONS_FILE = snap_data() / "versions.json"
 VERSIONS = None
 
 
@@ -19,12 +16,11 @@ def get_upstream_version(upstream: str) -> str:
     if VERSIONS is None:
         # Cache versions
         VERSIONS = _read_versions_file()
-
     return VERSIONS[upstream]
 
 
 def _read_versions_file():
-    with open(VERSIONS_FILE_PATH, mode="r") as versions_file:
+    with open(VERSIONS_FILE, mode="r") as versions_file:
         versions = json.loads(versions_file.read())
         return versions
 
@@ -52,12 +48,12 @@ def print_versions() -> None:
         "help_option_names": ["-h", "--help"],
     }
 )
-def versions_command():
+def version_command():
     """
-    Shows version information for MicroK8s and its upstream components.
+    Show version information of MicroK8s and its upstream components.
     """
     print_versions()
 
 
 if __name__ == "__main__":
-    versions_command(prog_name="microk8s version")
+    version_command(prog_name="microk8s version")
