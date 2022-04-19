@@ -67,6 +67,8 @@ apps:
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
+  version:
+    command: microk8s-version.wrapper
   add-node:
     command: microk8s-add-node.wrapper
   addons:

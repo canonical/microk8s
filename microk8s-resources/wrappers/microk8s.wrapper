@@ -27,6 +27,9 @@ elif [ "${APP}" == "inspect" ]; then
 elif [ "${APP}" == "help" ] || [ "${APP}" == "--help" ] || [ "$APP" == "-h" ]; then
     help
     readonly EXIT="0"
+elif [ "${APP}" == "--version" ]; then
+    "${SNAP}/microk8s-version.wrapper"
+    readonly EXIT="$?"
 else
     echo "'${APP}' is not a valid MicroK8s subcommand."
     help
