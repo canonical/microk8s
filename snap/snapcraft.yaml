@@ -113,7 +113,7 @@ apps:
 parts:
   raft:
     source: https://github.com/canonical/raft
-    source-tag: v0.11.3
+    source-tag: v0.13.0
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
@@ -160,7 +160,7 @@ parts:
       - raft
       - sqlite
     source: https://github.com/canonical/dqlite
-    source-tag: v1.9.1
+    source-tag: v1.10.0
     build-attributes: [no-patchelf]
     source-type: git
     plugin: autotools
