@@ -723,7 +723,9 @@ def join_dqlite(connection_parts, verify=False, worker=False):
     fingerprint = None
     if len(connection_parts) > 2:
         fingerprint = connection_parts[2]
-        verify = True
+    else:
+        # we do not have a fingerprint, do not attempt to verify the remote cert
+        verify = False
 
     print("Contacting cluster at {}".format(master_ip))
 
