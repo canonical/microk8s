@@ -472,7 +472,11 @@ render_csr_conf() {
         local ips='' sep=''
         local -i i=3
         for IP_ADDR in $(echo "$IP_ADDRESSES"); do
-            ips+="${sep}IP.$((i++)) = ${IP_ADDR}"
+            local ip_id="IP.$((i++))"
+	    while grep '^'"${ip_id}" ${SNAP_DATA}/certs/csr.conf.template > /dev/null ; do
+              ip_id="IP.$((i++))"
+            done
+            ips+="${sep}${ip_id} = ${IP_ADDR}"
             sep='\n'
         done
         "$SNAP/bin/sed" -i "s/#MOREIPS/${ips}/g" ${SNAP_DATA}/certs/csr.conf.rendered
