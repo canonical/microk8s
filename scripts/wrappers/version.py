@@ -32,6 +32,5 @@ def print_versions() -> None:
     print(f"  - CNI: {cni_version}")
 
 
-
 if __name__ == "__main__":
     print_versions()
