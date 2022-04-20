@@ -605,6 +605,7 @@ parts:
       set -eux
 
       . build-scripts/set-env-variables.sh
+      build-scripts/print-versions.sh > versions.json
 
       snapcraftctl set-version "${KUBE_VERSION}"
 
