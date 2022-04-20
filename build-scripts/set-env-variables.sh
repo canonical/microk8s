@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -eu
 
+write_versions_file() {
+  # This will be used by `microk8s --version`
+  VERSIONS_FILE="${SNAP}/versions.json"
+  echo "Writing versions at ${VERSIONS_FILE} ..."
+  rm -rf $VERSIONS_FILE
+  echo "{\"kube\":\"${KUBE_VERSION}\",\"cni\":\"${CNI_VERSION}\"}" > $VERSIONS_FILE
+}
+
 export ARCH="${KUBE_ARCH:-`dpkg --print-architecture`}"
 KUBE_ARCH=${ARCH}
 SNAP_ARCH=${KUBE_ARCH}
@@ -57,6 +65,8 @@ export ADDONS_REPOS_ENABLED="core"
 
 export CLUSTER_AGENT_REPO="${CLUSTER_AGENT_REPO:-https://github.com/canonical/microk8s-cluster-agent}"
 export CLUSTER_AGENT_TAG="${CLUSTER_AGENT_TAG:-main}"
+
+write_versions_file
 
 echo "Building with:"
 echo "KUBE_VERSION=${KUBE_VERSION}"
