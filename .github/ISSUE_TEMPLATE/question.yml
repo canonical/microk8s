@@ -1,0 +1,4 @@
+contact_links:
+  - name: Ask a question
+    url: https://kubernetes.slack.com/archives/CAUNWQ85V
+    about: "For discussions and/or other questions related to MicroK8s, please use the #microk8s channel on the Kubernetes Slack"
