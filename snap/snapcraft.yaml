@@ -508,6 +508,7 @@ parts:
       - hostname
       - iproute2
       - jq
+      - kmod
       - libatm1
       - members
       - net-tools
