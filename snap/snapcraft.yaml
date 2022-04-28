@@ -425,6 +425,7 @@ parts:
       - socat
       - grep
       - jq
+      - kmod
       - hostname
       - squashfs-tools
       - tar
