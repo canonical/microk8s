@@ -282,10 +282,9 @@ function suggest_fixes {
     printf -- "\t  'sudo apt install linux-modules-extra-raspi' and reboot.\n"
   fi
 
-  if ! sudo modprobe br_netfilter
+  if ! [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ]
   then
-    printf -- "\033[0;33mWARNING: \033[0m Failed to load br_netfilter kernel module. \n"
-    printf -- "\t  Please ensure br_netfilter is available on your system or else calico CNI may be failing. \n"
+    printf -- "\033[0;33mWARNING: \033[0m Please ensure br_netfilter kernel module is loaded on the host. \n"
   fi
 }
 
