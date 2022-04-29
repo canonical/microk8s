@@ -190,7 +190,7 @@ if ! [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ]
 then
   if ! modprobe br_netfilter
   then
-    refresh_opt_in_local_config "proxy-mode" "userspace" kube-proxy
+    echo "Failed to load br_netfilter. Calico might not work properly."
   fi
 fi
 if [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ] &&
