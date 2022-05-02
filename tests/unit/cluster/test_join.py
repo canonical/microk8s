@@ -1,6 +1,5 @@
 from click.testing import CliRunner
 from join import join as command
-from unittest.mock import patch
 
 
 def test_command_help_arguments():

@@ -5,3 +5,4 @@ pytest
 pytest-xdist
 pyyaml
 sh
+netifaces
