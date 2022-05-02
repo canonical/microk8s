@@ -639,6 +639,7 @@ parts:
     python-packages:
       - PyYAML == 5.3.1
       - netifaces == 0.10.9
+      - jsonschema == 4.0.0
     stage-packages:
       - openssl
       - python3-openssl
