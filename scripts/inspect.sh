@@ -371,7 +371,6 @@ check_certificates
 printf -- 'Inspecting services\n'
 check_service "snap.microk8s.daemon-cluster-agent"
 check_service "snap.microk8s.daemon-containerd"
-check_service "snap.microk8s.daemon-k8s-dqlite"
 if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
 then
   check_service "snap.microk8s.daemon-kubelite"
@@ -383,15 +382,20 @@ else
   check_service "snap.microk8s.daemon-controller-manager"
   check_service "snap.microk8s.daemon-control-plane-kicker"
 fi
+
 if ! [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then
   check_service "snap.microk8s.daemon-flanneld"
   check_service "snap.microk8s.daemon-etcd"
+else
+  check_service "snap.microk8s.daemon-k8s-dqlite"  
 fi
+
 if ! [ -e "${SNAP_DATA}/var/lock/no-traefik" ]
 then
   check_service "snap.microk8s.daemon-traefik"
 fi
+
 if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
   check_service "snap.microk8s.daemon-apiserver-kicker"
@@ -410,8 +414,11 @@ printf -- 'Inspecting kubernetes cluster\n'
 store_kubernetes_info
 check_storage_addon
 
-printf -- 'Inspecting dqlite\n'
-store_dqlite_info
+if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
+then
+  printf -- 'Inspecting dqlite\n'
+  store_dqlite_info
+fi
 
 suggest_fixes
 
