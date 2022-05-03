@@ -17,7 +17,7 @@ ${SNAP}/microk8s-stop.wrapper
 cp "$SNAP_DATA"/args/kube-apiserver "$BACKUP_DIR/args"
 # Configure the API sever to talk to the external dqlite
 if [ -e ${SNAP}/default-args/k8s-dqlite ] &&
-   ! [ -e ${SNAP_DATA}/args/k8s-dqlite ] &&
+   ! [ -e ${SNAP_DATA}/args/k8s-dqlite ]
 then
   echo "Reconfiguring the API server for dqlite"
   cp ${SNAP}/default-args/k8s-dqlite ${SNAP_DATA}/args/k8s-dqlite
