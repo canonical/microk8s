@@ -5,6 +5,7 @@ set -eux
 source $SNAP/actions/common/utils.sh
 
 need_api_restart=false
+need_cluster_agent_restart=false
 need_proxy_restart=false
 need_kubelet_restart=false
 need_controller_restart=false
@@ -43,6 +44,7 @@ then
   "$SNAP/bin/sed" -i 's@\${SNAP}/certs/serviceaccount.key@\${SNAP_DATA}/certs/serviceaccount.key@g' ${SNAP_DATA}/args/kube-controller-manager
   need_api_restart=true
   need_controller_restart=true
+  need_cluster_agent_restart=true
 fi
 
 #Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
@@ -167,6 +169,7 @@ then
     rm -rf .srl
     need_api_restart=true
     need_proxy_restart=true
+    need_cluster_agent_restart=true
 fi
 
 # Make containerd stream server listen to localhost
@@ -613,6 +616,10 @@ then
     echo "Unable to restart service"
     exit 1
   fi
+fi
+if ${need_cluster_agent_restart}
+then
+  snapctl restart ${SNAP_NAME}.daemon-cluster-agent
 fi
 
 # if we are refreshing in a no-flanneld we need to restart the CNI pods because they mount parts of $SNAP_DATA
