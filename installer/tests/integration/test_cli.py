@@ -49,3 +49,15 @@ class TestClass:
         # Test no args. We should get an error.
         result = runner.invoke(cli, "--help")
         assert result.exit_code == 0
+
+    def test_install_validates_memory(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ["install", "--mem", "3072"])
+        assert result.exit_code == 2
+        assert "invalid memory value" in result.output
+
+    def test_install_validates_cpu(self):
+        runner = CliRunner()
+        result = runner.invoke(cli, ["install", "--cpu", "3000"])
+        assert result.exit_code == 2
+        assert "invalid cpu value" in result.output

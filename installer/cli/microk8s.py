@@ -123,14 +123,44 @@ def _show_install_help():
     )
 
 
+def memory(mem_GB: str) -> int:
+    mem_GB = int(mem_GB)
+    # TODO: make sure min/max values are correct
+    min_GB = 1
+    max_GB = 2048
+    if not (min_GB <= mem_GB <= max_GB):
+        raise ValueError("Out of valid memory range")
+    return mem_GB
+
+
+def cpu(cpus: str) -> int:
+    cpus = int(cpus)
+    # TODO: make sure min/max values are correct
+    min_cpus = 1
+    max_cpus = 10
+    if not (min_cpus <= cpus <= max_cpus):
+        raise ValueError("Invalid number of cpus")
+    return cpus
+
+
+def disk(disk_GB: str) -> int:
+    disk_GB = int(disk_GB)
+    # TODO: make sure min/max values are correct
+    min_GB = 1
+    max_GB = 2048
+    if not (min_GB <= disk_GB <= max_GB):
+        raise ValueError("Out of valid disk range")
+    return disk_GB
+
+
 def install(args) -> None:
     if "--help" in args or "-h" in args:
         _show_install_help()
         return
     parser = argparse.ArgumentParser("microk8s install")
-    parser.add_argument("--cpu", default=definitions.DEFAULT_CORES, type=int)
-    parser.add_argument("--mem", default=definitions.DEFAULT_MEMORY, type=int)
-    parser.add_argument("--disk", default=definitions.DEFAULT_DISK, type=int)
+    parser.add_argument("--cpu", default=definitions.DEFAULT_CORES, type=cpu)
+    parser.add_argument("--mem", default=definitions.DEFAULT_MEMORY, type=memory)
+    parser.add_argument("--disk", default=definitions.DEFAULT_DISK, type=disk)
     parser.add_argument("--channel", default=definitions.DEFAULT_CHANNEL, type=str)
     parser.add_argument(
         "-y", "--assume-yes", action="store_true", default=definitions.DEFAULT_ASSUME
