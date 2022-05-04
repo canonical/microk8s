@@ -58,7 +58,7 @@ def validate_addons_file(repo_dir: Path) -> None:
 def load_addons_yaml(repo_dir: Path):
     addons_yaml = repo_dir / "addons.yaml"
     with open(addons_yaml, mode="r") as f:
-        return yaml.load(f.read(), Loader=yaml.Loader)
+        return yaml.safe_load(f.read())
 
 
 def validate_yaml_schema(contents):
