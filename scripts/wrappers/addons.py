@@ -4,14 +4,14 @@ import os
 import shutil
 import subprocess
 import sys
-import jsonschema
-
-import click
-import yaml
 from pathlib import Path
-from common.utils import get_current_arch, snap_common
 from typing import List
 
+import click
+import jsonschema
+import yaml
+
+from common.utils import get_current_arch, snap_common
 
 GIT = os.path.expandvars("$SNAP/git.wrapper")
 

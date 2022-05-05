@@ -1,21 +1,22 @@
-import jsonschema
-from common.utils import parse_xable_addon_args
-from addons import (
-    check_exists,
-    check_is_executable,
-    get_addons_list,
-    validate_yaml_schema,
-    validate_addons_repo,
-    validate_addons_file,
-)
+import os
+import stat
 from copy import deepcopy
 from pathlib import Path
 from unittest.mock import mock_open, patch
 
-import yaml
+import jsonschema
 import pytest
-import os
-import stat
+import yaml
+
+from addons import (
+    check_exists,
+    check_is_executable,
+    get_addons_list,
+    validate_addons_file,
+    validate_addons_repo,
+    validate_yaml_schema,
+)
+from common.utils import parse_xable_addon_args
 
 
 ADDONS = [
