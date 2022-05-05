@@ -4,15 +4,17 @@ from copy import deepcopy
 from pathlib import Path
 from unittest.mock import mock_open, patch
 
-import jsonschema
 import pytest
 import yaml
 
 from addons import (
-    check_exists,
-    check_is_executable,
+    AddonsYamlFormatError,
+    AddonsYamlNotFoundError,
+    MissingHookError,
+    WrongHookPermissionsError,
+    add,
     get_addons_list,
-    validate_addons_file,
+    load_addons_yaml,
     validate_addons_repo,
     validate_yaml_schema,
 )
@@ -89,27 +91,26 @@ INVALID_ADDONS["microk8s-addons"]["addons"][0].pop("check_status")
 def test_validate_yaml_schema():
     validate_yaml_schema(VALID_ADDONS)
 
-
-def test_validate_yaml_schema_raises_error_if_no_schema_conformant():
-    with pytest.raises(jsonschema.ValidationError):
+    with pytest.raises(AddonsYamlFormatError) as err:
         validate_yaml_schema(INVALID_ADDONS)
+    assert "Invalid addons.yaml file" in err.value.message
 
 
-def test_validate_addons_file_raises_error_if_not_found():
-    with pytest.raises(SystemExit):
-        validate_addons_file(Path("/some/path"))
+def test_load_addons_raises_on_file_not_found():
+    # When addons.yaml file is not found
+    with pytest.raises(AddonsYamlNotFoundError) as exc:
+        load_addons_yaml(Path("/some/repo"))
+    assert exc.value.message == "Error: repository repo does not contain an addons.yaml file"
 
 
-def test_validate_addons_file_raises_error_invalid_yaml():
+def test_load_addons_raises_on_invalid_yaml_contents(repo_dir):
     with patch("addons.open", mock_open(read_data="unbalanced blackets: ][")):
-        with pytest.raises(SystemExit):
-            validate_addons_file(Path("/some/path"))
-
-
-def test_validate_addons_file_raises_error_if_not_schema_conformant():
-    with patch("addons.open", mock_open(read_data=yaml.dump(INVALID_ADDONS))):
-        with pytest.raises(SystemExit):
-            validate_addons_file(Path("/some/path"))
+        with pytest.raises(AddonsYamlFormatError) as exc:
+            load_addons_yaml(repo_dir)
+        assert (
+            exc.value.message
+            == "Yaml format error in addons.yaml file: while parsing a block node expected the node content, but found ']'"  # noqa
+        )
 
 
 def test_get_addons_list():
@@ -117,8 +118,54 @@ def test_get_addons_list():
         assert get_addons_list(Path("/some/path")) == [TEST_ADDON_NAME]
 
 
+def test_validate_addons_repo(repo_dir):
+    validate_addons_repo(repo_dir)
+
+
+def test_validate_addons_repo_raises_on_missing_enable_hook(addon_missing_enable_hook):
+    with pytest.raises(MissingHookError) as err:
+        validate_addons_repo(addon_missing_enable_hook)
+    assert err.value.message == "Missing enable hook for foo addon"
+
+
+def test_validate_addons_repo_raises_on_missing_disable_hook(addon_missing_disable_hook):
+    with pytest.raises(MissingHookError) as err:
+        validate_addons_repo(addon_missing_disable_hook)
+    assert err.value.message == "Missing disable hook for foo addon"
+
+
+def test_validate_addons_repo_raises_on_enable_not_executable(enable_not_executable):
+    with pytest.raises(WrongHookPermissionsError) as err:
+        validate_addons_repo(enable_not_executable)
+    assert err.value.message == "enable hook for foo addon needs execute permissions"
+
+
+def test_validate_addons_repo_raises_on_disable_not_executable(disable_not_executable):
+    with pytest.raises(WrongHookPermissionsError) as err:
+        validate_addons_repo(disable_not_executable)
+    assert err.value.message == "disable hook for foo addon needs execute permissions"
+
+
+@patch("addons.subprocess")
+@patch("addons.snap_common", return_value=Path("/tmp/"))
+@patch("addons.validate_addons_repo", side_effect=AddonsYamlFormatError("foo"))
+@patch("addons.shutil.rmtree")
+def test_add_removes_repo_on_validation_error(
+    rm_mock,
+    validate_addons_repo_mock,
+    snap_common_mock,
+    subprocess_mock,
+):
+    with pytest.raises(SystemExit):
+        add.callback("myrepo", "http://github.com/me/myrepo", None, False)
+
+    repo_dir = Path("/tmp/addons/myrepo")
+    validate_addons_repo_mock.assert_called_once_with(repo_dir)
+    rm_mock.assert_called_once_with(repo_dir)
+
+
 @pytest.fixture(scope="function")
-def valid_repo_dir(tmp_path):
+def repo_dir(tmp_path):
     repo_dir = tmp_path / "myrepo"
     repo_dir.mkdir()
     addons_yaml = repo_dir / "addons.yaml"
@@ -142,47 +189,45 @@ def valid_repo_dir(tmp_path):
     yield repo_dir
 
 
-def test_validate_addons_repo(valid_repo_dir):
-    validate_addons_repo(valid_repo_dir)
+@pytest.fixture(scope="function")
+def invalid_addons_yaml(tmp_path):
+    repo_dir = tmp_path / "invalid_repo"
+    repo_dir.mkdir()
+    addons_yaml = repo_dir / "addons.yaml"
+    addons_yaml.write_text(yaml.dump(INVALID_ADDONS))
+    yield repo_dir
 
 
 @pytest.fixture(scope="function")
-def valid_addon_dir(valid_repo_dir):
-    yield valid_repo_dir / "addons" / TEST_ADDON_NAME
+def missing_addons_yaml(tmp_path):
+    repo_dir = tmp_path / "invalid_repo"
+    repo_dir.mkdir()
+    yield repo_dir
 
 
 @pytest.fixture(scope="function")
-def addon_missing_enable(valid_addon_dir):
-    enable = valid_addon_dir / "enable"
-    os.remove(enable)
-    yield valid_addon_dir
-
-
-def test_check_exists(valid_addon_dir):
-    hook = valid_addon_dir / "enable"
-    check_exists(hook)
-
-
-def test_check_exists_raises_error_if_enable_missing(addon_missing_enable):
-    hook = addon_missing_enable / "enable"
-    with pytest.raises(SystemExit):
-        check_exists(hook)
+def addon_missing_enable_hook(repo_dir):
+    addon_dir = repo_dir / "addons" / TEST_ADDON_NAME
+    os.remove(addon_dir / "enable")
+    yield repo_dir
 
 
 @pytest.fixture(scope="function")
-def addon_with_wrong_permission(valid_addon_dir):
-    enable = valid_addon_dir / "enable"
-    # Change to mode to read-only by the owner
-    enable.chmod(stat.S_IREAD)
-    yield valid_addon_dir
+def addon_missing_disable_hook(repo_dir):
+    addon_dir = repo_dir / "addons" / TEST_ADDON_NAME
+    os.remove(addon_dir / "disable")
+    yield repo_dir
 
 
-def test_check_is_executable(valid_addon_dir):
-    hook = valid_addon_dir / "enable"
-    check_is_executable(hook)
+@pytest.fixture(scope="function")
+def enable_not_executable(repo_dir):
+    addon_dir = repo_dir / "addons" / TEST_ADDON_NAME
+    (addon_dir / "enable").chmod(stat.S_IREAD)
+    yield repo_dir
 
 
-def test_check_is_executable_raises_error_wrong_permissions(addon_with_wrong_permission):
-    hook = addon_with_wrong_permission / "enable"
-    with pytest.raises(SystemExit):
-        check_is_executable(hook)
+@pytest.fixture(scope="function")
+def disable_not_executable(repo_dir):
+    addon_dir = repo_dir / "addons" / TEST_ADDON_NAME
+    (addon_dir / "disable").chmod(stat.S_IREAD)
+    yield repo_dir

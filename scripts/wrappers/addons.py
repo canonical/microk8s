@@ -21,6 +21,50 @@ repository = click.Group("repo")
 addons.add_command(repository)
 
 
+class RepoValidationError(Exception):
+    @property
+    def message(self) -> str:
+        raise NotImplementedError()
+
+
+class AddonsYamlNotFoundError(RepoValidationError):
+    def __init__(self, repo_name: str):
+        self.repo_name = repo_name
+
+    @property
+    def message(self) -> str:
+        return f"Error: repository {self.repo_name} does not contain an addons.yaml file"
+
+
+class AddonsYamlFormatError(RepoValidationError):
+    def __init__(self, message):
+        self._message = message
+
+    @property
+    def message(self) -> str:
+        return self._message
+
+
+class MissingHookError(RepoValidationError):
+    def __init__(self, hook_name: str, addon: str):
+        self.hook_name = hook_name
+        self.addon = addon
+
+    @property
+    def message(self) -> str:
+        return f"Missing {self.hook_name} hook for {self.addon} addon"
+
+
+class WrongHookPermissionsError(RepoValidationError):
+    def __init__(self, hook_name: str, addon: str):
+        self.hook_name = hook_name
+        self.addon = addon
+
+    @property
+    def message(self) -> str:
+        return f"{self.hook_name} hook for {self.addon} addon needs execute permissions"
+
+
 def validate_addons_repo(repo_dir: Path) -> None:
     """
     Runs some checks on an addons repository.
@@ -34,31 +78,20 @@ def validate_addons_file(repo_dir: Path) -> None:
     """
     Checks that the addons.yaml file exists and that it has the appropriate format.
     """
-    try:
-        contents = load_addons_yaml(repo_dir)
-    except FileNotFoundError:
-        repo_name = repo_dir.name
-        click.echo(
-            f"Error: repository '{repo_name}' does not contain an addons.yaml file", err=True
-        )
-        click.echo("Remove it with:", err=True)
-        click.echo(f"    microk8s addons repo remove {repo_name}", err=True)
-        sys.exit(1)
-    except yaml.YAMLError as err:
-        click.echo(f"Yaml format error in addons.yaml file: {err}", err=True)
-        sys.exit(1)
-
-    try:
-        validate_yaml_schema(contents)
-    except jsonschema.ValidationError as err:
-        click.echo(f"Invalid addons.yaml file: {err.message}", err=True)
-        sys.exit(1)
+    contents = load_addons_yaml(repo_dir)
+    validate_yaml_schema(contents)
 
 
 def load_addons_yaml(repo_dir: Path):
     addons_yaml = repo_dir / "addons.yaml"
-    with open(addons_yaml, mode="r") as f:
-        return yaml.safe_load(f.read())
+    try:
+        with open(addons_yaml, mode="r") as f:
+            return yaml.safe_load(f.read())
+    except FileNotFoundError:
+        raise AddonsYamlNotFoundError(repo_dir.name)
+    except yaml.YAMLError as err:
+        message = f"Yaml format error in addons.yaml file: {err.context} {err.problem}"
+        raise AddonsYamlFormatError(message)
 
 
 def validate_yaml_schema(contents):
@@ -103,7 +136,11 @@ def validate_yaml_schema(contents):
         },
         "required": ["microk8s-addons"],
     }
-    jsonschema.validate(contents, schema=schema)
+    try:
+        jsonschema.validate(contents, schema=schema)
+    except jsonschema.ValidationError as err:
+        message = f"Invalid addons.yaml file: {err.message}"
+        raise AddonsYamlFormatError(message)
 
 
 def validate_hooks(repo_dir: Path) -> None:
@@ -115,27 +152,15 @@ def validate_hooks(repo_dir: Path) -> None:
         addon_folder = repo_dir / "addons" / addon
         for hook_name in ("enable", "disable"):
             hook = addon_folder / hook_name
-            check_exists(hook)
-            check_is_executable(addon_folder)
+            if not hook.exists():
+                raise MissingHookError(hook_name, addon)
+            if not os.access(hook, os.X_OK):
+                raise WrongHookPermissionsError(hook_name, addon)
 
 
 def get_addons_list(repo_dir: Path) -> List[str]:
     contents = load_addons_yaml(repo_dir)
     return [addon["name"] for addon in contents["microk8s-addons"]["addons"]]
-
-
-def check_exists(hook: Path):
-    if not hook.exists():
-        click.echo(f"Missing {hook.name} hook", err=True)
-        sys.exit(1)
-
-
-def check_is_executable(hook: Path):
-    if not os.access(hook, os.X_OK):
-        click.echo(
-            f"{hook.name} hook needs execute permissions. Try with: chmod a+x {hook}", err=True
-        )
-        sys.exit(1)
 
 
 @repository.command("add", help="Add a MicroK8s addons repository")
@@ -157,11 +182,16 @@ def add(name: str, repository: str, reference: str, force: bool):
     cmd = [GIT, "clone", repository, repo_dir]
     if reference is not None:
         cmd += ["-b", reference]
-
     subprocess.check_call(cmd)
     subprocess.check_call(["chgrp", "microk8s", "-R", repo_dir])
 
-    validate_addons_repo(repo_dir)
+    try:
+        validate_addons_repo(repo_dir)
+    except RepoValidationError as err:
+        click.echo(err.message, err=True)
+        click.echo(f"Removing {repo_dir}")
+        shutil.rmtree(repo_dir)
+        sys.exit(1)
 
 
 @repository.command("remove", help="Remove a MicroK8s addons repository")
