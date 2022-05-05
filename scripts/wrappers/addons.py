@@ -145,8 +145,8 @@ def validate_yaml_schema(contents):
 
 def validate_hooks(repo_dir: Path) -> None:
     """
-    Check that enable and disable hooks are present in the
-    repository, and that they have execute permissions.
+    Check that, for each registered addon, the enable and disable hooks
+    are present in the repository, and that they have execute permissions.
     """
     for addon in get_addons_list(repo_dir):
         addon_folder = repo_dir / "addons" / addon
