@@ -238,24 +238,20 @@ def disable_not_executable(repo_dir):
 
 @contextmanager
 def create_test_repo(repo_name: str):
-    # Create temporary test git repository
+    # Create temporary dummy test git repository
     addons = Path("/tmp/addons")
-    try:
-        os.mkdir(Path(addons))
-    except FileExistsError:
-        pass
-    try:
-        repo_dir = addons / repo_name
-        os.mkdir(Path(repo_dir))
-    except FileExistsError:
-        pass
+    os.mkdir(Path(addons))
+    repo_dir = addons / repo_name
+    os.mkdir(Path(repo_dir))
+
     # Create the .git file
     with open(repo_dir / ".git", mode="w+"):
         pass
+
     yield repo_dir
 
-    # Remove the repo
-    shutil.rmtree(Path("/tmp/addons"))
+    # Cleanup
+    shutil.rmtree(Path(addons))
 
 
 @patch("addons.git_rollback")
