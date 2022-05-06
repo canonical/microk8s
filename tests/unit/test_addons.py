@@ -1,5 +1,7 @@
 import os
 import stat
+import shutil
+from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
 from unittest.mock import mock_open, patch
@@ -15,6 +17,7 @@ from addons import (
     add,
     get_addons_list,
     load_addons_yaml,
+    update,
     validate_addons_repo,
     validate_yaml_schema,
 )
@@ -231,3 +234,47 @@ def disable_not_executable(repo_dir):
     addon_dir = repo_dir / "addons" / TEST_ADDON_NAME
     (addon_dir / "disable").chmod(stat.S_IREAD)
     yield repo_dir
+
+
+@contextmanager
+def create_test_repo(repo_name: str):
+    # Create temporary test git repository
+    addons = Path("/tmp/addons")
+    try:
+        os.mkdir(Path(addons))
+    except FileExistsError:
+        pass
+    try:
+        repo_dir = addons / repo_name
+        os.mkdir(Path(repo_dir))
+    except FileExistsError:
+        pass
+    # Create the .git file
+    with open(repo_dir / ".git", mode="w+"):
+        pass
+    yield repo_dir
+
+    # Remove the repo
+    shutil.rmtree(Path("/tmp/addons"))
+
+
+@patch("addons.git_rollback")
+@patch("addons.git_current_commit")
+@patch("addons.subprocess")
+@patch("addons.snap_common", return_value=Path("/tmp/"))
+@patch("addons.validate_addons_repo", side_effect=AddonsYamlFormatError("foo"))
+def test_update_rollbacks_repo_on_validation_error(
+    validate_addons_repo_mock,
+    snap_common_mock,
+    subprocess_mock,
+    git_current_commit_mock,
+    git_rollback_mock,
+):
+    with create_test_repo("repo_to_update") as repo_dir:
+
+        with pytest.raises(SystemExit):
+            update.callback("repo_to_update")
+
+        validate_addons_repo_mock.assert_called_once_with(repo_dir)
+        git_current_commit_mock.assert_called_once_with(repo_dir)
+        git_rollback_mock.assert_called_once_with(git_current_commit_mock.return_value, repo_dir)

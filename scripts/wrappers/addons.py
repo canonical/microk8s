@@ -218,16 +218,44 @@ def update(name: str):
         click.echo("Error: built-in repository '{}' cannot be updated".format(name), err=True)
         sys.exit(1)
 
+    commit_before_pull = git_current_commit(repo_dir)
+
     click.echo("Updating repository {}".format(name))
     subprocess.check_call([GIT, "pull"], cwd=repo_dir)
 
-    if not (repo_dir / "addons.yaml").exists():
-        click.echo(
-            "Error: repository '{}' does not contain an addons.yaml file".format(name), err=True
-        )
-        click.echo("Remove it with:", err=True)
-        click.echo("    microk8s addons repo remove {}".format(name), err=True)
+    try:
+        validate_addons_repo(repo_dir)
+    except RepoValidationError as err:
+        click.echo(err.message, err=True)
+        click.echo(f"Rolling back repository {name}")
+        git_rollback(commit_before_pull, repo_dir)
         sys.exit(1)
+
+
+class GettingGitCommitError(Exception):
+    def __init__(self, exit_code, stderr):
+        self.exit_code = exit_code
+        self.stderr = stderr
+
+
+def git_current_commit(repository: Path) -> str:
+    """
+    Returns the current commit hash of a given git repository
+    """
+    cmd = [GIT, "rev-parse", "--verify", "HEAD"]
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=repository)
+    stdout, stderr = process.communicate()
+    if process.returncode != 0:
+        raise GettingGitCommitError(exit_code=process.returncode, stderr=stderr)
+    return stdout
+
+
+def git_rollback(commit: str, repository: Path):
+    """
+    Resets the git repository to a particular commit hash
+    """
+    cmd = [GIT, "reset", "--hard", commit]
+    subprocess.check_call(cmd, cwd=repository)
 
 
 @repository.command("list", help="List configured MicroK8s addons repositories")
