@@ -75,11 +75,11 @@ def disable_addons(destroy_storage):
         if addon["name"] == "community":
             continue
 
-        print(f"Disabling addon : {addon['repository']}/{addon['name']}")
         # Do not disable disabled addons
         if addon in disabled:
             continue
 
+        print(f"Disabling addon : {addon['repository']}/{addon['name']}")
         if (addon["name"] == "hostpath-storage" or addon["name"] == "storage") and destroy_storage:
             disable_addon(addon["repository"], f"{addon['name']}", ["destroy-storage"])
         else:
@@ -116,7 +116,7 @@ def clean_cluster():
     nss = []
     if res:
         nss = res.split()
-    resources = ["replicationcontrollers", "daemonsets", "deployments"]
+    resources = ["replicationcontrollers", "daemonsets", "deployments", "statefulsets"]
     for ns in nss:
         ns_name = ns.split("/")[-1]
         print(f"Cleaning resources in namespace {ns_name}")
