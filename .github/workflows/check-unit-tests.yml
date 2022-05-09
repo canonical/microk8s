@@ -21,3 +21,4 @@ jobs:
         run: |
           tox -e scripts
           tox -e wrappers
+          tox -e cluster
