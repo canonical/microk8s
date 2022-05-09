@@ -41,10 +41,12 @@ def exit_if_multinode():
         sys.exit(0)
 
 
-def disable_addon(repo, addon, args=[]):
+def disable_addon(repo, addon, args=None):
     """
     Try to disable an addon. Ignore any errors and/or silence any output.
     """
+    if args is None:
+        args = []
     wait_for_ready(timeout=30)
     script = snap_common() / "addons" / repo / "addons" / addon / "disable"
     if not script.exists():
