@@ -79,25 +79,6 @@ def validate_addons_file(repo_dir: Path) -> None:
     Checks that the addons.yaml file exists and that it has the appropriate format.
     """
     contents = load_addons_yaml(repo_dir)
-    validate_yaml_schema(contents)
-
-
-def load_addons_yaml(repo_dir: Path):
-    addons_yaml = repo_dir / "addons.yaml"
-    try:
-        with open(addons_yaml, mode="r") as f:
-            return yaml.safe_load(f.read())
-    except FileNotFoundError:
-        raise AddonsYamlNotFoundError(repo_dir.name)
-    except yaml.YAMLError as err:
-        message = f"Yaml format error in addons.yaml file: {err.context} {err.problem}"
-        raise AddonsYamlFormatError(message)
-
-
-def validate_yaml_schema(contents):
-    """
-    Validates that the addons.yaml file has the expected format.
-    """
     schema = {
         "type": "object",
         "properties": {
@@ -140,6 +121,18 @@ def validate_yaml_schema(contents):
         jsonschema.validate(contents, schema=schema)
     except jsonschema.ValidationError as err:
         message = f"Invalid addons.yaml file: {err.message}"
+        raise AddonsYamlFormatError(message)
+
+
+def load_addons_yaml(repo_dir: Path):
+    addons_yaml = repo_dir / "addons.yaml"
+    try:
+        with open(addons_yaml, mode="r") as f:
+            return yaml.safe_load(f.read())
+    except FileNotFoundError:
+        raise AddonsYamlNotFoundError(repo_dir.name)
+    except yaml.YAMLError as err:
+        message = f"Yaml format error in addons.yaml file: {err.context} {err.problem}"
         raise AddonsYamlFormatError(message)
 
 

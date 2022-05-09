@@ -4,7 +4,7 @@ import shutil
 from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
-from unittest.mock import mock_open, patch
+from unittest.mock import mock_open, patch, Mock
 
 import pytest
 import yaml
@@ -18,8 +18,8 @@ from addons import (
     get_addons_list,
     load_addons_yaml,
     update,
+    validate_addons_file,
     validate_addons_repo,
-    validate_yaml_schema,
 )
 from common.utils import parse_xable_addon_args
 
@@ -91,11 +91,15 @@ INVALID_ADDONS = deepcopy(VALID_ADDONS)
 INVALID_ADDONS["microk8s-addons"]["addons"][0].pop("check_status")
 
 
-def test_validate_yaml_schema():
-    validate_yaml_schema(VALID_ADDONS)
+@patch("addons.load_addons_yaml", return_value=VALID_ADDONS)
+def test_validate_addons_file(load_addons_mock):
+    validate_addons_file(Mock())
 
+
+@patch("addons.load_addons_yaml", return_value=INVALID_ADDONS)
+def test_validate_addons_file_raises_if_invalid_format(load_addons_mock):
     with pytest.raises(AddonsYamlFormatError) as err:
-        validate_yaml_schema(INVALID_ADDONS)
+        validate_addons_file(Mock())
     assert "Invalid addons.yaml file" in err.value.message
 
 
