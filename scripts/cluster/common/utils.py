@@ -114,6 +114,16 @@ def is_node_running_dqlite():
     return os.path.isfile(ha_lock)
 
 
+def is_node_running_ha_etcd():
+    """
+    Check if we should use the HA etcd joining process (join api version 3.0)
+
+    :returns: True if HA etcd is to be used, otherwise False
+    """
+    ha_lock = os.path.expandvars("${SNAP_DATA}/var/lock/ha-etcd")
+    return os.path.isfile(ha_lock)
+
+
 def is_node_dqlite_worker():
     """
     Check if this is a worker only node

@@ -22,6 +22,7 @@ from common.utils import (
     is_low_memory_guard_enabled,
     try_set_file_permissions,
     is_node_running_dqlite,
+    is_node_running_ha_etcd,
     get_cluster_agent_port,
     try_initialise_cni_autodetect_for_clustering,
     service,
@@ -46,6 +47,8 @@ cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
 cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
 cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
 cluster_key_file = "{}/cluster.key".format(cluster_dir)
+
+CLUSTER_API_V3 = "cluster/api/v3.0"
 
 FINGERPRINT_MIN_LEN = 12
 
@@ -138,7 +141,7 @@ def get_connection_info(
     :param master_port: the master port
     :param token: the token to contact the master with
     :param callback_token: callback token for etcd based clusters
-    :param cluster_type: the type of cluster we want to join, etcd or dqlite
+    :param cluster_type: the type of cluster we want to join, etcd, dqlite or ha-etcd
     :param verify_peer: flag indicating if we should verify peers certificate
     :param fingerprint: the certificate fingerprint we expect from the peer
     :param worker: this is a worker only node
@@ -159,7 +162,7 @@ def get_connection_info(
             }
 
             return join_request(conn, CLUSTER_API_V2, req_data, master_ip, verify_peer, fingerprint)
-        else:
+        elif cluster_type == "etcd":
             req_data = {
                 "token": token,
                 "hostname": socket.gethostname(),
@@ -169,6 +172,14 @@ def get_connection_info(
             return join_request(
                 conn, CLUSTER_API, req_data, master_ip, verify_peer=False, fingerprint=None
             )
+        elif cluster_type == "etcd-ha":
+            req_data = {
+                "token": token,
+                "hostname": socket.gethostname(),
+                "port": cluster_agent_port,
+                "worker": bool(worker),
+            }
+            return join_request(conn, CLUSTER_API_V3, req_data, master_ip, verify_peer, fingerprint)
     except http.client.HTTPException as e:
         print("Connecting to cluster failed with {}.".format(e))
         exit(5)
@@ -740,9 +751,44 @@ def join_dqlite(connection_parts, verify=False, worker=False):
     )
 
     if worker:
-        join_dqlite_worker_node(info, master_ip, master_port, token)
+        join_worker_only_node(info, master_ip, master_port, token)
     else:
         join_dqlite_master_node(info, master_ip, token)
+
+
+def join_ha_etcd(connection_parts, verify=False, worker=False):
+    """
+    Configure node to join an HA etcd cluster.
+
+    :param connection_parts: connection string parts
+    """
+    token = connection_parts[1]
+    master_ep = connection_parts[0].split(":")
+    master_ip = master_ep[0]
+    master_port = master_ep[1]
+    fingerprint = None
+    if len(connection_parts) > 2:
+        fingerprint = connection_parts[2]
+    else:
+        # we do not have a fingerprint, do not attempt to verify the remote cert
+        verify = False
+
+    print("Contacting cluster at {}".format(master_ip))
+
+    info = get_connection_info(
+        master_ip,
+        master_port,
+        token,
+        cluster_type="ha-etcd",
+        verify_peer=verify,
+        fingerprint=fingerprint,
+        worker=worker,
+    )
+
+    if worker:
+        join_worker_only_node(info, master_ip, master_port, token)
+    else:
+        join_ha_etcd_master_node(info, master_ip, token)
 
 
 def update_traefik(master_ip, api_port, nodes_ips):
@@ -802,9 +848,9 @@ def print_traefik_usage(master_ip, api_port, nodes_ips):
     print("")
 
 
-def join_dqlite_worker_node(info, master_ip, master_port, token):
+def join_worker_only_node(info, master_ip, master_port, token):
     """
-    Join this node as a worker to a cluster running dqlite.
+    Join this node as a worker to a cluster running dqlite or HA etcd.
 
     :param info: dictionary with the connection information
     :param master_ip: the IP of the master node we contacted to connect to the cluster
@@ -870,6 +916,57 @@ def join_dqlite_master_node(info, master_ip, token):
     store_base_kubelet_args(info["kubelet_args"])
     store_callback_token(info["callback_token"])
     update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
+    # We want to update the local CNI yaml but we do not want to apply it.
+    # The cni is applied already in the cluster we join
+    try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
+    mark_no_cert_reissue()
+
+
+def join_ha_etcd_master_node(info, master_ip, token):
+    """
+    Join this node to a cluster running HA etcd.
+
+    :param info: dictionary with the connection information
+    :param master_ip: the IP of the master node we contacted to connect to the cluster
+    :param token: the token to pass to the master in order to authenticate with it
+    """
+    hostname_override = info["hostname_override"]
+    store_cert("ca.crt", info["ca"])
+    store_cert("ca.key", info["ca_key"])
+    store_cert("serviceaccount.key", info["service_account_key"])
+    # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
+    for component in [
+        ("kube-proxy", "kubeproxy", "proxy.config"),
+        ("kubelet", "kubelet", "kubelet.config"),
+        ("kube-controller-manager", "controller", "controller.config"),
+        ("kube-scheduler", "scheduler", "scheduler.config"),
+    ]:
+        component_token = get_token(component[0])
+        if not component_token:
+            print("Error, could not locate {} token. Joining cluster failed.".format(component[0]))
+            exit(3)
+        assert token is not None
+        # TODO make this configurable
+        create_kubeconfig(
+            component_token, info["ca"], "127.0.0.1", "16443", component[2], component[1]
+        )
+    if "admin_token" in info:
+        replace_admin_token(info["admin_token"])
+    if "api_authz_mode" in info:
+        update_apiserver(info["api_authz_mode"])
+
+    create_admin_kubeconfig(info["ca"], info["admin_token"])
+    store_base_kubelet_args(info["kubelet_args"])
+    store_callback_token(info["callback_token"])
+
+    store_cert("etcdadm/ca.crt", info["etcd_ca"])
+    store_cert("etcdadm/ca.key", info["etcd_ca_key"])
+
+    # TODO (neoaggelos): figure out what else is needed to join the etcd node
+    # etcdadm_reset()
+    # etcdadm_join()
+    print("[wip] Please join the etcd cluster manually for now")
+
     # We want to update the local CNI yaml but we do not want to apply it.
     # The cni is applied already in the cluster we join
     try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
@@ -955,7 +1052,9 @@ If you would still like to join the cluster as a control plane node, use:
         )
         sys.exit(1)
 
-    if is_node_running_dqlite():
+    if is_node_running_ha_etcd():
+        join_ha_etcd(connection_parts, verify, worker)
+    elif is_node_running_dqlite():
         join_dqlite(connection_parts, verify, worker)
     else:
         join_etcd(connection_parts, verify)
