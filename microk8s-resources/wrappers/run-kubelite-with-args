@@ -165,11 +165,25 @@ fi
 
 if ! [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ]
 then
-  if ! modprobe br_netfilter
+  # NOTE(neoaggelos): https://github.com/canonical/microk8s/issues/3085
+  # Attempt to use modprobe from the host, otherwise fallback to the one
+  # provided with the snap.
+  #
+  # If the br_netfilter module is loaded successfully, make sure to remove
+  # the --proxy-mode=userspace flag from kube-proxy, since it breaks Calico.
+  if /sbin/modprobe br_netfilter || modprobe br_netfilter
   then
-    refresh_opt_in_local_config "proxy-mode" "userspace" kube-proxy
+    echo "Successfully loaded br_netfilter module."
+    if grep -- "--proxy-mode=userspace" $SNAP_DATA/args/kube-proxy
+    then
+      echo "Removing --proxy-mode=userspace flag from kube-proxy, since it breaks Calico."
+      skip_opt_in_local_config "proxy-mode" "kube-proxy"
+    fi
+  else
+    echo "Failed to load br_netfilter. Calico might not work properly."
   fi
 fi
+
 if [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ] &&
    grep 0 /proc/sys/net/bridge/bridge-nf-call-iptables
 then
