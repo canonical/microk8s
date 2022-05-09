@@ -15,10 +15,6 @@ devices:
     path: /sys/module/nf_conntrack/parameters/hashsize
     source: /sys/module/nf_conntrack/parameters/hashsize
     type: disk
-  aadisable1:
-    path: /sys/module/apparmor/parameters/enabled
-    source: /dev/null
-    type: disk
   aadisable2:
     path: /dev/kmsg
     source: /dev/kmsg

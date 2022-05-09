@@ -900,7 +900,9 @@ def join_etcd(connection_parts, verify=True):
     mark_no_cert_reissue()
 
 
-@click.command(context_settings={"ignore_unknown_options": True})
+@click.command(
+    context_settings={"ignore_unknown_options": True, "help_option_names": ["-h", "--help"]}
+)
 @click.argument("connection", required=True)
 @click.option(
     "--worker", "worker", default=False, flag_value="as-worker", help="Join as a worker only node."
