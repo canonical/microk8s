@@ -77,11 +77,11 @@ def disable_addons(destroy_storage):
         if addon["name"] == "community":
             continue
 
+        print(f"Disabling addon : {addon['repository']}/{addon['name']}")
         # Do not disable disabled addons
         if addon in disabled:
             continue
 
-        print(f"Disabling addon : {addon['repository']}/{addon['name']}")
         if (addon["name"] == "hostpath-storage" or addon["name"] == "storage") and destroy_storage:
             disable_addon(addon["repository"], f"{addon['name']}", ["destroy-storage"])
         else:
