@@ -41,10 +41,12 @@ def exit_if_multinode():
         sys.exit(0)
 
 
-def disable_addon(repo, addon, args=[]):
+def disable_addon(repo, addon, args=None):
     """
     Try to disable an addon. Ignore any errors and/or silence any output.
     """
+    if args is None:
+        args = []
     wait_for_ready(timeout=30)
     script = snap_common() / "addons" / repo / "addons" / addon / "disable"
     if not script.exists():
@@ -116,7 +118,7 @@ def clean_cluster():
     nss = []
     if res:
         nss = res.split()
-    resources = ["replicationcontrollers", "daemonsets", "deployments"]
+    resources = ["replicationcontrollers", "daemonsets", "deployments", "statefulsets"]
     for ns in nss:
         ns_name = ns.split("/")[-1]
         print(f"Cleaning resources in namespace {ns_name}")
