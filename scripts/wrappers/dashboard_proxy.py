@@ -1,6 +1,24 @@
 #!/usr/bin/python3
-from subprocess import check_output
+
+import base64
+import os
+from subprocess import check_output, run
+import time
+
 import click
+
+MICROK8S_ENABLE = os.path.expandvars("$SNAP/microk8s-enable.wrapper")
+KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
+SECRET_YAML = """
+apiVersion: v1
+kind: Secret
+metadata:
+  name: microk8s-dashboard-proxy-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: "default"
+type: kubernetes.io/service-account-token
+"""
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
@@ -10,12 +28,12 @@ def dashboard_proxy():
     to allow accessing the dashboard from the local machine.
     """
     print("Checking if Dashboard is running.")
-    command = ["/snap/microk8s/current/microk8s-enable.wrapper", "dashboard"]
+    command = [MICROK8S_ENABLE, "dashboard"]
     output = check_output(command)
     if b"Addon dashboard is already enabled." not in output:
         print("Waiting for Dashboard to come up.")
         command = [
-            "microk8s.kubectl",
+            KUBECTL,
             "-n",
             "kube-system",
             "wait",
@@ -27,46 +45,34 @@ def dashboard_proxy():
         ]
         check_output(command)
 
-    command = [
-        "/snap/microk8s/current/microk8s-kubectl.wrapper",
-        "-n",
-        "kube-system",
-        "get",
-        "secret",
-    ]
-    output = check_output(command)
-    secret_name = None
-    for line in output.split(b"\n"):
-        if line.startswith(b"default-token"):
-            secret_name = line.split()[0].decode()
+    print("Create token for accessing the dashboard")
+    run([KUBECTL, "apply", "-f", "-"], input=SECRET_YAML.encode("ascii"))
+
+    for attempt in range(20):
+        print("Waiting for secret token (attempt {})".format(attempt))
+        command = [
+            KUBECTL,
+            "-n",
+            "kube-system",
+            "get",
+            "secret",
+            "microk8s-dashboard-proxy-token",
+            "-o",
+            "jsonpath={.data.token}",
+        ]
+        output = check_output(command)
+        if output:
+            token = base64.b64decode(output).decode()
             break
 
-    if not secret_name:
-        print("Cannot find the dashboard secret.")
-
-    command = [
-        "/snap/microk8s/current/microk8s-kubectl.wrapper",
-        "-n",
-        "kube-system",
-        "describe",
-        "secret",
-        secret_name,
-    ]
-    output = check_output(command)
-    token = None
-    for line in output.split(b"\n"):
-        if line.startswith(b"token:"):
-            token = line.split()[1].decode()
-
-    if not token:
-        print("Cannot find token from secret.")
+        time.sleep(5)
 
     print("Dashboard will be available at https://127.0.0.1:10443")
     print("Use the following token to login:")
     print(token)
 
     command = [
-        "/snap/microk8s/current/microk8s-kubectl.wrapper",
+        KUBECTL,
         "port-forward",
         "-n",
         "kube-system",
