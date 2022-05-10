@@ -104,23 +104,37 @@ Commands:
 
 
 def _show_install_help():
-    msg = """Usage: microk8s install OPTIONS
+    msg = f"""Usage: microk8s install OPTIONS
 
     Options:
       --help     Show this message and exit.
-      --cpu      Cores used by MicroK8s (default={})
-      --mem      RAM in GB used by MicroK8s (default={})
-      --disk     Max volume in GB of the dynamically expandable hard disk to be used (default={})
-      --channel  Kubernetes version to install (default={})
-       -y, --assume-yes  Automatic yes to prompts"""
-    Echo.info(
-        msg.format(
-            definitions.DEFAULT_CORES,
-            definitions.DEFAULT_MEMORY,
-            definitions.DEFAULT_DISK,
-            definitions.DEFAULT_CHANNEL,
-        )
-    )
+      --cpu      Cores used by MicroK8s (default={definitions.DEFAULT_CORES}, min={definitions.MIN_CORES})
+      --mem      RAM in GB used by MicroK8s (default={definitions.DEFAULT_MEMORY}, min={definitions.MIN_MEMORY})
+      --disk     Max volume in GB of the dynamically expandable hard disk to be used (default={definitions.DEFAULT_DISK}, min={definitions.MIN_DISK})
+      --channel  Kubernetes version to install (default={definitions.DEFAULT_CHANNEL})
+      -y, --assume-yes  Automatic yes to prompts"""  # noqa
+    Echo.info(msg)
+
+
+def mem(mem_GB: str) -> int:
+    mem_GB = int(mem_GB)
+    if mem_GB < definitions.MIN_MEMORY:
+        raise ValueError("Out of valid memory range")
+    return mem_GB
+
+
+def cpu(cpus: str) -> int:
+    cpus = int(cpus)
+    if cpus < definitions.MIN_CORES:
+        raise ValueError("Invalid number of cpus")
+    return cpus
+
+
+def disk(disk_GB: str) -> int:
+    disk_GB = int(disk_GB)
+    if disk_GB < definitions.MIN_DISK:
+        raise ValueError("Out of valid disk range")
+    return disk_GB
 
 
 def install(args) -> None:
@@ -128,31 +142,23 @@ def install(args) -> None:
         _show_install_help()
         return
     parser = argparse.ArgumentParser("microk8s install")
-    parser.add_argument("--cpu", default=definitions.DEFAULT_CORES, type=int)
-    parser.add_argument("--mem", default=definitions.DEFAULT_MEMORY, type=int)
-    parser.add_argument("--disk", default=definitions.DEFAULT_DISK, type=int)
+    parser.add_argument("--cpu", default=definitions.DEFAULT_CORES, type=cpu)
+    parser.add_argument("--mem", default=definitions.DEFAULT_MEMORY, type=mem)
+    parser.add_argument("--disk", default=definitions.DEFAULT_DISK, type=disk)
     parser.add_argument("--channel", default=definitions.DEFAULT_CHANNEL, type=str)
     parser.add_argument(
         "-y", "--assume-yes", action="store_true", default=definitions.DEFAULT_ASSUME
     )
-    args = parser.parse_args(args)
-
     echo = Echo()
 
-    if platform == "win32":
-        aux = Windows(args)
-        if not aux.is_enough_space():
-            echo.warning("VM disk size requested exceeds free space on host.")
-
-    if platform == "darwin":
-        aux = MacOS(args)
-        if not aux.is_enough_space():
-            echo.warning("VM disk size requested exceeds free space on host.")
-
-    else:
-        aux = Linux(args)
-        if not aux.is_enough_space():
-            echo.warning("VM disk size requested exceeds free space on host.")
+    args = parser.parse_args(args)
+    aux = {"win32": Windows, "darwin": MacOS, "linux": Linux}[platform](args)
+    if not aux.is_enough_space():
+        echo.warning("VM disk size requested exceeds free space on host.")
+    if not aux.is_enough_cpus():
+        echo.warning("VM cpus requested exceed number of available cores on host.")
+    if not aux.is_enough_memory():
+        echo.warning("VM memory requested exceeds the total memory on host.")
 
     vm_provider_name: str = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
