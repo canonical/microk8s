@@ -116,11 +116,11 @@ def _show_install_help():
     Echo.info(msg)
 
 
-def mem(mem_GB: str) -> int:
-    mem_GB = int(mem_GB)
-    if mem_GB < definitions.MIN_MEMORY:
+def memory(mem_gb: str) -> int:
+    mem_gb = int(mem_gb)
+    if mem_gb < definitions.MIN_MEMORY:
         raise ValueError("Out of valid memory range")
-    return mem_GB
+    return mem_gb
 
 
 def cpu(cpus: str) -> int:
@@ -130,34 +130,35 @@ def cpu(cpus: str) -> int:
     return cpus
 
 
-def disk(disk_GB: str) -> int:
-    disk_GB = int(disk_GB)
-    if disk_GB < definitions.MIN_DISK:
+def disk(disk_gb: str) -> int:
+    disk_gb = int(disk_gb)
+    if disk_gb < definitions.MIN_DISK:
         raise ValueError("Out of valid disk range")
-    return disk_GB
+    return disk_gb
 
 
 def install(args) -> None:
     if "--help" in args or "-h" in args:
         _show_install_help()
         return
+
     parser = argparse.ArgumentParser("microk8s install")
     parser.add_argument("--cpu", default=definitions.DEFAULT_CORES, type=cpu)
-    parser.add_argument("--mem", default=definitions.DEFAULT_MEMORY, type=mem)
+    parser.add_argument("--mem", default=definitions.DEFAULT_MEMORY, type=memory)
     parser.add_argument("--disk", default=definitions.DEFAULT_DISK, type=disk)
     parser.add_argument("--channel", default=definitions.DEFAULT_CHANNEL, type=str)
     parser.add_argument(
         "-y", "--assume-yes", action="store_true", default=definitions.DEFAULT_ASSUME
     )
     echo = Echo()
-
     args = parser.parse_args(args)
-    aux = {"win32": Windows, "darwin": MacOS, "linux": Linux}[platform](args)
-    if not aux.is_enough_space():
+
+    host = {"win32": Windows, "darwin": MacOS, "linux": Linux}[platform](args)
+    if not host.has_enough_disk_space():
         echo.warning("VM disk size requested exceeds free space on host.")
-    if not aux.is_enough_cpus():
+    if not host.has_enough_cpus():
         echo.warning("VM cpus requested exceed number of available cores on host.")
-    if not aux.is_enough_memory():
+    if not host.has_enough_memory():
         echo.warning("VM memory requested exceeds the total memory on host.")
 
     vm_provider_name: str = "multipass"

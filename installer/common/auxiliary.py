@@ -55,7 +55,7 @@ class Auxiliary(ABC):
         """
         return psutil.cpu_count(logical=False)
 
-    def is_enough_space(self) -> bool:
+    def has_enough_disk_space(self) -> bool:
         """
         Compare free space with minimum.
 
@@ -63,7 +63,7 @@ class Auxiliary(ABC):
         """
         return self._free_disk_space() > self.requested_disk
 
-    def is_enough_memory(self) -> bool:
+    def has_enough_memory(self) -> bool:
         """
         Compare requested memory against available
 
@@ -71,7 +71,7 @@ class Auxiliary(ABC):
         """
         return self._total_memory() > self.requested_memory
 
-    def is_enough_cpus(self) -> bool:
+    def has_enough_cpus(self) -> bool:
         """
         Compare requested cpus against available cores.
 
