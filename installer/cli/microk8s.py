@@ -117,6 +117,9 @@ def _show_install_help():
 
 
 def memory(mem_gb: str) -> int:
+    """
+    Validates the value in --mem parameter of the install command.
+    """
     mem_gb = int(mem_gb)
     if mem_gb < definitions.MIN_MEMORY:
         raise ValueError("Out of valid memory range")
@@ -124,6 +127,9 @@ def memory(mem_gb: str) -> int:
 
 
 def cpu(cpus: str) -> int:
+    """
+    Validates the value in --cpu parameter of the install command.
+    """
     cpus = int(cpus)
     if cpus < definitions.MIN_CORES:
         raise ValueError("Invalid number of cpus")
@@ -131,6 +137,9 @@ def cpu(cpus: str) -> int:
 
 
 def disk(disk_gb: str) -> int:
+    """
+    Validates the value in --disk parameter of the install command.
+    """
     disk_gb = int(disk_gb)
     if disk_gb < definitions.MIN_DISK:
         raise ValueError("Out of valid disk range")
