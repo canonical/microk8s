@@ -150,8 +150,9 @@ def install(args) -> None:
     parser.add_argument(
         "-y", "--assume-yes", action="store_true", default=definitions.DEFAULT_ASSUME
     )
-    echo = Echo()
     args = parser.parse_args(args)
+
+    echo = Echo()
 
     host = {"win32": Windows, "darwin": MacOS, "linux": Linux}[platform](args)
     if not host.has_enough_disk_space():
