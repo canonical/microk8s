@@ -163,7 +163,13 @@ def install(args) -> None:
 
     echo = Echo()
 
-    host = {"win32": Windows, "darwin": MacOS, "linux": Linux}[platform](args)
+    if platform == "win32":
+        host = Windows(args)
+    elif platform == "darwin":
+        host = MacOS(args)
+    else:
+        host = Linux(args)
+
     if not host.has_enough_disk_space():
         echo.warning("VM disk size requested exceeds free space on host.")
     if not host.has_enough_cpus():
