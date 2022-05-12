@@ -170,10 +170,11 @@ def install(args) -> None:
     else:
         host = Linux(args)
 
+    if not host.has_enough_cpus():
+        echo.error("VM cpus requested exceed number of available cores on host.")
+        exit(1)
     if not host.has_enough_disk_space():
         echo.warning("VM disk size requested exceeds free space on host.")
-    if not host.has_enough_cpus():
-        echo.warning("VM cpus requested exceed number of available cores on host.")
     if not host.has_enough_memory():
         echo.warning("VM memory requested exceeds the total memory on host.")
 
