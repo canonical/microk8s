@@ -26,7 +26,7 @@ about: Something is not working
 #### Can you suggest a fix?
 <!-- (This section is optional). How do you propose that the issue be fixed? -->
 
-#### Are you interested in contributing a fix?
+#### Are you interested in contributing with a fix?
 <!-- yes/no, or @mention maintainers. Community contributions are welcome. -->
 
 <!-- Thank you for making MicroK8s better -->

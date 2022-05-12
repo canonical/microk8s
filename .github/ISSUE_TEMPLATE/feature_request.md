@@ -14,7 +14,7 @@ about: Suggest a new feature
 #### Why is this important?
 <!-- Please explain the motivation, how it will be used, etc. -->
 
-#### Are you interested in contributing this feature?
+#### Are you interested in contributing to this feature?
 <!-- yes/no, or @mention maintainers. -->
 
 
