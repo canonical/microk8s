@@ -109,8 +109,8 @@ def _show_install_help():
     Options:
       --help     Show this message and exit.
       --cpu      Cores used by MicroK8s (default={definitions.DEFAULT_CORES}, min={definitions.MIN_CORES})
-      --mem      RAM in GB used by MicroK8s (default={definitions.DEFAULT_MEMORY}, min={definitions.MIN_MEMORY})
-      --disk     Max volume in GB of the dynamically expandable hard disk to be used (default={definitions.DEFAULT_DISK}, min={definitions.MIN_DISK})
+      --mem      RAM in GB used by MicroK8s (default={definitions.DEFAULT_MEMORY_GB}, min={definitions.MIN_MEMORY_GB})
+      --disk     Max volume in GB of the dynamically expandable hard disk to be used (default={definitions.DEFAULT_DISK_GB}, min={definitions.MIN_DISK_GB})
       --channel  Kubernetes version to install (default={definitions.DEFAULT_CHANNEL})
       -y, --assume-yes  Automatic yes to prompts"""  # noqa
     Echo.info(msg)
@@ -121,7 +121,7 @@ def memory(mem_gb: str) -> int:
     Validates the value in --mem parameter of the install command.
     """
     mem_gb = int(mem_gb)
-    if mem_gb < definitions.MIN_MEMORY:
+    if mem_gb < definitions.MIN_MEMORY_GB:
         raise ValueError("Out of valid memory range")
     return mem_gb
 
@@ -141,7 +141,7 @@ def disk(disk_gb: str) -> int:
     Validates the value in --disk parameter of the install command.
     """
     disk_gb = int(disk_gb)
-    if disk_gb < definitions.MIN_DISK:
+    if disk_gb < definitions.MIN_DISK_GB:
         raise ValueError("Out of valid disk range")
     return disk_gb
 
@@ -153,8 +153,8 @@ def install(args) -> None:
 
     parser = argparse.ArgumentParser("microk8s install")
     parser.add_argument("--cpu", default=definitions.DEFAULT_CORES, type=cpu)
-    parser.add_argument("--mem", default=definitions.DEFAULT_MEMORY, type=memory)
-    parser.add_argument("--disk", default=definitions.DEFAULT_DISK, type=disk)
+    parser.add_argument("--mem", default=definitions.DEFAULT_MEMORY_GB, type=memory)
+    parser.add_argument("--disk", default=definitions.DEFAULT_DISK_GB, type=disk)
     parser.add_argument("--channel", default=definitions.DEFAULT_CHANNEL, type=str)
     parser.add_argument(
         "-y", "--assume-yes", action="store_true", default=definitions.DEFAULT_ASSUME
