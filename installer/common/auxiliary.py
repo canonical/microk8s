@@ -77,7 +77,7 @@ class Auxiliary(ABC):
 
         :return: Boolean
         """
-        return self._cpu_count() > self.requested_cores
+        return self._cpu_count() >= self.requested_cores
 
     def get_kubectl_directory(self) -> str:
         """
