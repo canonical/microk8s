@@ -173,10 +173,11 @@ def install(args) -> None:
     if not host.has_enough_cpus():
         echo.error("VM cpus requested exceed number of available cores on host.")
         exit(1)
-    if not host.has_enough_disk_space():
-        echo.warning("VM disk size requested exceeds free space on host.")
     if not host.has_enough_memory():
         echo.warning("VM memory requested exceeds the total memory on host.")
+        exit(1)
+    if not host.has_enough_disk_space():
+        echo.warning("VM disk size requested exceeds free space on host.")
 
     vm_provider_name: str = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
