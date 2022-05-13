@@ -1,5 +1,5 @@
 from click.testing import CliRunner
-from leave import leave as command
+from cluster.leave import leave as command
 
 
 def test_command_help_arguments():

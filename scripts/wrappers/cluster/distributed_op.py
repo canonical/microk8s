@@ -9,7 +9,7 @@ import sys
 import json
 import socket
 
-from common.utils import (
+from common.cluster_utils import (
     is_node_running_dqlite,
     get_internal_ip_from_get_node,
     is_same_server,

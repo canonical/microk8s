@@ -1,5 +1,5 @@
 from click.testing import CliRunner
-from join import join as command
+from cluster.join import join as command
 
 
 def test_command_help_arguments():

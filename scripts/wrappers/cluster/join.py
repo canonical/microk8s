@@ -18,7 +18,7 @@ import urllib3
 import yaml
 import json
 
-from common.utils import (
+from common.cluster_utils import (
     is_low_memory_guard_enabled,
     try_set_file_permissions,
     is_node_running_dqlite,
