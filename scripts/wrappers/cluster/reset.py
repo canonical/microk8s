@@ -8,7 +8,7 @@ import sys
 import click
 import netifaces
 
-from common.cluster_utils import (
+from cluster.utils import (
     try_set_file_permissions,
     is_node_running_dqlite,
 )

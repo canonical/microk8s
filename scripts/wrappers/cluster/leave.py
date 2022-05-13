@@ -12,7 +12,7 @@ import click
 import netifaces
 import yaml
 
-from common.cluster_utils import (
+from cluster.utils import (
     is_node_running_dqlite,
     service,
     unmark_no_cert_reissue,

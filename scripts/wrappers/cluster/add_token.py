@@ -6,7 +6,7 @@ import time
 import argparse
 import subprocess
 
-from common.cluster_utils import is_node_running_dqlite
+from cluster.utils import is_node_running_dqlite
 
 try:
     from secrets import token_hex
