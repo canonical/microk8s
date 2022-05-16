@@ -25,7 +25,11 @@ command_descriptions = {
     "stop": "Stops the kubernetes cluster",
 }
 DEFAULT_CORES: int = 2
-DEFAULT_MEMORY: int = 4
-DEFAULT_DISK: int = 50
+DEFAULT_MEMORY_GB: int = 4
+DEFAULT_DISK_GB: int = 50
 DEFAULT_ASSUME: bool = False
 DEFAULT_CHANNEL: str = "1.22/stable"
+
+MIN_CORES: int = 2
+MIN_MEMORY_GB: int = 2
+MIN_DISK_GB: int = 10

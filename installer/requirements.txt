@@ -1,6 +1,7 @@
 urllib3==1.26.5
 click~=7.0
 progressbar33==2.4
+psutil==5.9.0
 requests==2.25.1
 requests_unixsocket==0.1.5
 pysha3==1.0.2; python_version < '3.6'
