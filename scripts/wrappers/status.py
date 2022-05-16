@@ -127,7 +127,7 @@ def print_yaml(isReady, enabled_addons, disabled_addons):
 
         for disabled in disabled_addons:
             print("{:>4}name: {:<1}".format("- ", disabled["name"]))
-            print("{:>4}repository: {:<1}".format("", enabled["repository"]))
+            print("{:>4}repository: {:<1}".format("", disabled["repository"]))
             print("{:>4}description: {:<1}".format("", disabled["description"]))
             print("{:>4}version: {:<1}".format("", disabled["version"]))
             print("{:>4}status: disabled".format(""))
