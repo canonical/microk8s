@@ -8,6 +8,13 @@ function help() {
         echo -e "\t$(basename ${i} | sed 's/microk8s-//g' | sed 's/.wrapper//g')"
     done
     echo -e "\tinspect"
+    plugins="$(find ${SNAP_COMMON}/plugins/* 2> /dev/null)"
+    if [ ! -z "$plugins" ]; then
+	    echo "Available subcommands from addons are:"
+	    for i in "$plugins" ; do
+		    echo -e "\t$(basename ${i})"
+	    done
+    fi
 }
 
 if [ -z "$1" ]; then

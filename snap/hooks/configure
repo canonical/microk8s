@@ -20,6 +20,11 @@ then
   done
 fi
 
+if [ ! -d "${SNAP_COMMON}/plugins" ]
+then
+  mkdir -p ${SNAP_COMMON}/plugins
+fi
+
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
 # and make sure the respective services use them.
@@ -333,7 +338,7 @@ then
   mv ${CD_TOML_TMP} ${CD_TOML}
 fi
 
-for dir in ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock ${SNAP_DATA}/tmp/
+for dir in ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock ${SNAP_DATA}/tmp/
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
@@ -347,7 +352,7 @@ fi
 
 if getent group microk8s >/dev/null 2>&1
 then
-  chgrp microk8s -R ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
+  chgrp microk8s -R ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
 fi
 
 try_copy_users_to_snap_microk8s
