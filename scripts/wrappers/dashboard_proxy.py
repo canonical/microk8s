@@ -2,7 +2,7 @@
 
 import base64
 import os
-from subprocess import check_output, run
+from subprocess import check_output, run, CalledProcessError
 import time
 
 import click
@@ -19,6 +19,39 @@ metadata:
     kubernetes.io/service-account.name: "default"
 type: kubernetes.io/service-account-token
 """
+
+
+def get_token(secret):
+    """
+    Get a token to be used
+    """
+    token = None
+    print("Trying to get token from {}".format(secret))
+    for attempt in range(3):
+        print("Waiting for secret token (attempt {})".format(attempt))
+        command = [
+            KUBECTL,
+            "-n",
+            "kube-system",
+            "get",
+            "secret",
+            secret,
+            "-o",
+            "jsonpath={.data.token}",
+        ]
+        try:
+            output = check_output(command)
+        except CalledProcessError:
+            time.sleep(5)
+            continue
+
+        if output:
+            token = base64.b64decode(output).decode()
+            break
+
+        time.sleep(5)
+
+    return token
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
@@ -45,27 +78,13 @@ def dashboard_proxy():
         ]
         check_output(command)
 
-    print("Create token for accessing the dashboard")
-    run([KUBECTL, "apply", "-f", "-"], input=SECRET_YAML.encode("ascii"))
-
-    for attempt in range(20):
-        print("Waiting for secret token (attempt {})".format(attempt))
-        command = [
-            KUBECTL,
-            "-n",
-            "kube-system",
-            "get",
-            "secret",
-            "microk8s-dashboard-proxy-token",
-            "-o",
-            "jsonpath={.data.token}",
-        ]
-        output = check_output(command)
-        if output:
-            token = base64.b64decode(output).decode()
-            break
-
-        time.sleep(5)
+    # Get token created by the dashboard enable script
+    token = get_token("microk8s-dashboard-token")
+    if not token:
+        # Create a token. This is needed in case the enable script is pre-1.25.
+        print("Create token for accessing the dashboard")
+        run([KUBECTL, "apply", "-f", "-"], input=SECRET_YAML.encode("ascii"))
+        token = get_token("microk8s-dashboard-proxy-token")
 
     print("Dashboard will be available at https://127.0.0.1:10443")
     print("Use the following token to login:")
