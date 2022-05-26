@@ -31,8 +31,7 @@ then
   iptables -D FORWARD -d "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
   iptables-nft -D FORWARD -s "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
   iptables-nft -D FORWARD -d "$pod_cidr" -m comment --comment "generated for MicroK8s pods" -j ACCEPT || true
-  iptables -F CNI-HOSTPORT-DNAT || true
-  iptables -X CNI-HOSTPORT-DNAT || true
+  iptables-legacy -t nat -F CNI-HOSTPORT-DNAT || true
 fi
 
 snapctl stop ${SNAP_NAME}.daemon-containerd 2>&1 || true
