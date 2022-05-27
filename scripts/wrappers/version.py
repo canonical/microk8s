@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import json
-from os import environ
+from os import environ, getenv
 from pathlib import Path
 
 
@@ -13,11 +13,11 @@ def get_upstream_versions() -> str:
 
 
 def get_snap_version() -> str:
-    return environ["SNAP_VERSION"]
+    return getenv("SNAP_VERSION", "(unknown)")
 
 
 def get_snap_revision() -> str:
-    return environ["SNAP_REVISION"]
+    return getenv("SNAP_REVISION", "(unknown)")
 
 
 def print_versions() -> None:
@@ -27,9 +27,7 @@ def print_versions() -> None:
 
     upstream_versions = get_upstream_versions()
     kube_version = upstream_versions["kube"]
-    cni_version = upstream_versions["cni"]
     print(f"  - K8s: {kube_version}")
-    print(f"  - CNI: {cni_version}")
 
 
 if __name__ == "__main__":

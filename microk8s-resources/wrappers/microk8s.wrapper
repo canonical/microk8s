@@ -36,7 +36,6 @@ elif [ "${APP}" == "help" ] || [ "${APP}" == "--help" ] || [ "$APP" == "-h" ]; t
     readonly EXIT="0"
 elif [ -f "${SNAP_COMMON}/plugins/${APP}" ]; then
     "${SNAP_COMMON}/plugins/${APP}" "$@"
-    readonly EXIT="$?"
 else
     echo "'${APP}' is not a valid MicroK8s subcommand."
     help
