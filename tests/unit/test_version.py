@@ -1,5 +1,4 @@
-from version import get_snap_version
-from version import get_snap_revision
+from version import get_snap_version, get_snap_revision
 import os
 
 
