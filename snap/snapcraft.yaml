@@ -109,6 +109,8 @@ apps:
     command: microk8s-cilium.wrapper
   dbctl:
     command: microk8s-dbctl.wrapper
+  version:
+    command: microk8s-version.wrapper
 
 parts:
   raft:
