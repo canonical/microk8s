@@ -13,7 +13,7 @@ SECRET_YAML = """
 apiVersion: v1
 kind: Secret
 metadata:
-  name: microk8s-dashboard-proxy-token
+  name: microk8s-dashboard-token
   namespace: kube-system
   annotations:
     kubernetes.io/service-account.name: "default"
@@ -84,7 +84,7 @@ def dashboard_proxy():
         # Create a token. This is needed in case the enable script is pre-1.25.
         print("Create token for accessing the dashboard")
         run([KUBECTL, "apply", "-f", "-"], input=SECRET_YAML.encode("ascii"))
-        token = get_token("microk8s-dashboard-proxy-token")
+        token = get_token("microk8s-dashboard-token")
 
     print("Dashboard will be available at https://127.0.0.1:10443")
     print("Use the following token to login:")
