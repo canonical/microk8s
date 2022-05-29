@@ -4,8 +4,16 @@ set -ex
 
 source $SNAP/actions/common/utils.sh
 # Re-exec outside of apparmor confinement
-if ! is_strict && [ -d /sys/kernel/security/apparmor ] && [ "$(cat /proc/self/attr/current)" != "unconfined" ]; then
-    exec aa-exec -p unconfined -- "$0" "$@"
+if ! is_strict && [ -d /sys/kernel/security/apparmor ]; then
+    status_file=/proc/self/attr/apparmor/current
+    # Fallback for older kernels, check the legacy interfaces
+    # https://www.kernel.org/doc/html/latest/admin-guide/LSM/index.html
+    if [ ! -f $status_file ]; then
+        status_file=/proc/self/attr/current
+    fi
+    if [ "$(cat $status_file)" != "unconfined" ]; then
+        exec aa-exec -p unconfined -- "$0" "$@"
+    fi
 fi
 
 # Why we put the /snap/microk8s/current in the path?
