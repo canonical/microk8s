@@ -58,3 +58,15 @@ then
 fi
 
 kill_all_container_shims
+
+# Cleanup calico interface.
+if "${SNAP}/sbin/ip" link show vxlan.calico
+then
+  "${SNAP}/sbin/ip" link delete vxlan.calico || true
+fi
+
+# Cleanup cni network namespaces.
+for ns in `"${SNAP}/sbin/ip" netns list | grep "^cni-" | awk '{print $1}'`
+do
+  $SNAP/sbin/ip netns delete "${ns}" || true
+done
