@@ -42,16 +42,19 @@ def get_cluster_agent_endpoints(include_self=False):
         with open(callback_token_file, "r+") as fp:
             token = fp.read()
 
-        subprocess.check_call([KUBECTL, "--wait-ready", "--timeout=60"])
+        subprocess.check_call(
+            [MICROK8S_STATUS, "--wait-ready", "--timeout=60"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         stdout = subprocess.check_output([KUBECTL, "get", "node", "-o", "json"])
         info = json.loads(stdout)
         for node_info in info["items"]:
-            if not include_self:
-                node_ip = get_internal_ip_from_get_node(node_info)
-                if is_same_server(hostname, node_ip):
-                    continue
+            node_ip = get_internal_ip_from_get_node(node_info)
+            if not include_self and is_same_server(hostname, node_ip):
+                continue
 
-            nodes.append(("{}:25000".format(node_ip), token))
+            nodes.append(("{}:25000".format(node_ip), token.rstrip()))
     else:
         with open(callback_tokens_file, "r+") as fp:
             for _, line in enumerate(fp):
@@ -59,8 +62,12 @@ def get_cluster_agent_endpoints(include_self=False):
                 host = node_ep.split(":")[0]
 
                 try:
-                    subprocess.check_call([KUBECTL, "get", "node", host])
-                    nodes.append((node_ep, token))
+                    subprocess.check_call(
+                        [KUBECTL, "get", "node", host],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    nodes.append((node_ep, token.rstrip()))
                 except subprocess.CalledProcessError:
                     print("Node {} not present".format(host))
 
@@ -99,17 +106,12 @@ def do_configure_op(remote_op):
             raise SystemExit(e)
 
 
-def do_image_import(image_file):
+def do_image_import(image_data):
     """
     Perform a /image/import operation on all nodes
-    """
 
-    try:
-        with open(image_file, "rb") as fin:
-            image_data = fin.read()
-    except Exception as e:
-        print("Could not read image file {}".format(image_file))
-        raise SystemExit(e)
+    :param image_data: Raw bytes of the OCI image tar file
+    """
 
     try:
         endpoints = get_cluster_agent_endpoints(include_self=True)
@@ -119,6 +121,7 @@ def do_image_import(image_file):
 
     for node_ep, token in endpoints:
         try:
+            print("Pushing OCI images to {}".format(node_ep))
             res = requests.post(
                 "https://{}/{}/image/import".format(node_ep, CLUSTER_API_V2),
                 data=image_data,
@@ -131,7 +134,7 @@ def do_image_import(image_file):
             if res.status_code != 200:
                 print("Failed to import images on {}: {}".format(node_ep, res.content.decode()))
         except requests.exceptions.RequestException as e:
-            print("Failed to reach {}".format(node_ep))
+            print("Failed to reach {}: {}".format(node_ep, e))
 
 
 def restart(service):
