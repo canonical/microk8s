@@ -408,19 +408,40 @@ get_ips() {
     fi
 }
 
-gen_server_cert() (
+_gen_server_cert() {
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
     ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
-)
+}
 
-gen_proxy_client_cert() (
+gen_server_cert() {
+    # Generate the server certificate
+    # The file csr.conf is checked to determine if a regeneration of the cert must be done.
+    if compare_csr_conf; then
+        _gen_server_cert
+    fi
+}
+
+_gen_proxy_client_cert() {
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
     ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
-)
+}
+
+gen_proxy_client_cert() {
+    # Generate the proxy client certificate
+    # The file csr.conf is checked to determine if a regeneration of the cert must be done.
+    if compare_csr_conf; then
+        _gen_proxy_client_cert
+    fi
+}
 
 produce_certs() {
+    # Produce the certificates
+    # The file csr.conf is checked to determine if a regeneration of the certs must be done.
+    # Outputs
+    #  0 if no change
+    #  1 otherwise.
     export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
     # Generate RSA keys if not yet
     for key in serviceaccount.key ca.key server.key front-proxy-ca.key front-proxy-client.key; do
@@ -439,33 +460,13 @@ produce_certs() {
         ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
     fi
 
-    # Produce certificates based on the rendered csr.conf.rendered.
-    # The file csr.conf.rendered is compared with csr.conf to determine if a regeneration of the certs must be done.
-    #
-    # Returns
-    #  0 if no change
-    #  1 otherwise.
-
-    render_csr_conf
-    if ! [ -f "${SNAP_DATA}/certs/csr.conf" ]; then
-        echo "changeme" >  "${SNAP_DATA}/certs/csr.conf"
-    fi
-
-    local force
-    if ! "${SNAP}/usr/bin/cmp" -s "${SNAP_DATA}/certs/csr.conf.rendered" "${SNAP_DATA}/certs/csr.conf"; then
-        force=true
-        cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
-    else
-        force=false
-    fi
-
-    if $force; then
-        gen_server_cert
-        gen_proxy_client_cert
+    if compare_csr_conf; then
+        _gen_server_cert
+        _gen_proxy_client_cert
         echo "1"
     elif [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ] ||
          [ "$(${SNAP}/usr/bin/openssl < ${SNAP_DATA}/certs/front-proxy-client.crt x509 -noout -issuer)" == "issuer=CN = 127.0.0.1" ]; then
-        gen_proxy_client_cert
+        _gen_proxy_client_cert
         echo "1"
     else
         echo "0"
@@ -473,7 +474,7 @@ produce_certs() {
 }
 
 render_csr_conf() {
-    # Render csr.conf.template to csr.conf.rendered
+    # Renders csr.conf.template to csr.conf.rendered
 
     local IP_ADDRESSES="$(get_ips)"
 
@@ -494,6 +495,24 @@ render_csr_conf() {
     else
         "$SNAP/bin/sed" -i 's/#MOREIPS//g' ${SNAP_DATA}/certs/csr.conf.rendered
     fi
+}
+
+compare_csr_conf() {
+    # Compares the file csr.conf.rendered with csr.conf
+    # Return
+    #  0 if no change
+    #  1 otherwise.
+    render_csr_conf
+
+    if ! [ -f "${SNAP_DATA}/certs/csr.conf" ]; then
+        echo "changeme" >  "${SNAP_DATA}/certs/csr.conf"
+    fi
+
+    if ! "${SNAP}/usr/bin/cmp" -s "${SNAP_DATA}/certs/csr.conf.rendered" "${SNAP_DATA}/certs/csr.conf"; then
+        cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
+        return 1
+    fi
+    return 0
 }
 
 get_node() {
