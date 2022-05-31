@@ -99,6 +99,41 @@ def do_configure_op(remote_op):
             raise SystemExit(e)
 
 
+def do_image_import(image_file):
+    """
+    Perform a /image/import operation on all nodes
+    """
+
+    try:
+        with open(image_file, "rb") as fin:
+            image_data = fin.read()
+    except Exception as e:
+        print("Could not read image file {}".format(image_file))
+        raise SystemExit(e)
+
+    try:
+        endpoints = get_cluster_agent_endpoints(include_self=True)
+    except subprocess.CalledProcessError as e:
+        print("Could not query for nodes")
+        raise SystemExit(e)
+
+    for node_ep, token in endpoints:
+        try:
+            res = requests.post(
+                "https://{}/{}/image/import".format(node_ep, CLUSTER_API_V2),
+                data=image_data,
+                headers={
+                    "x-microk8s-callback-token": token,
+                },
+                verify=False,
+            )
+
+            if res.status_code != 200:
+                print("Failed to import images on {}: {}".format(node_ep, res.content.decode()))
+        except requests.exceptions.RequestException as e:
+            print("Failed to reach {}".format(node_ep))
+
+
 def restart(service):
     """
     Restart service on all nodes
