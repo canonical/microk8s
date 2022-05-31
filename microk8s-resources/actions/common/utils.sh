@@ -577,9 +577,9 @@ init_cluster() {
   $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
   ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
   chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
-  if getent group microk8s >/dev/null 2>&1
+  if getent group snap_microk8s >/dev/null 2>&1
   then
-    chgrp microk8s -R ${SNAP_DATA}/var/kubernetes/backend/ || true
+    chgrp snap_microk8s -R --preserve=mode ${SNAP_DATA}/var/kubernetes/backend/ || true
   fi
 }
 

@@ -10,5 +10,11 @@ source $SNAP/actions/common/utils.sh
 
 SNAPSHOTTER=$(snapshotter)
 
-declare -a args="($(cat $SNAP_DATA/args/ctr))"
-LD_LIBRARY_PATH="$IN_SNAP_LD_LIBRARY_PATH" CONTAINERD_SNAPSHOTTER="$SNAPSHOTTER" "${SNAP}/bin/ctr" "${args[@]}" "$@"
+if ! [ -e $SNAP_DATA/args/ctr ]
+then
+  echo "Arguments file $SNAP_DATA/args/ctr is missing."
+  exit 1
+else
+  declare -a args="($(cat $SNAP_DATA/args/ctr))"
+  LD_LIBRARY_PATH="$IN_SNAP_LD_LIBRARY_PATH" CONTAINERD_SNAPSHOTTER="$SNAPSHOTTER" "${SNAP}/bin/ctr" "${args[@]}" "$@"
+fi

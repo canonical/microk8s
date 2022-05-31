@@ -55,7 +55,9 @@ hooks:
     plugs:
       - account-control
       - dot-kube
+      - firewall-control
       - network
+      - network-observe
   install:
     plugs:
       - account-control
