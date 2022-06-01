@@ -22,6 +22,11 @@ then
   source $SNAP_DATA/args/kubectl-env
 fi
 
+if is_strict
+then
+  export EDITOR="${SNAP}/bin/nano"
+fi
+
 declare -a args="($(cat $SNAP_DATA/args/kubectl))"
 if [ -n "${args[@]-}" ]
 then
