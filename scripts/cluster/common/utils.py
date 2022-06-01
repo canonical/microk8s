@@ -11,6 +11,14 @@ from subprocess import check_output, CalledProcessError
 import yaml
 import socket
 
+def get_group():
+    return "snap_microk8s" if is_strict() else "microk8s"
+
+def is_strict():
+    snap_yaml = "{}/meta/cni.yaml".format(os.environ.get("SNAP"))
+    with open(snap_yaml) as f:
+        snap_meta = yaml.safe_load(f)
+    return snap_meta["confinement"] == "strict"
 
 def try_set_file_permissions(file):
     """
@@ -21,7 +29,7 @@ def try_set_file_permissions(file):
 
     os.chmod(file, 0o660)
     try:
-        shutil.chown(file, group="snap_microk8s")
+        shutil.chown(file, group=get_group())
     except LookupError:
         # not setting the group means only the current user can access the file
         pass

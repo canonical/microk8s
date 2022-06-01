@@ -2,17 +2,23 @@
 
 set -eux
 
-if [ ! -f "${SNAP_DATA}/var/lock/installed.lock" ]
+if is_strict && [ ! -f "${SNAP_DATA}/var/lock/installed.lock" ]
 then
   exit 0
 fi
 
 source $SNAP/actions/common/utils.sh
 
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+if is_strict
+then
 
-check_snap_interfaces # Check for interfaces but do not start until this script has run.
+  ARCH="$($SNAP/bin/uname -m)"
+  export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+
+  echo "Checking snap interfaces..."
+
+  check_snap_interfaces # Check for interfaces but do not start until this script has run.
+fi
 
 need_api_restart=false
 need_proxy_restart=false
@@ -343,6 +349,7 @@ then
   mv ${CD_TOML_TMP} ${CD_TOML}
 fi
 
+# Not really sure why ${SNAP_COMMON}/addons shouldn't be here.
 # Securing important directories
 for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock ${SNAP_DATA}/tmp/
 do
@@ -350,15 +357,22 @@ do
   chmod -R o-rwX ${dir}
 done
 
-# Try to create the snap_microk8s group. Do not fail the installation if something goes wrong
-if ! getent group snap_microk8s >/dev/null 2>&1
+group="microk8s"
+
+if is_strict
 then
-  groupadd --system snap_microk8s || true
+  group="snap_microk8s"
 fi
 
-if getent group snap_microk8s >/dev/null 2>&1
+# Try to create the snap_microk8s group. Do not fail the installation if something goes wrong
+if ! getent group "${group}" >/dev/null 2>&1
 then
-  chgrp snap_microk8s -R ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
+  groupadd --system "${group}" || true
+fi
+
+if getent group "${group}" >/dev/null 2>&1
+then
+  chgrp "${group}" -R ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
 fi
 
 if ! [ -e "${SNAP_DATA}/opt/cni/bin/flanneld" ]
@@ -604,7 +618,10 @@ fi
 # Refresh calico if needed
 refresh_calico_if_needed
 
-enable_snap
+if is_strict
+then
+  enable_snap
+fi
 
 # Restart reconfigured services
 if ${need_api_restart} ||

@@ -2,6 +2,12 @@
 
 set -ex
 
+source $SNAP/actions/common/utils.sh
+
+if ! is_strict && [ -d /sys/kernel/security/apparmor ] && [ "$(cat /proc/self/attr/current)" != "unconfined" ]; then
+    exec aa-exec -p unconfined -- "$0" "$@"
+fi
+
 # Why we put the /snap/microk8s/current in the path?
 # containerd-shims need to call runc. They inherit their PATH from containerd.
 # As the snap refreshes runc changes location, eg moves from
@@ -16,9 +22,20 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 export XDG_RUNTIME_DIR="${SNAP_COMMON}/run"
 mkdir -p "${XDG_RUNTIME_DIR}"
 
-source $SNAP/actions/common/utils.sh
-
-apparmor_parser -r $SNAP/containerd-profile
+if is_strict
+then
+  apparmor_parser -r $SNAP/containerd-profile
+else
+  if [ -d "/etc/apparmor.d" ]; then
+    echo "Using a default profile template"
+    cp ${SNAP}/containerd-profile /etc/apparmor.d/cri-containerd.apparmor.d
+    echo "Reloading AppArmor profiles"
+    if ! service apparmor reload
+    then
+      echo "AppArmor profiles loading failed. AppArmor may be unavailable on this host."
+    fi
+  fi
+fi
 
 app=containerd
 

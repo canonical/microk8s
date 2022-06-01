@@ -16,6 +16,15 @@ LOG = logging.getLogger(__name__)
 kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/client.config")
 
 
+def get_group():
+    return "snap_microk8s" if is_strict() else "microk8s"
+
+def is_strict():
+    snap_yaml = "{}/meta/cni.yaml".format(os.environ.get("SNAP"))
+    with open(snap_yaml) as f:
+        snap_meta = yaml.safe_load(f)
+    return snap_meta["confinement"] == "strict"
+
 def get_current_arch():
     # architecture mapping
     arch_mapping = {"aarch64": "arm64", "armv7l": "armhf", "x86_64": "amd64", "s390x": "s390x"}

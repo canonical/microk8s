@@ -36,7 +36,12 @@ subject=$(openssl x509 -sha256 -days 365 -noout -subject -in "$SNAP_DATA/certs/c
 if [[ $subject == *"127.0.0.1"* ]]; then
   echo "Clustering requires a fresh MicroK8s installation. Reinstall with:"
   echo "sudo snap remove microk8s"
-  echo "sudo snap install microk8s"
+  install_message="sudo snap install microk8s"
+  if ! is_strict
+  then
+    install_message="${install_message} --classic"
+  fi
+  echo "$install_message"
   exit 1
 fi
 
@@ -46,9 +51,16 @@ if [ ! -f "$SNAP_DATA/credentials/cluster-tokens.txt" ]; then
   touch $SNAP_DATA/credentials/cluster-tokens.txt 
 fi
 
-if getent group snap_microk8s >/dev/null 2>&1
+
+group="microk8s"
+if is_strict
 then
-  chgrp snap_microk8s $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
+  group="snap_microk8s"
+fi
+
+if getent group ${group} >/dev/null 2>&1
+then
+  chgrp ${group} $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
   chmod ug+rw $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
   chmod o-rwX $SNAP_DATA/credentials/cluster-tokens.txt >/dev/null 2>&1 || true
 fi

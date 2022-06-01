@@ -2,7 +2,9 @@
 
 set -eux
 
-if [ -f "${SNAP_DATA}/var/lock/installed.lock" ]
+source $SNAP/actions/common/utils.sh
+
+if is_strict && [ -f "${SNAP_DATA}/var/lock/installed.lock" ]
 then
   exit 0
 fi
@@ -12,7 +14,6 @@ export LD_LIBRARY_PATH="${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/$ARCH-linux-gnu:
 export PATH="${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:$PATH:/usr/bin:/usr/local/bin"
 export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
 
-source $SNAP/actions/common/utils.sh
 
 cp -r --preserve=mode ${SNAP}/default-args ${SNAP_DATA}/args
 mv ${SNAP_DATA}/args/certs.d/localhost__32000 ${SNAP_DATA}/args/certs.d/localhost:32000

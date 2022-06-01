@@ -9,9 +9,14 @@ export PYTHONNOUSERSITE=false
 export LC_ALL="${LC_ALL:-C.UTF-8}"
 export LANG="${LANG:-C.UTF-8}"
 
-# avoid AppArmor denial in strict mode when running under sudo without -H
-cd "$SNAP"
+source $SNAP/actions/common/utils.sh
 
+# avoid AppArmor denial in strict mode when running under sudo without -H
+
+if is_strict
+then
+  cd "$SNAP"
+fi
 source $SNAP/actions/common/utils.sh
 
 exit_if_not_root

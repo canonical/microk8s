@@ -3,13 +3,18 @@
 exit_if_no_permissions() {
   # test if we can access the default kubeconfig
   if [ ! -r $SNAP_DATA/credentials/client.config ]; then
+    local group='microk8s'
+    if is_strict
+    then
+      group='snap_microk8s'
+    fi
     echo "Insufficient permissions to access MicroK8s." >&2
-    echo "You can either try again with sudo or add the user $USER to the 'snap_microk8s' group:" >&2
+    echo "You can either try again with sudo or add the user $USER to the '${group}' group:" >&2
     echo "" >&2
-    echo "    sudo usermod -a -G snap_microk8s $USER" >&2
+    echo "    sudo usermod -a -G ${group} $USER" >&2
     echo "    sudo chown -f -R $USER ~/.kube" >&2
     echo "" >&2
-    echo "After this, reload the user groups either via a reboot or by running 'newgrp snap_microk8s'." >&2
+    echo "After this, reload the user groups either via a reboot or by running 'newgrp ${group}'." >&2
     exit 1
   fi
 }
@@ -901,7 +906,7 @@ enable_snap() {
 
 exit_if_not_root() {
   # test if we run with sudo
-  if [ "$EUID" -ne 0 ]
+  if (! is_strict) && [ "$EUID" -ne 0 ]
   then echo "Elevated permissions are needed for this command. Please use sudo."
     exit 1
   fi
