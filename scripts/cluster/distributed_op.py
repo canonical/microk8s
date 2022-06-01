@@ -10,6 +10,8 @@ import json
 import socket
 
 from common.utils import (
+    get_callback_token,
+    get_cluster_agent_port,
     is_node_running_dqlite,
     get_internal_ip_from_get_node,
     is_same_server,
@@ -39,8 +41,7 @@ def get_cluster_agent_endpoints(include_self=False):
     nodes = []
     if is_node_running_dqlite():
         hostname = socket.gethostname()
-        with open(callback_token_file, "r+") as fp:
-            token = fp.read()
+        token = get_callback_token()
 
         subprocess.check_call(
             [MICROK8S_STATUS, "--wait-ready", "--timeout=60"],
@@ -56,6 +57,11 @@ def get_cluster_agent_endpoints(include_self=False):
 
             nodes.append(("{}:25000".format(node_ip), token.rstrip()))
     else:
+        if include_self:
+            token = get_callback_token()
+            port = get_cluster_agent_port()
+            nodes.append(("127.0.0.1:{}".format(port), token.rstrip()))
+
         with open(callback_tokens_file, "r+") as fp:
             for _, line in enumerate(fp):
                 node_ep, token = line.split()
