@@ -20,7 +20,7 @@ def get_group():
     return "snap_microk8s" if is_strict() else "microk8s"
 
 def is_strict():
-    snap_yaml = "{}/meta/cni.yaml".format(os.environ.get("SNAP"))
+    snap_yaml = "{}/meta/snap.yaml".format(os.environ.get("SNAP"))
     with open(snap_yaml) as f:
         snap_meta = yaml.safe_load(f)
     return snap_meta["confinement"] == "strict"
