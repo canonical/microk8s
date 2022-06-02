@@ -913,7 +913,7 @@ enable_snap() {
 
 exit_if_not_root() {
   # test if we run with sudo
-  if (! is_strict) && [ "$EUID" -ne 0 ]
+  if (is_strict) && [ "$EUID" -ne 0 ]
   then echo "Elevated permissions are needed for this command. Please use sudo."
     exit 1
   fi
