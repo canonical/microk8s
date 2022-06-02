@@ -62,21 +62,23 @@ def get_cluster_agent_endpoints(include_self=False):
             port = get_cluster_agent_port()
             nodes.append(("127.0.0.1:{}".format(port), token.rstrip()))
 
-        with open(callback_tokens_file, "r+") as fp:
-            for _, line in enumerate(fp):
-                node_ep, token = line.split()
-                host = node_ep.split(":")[0]
+        try:
+            with open(callback_tokens_file, "r+") as fin:
+                for line in fin:
+                    node_ep, token = line.split()
+                    host = node_ep.split(":")[0]
 
-                try:
-                    subprocess.check_call(
-                        [KUBECTL, "get", "node", host],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    )
-                    nodes.append((node_ep, token.rstrip()))
-                except subprocess.CalledProcessError:
-                    print("Node {} not present".format(host))
-
+                    try:
+                        subprocess.check_call(
+                            [KUBECTL, "get", "node", host],
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL,
+                        )
+                        nodes.append((node_ep, token.rstrip()))
+                    except subprocess.CalledProcessError:
+                        print("Node {} not present".format(host))
+        except OSError:
+            pass
     return nodes
 
 
