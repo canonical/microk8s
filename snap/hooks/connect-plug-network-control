@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -eu
+
+for link in cni0 cilium_vxlan
+do
+  if $SNAP/sbin/ip link show ${link}
+  then
+    $SNAP/sbin/ip link delete ${link}
+  fi
+done
+
+${SNAP}/meta/hooks/configure

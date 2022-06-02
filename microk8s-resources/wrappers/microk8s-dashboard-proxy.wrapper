@@ -7,6 +7,7 @@ export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gn
 export PYTHONNOUSERSITE=false
 source $SNAP/actions/common/utils.sh
 
+exit_if_not_root
 exit_if_no_permissions
 
 LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH  ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/dashboard_proxy.py

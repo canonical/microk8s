@@ -4,12 +4,12 @@ exit_if_no_permissions() {
   # test if we can access the default kubeconfig
   if [ ! -r $SNAP_DATA/credentials/client.config ]; then
     echo "Insufficient permissions to access MicroK8s." >&2
-    echo "You can either try again with sudo or add the user $USER to the 'microk8s' group:" >&2
+    echo "You can either try again with sudo or add the user $USER to the 'snap_microk8s' group:" >&2
     echo "" >&2
-    echo "    sudo usermod -a -G microk8s $USER" >&2
+    echo "    sudo usermod -a -G snap_microk8s $USER" >&2
     echo "    sudo chown -f -R $USER ~/.kube" >&2
     echo "" >&2
-    echo "After this, reload the user groups either via a reboot or by running 'newgrp microk8s'." >&2
+    echo "After this, reload the user groups either via a reboot or by running 'newgrp snap_microk8s'." >&2
     exit 1
   fi
 }
@@ -75,7 +75,7 @@ run_with_sudo() {
     then
       shift
     fi
-    eval "$@"
+    "$@"
   else
     if [ -n "${LD_LIBRARY_PATH-}" ]
     then
@@ -123,7 +123,7 @@ refresh_opt_in_local_config() {
     if $(grep -qE "^$opt=" $config_file); then
         run_with_sudo "$SNAP/bin/sed" -i "s@^$opt=.*@$replace_line@" $config_file
     else
-        run_with_sudo "$SNAP/bin/sed" -i "$ a $replace_line" "$config_file"
+        run_with_sudo "$SNAP/bin/sed" -i "1i$replace_line" "$config_file"
     fi
 }
 
@@ -577,9 +577,9 @@ init_cluster() {
   $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
   ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
   chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
-  if getent group microk8s >/dev/null 2>&1
+  if getent group snap_microk8s >/dev/null 2>&1
   then
-    chgrp microk8s -R ${SNAP_DATA}/var/kubernetes/backend/ || true
+    chgrp snap_microk8s -R --preserve=mode ${SNAP_DATA}/var/kubernetes/backend/ || true
   fi
 }
 
@@ -680,9 +680,9 @@ get_container_shim_pids() {
 }
 
 kill_all_container_shims() {
-    run_with_sudo systemctl kill snap.microk8s.daemon-kubelite.service --signal=SIGKILL &>/dev/null || true
-    run_with_sudo systemctl kill snap.microk8s.daemon-kubelet.service --signal=SIGKILL &>/dev/null || true
-    run_with_sudo systemctl kill snap.microk8s.daemon-containerd.service --signal=SIGKILL &>/dev/null || true
+  run_with_sudo systemctl kill snap.microk8s.daemon-kubelite.service --signal=SIGKILL &>/dev/null || true
+  run_with_sudo systemctl kill snap.microk8s.daemon-kubelet.service --signal=SIGKILL &>/dev/null || true
+  run_with_sudo systemctl kill snap.microk8s.daemon-containerd.service --signal=SIGKILL &>/dev/null || true
 }
 
 is_first_boot() {
@@ -829,9 +829,18 @@ fetch_as() {
 
 ############################# Strict functions ######################################
 
+log_init () {
+  echo `date +"[%m-%d %H:%M:%S]" start logging` > $SNAP_COMMON/var/log/microk8s.log
+}
+
+log () {
+  echo -n `date +"[%m-%d %H:%M:%S]"` >> $SNAP_COMMON/var/log/microk8s.log
+  echo ": $@" >> $SNAP_COMMON/var/log/microk8s.log
+}
+
 is_strict() {
   # Return 0 if we are in strict mode
-  if cat $SNAP/meta/snap.yaml | grep confinement | grep strict
+  if cat $SNAP/meta/snap.yaml | grep confinement | grep -q strict
   then
     return 0
   else
@@ -843,8 +852,8 @@ check_snap_interfaces() {
     # Check whether all of the required interfaces are connected before proceeding.
     # This is to address https://forum.snapcraft.io/t/mimic-sequence-of-hook-calls-with-auto-connected-interfaces/19618
     declare -ra interfaces=(
+        "account-control"
         "docker-privileged"
-        "docker-support"
         "dot-kube"
         "dot-config-helm"
         "firewall-control"
@@ -867,6 +876,7 @@ check_snap_interfaces() {
         "process-control"
         "system-observe"
     )
+
     declare -a missing=()
 
     for interface in ${interfaces[@]}
@@ -881,11 +891,34 @@ check_snap_interfaces() {
     then
         snapctl set-health blocked "You must connect ${missing[*]} before proceeding"
         exit 0
-    else
-        if [ $1 -gt 0 ]
-        then
-            snapctl start --enable ${SNAP_NAME}
-            snapctl set-health okay
-        fi
     fi
+}
+
+enable_snap() {
+  snapctl start --enable ${SNAP_NAME}
+  snapctl set-health okay
+}
+
+exit_if_not_root() {
+  # test if we run with sudo
+  if [ "$EUID" -ne 0 ]
+  then echo "Elevated permissions are needed for this command. Please use sudo."
+    exit 1
+  fi
+}
+
+is_first_boot_on_strict() {
+  # Return 0 if this is the first start after the host booted.
+  SENTINEL="/tmp/.containerd-first-book-check"
+  # We rely on the fact that /tmp is cleared at every boot to determine if
+  # this is the first call after boot: if the sentinel file exists, then it
+  # means that no reboot occurred since last check; otherwise, return success
+  # and create the sentinel file for the future check.
+  if [ -f "$SENTINEL" ]
+  then
+    return 1
+  else
+    touch "$SENTINEL"
+    return 0
+  fi
 }
