@@ -2,8 +2,9 @@
 
 set -ex
 
+source $SNAP/actions/common/utils.sh
 # Re-exec outside of apparmor confinement
-if [ -d /sys/kernel/security/apparmor ] && [ "$(cat /proc/self/attr/current)" != "unconfined" ]; then
+if ! is_strict && [ -d /sys/kernel/security/apparmor ] && [ "$(cat /proc/self/attr/current)" != "unconfined" ]; then
     exec aa-exec -p unconfined -- "$0" "$@"
 fi
 
@@ -21,15 +22,19 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 export XDG_RUNTIME_DIR="${SNAP_COMMON}/run"
 mkdir -p "${XDG_RUNTIME_DIR}"
 
-source $SNAP/actions/common/utils.sh
 
-if [ -d "/etc/apparmor.d" ]; then
-  echo "Using a default profile template"
-  cp ${SNAP}/containerd-profile /etc/apparmor.d/cri-containerd.apparmor.d
-  echo "Reloading AppArmor profiles"
-  if ! service apparmor reload
-  then
-    echo "AppArmor profiles loading failed. AppArmor may be unavailable on this host."
+if is_strict
+then
+  apparmor_parser -r $SNAP/containerd-profile
+else
+  if [ -d "/etc/apparmor.d" ]; then
+    echo "Using a default profile template"
+    cp ${SNAP}/containerd-profile /etc/apparmor.d/cri-containerd.apparmor.d
+    echo "Reloading AppArmor profiles"
+    if ! service apparmor reload
+    then
+      echo "AppArmor profiles loading failed. AppArmor may be unavailable on this host."
+    fi
   fi
 fi
 
@@ -55,12 +60,16 @@ then
 fi
 
 # clean leftover container state if we just booted
-if (is_first_boot "${SNAP_COMMON}/run/containerd")
+if (is_strict && is_first_boot_on_strict) || (! is_strict && is_first_boot)
 then
   rm -rf "${SNAP_COMMON}/run/containerd" || true
 fi
+
 mkdir -p "${SNAP_COMMON}/run/containerd"
-mark_boot_time "${SNAP_COMMON}/run/containerd"
+if ! is_strict
+then
+  mark_boot_time "${SNAP_COMMON}/run/containerd"
+fi
 
 # This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/$app))"
