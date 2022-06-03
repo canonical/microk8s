@@ -23,5 +23,4 @@ then
   exit 1
 fi
 
-
 run_with_sudo preserve_env ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/leave.py $@
