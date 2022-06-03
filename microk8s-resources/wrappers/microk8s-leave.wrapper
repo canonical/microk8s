@@ -7,10 +7,13 @@ ARCH="$($SNAP/bin/uname -m)"
 export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export SNAP_NAME
 export PYTHONNOUSERSITE=false
+export LC_ALL="${LC_ALL:-C.UTF-8}"
+export LANG="${LANG:-C.UTF-8}"
 
 source $SNAP/actions/common/utils.sh
 
 exit_if_stopped
+exit_if_not_root
 exit_if_no_permissions
 
 if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ] &&
