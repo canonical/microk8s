@@ -73,6 +73,8 @@ apps:
     command: microk8s-addons.wrapper
   refresh-certs:
     command: microk8s-refresh-certs.wrapper
+  images:
+    command: microk8s-images.wrapper
   join:
     command: microk8s-join.wrapper
   remove-node:
