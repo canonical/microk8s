@@ -24,10 +24,9 @@ fi
 
 exit_if_no_permissions
 
-joincmd="LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py $@"
 if is_strict
 then
-  eval $joincmd
+  LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py $@
 else
-  sudo -E ${joincmd}
+  sudo -E LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/join.py $@
 fi
