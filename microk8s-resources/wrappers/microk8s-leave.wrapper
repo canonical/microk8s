@@ -23,9 +23,5 @@ then
   exit 1
 fi
 
-if is_strict
-then
-  run_with_sudo ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/leave.py $@
-else
-  run_with_sudo preserve_env ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/leave.py $@
-fi
+
+run_with_sudo preserve_env ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/leave.py $@
