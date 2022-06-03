@@ -12,6 +12,7 @@ then
     exit 0
 fi
 
+exit_if_not_root
 exit_if_no_permissions
 
 PARSED=$(getopt --options=lho: --longoptions=help,output:,disable-low-memory-guard --name "$@" -- "$@")
@@ -44,7 +45,16 @@ done
 
 exit_if_low_memory_guard
 
-if ! run_with_sudo snap start ${SNAP_NAME} --enable
+startcmd="run_with_sudo snap start ${SNAP_NAME} --enable"
+if is_strict
+then
+  startcmd="snapctl start ${SNAP_NAME} --enable"
+fi
+
+$startcmd
+start_status=$?
+
+if ! [ $start_status -eq 0 ]
 then
     echo 'Failed to start microk8s services. Check snapd logs with "journalctl -u snapd.service"'
     exit 1
