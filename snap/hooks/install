@@ -2,14 +2,20 @@
 
 set -eux
 
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
-export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
-
 source $SNAP/actions/common/utils.sh
 
-cp -r ${SNAP}/default-args ${SNAP_DATA}/args
+if [ -f "${SNAP_DATA}/var/lock/installed.lock" ]
+then
+  exit 0
+fi
+
+ARCH="$(${SNAP}/bin/uname -m)"
+export LD_LIBRARY_PATH="${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/$ARCH-linux-gnu:${SNAP}/usr/lib/$ARCH-linux-gnu"
+export PATH="${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:$PATH:/usr/bin:/usr/local/bin"
+export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
+
+
+cp -r --preserve=mode ${SNAP}/default-args ${SNAP_DATA}/args
 mv ${SNAP_DATA}/args/certs.d/localhost__32000 ${SNAP_DATA}/args/certs.d/localhost:32000
 
 # Sym link the host's /var/lib/kubelet to the Snap's.  This will be fixed with layouts when
@@ -90,13 +96,21 @@ do
   chmod -R o-rwX ${dir}
 done
 
-for link in cni0 cilium_vxlan
-do
-  if $SNAP/sbin/ip link show ${link}
+if ! is_strict || (is_strict && snapctl is-connected network-control) 
   then
-    $SNAP/sbin/ip link delete ${link}
-  fi
-done
+  for link in cni0 cilium_vxlan
+  do
+    if ${SNAP}/sbin/ip link show ${link}
+    then
+      ${SNAP}/sbin/ip link delete ${link}
+    fi
+  done
+fi
+
+if is_strict && snapctl is-connected k8s-kubelet
+then
+  snapctl restart microk8s.daemon-containerd
+fi
 
 init_cluster
 
@@ -108,19 +122,19 @@ set_service_not_expected_to_start traefik
 touch "${SNAP_DATA}/var/lock/ha-cluster"
 touch "${SNAP_DATA}/var/lock/lite.lock"
 
-RESOURCES="$SNAP/upgrade-scripts/000-switch-to-calico/resources"
-BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
+RESOURCES="${SNAP}/upgrade-scripts/000-switch-to-calico/resources"
+BACKUP_DIR="${SNAP_DATA}/var/tmp/upgrades/000-switch-to-calico"
 
-mkdir -p "$BACKUP_DIR"
+mkdir -p "${BACKUP_DIR}"
 
-mkdir -p "$BACKUP_DIR/args/cni-network/"
-cp "$SNAP_DATA"/args/cni-network/* "$BACKUP_DIR/args/cni-network/" 2>/dev/null || true
-rm -rf "$SNAP_DATA"/args/cni-network/*
+mkdir -p "${BACKUP_DIR}/args/cni-network/"
+cp "${SNAP_DATA}"/args/cni-network/* "${BACKUP_DIR}/args/cni-network/" 2>/dev/null || true
+rm -rf "${SNAP_DATA}"/args/cni-network/*
 if [ "$ARCH" == "s390x" ]
 then
-  cp "$RESOURCES/calico.s390x.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
+  cp "${RESOURCES}/calico.s390x.yaml" "${SNAP_DATA}/args/cni-network/cni.yaml"
 else
-  cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
+  cp "${RESOURCES}/calico.yaml" "${SNAP_DATA}/args/cni-network/cni.yaml"
 fi
 mkdir -p "$SNAP_DATA/opt/cni/bin/"
 cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
@@ -131,3 +145,5 @@ if [ $MEMORY -le 524288 ]
 then
   touch ${SNAP_DATA}/var/lock/low-memory-guard.lock
 fi
+
+touch "${SNAP_DATA}/var/lock/installed.lock"
