@@ -4,7 +4,7 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
-if is_strict && [ ! -f "${SNAP_DATA}/var/lock/installed.lock" ]
+if [ ! -f "${SNAP_DATA}/var/lock/installed.lock" ]
 then
   exit 0
 fi

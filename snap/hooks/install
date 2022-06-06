@@ -4,7 +4,7 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
-if is_strict && [ -f "${SNAP_DATA}/var/lock/installed.lock" ]
+if [ -f "${SNAP_DATA}/var/lock/installed.lock" ]
 then
   exit 0
 fi
@@ -146,7 +146,4 @@ then
   touch ${SNAP_DATA}/var/lock/low-memory-guard.lock
 fi
 
-if is_strict
-then
-  touch "${SNAP_DATA}/var/lock/installed.lock"
-fi
+touch "${SNAP_DATA}/var/lock/installed.lock"
