@@ -79,7 +79,7 @@ then
 fi
 
 #UFW configuration
-if ufw version &> /dev/null
+if ! is_strict && (ufw version &> /dev/null)
 then
   ufw=$(ufw status)
   if echo $ufw | grep -q "Status: active" &&
