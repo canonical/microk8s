@@ -4,6 +4,23 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
+if is_strict && [ ! -f "${SNAP_DATA}/var/lock/installed.lock" ]
+then
+  exit 0
+fi
+
+
+if is_strict
+then
+
+  ARCH="$($SNAP/bin/uname -m)"
+  export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+
+  echo "Checking snap interfaces..."
+
+  check_snap_interfaces # Check for interfaces but do not start until this script has run.
+fi
+
 need_api_restart=false
 need_proxy_restart=false
 need_kubelet_restart=false
@@ -344,18 +361,23 @@ do
   chmod -R o-rwX ${dir}
 done
 
-# Try to create the microk8s group. Do not fail the installation if something goes wrong
-if ! getent group microk8s >/dev/null 2>&1
+group=$(get_microk8s_group)
+
+# Try to create the snap_microk8s group. Do not fail the installation if something goes wrong
+if ! getent group ${group} >/dev/null 2>&1
 then
-  groupadd --system microk8s || true
+  groupadd --system ${group} || true
 fi
 
-if getent group microk8s >/dev/null 2>&1
+if getent group ${group} >/dev/null 2>&1
 then
-  chgrp microk8s -R ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
+  chgrp ${group} -R ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
 fi
 
-try_copy_users_to_snap_microk8s
+if ! is_strict
+then
+  try_copy_users_to_snap_microk8s
+fi
 
 if ! [ -e "${SNAP_DATA}/opt/cni/bin/flanneld" ]
 then
@@ -599,6 +621,11 @@ fi
 
 # Refresh calico if needed
 refresh_calico_if_needed
+
+if is_strict
+then
+  enable_snap
+fi
 
 # Restart reconfigured services
 if ${need_api_restart} ||
