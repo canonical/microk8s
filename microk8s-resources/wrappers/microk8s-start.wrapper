@@ -52,10 +52,10 @@ then
     exit 1
 else
     start_all_containers
-    if test -e ${SNAP_DATA}/var/lock/stopped.lock
+    if run_with_sudo test -e ${SNAP_DATA}/var/lock/stopped.lock
     then
         # Mark the api server as starting
-        rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+        run_with_sudo rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
     fi
 fi
 

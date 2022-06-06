@@ -30,7 +30,7 @@ fi
 declare -a args="($(cat $SNAP_DATA/args/kubectl))"
 if [ -n "${args[@]-}" ]
 then
-  EDITOR="${SNAP}/bin/nano" "${SNAP}/kubectl" "${args[@]}" "$@"
+  "${SNAP}/kubectl" "${args[@]}" "$@"
 else
-  EDITOR="${SNAP}/bin/nano" "${SNAP}/kubectl" "$@"
+  "${SNAP}/kubectl" "$@"
 fi
