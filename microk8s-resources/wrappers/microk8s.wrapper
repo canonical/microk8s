@@ -2,6 +2,8 @@
 
 set -e
 
+source $SNAP/actions/common/utils.sh
+
 function help() {
     echo "Available subcommands are:"
     for i in ${SNAP}/microk8s-*.wrapper; do
@@ -29,7 +31,7 @@ if [ -f "${SNAP}/microk8s-${APP}.wrapper" ]; then
     "${SNAP}/microk8s-${APP}.wrapper" "$@"
     readonly EXIT="$?"
 elif [ "${APP}" == "inspect" ]; then
-    sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh "$@"
+    run_with_sudo preserve_env SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh "$@"
     readonly EXIT="$?"
 elif [ "${APP}" == "help" ] || [ "${APP}" == "--help" ] || [ "$APP" == "-h" ]; then
     help
