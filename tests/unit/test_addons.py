@@ -155,12 +155,14 @@ def test_validate_addons_repo_raises_on_disable_not_executable(disable_not_execu
 
 @patch("addons.subprocess")
 @patch("addons.snap_common", return_value=Path("/tmp/"))
+@patch("addons.get_group", return_value="microk8s")
 @patch("addons.validate_addons_repo", side_effect=AddonsYamlFormatError("foo"))
 @patch("addons.shutil.rmtree")
 def test_add_removes_repo_on_validation_error(
     rm_mock,
     validate_addons_repo_mock,
     snap_common_mock,
+    get_group_mock,
     subprocess_mock,
 ):
     with pytest.raises(SystemExit):
