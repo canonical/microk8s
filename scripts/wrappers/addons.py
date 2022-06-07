@@ -11,7 +11,7 @@ import click
 import jsonschema
 import yaml
 
-from common.utils import get_current_arch, snap_common
+from common.utils import get_current_arch, snap_common, get_group
 
 GIT = os.path.expandvars("$SNAP/git.wrapper")
 
@@ -176,7 +176,7 @@ def add(name: str, repository: str, reference: str, force: bool):
     if reference is not None:
         cmd += ["-b", reference]
     subprocess.check_call(cmd)
-    subprocess.check_call(["chgrp", "microk8s", "-R", repo_dir])
+    subprocess.check_call(["chgrp", get_group(), "-R", repo_dir])
 
     try:
         validate_addons_repo(repo_dir)

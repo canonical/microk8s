@@ -16,11 +16,29 @@ LOG = logging.getLogger(__name__)
 KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
 
 
+def get_group():
+    return "snap_microk8s" if is_strict() else "microk8s"
+
+
+def is_strict():
+    snap_yaml = snap() / "meta/snap.yaml"
+    with open(snap_yaml) as f:
+        snap_meta = yaml.safe_load(f)
+    return snap_meta["confinement"] == "strict"
+
+
 def get_current_arch():
     # architecture mapping
     arch_mapping = {"aarch64": "arm64", "armv7l": "armhf", "x86_64": "amd64", "s390x": "s390x"}
 
     return arch_mapping[platform.machine()]
+
+
+def snap() -> Path:
+    try:
+        return Path(os.environ["SNAP"])
+    except KeyError:
+        return Path("/snap/microk8s/current")
 
 
 def snap_data() -> Path:
