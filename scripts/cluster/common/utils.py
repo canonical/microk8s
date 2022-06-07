@@ -12,6 +12,17 @@ import yaml
 import socket
 
 
+def get_group():
+    return "snap_microk8s" if is_strict() else "microk8s"
+
+
+def is_strict():
+    snap_yaml = "{}/meta/snap.yaml".format(os.environ.get("SNAP"))
+    with open(snap_yaml) as f:
+        snap_meta = yaml.safe_load(f)
+    return snap_meta["confinement"] == "strict"
+
+
 def try_set_file_permissions(file):
     """
     Try setting the ownership group and permission of the file
