@@ -161,8 +161,8 @@ def test_validate_addons_repo_raises_on_disable_not_executable(disable_not_execu
 def test_add_removes_repo_on_validation_error(
     rm_mock,
     validate_addons_repo_mock,
-    snap_common_mock,
     get_group_mock,
+    snap_common_mock,
     subprocess_mock,
 ):
     with pytest.raises(SystemExit):
