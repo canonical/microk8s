@@ -18,13 +18,13 @@ def get_group():
 
 
 def is_strict():
-    snap_yaml = snap_dir() / "meta/snap.yaml"
+    snap_yaml = snap() / "meta/snap.yaml"
     with open(snap_yaml) as f:
         snap_meta = yaml.safe_load(f)
     return snap_meta["confinement"] == "strict"
 
 
-def snap_dir() -> Path:
+def snap() -> Path:
     try:
         return Path(os.environ["SNAP"])
     except KeyError:
