@@ -21,7 +21,7 @@ def get_group():
 
 
 def is_strict():
-    snap_yaml = "{}/meta/snap.yaml".format(os.environ.get("SNAP"))
+    snap_yaml = snap_dir() / "meta/snap.yaml"
     with open(snap_yaml) as f:
         snap_meta = yaml.safe_load(f)
     return snap_meta["confinement"] == "strict"
@@ -32,6 +32,13 @@ def get_current_arch():
     arch_mapping = {"aarch64": "arm64", "armv7l": "armhf", "x86_64": "amd64", "s390x": "s390x"}
 
     return arch_mapping[platform.machine()]
+
+
+def snap_dir() -> Path:
+    try:
+        return Path(os.environ["SNAP"])
+    except KeyError:
+        return Path("/snap/microk8s/current")
 
 
 def snap_data() -> Path:

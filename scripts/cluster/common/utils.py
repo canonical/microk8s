@@ -6,6 +6,7 @@ import time
 import string
 import random
 import datetime
+from pathlib import Path
 from subprocess import check_output, CalledProcessError
 
 import yaml
@@ -17,10 +18,17 @@ def get_group():
 
 
 def is_strict():
-    snap_yaml = "{}/meta/snap.yaml".format(os.environ.get("SNAP"))
+    snap_yaml = snap_dir() / "meta/snap.yaml"
     with open(snap_yaml) as f:
         snap_meta = yaml.safe_load(f)
     return snap_meta["confinement"] == "strict"
+
+
+def snap_dir() -> Path:
+    try:
+        return Path(os.environ["SNAP"])
+    except KeyError:
+        return Path("/snap/microk8s/current")
 
 
 def try_set_file_permissions(file):
