@@ -10,7 +10,7 @@ from pathlib import Path
 import click
 import yaml
 
-kubeconfig = "--kubeconfig=" + os.path.expandvars("${SNAP_DATA}/credentials/client.config")
+KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
 
 
 def get_current_arch():
@@ -166,14 +166,19 @@ def ensure_started():
 
 def kubectl_get(cmd, namespace="--all-namespaces"):
     if namespace == "--all-namespaces":
-        return run("kubectl", kubeconfig, "get", cmd, "--all-namespaces", die=False)
+        return run(KUBECTL, "get", cmd, "--all-namespaces", die=False)
     else:
-        return run("kubectl", kubeconfig, "get", cmd, "-n", namespace, die=False)
+        return run(KUBECTL, "get", cmd, "-n", namespace, die=False)
 
 
 def kubectl_get_clusterroles():
     return run(
-        "kubectl", kubeconfig, "get", "clusterroles", "--show-kind", "--no-headers", die=False
+        KUBECTL,
+        "get",
+        "clusterroles",
+        "--show-kind",
+        "--no-headers",
+        die=False,
     )
 
 
