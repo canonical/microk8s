@@ -4,7 +4,10 @@ set -ex
 echo "Rolling back dqlite upgrade on master"
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
+if ! is_strict
+then
+  CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
+fi
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/001-switch-to-dqlite"
 
 echo "Restarting etcd"

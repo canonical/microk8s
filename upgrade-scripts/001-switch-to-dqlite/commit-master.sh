@@ -4,7 +4,10 @@ set -ex
 echo "Switching master to dqlite"
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
+if ! is_strict
+then
+  CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
+fi
 
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/001-switch-to-dqlite"
 DB_DIR="$BACKUP_DIR/db"
@@ -68,7 +71,7 @@ then
   # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
   timeout="120"
   start_timer="$(date +%s)"
-  while ! (is_apiserver_ready) 
+  while ! (is_apiserver_ready)
   do
     sleep 5
     now="$(date +%s)"
