@@ -5,7 +5,6 @@ echo "Switching master to dqlite"
 
 source $SNAP/actions/common/utils.sh
 
-
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/001-switch-to-dqlite"
 DB_DIR="$BACKUP_DIR/db"
 
