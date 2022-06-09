@@ -112,7 +112,6 @@ class VM:
                 subprocess.check_output(cmd_prefix + [cmd])
             time.sleep(20)
 
-
     def _setup_multipass(self, channel_or_snap):
         if not self.attached:
             subprocess.check_call(

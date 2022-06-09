@@ -13,6 +13,7 @@ upgrade_to = os.environ.get("UPGRADE_MICROK8S_TO", "edge")
 confinement = os.environ.get("CONFINEMENT", "classic")
 is_strict = True if confinement == "strict" else False
 
+
 class TestUpgradePath(object):
     """
     Validates a microk8s upgrade path
