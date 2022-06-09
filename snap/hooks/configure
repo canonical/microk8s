@@ -655,7 +655,8 @@ then
   touch "${SNAP_DATA}/var/lock/cni-needs-reload"
 fi
 
-if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
+if ! is_strict &&
+   [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
    [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
    ! [ -e "${SNAP_DATA}/var/lock/clustered.lock" ]
 then
