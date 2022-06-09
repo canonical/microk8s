@@ -2,9 +2,9 @@
 
 if echo "$*" | grep -q -- 'help'; then
     prog=$(basename -s.wrapper "$0")
-    echo "Usage: $prog LXC-IMAGE ORIGINAL-CHANNEL UPGRADE-WITH-CHANNEL [PROXY]"
+    echo "Usage: $prog LXC-IMAGE CONFINEMENT ORIGINAL-CHANNEL UPGRADE-WITH-CHANNEL [PROXY]"
     echo ""
-    echo "Example: $prog ubuntu:18.04 latest/beta latest/edge"
+    echo "Example: $prog ubuntu:18.04 classic latest/beta latest/edge"
     echo "Use Ubuntu 18.04 for running our tests."
     echo "We test that microk8s from latest/edge (UPGRADE-WITH-CHANNEL) runs fine."
     echo "We test that microk8s from latest/beta (ORIGINAL-CHANNEL) can be upgraded"
@@ -12,6 +12,29 @@ if echo "$*" | grep -q -- 'help'; then
     echo
     exit
 fi
+
+set -uex
+
+DISTRO=$1
+NAME=machine-$RANDOM
+CONFINEMENT=$2
+FROM_CHANNEL=$3
+TO_CHANNEL=$4
+PROXY=""
+if [ "$#" -ne 4 ]
+then
+  PROXY=$5
+fi
+
+function is_strict() {
+  # Return 0 if we are in strict mode
+  if [[ "$CONFINEMENT" == "strict" ]];
+  then
+    return 0
+  else
+    return 1
+  fi
+}
 
 function create_machine() {
   local NAME=$1
@@ -22,13 +45,14 @@ function create_machine() {
   cat tests/lxc/microk8s.profile | lxc profile edit microk8s
 
   lxc launch -p default -p microk8s $DISTRO $NAME
-
+  lxc config device override $NAME root size=50GB
+  
   # Allow for the machine to boot and get an IP
   sleep 20
-  tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /var/tmp
+  tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /root
   DISTRO_DEPS_TMP="${DISTRO//:/_}"
   DISTRO_DEPS="${DISTRO_DEPS_TMP////-}"
-  lxc exec $NAME -- /bin/bash "/var/tmp/tests/lxc/install-deps/$DISTRO_DEPS"
+  lxc exec $NAME -- /bin/bash "/root/tests/lxc/install-deps/$DISTRO_DEPS"
   lxc exec $NAME -- reboot
   sleep 20
 
@@ -41,18 +65,6 @@ function create_machine() {
     sleep 20
   fi
 }
-
-set -uex
-
-DISTRO=$1
-NAME=machine-$RANDOM
-FROM_CHANNEL=$2
-TO_CHANNEL=$3
-PROXY=""
-if [ "$#" -ne 3 ]
-then
-  PROXY=$4
-fi
 
 # Test clustering. This test will create lxc containers or multipass VMs
 # therefore we do not need to run it inside a VM/container
@@ -77,9 +89,9 @@ create_machine $NAME $PROXY
 if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
   lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
-  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=/tmp/microk8s_latest_amd64.snap pytest -s /var/tmp/tests/test-upgrade-path.py"
+  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=/tmp/microk8s_latest_amd64.snap pytest -s /root/tests/test-upgrade-path.py"
 else
-  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade-path.py"
+  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /root/tests/test-upgrade-path.py"
 fi
 lxc delete $NAME --force
 
@@ -90,10 +102,13 @@ if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
   lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
   lxc exec $NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+  if is_strict
+  then
+    lxc exec $NAME -- bash -c '/root/tests/connect-all-interfaces.sh'
+  fi
 else
   lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL} --classic
 fi
-lxc exec $NAME -- /var/tmp/tests/smoke-test.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
 lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
 lxc exec $NAME -- microk8s enable community

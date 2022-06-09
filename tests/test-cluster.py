@@ -6,6 +6,7 @@ import pytest
 import os
 import subprocess
 from os import path
+from utils import snap_interfaces
 
 # Provide a list of VMs you want to reuse. VMs should have already microk8s installed.
 # the test will attempt a refresh to the channel requested for testing
@@ -16,6 +17,8 @@ reuse_vms = None
 channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/edge")
 backend = os.environ.get("BACKEND", None)
 profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
+confinement = os.environ.get("CONFINEMENT", "classic")
+is_strict = True if confinement == "strict" else False
 
 
 class VM:
@@ -94,15 +97,21 @@ class VM:
     def _transfer_install_local_snap_lxc(self, channel_or_snap):
         print("Installing snap from {}".format(channel_or_snap))
         cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
-        cmd = ["rm -rf /var/tmp/microk8s.snap"]
+        cmd = ["rm -rf /root/microk8s.snap"]
         subprocess.check_output(cmd_prefix + cmd)
-        cmd = "lxc file push {} {}/var/tmp/microk8s.snap".format(
+        cmd = "lxc file push {} {}/root/microk8s.snap".format(
             channel_or_snap, self.vm_name
         ).split()
         subprocess.check_output(cmd)
-        cmd = ["snap install /var/tmp/microk8s.snap --classic --dangerous"]
+        cmd = ["snap install /root/microk8s.snap --classic --dangerous"]
         subprocess.check_output(cmd_prefix + cmd)
         time.sleep(20)
+        if is_strict:
+            for i in snap_interfaces:
+                cmd = "snap connect microk8s:{}".format(i)
+                subprocess.check_output(cmd_prefix + [cmd])
+            time.sleep(20)
+
 
     def _setup_multipass(self, channel_or_snap):
         if not self.attached:
@@ -132,14 +141,21 @@ class VM:
     def _transfer_install_local_snap_multipass(self, channel_or_snap):
         print("Installing snap from {}".format(channel_or_snap))
         subprocess.check_call(
-            "/snap/bin/multipass transfer {} {}:/var/tmp/microk8s.snap".format(
+            "/snap/bin/multipass transfer {} {}:/root/microk8s.snap".format(
                 channel_or_snap, self.vm_name
             ).split()
         )
         subprocess.check_call(
             "/snap/bin/multipass exec {}  -- sudo "
-            "snap install /var/tmp/microk8s.snap --classic --dangerous".format(self.vm_name).split()
+            "snap install /root/microk8s.snap --classic --dangerous".format(self.vm_name).split()
         )
+        if is_strict:
+            for i in snap_interfaces:
+                subprocess.check_call(
+                    "/snap/bin/multipass exec {}  -- sudo "
+                    "snap connect microk8s:{}".format(self.vm_name, i).split()
+                )
+            time.sleep(20)
 
     def run(self, cmd):
         """
