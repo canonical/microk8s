@@ -62,7 +62,7 @@ class TestUpgradePath(object):
         if not is_strict:
             channel = "1.{}/stable".format(start_channel)
         else:
-            channel = ""
+            channel = "latest/edge/strict"
         print("Installing {}".format(channel))
         cmd = "sudo snap install microk8s --classic --channel={}".format(channel)
         run_until_success(cmd)
