@@ -4,10 +4,7 @@ set -ex
 echo "Rolling back calico upgrade on a node"
 
 source $SNAP/actions/common/utils.sh
-if ! is_strict
-then
-  CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
-fi
+
 
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"
 

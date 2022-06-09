@@ -5,10 +5,7 @@ set -ex
 echo "Switching master to calico"
 
 source $SNAP/actions/common/utils.sh
-if ! is_strict
-then
-  CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
-fi
+
 
 RESOURCES="$SNAP/upgrade-scripts/000-switch-to-calico/resources"
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/000-switch-to-calico"

@@ -4,10 +4,7 @@ set -ex
 echo "Switching master to dqlite"
 
 source $SNAP/actions/common/utils.sh
-if ! is_strict
-then
-  CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
-fi
+
 
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/001-switch-to-dqlite"
 DB_DIR="$BACKUP_DIR/db"

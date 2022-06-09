@@ -4,10 +4,7 @@ set -ex
 echo "Rolling back calico upgrade on master"
 
 source $SNAP/actions/common/utils.sh
-if ! is_strict
-then
-  CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
-fi
+
 
 if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]; then
   KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
