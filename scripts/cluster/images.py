@@ -40,7 +40,7 @@ def get_all_ctr_images():
     return [tag for tag in images if tag and not tag.startswith("sha256:")]
 
 
-@images.command("export", help="Export OCI images from the current MicroK8s node")
+@images.command("export-local", help="Export OCI images from the current MicroK8s node")
 @click.argument("output", default="-")
 @click.argument("images", nargs=-1)
 def export_images(output: str, images: List[str]):
