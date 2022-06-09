@@ -54,6 +54,7 @@ function store_network {
   mkdir -p $INSPECT_DUMP/network
   ss -pln &> $INSPECT_DUMP/network/ss
   ip addr &> $INSPECT_DUMP/network/ip-addr
+  ip route &> $INSPECT_DUMP/network/ip-addr
   iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
   iptables -S &> $INSPECT_DUMP/network/iptables-S
   iptables -L &> $INSPECT_DUMP/network/iptables-L
