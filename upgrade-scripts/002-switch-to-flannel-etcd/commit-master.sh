@@ -4,7 +4,6 @@ set -ex
 echo "Switching master to flannel-etcd"
 
 source $SNAP/actions/common/utils.sh
-CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
 
 BACKUP_DIR="$SNAP_DATA/var/tmp/upgrades/002-switch-to-flannel-etcd"
 DB_DIR="$BACKUP_DIR/db"
@@ -38,12 +37,13 @@ chmod 660 "$SNAP_DATA"/args/etcd
 
 cp -r "$SNAP_DATA"/args/cni-network "$BACKUP_DIR/args/"
 find "$SNAP_DATA"/args/cni-network/* -not -name '*multus*' -exec rm -f {} \;
-cp "$SNAP"/default-args/cni-network/* "$SNAP_DATA"/args/cni-network/
-chmod -R 660 "$SNAP_DATA"/args/cni-network
+cp --no-preserve=mode,ownership "$SNAP"/default-args/cni-network/* "$SNAP_DATA"/args/cni-network/
+chmod -R 770 "$SNAP_DATA"/args/cni-network
 
-if getent group microk8s >/dev/null 2>&1
+group=$(get_microk8s_group)
+if getent group ${group} >/dev/null 2>&1
 then
-  chgrp microk8s -R ${SNAP_DATA}/args/ || true
+  chgrp ${group} -R ${SNAP_DATA}/args/ || true
 fi
 
 set_service_expected_to_start etcd
