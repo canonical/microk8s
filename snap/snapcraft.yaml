@@ -237,8 +237,22 @@ apps:
     plugs:
       - account-control
       - docker-unprivileged
+      - dot-config-helm
+      - dot-kube
+      - firewall-control
       - home-read-all
+      - home
+      - kernel-module-observe
+      - kubernetes-support
+      - login-session-observe
+      - home-read-all
+      - log-observe
+      - mount-observe
+      - network
       - network-control
+      - network-observe
+      - opengl
+      - system-observe
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
