@@ -245,7 +245,6 @@ apps:
       - kernel-module-observe
       - kubernetes-support
       - login-session-observe
-      - home-read-all
       - log-observe
       - mount-observe
       - network
