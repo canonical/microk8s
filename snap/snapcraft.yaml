@@ -469,7 +469,7 @@ apps:
       - process-control
       - system-observe
   inspect:
-    command: microk8s.wrapper
+    command: microk8s.wrapper inspect
     plugs:
       - network-observe
       - kubernetes-support
