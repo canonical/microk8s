@@ -4,6 +4,8 @@ INSPECT_DUMP=${SNAP_DATA}/inspection-report
 RETURN_CODE=0
 JOURNALCTL_LIMIT=100000
 
+source $SNAP/actions/common/utils.sh
+
 function print_help {
   # Print the help message
   printf -- 'This script will inspect your microk8s installation. It will report any issue it finds,\n';
@@ -16,9 +18,26 @@ function check_service {
   # Check the service passed as the first argument is up and running and collect its logs.
   local service=$1
   mkdir -p $INSPECT_DUMP/$service
-  journalctl -n $JOURNALCTL_LIMIT -u $service &> $INSPECT_DUMP/$service/journal.log
-  systemctl status $service &> $INSPECT_DUMP/$service/systemctl.log
-  if systemctl status $service &> /dev/null
+
+  status="inactive"
+  if is_strict
+  then
+    journalctl -n $JOURNALCTL_LIMIT -u snap.$service &> $INSPECT_DUMP/$service/journal.log
+    snapctl services $service &> $INSPECT_DUMP/$service/snapctl.log
+    if ! snapctl services $service | grep inactive &> /dev/null
+    then
+      status="active"
+    fi
+  else
+    journalctl -n $JOURNALCTL_LIMIT -u $service &> $INSPECT_DUMP/$service/journal.log
+    systemctl status $service &> $INSPECT_DUMP/$service/systemctl.log
+    if systemctl status $service &> /dev/null
+    then
+      status="active"
+    fi
+  fi
+
+  if [ "$status" == "active" ]
   then
     printf -- '  Service %s is running\n' "$service"
   else
@@ -32,12 +51,17 @@ function check_service {
 function check_apparmor {
   # Collect apparmor info.
   mkdir -p $INSPECT_DUMP/apparmor
-  if [ -f /etc/apparmor.d/containerd ]
+  if is_strict
   then
-    cp /etc/apparmor.d/containerd $INSPECT_DUMP/apparmor/
+    journalctl -k &> $INSPECT_DUMP/apparmor/dmesg
+  else
+    if [ -f /etc/apparmor.d/containerd ]
+    then
+      cp /etc/apparmor.d/containerd $INSPECT_DUMP/apparmor/
+    fi
+    dmesg &> $INSPECT_DUMP/apparmor/dmesg
+    aa-status &> $INSPECT_DUMP/apparmor/aa-status
   fi
-  dmesg &> $INSPECT_DUMP/apparmor/dmesg
-  aa-status &> $INSPECT_DUMP/apparmor/aa-status
 }
 
 
@@ -52,12 +76,15 @@ function store_network {
   # Collect network setup.
   printf -- '  Copy network configuration to the final report tarball\n'
   mkdir -p $INSPECT_DUMP/network
-  ss -pln &> $INSPECT_DUMP/network/ss
   ip addr &> $INSPECT_DUMP/network/ip-addr
   ip route &> $INSPECT_DUMP/network/ip-addr
   iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
   iptables -S &> $INSPECT_DUMP/network/iptables-S
   iptables -L &> $INSPECT_DUMP/network/iptables-L
+  if ! is_strict
+  then
+    ss -pln &> $INSPECT_DUMP/network/ss
+  fi
 }
 
 
@@ -67,12 +94,6 @@ function store_sys {
   # collect the processes running
   printf -- '  Copy processes list to the final report tarball\n'
   ps -ef > $INSPECT_DUMP/sys/ps
-  printf -- '  Copy snap list to the final report tarball\n'
-  snap version > $INSPECT_DUMP/sys/snap-version
-  snap list > $INSPECT_DUMP/sys/snap-list
-  # Stores VM name (or none, if we are not on a VM)
-  printf -- '  Copy VM name (or none) to the final report tarball\n'
-  systemd-detect-virt &> $INSPECT_DUMP/sys/vm_name
   # Store disk usage information
   printf -- '  Copy disk usage information to the final report tarball\n'
   df -h | grep ^/ &> $INSPECT_DUMP/sys/disk_usage # remove the grep to also include virtual in-memory filesystems
@@ -82,12 +103,21 @@ function store_sys {
   # Store server's uptime.
   printf -- '  Copy server uptime to the final report tarball\n'
   uptime &> $INSPECT_DUMP/sys/uptime
-  # Store the current linux distro.
-  printf -- '  Copy current linux distribution to the final report tarball\n'
-  lsb_release -a &> $INSPECT_DUMP/sys/lsb_release
   # Store openssl information.
   printf -- '  Copy openSSL information to the final report tarball\n'
   openssl version -v -d -e &> $INSPECT_DUMP/sys/openssl
+  if ! is_strict
+  then
+    printf -- '  Copy snap list to the final report tarball\n'
+    snap version > $INSPECT_DUMP/sys/snap-version
+    snap list > $INSPECT_DUMP/sys/snap-list
+    # Stores VM name (or none, if we are not on a VM)
+    printf -- '  Copy VM name (or none) to the final report tarball\n'
+    systemd-detect-virt &> $INSPECT_DUMP/sys/vm_name
+    # Store the current linux distro.
+    printf -- '  Copy current linux distribution to the final report tarball\n'
+    lsb_release -a &> $INSPECT_DUMP/sys/lsb_release
+  fi
 }
 
 
@@ -95,16 +125,28 @@ function store_kubernetes_info {
   # Collect some in-k8s details
   printf -- '  Inspect kubernetes cluster\n'
   mkdir -p $INSPECT_DUMP/k8s
-  sudo -E /snap/bin/microk8s kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
-  sudo -E /snap/bin/microk8s kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
-  sudo -E /snap/bin/microk8s kubectl cluster-info dump -A 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
-  sudo -E /snap/bin/microk8s kubectl get all --all-namespaces -o wide 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
-  sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
-  sudo -E /snap/bin/microk8s kubectl get pvc --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+  if is_strict
+  then
+    export KUBECONFIG=$SNAP_DATA/credentials/client.config
+    $SNAP/kubectl version > $INSPECT_DUMP/k8s/version 2>&1
+    $SNAP/kubectl cluster-info > $INSPECT_DUMP/k8s/cluster-info 2>&1
+    $SNAP/kubectl cluster-info dump -A > $INSPECT_DUMP/k8s/cluster-info-dump 2>&1
+    $SNAP/kubectl get all --all-namespaces -o wide > $INSPECT_DUMP/k8s/get-all 2>&1
+    $SNAP/kubectl get pv > $INSPECT_DUMP/k8s/get-pv 2>&1
+    $SNAP/kubectl get pvc --all-namespaces > $INSPECT_DUMP/k8s/get-pvc 2>&1
+  else
+    sudo -E /snap/bin/microk8s kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
+    sudo -E /snap/bin/microk8s kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
+    sudo -E /snap/bin/microk8s kubectl cluster-info dump -A 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+    sudo -E /snap/bin/microk8s kubectl get all --all-namespaces -o wide 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
+    sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+    sudo -E /snap/bin/microk8s kubectl get pvc --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
+  fi
 }
 
 function check_storage_addon {
-  image=`sudo -E /snap/bin/microk8s kubectl get deploy -n kube-system hostpath-provisioner -o jsonpath='{.spec.template.spec.containers[0].image}' 2>&1`
+  export KUBECONFIG=$SNAP_DATA/credentials/client.config
+  image="$($SNAP/kubectl get deploy -n kube-system hostpath-provisioner -o jsonpath='{.spec.template.spec.containers[0].image}' 2>&1)"
 
   case "$image" in
     cdkbot/hostpath-provisioner-amd64:1.0.0|cdkbot/hostpath-provisioner-arm64:1.0.0)
@@ -126,17 +168,32 @@ function store_dqlite_info {
   # Collect some dqlite details
   printf -- '  Inspect dqlite\n'
   mkdir -p $INSPECT_DUMP/dqlite
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
-  sudo -E cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
-  sudo -E ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
+  run_with_sudo preserve_env cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
+  run_with_sudo preserve_env cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
+  run_with_sudo preserve_env cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
+  run_with_sudo preserve_env ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
 }
 
 
 function suggest_fixes {
   # Propose fixes
   printf '\n'
-  if ! systemctl status snap.microk8s.daemon-kubelite &> /dev/null
+  # This if is verbose but I hope is clear
+  status="inactive"
+  if is_strict
+  then
+    if ! snapctl services microk8s.daemon-kubelite | grep inactive &> /dev/null
+    then
+      status="active"
+    fi
+  else
+    if systemctl status snap.microk8s.daemon-kubelite &> /dev/null
+    then
+      status="active"
+    fi
+  fi
+
+  if [ "$status" == "inactive" ]
   then
     if lsof -Pi :16443 -sTCP:LISTEN -t &> /dev/null
     then
@@ -151,7 +208,7 @@ function suggest_fixes {
     printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
   fi
 
-  if /snap/core18/current/usr/bin/which ufw &> /dev/null
+  if ! is_strict && [ /snap/core18/current/usr/bin/which ufw &> /dev/null ]
   then
     ufw=$(ufw status)
     if echo $ufw | grep -q "Status: active"
@@ -218,7 +275,7 @@ function suggest_fixes {
   fi
 
   # Fedora Specific Checks
-  if fedora_release
+  if ! is_strict && fedora_release
   then
 
     # Check if appropriate cgroup libraries for Fedora are installed
@@ -238,7 +295,7 @@ function suggest_fixes {
   fi
 
   # Debian 9 checks
-  if debian9_release
+  if ! is_strict && debian9_release
   then
 
     # Check if snapctl is fresh
@@ -252,7 +309,7 @@ function suggest_fixes {
   fi
 
   # LXD Specific Checks
-  if cat /proc/1/environ | grep "container=lxc" &> /dev/null
+  if ! is_strict && cat /proc/1/environ | grep "container=lxc" &> /dev/null
     then
 
     # make sure the /dev/kmsg is available, indicating a potential missing profile
@@ -367,6 +424,8 @@ if [[ (${#@} -ne 0) && (("$*" == "--help") || ("$*" == "-h")) ]]; then
   exit 0;
 fi;
 
+exit_if_not_root
+
 rm -rf ${SNAP_DATA}/inspection-report
 mkdir -p ${SNAP_DATA}/inspection-report
 
@@ -378,36 +437,69 @@ printf -- 'Inspecting Certificates\n'
 check_certificates
 
 printf -- 'Inspecting services\n'
-check_service "snap.microk8s.daemon-cluster-agent"
-check_service "snap.microk8s.daemon-containerd"
+svc_cluster_agent="microk8s.daemon-cluster-agent"
+svc_containerd="microk8s.daemon-containerd"
+svc_kubelite="microk8s.daemon-kubelite"
+svc_apiserver="microk8s.daemon-apiserver"
+svc_proxy="microk8s.daemon-proxy"
+svc_kubelet="microk8s.daemon-kubelet"
+svc_scheduler="microk8s.daemon-scheduler"
+svc_controller_manager="microk8s.daemon-controller-manager"
+svc_control_plane_kicker="microk8s.daemon-control-plane-kicker"
+svc_flanneld="microk8s.daemon-flanneld"
+svc_etcd="microk8s.daemon-etcd"
+svc_dqlite="microk8s.daemon-k8s-dqlite"
+svc_traefik="microk8s.daemon-traefik"
+svc_api_server_kicker="microk8s.daemon-apiserver-kicker"
+
+if ! is_strict
+then
+  svc_cluster_agent="snap.${svc_cluster_agent}"
+  svc_containerd="snap.${svc_containerd}"
+  svc_kubelite="snap.${svc_kubelite}"
+  svc_apiserver="snap.${svc_apiserver}"
+  svc_proxy="snap.${svc_proxy}"
+  svc_kubelet="snap.${svc_kubelet}"
+  svc_scheduler="snap.${svc_scheduler}"
+  svc_controller_manager="snap.${svc_controller_manager}"
+  svc_control_plane_kicker="snap.${svc_control_plane_kicker}"
+  svc_flanneld="snap.${svc_flanneld}"
+  svc_etcd="snap.${svc_etcd}"
+  svc_dqlite="snap.${svc_dqlite}"
+  svc_traefik="snap.${svc_traefik}"
+  svc_api_server_kicker="snap.${svc_api_server_kicker}"
+fi
+
+check_service $svc_cluster_agent
+check_service $svc_containerd
 if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
 then
-  check_service "snap.microk8s.daemon-kubelite"
+  check_service $svc_kubelite
 else
-  check_service "snap.microk8s.daemon-apiserver"
-  check_service "snap.microk8s.daemon-proxy"
-  check_service "snap.microk8s.daemon-kubelet"
-  check_service "snap.microk8s.daemon-scheduler"
-  check_service "snap.microk8s.daemon-controller-manager"
-  check_service "snap.microk8s.daemon-control-plane-kicker"
+  check_service $svc_apiserver
+  check_service $svc_proxy
+  check_service $svc_kubelet
+  check_service $svc_scheduler
+  check_service $svc_controller_manager
+  check_service $svc_control_plane_kicker
 fi
 
 if ! [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then
-  check_service "snap.microk8s.daemon-flanneld"
-  check_service "snap.microk8s.daemon-etcd"
+  check_service $svc_flanneld
+  check_service $svc_etcd
 else
-  check_service "snap.microk8s.daemon-k8s-dqlite"
+  check_service $svc_dqlite
 fi
 
 if ! [ -e "${SNAP_DATA}/var/lock/no-traefik" ]
 then
-  check_service "snap.microk8s.daemon-traefik"
+  check_service $svc_traefik
 fi
 
 if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
-  check_service "snap.microk8s.daemon-apiserver-kicker"
+  check_service $svc_api_server_kicker
 fi
 
 store_args

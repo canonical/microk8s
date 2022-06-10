@@ -84,7 +84,7 @@ apps:
   ctr:
     command: microk8s-ctr.wrapper
   inspect:
-    command: sudo SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh
+    command: microk8s.wrapper inspect
   enable:
     command: microk8s-enable.wrapper
   disable:

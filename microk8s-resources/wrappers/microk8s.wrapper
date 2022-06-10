@@ -31,7 +31,7 @@ if [ -f "${SNAP}/microk8s-${APP}.wrapper" ]; then
     "${SNAP}/microk8s-${APP}.wrapper" "$@"
     readonly EXIT="$?"
 elif [ "${APP}" == "inspect" ]; then
-    run_with_sudo preserve_env SNAP_DATA=${SNAP_DATA} ${SNAP}/inspect.sh "$@"
+    run_with_sudo preserve_env ${SNAP}/inspect.sh "$@"
     readonly EXIT="$?"
 elif [ "${APP}" == "help" ] || [ "${APP}" == "--help" ] || [ "$APP" == "-h" ]; then
     help
