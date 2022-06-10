@@ -54,6 +54,7 @@ function store_network {
   mkdir -p $INSPECT_DUMP/network
   ss -pln &> $INSPECT_DUMP/network/ss
   ip addr &> $INSPECT_DUMP/network/ip-addr
+  ip route &> $INSPECT_DUMP/network/ip-addr
   iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
   iptables -S &> $INSPECT_DUMP/network/iptables-S
   iptables -L &> $INSPECT_DUMP/network/iptables-L
@@ -286,6 +287,14 @@ function suggest_fixes {
   then
     printf -- "\033[0;33mWARNING: \033[0m Please ensure br_netfilter kernel module is loaded on the host. \n"
   fi
+
+  if ! ( ip route; ip -6 route ) | grep "^default" &>/dev/null
+  then
+    printf -- "
+\033[0;33mWARNING: \033[0m No default route exists. MicroK8s might not work properly.
+Refer to https://microk8s.io/docs for instructions on air-gap deployments.\n\n
+"
+  fi
 }
 
 function fedora_release {
@@ -388,7 +397,7 @@ then
   check_service "snap.microk8s.daemon-flanneld"
   check_service "snap.microk8s.daemon-etcd"
 else
-  check_service "snap.microk8s.daemon-k8s-dqlite"  
+  check_service "snap.microk8s.daemon-k8s-dqlite"
 fi
 
 if ! [ -e "${SNAP_DATA}/var/lock/no-traefik" ]

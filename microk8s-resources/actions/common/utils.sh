@@ -813,7 +813,7 @@ refresh_calico_if_needed() {
 }
 
 remove_docker_specific_args() {
-  # Remove docker specific arguments and return 0 if kubelet needs to be restarted 
+  # Remove docker specific arguments and return 0 if kubelet needs to be restarted
   if grep -e "\-\-network-plugin" ${SNAP_DATA}/args/kubelet ||
     grep -e "\-\-cni-conf-dir" ${SNAP_DATA}/args/kubelet ||
     grep -e "\-\-cni-bin-dir" ${SNAP_DATA}/args/kubelet
@@ -933,4 +933,21 @@ is_first_boot_on_strict() {
     touch "$SENTINEL"
     return 0
   fi
+}
+
+default_route_exists() {
+  # test if we have a default route
+  ( ip route; ip -6 route ) | grep "^default" &>/dev/null
+}
+
+wait_for_default_route() {
+  # wait 10 seconds for default route to appear
+  n=0
+  until [ $n -ge 5 ]
+  do
+    default_route_exists && break
+    echo "Waiting for default route to appear. (attempt $n)"
+    n=$[$n+1]
+    sleep 2
+  done
 }

@@ -38,16 +38,22 @@ then
 fi
 
 ## API server configuration
-# wait up to two minutes for the default network interface to appear.
-n=0
-until [ $n -ge 20 ]
-do
-  ip route | grep default &> /dev/null && break
-  ip -6 route | grep default &> /dev/null && break
-  echo "Waiting for default route to appear. (attempt $n)"
-  n=$[$n+1]
-  sleep 6
-done
+
+# Check if we advertise an address. If we do we do not need to wait for a default network interface.
+if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null
+then
+  # we keep this command to cleanup the file, as it is no longer needed.
+  rm -f ${SNAP_DATA}/external_ip.txt
+
+  # check if there is a default route available
+  if ! default_route_exists
+  then
+    echo "WARNING: No default route exists. MicroK8s might not work properly."
+    echo "Refer to https://microk8s.io/docs for instructions on air-gap deployments."
+  fi
+
+  wait_for_default_route
+fi
 
 if [ -e ${SNAP_DATA}/args/ha-conf ]
 then
@@ -135,22 +141,6 @@ else
 fi
 
 ## Kube-proxy configuration
-# Check if we advertise an address. If we do we do not need to wait for a default network interface.
-if ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null
-then
-  # we keep this command to cleanup the file, as it is no longer needed.
-  rm -f ${SNAP_DATA}/external_ip.txt
-  # wait up to two minutes for the default network interface to appear.
-  n=0
-  until [ $n -ge 20 ]
-  do
-    ip route | grep default &> /dev/null && break
-    ip -6 route | grep default &> /dev/null && break
-    echo "Waiting for default route to appear. (attempt $n)"
-    n=$[$n+1]
-    sleep 6
-  done
-fi
 
 if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]
 then

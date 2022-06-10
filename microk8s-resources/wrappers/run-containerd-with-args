@@ -77,16 +77,15 @@ set -a
 . "${SNAP_DATA}/args/${app}-env"
 set +a
 
-# wait up to two minutes for the default network interface to appear.
-n=0
-until [ $n -ge 20 ]
-do
-  ip route | grep default &> /dev/null && break
-  ip -6 route | grep default &> /dev/null && break
-  echo "Waiting for default route to appear. (attempt $n)"
-  n=$[$n+1]
-  sleep 6
-done
+# check if there is a default route available
+if ! default_route_exists
+then
+  echo "WARNING: No default route exists. MicroK8s might not work properly."
+  echo "Refer to https://microk8s.io/docs for instructions on air-gap deployments."
+fi
+
+# NOTE(neoaggelos): See https://github.com/canonical/microk8s/issues/423 for context
+wait_for_default_route
 
 # Set the path to the Cilium socket correctly for CNI
 export CILIUM_SOCK="${SNAP_DATA}/var/run/cilium/cilium.sock"
