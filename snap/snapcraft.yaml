@@ -655,4 +655,5 @@ slots:
     interface: content
     content: microk8s
     source:
-      read: [$SNAP/.microk8s-info/microk8s]
+      read:
+        - $SNAP_DATA/credentials
