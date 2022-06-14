@@ -21,8 +21,10 @@ jobs:
           sudo lxd init --auto
           sudo usermod --append --groups lxd $USER
           sg lxd -c 'lxc version'
-      - name: Install snapcraft
-        run: sudo snap install snapcraft --classic
+      - name: Install snapstar
+        run: |
+          sudo snap install snapcraft --classic
+          sudo snap refresh snapd --channel=latest/candidate
       - name: Build snap
         run: |
           sg lxd -c 'snapcraft --use-lxd'
