@@ -941,6 +941,16 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     restart_all_services()
 
 
+def update_kubelet_node_ip(args_string, hostname_override):
+    """
+    Update the kubelet --node-ip argument if it was set on the node that we join.
+    :param args_string: the kubelet arguments
+    :param hostname_override: the source IP address used by the node when joining
+    """
+    if "--node-ip" in args_string:
+        set_arg("--node-ip", hostname_override, "kubelet")
+
+
 def join_dqlite(connection_parts, verify=False):
     """
     Configure node to join a dqlite cluster.
@@ -997,6 +1007,7 @@ def join_dqlite(connection_parts, verify=False):
 
     create_admin_kubeconfig(info["ca"], info["admin_token"])
     store_base_kubelet_args(info["kubelet_args"])
+    update_kubelet_node_ip(info["kubelet_args"], hostname_override)
     store_callback_token(info["callback_token"])
 
     update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
@@ -1022,6 +1033,7 @@ def join_etcd(connection_parts, verify=True):
     hostname_override = None
     if "hostname_override" in info:
         hostname_override = info["hostname_override"]
+        update_kubelet_node_ip(info["kubelet_args"], hostname_override)
     store_remote_ca(info["ca"])
     update_flannel(info["etcd"], master_ip, master_port, token)
     update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override)
