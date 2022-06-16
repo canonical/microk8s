@@ -130,7 +130,8 @@ function store_kubernetes_info {
     export KUBECONFIG=$SNAP_DATA/credentials/client.config
     $SNAP/kubectl version > $INSPECT_DUMP/k8s/version 2>&1
     $SNAP/kubectl cluster-info > $INSPECT_DUMP/k8s/cluster-info 2>&1
-    $SNAP/kubectl cluster-info dump -A > $INSPECT_DUMP/k8s/cluster-info-dump 2>&1
+    $SNAP/kubectl cluster-info dump -A > $INSPECT_DUMP/k8s/cluster-info-dump 2>&1 # Leave the cluster-info-dump file for legacy
+    $SNAP/kubectl cluster-info dump -A --output-directory="$INSPECT_DUMP/k8s/cluster-info-dump-dir" 2>&1 # Split cluster-info-dump into multiple files for easier parsing
     $SNAP/kubectl get all --all-namespaces -o wide > $INSPECT_DUMP/k8s/get-all 2>&1
     $SNAP/kubectl get pv > $INSPECT_DUMP/k8s/get-pv 2>&1
     $SNAP/kubectl get pvc --all-namespaces > $INSPECT_DUMP/k8s/get-pvc 2>&1
@@ -138,6 +139,7 @@ function store_kubernetes_info {
     sudo -E /snap/bin/microk8s kubectl version 2>&1 | sudo tee $INSPECT_DUMP/k8s/version > /dev/null
     sudo -E /snap/bin/microk8s kubectl cluster-info 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info > /dev/null
     sudo -E /snap/bin/microk8s kubectl cluster-info dump -A 2>&1 | sudo tee $INSPECT_DUMP/k8s/cluster-info-dump > /dev/null
+    sudo -E /snap/bin/microk8s kubectl cluster-info dump -A --output-directory="$INSPECT_DUMP/k8s/cluster-info-dump-dir" 2>&1 > /dev/null
     sudo -E /snap/bin/microk8s kubectl get all --all-namespaces -o wide 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-all > /dev/null
     sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
     sudo -E /snap/bin/microk8s kubectl get pvc --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
