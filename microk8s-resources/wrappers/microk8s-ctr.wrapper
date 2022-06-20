@@ -8,8 +8,6 @@ export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gn
 
 source $SNAP/actions/common/utils.sh
 
-exit_if_not_root
-
 SNAPSHOTTER=$(snapshotter)
 
 if ! [ -e $SNAP_DATA/args/ctr ]
