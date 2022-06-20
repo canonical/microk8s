@@ -64,6 +64,7 @@ do
     then
       chmod -R ug+rwX ${SNAP_DATA}/var/kubernetes/backend || true
       chgrp ${group} -R ${SNAP_DATA}/var/kubernetes/backend || true
+      chgrp ${group} ${SNAP_COMMON}/run/containerd.sock || true
     fi
 
     if ! [ -e "${SNAP_DATA}/var/lock/no-cert-reissue" ] &&
