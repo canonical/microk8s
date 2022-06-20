@@ -429,7 +429,7 @@ parts:
     override-build: |
       set -eux
       . $SNAPCRAFT_PART_SRC/set-env-variables.sh
-      snap refresh go --channel=1.17/stable || true
+      snap refresh go --channel=1.18/stable || true
       go version
       export GOPATH=$(realpath ../go)
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
@@ -474,20 +474,22 @@ parts:
     override-build: |
       set -eux
       . $SNAPCRAFT_PART_SRC/set-env-variables.sh
-      snap refresh go --channel=1.16/stable || true
+
+      snap refresh go --channel=1.18/stable || true
       go version
       export GOPATH=$(realpath ../go)
-      export GO111MODULE=off
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
 
-      # Build runc
-      go get -d github.com/opencontainers/runc
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      if [ -d ${GOPATH}/runc ]; then
+        rm -rf ${GOPATH}/runc
+      fi
+      git clone https://github.com/opencontainers/runc ${GOPATH}/runc
       (
-        cd $GOPATH/src/github.com/opencontainers/runc
+        cd $GOPATH/runc
         git checkout ${RUNC_COMMIT}
         make BUILDTAGS='seccomp apparmor'
       )
-      cp $GOPATH/src/github.com/opencontainers/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
+      cp $GOPATH/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
 
       # Assemble the snap
       snapcraftctl build
