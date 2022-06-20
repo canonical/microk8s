@@ -60,7 +60,7 @@ then
 fi
 
 # clean leftover container state if we just booted
-if (is_strict && is_first_boot_on_strict) || (! is_strict && is_first_boot)
+if (is_strict && is_first_boot_on_strict) || (! is_strict && is_first_boot "${SNAP_COMMON}/run/containerd")
 then
   rm -rf "${SNAP_COMMON}/run/containerd" || true
 fi
