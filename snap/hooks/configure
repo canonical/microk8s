@@ -4,14 +4,12 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
-if [ ! -f "${SNAP_DATA}/var/lock/installed.lock" ]
-then
-  exit 0
-fi
-
-
 if is_strict
 then
+  if [ ! -f "${SNAP_DATA}/var/lock/installed.lock" ]
+  then
+    exit 0
+  fi
 
   ARCH="$($SNAP/bin/uname -m)"
   export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
