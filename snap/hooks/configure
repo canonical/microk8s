@@ -4,13 +4,15 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
+# Make sure either the install hook has run or we are refreshing an already existing snap as indicated
+# by the existence of certificates.
+if [ ! -f "${SNAP_DATA}/var/lock/installed.lock" ] && [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
+then
+  exit 0
+fi
+
 if is_strict
 then
-  if [ ! -f "${SNAP_DATA}/var/lock/installed.lock" ]
-  then
-    exit 0
-  fi
-
   ARCH="$($SNAP/bin/uname -m)"
   export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 
