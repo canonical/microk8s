@@ -1,7 +1,7 @@
-From 728d989c7643a87ca9d57e3135e35c7af833bae0 Mon Sep 17 00:00:00 2001
+From 20906ff89553a0fb078d6c955ef5125c58361223 Mon Sep 17 00:00:00 2001
 From: Alberto Mardegan <mardy@users.sourceforge.net>
 Date: Thu, 17 Jun 2021 14:31:35 +0300
-Subject: [PATCH 3/3] standard_init_linux: change AppArmor profile as late as
+Subject: [PATCH] standard_init_linux: change AppArmor profile as late as
  possible
 
 ---
@@ -9,46 +9,46 @@ Subject: [PATCH 3/3] standard_init_linux: change AppArmor profile as late as
  1 file changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/libcontainer/standard_init_linux.go b/libcontainer/standard_init_linux.go
-index d77022ad..6f43da5f 100644
+index 585a04fa..c1b48d09 100644
 --- a/libcontainer/standard_init_linux.go
 +++ b/libcontainer/standard_init_linux.go
-@@ -114,10 +114,6 @@ func (l *linuxStandardInit) Init() error {
- 			return errors.Wrap(err, "sethostname")
+@@ -126,10 +126,6 @@ func (l *linuxStandardInit) Init() error {
+ 			return &os.SyscallError{Syscall: "sethostname", Err: err}
  		}
  	}
 -	if err := apparmor.ApplyProfile(l.config.AppArmorProfile); err != nil {
--		return errors.Wrap(err, "apply apparmor profile")
+-		return fmt.Errorf("unable to apply apparmor profile: %w", err)
 -	}
 -
  	for key, value := range l.config.Config.Sysctl {
  		if err := writeSystemProperty(key, value); err != nil {
- 			return errors.Wrapf(err, "write sysctl key %s", key)
-@@ -137,17 +133,21 @@ func (l *linuxStandardInit) Init() error {
+ 			return err
+@@ -149,17 +145,21 @@ func (l *linuxStandardInit) Init() error {
  	if err != nil {
- 		return errors.Wrap(err, "get pdeath signal")
+ 		return fmt.Errorf("can't get pdeath signal: %w", err)
  	}
 -	if l.config.NoNewPrivileges {
 -		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
--			return errors.Wrap(err, "set nonewprivileges")
+-			return &os.SyscallError{Syscall: "prctl(SET_NO_NEW_PRIVS)", Err: err}
 -		}
 -	}
  	// Tell our parent that we're ready to Execv. This must be done before the
  	// Seccomp rules have been applied, because we need to be able to read and
  	// write to a socket.
  	if err := syncParentReady(l.pipe); err != nil {
- 		return errors.Wrap(err, "sync ready")
+ 		return fmt.Errorf("sync ready: %w", err)
  	}
 +	if err := apparmor.ApplyProfile(l.config.AppArmorProfile); err != nil {
-+		return errors.Wrap(err, "apply apparmor profile")
++		return fmt.Errorf("apply apparmor profile: %w", err)
 +	}
 +	if l.config.NoNewPrivileges {
 +		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
-+			return errors.Wrap(err, "set nonewprivileges")
++			return fmt.Errorf("set nonewprivileges: %w", err)
 +		}
 +	}
 +
  	if err := selinux.SetExecLabel(l.config.ProcessLabel); err != nil {
- 		return errors.Wrap(err, "set process label")
+ 		return fmt.Errorf("can't set process label: %w", err)
  	}
 -- 
 2.25.1
