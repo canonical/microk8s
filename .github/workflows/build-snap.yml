@@ -26,7 +26,7 @@ jobs:
           sudo snap install snapcraft --classic
       - name: Install snapd from candidate
         run: |
-          sudo snap refresh snapd --channel=latest/candidate
+          sudo snap refresh snapd --channel=latest/beta
       - name: Build snap
         run: |
           sg lxd -c 'snapcraft --use-lxd'
