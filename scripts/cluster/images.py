@@ -52,7 +52,9 @@ def export_images(output: str, images: List[str]):
         try:
             subprocess.check_call([CTR, "image", "export", "-", image], stdout=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
-            subprocess.check_call([CTR, "content", "fetch", "--all-platforms"], stdout=sys.stderr)
+            subprocess.check_call(
+                [CTR, "content", "fetch", "--all-platforms", image], stdout=sys.stderr
+            )
 
     subprocess.check_call([CTR, "image", "export", output, *images])
 
