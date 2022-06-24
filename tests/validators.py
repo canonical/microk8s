@@ -262,6 +262,7 @@ def validate_forward():
         time.sleep(2)
 
     assert resp.status_code == 200
+    os.system("killall kubectl")
 
 
 def validate_metrics_server():
