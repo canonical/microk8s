@@ -95,11 +95,13 @@ class VM:
     def _transfer_install_local_snap_lxc(self, channel_or_snap):
         print("Installing snap from {}".format(channel_or_snap))
         cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
-        cmd = ["rm -rf /root/microk8s.snap"]
+        cmd = ["rm -rf /var/tmp/microk8s.snap"]
         subprocess.check_output(cmd_prefix + cmd)
-        cmd = "lxc file push {} {}/root/microk8s.snap".format(channel_or_snap, self.vm_name).split()
+        cmd = "lxc file push {} {}/var/tmp/microk8s.snap".format(
+            channel_or_snap, self.vm_name
+        ).split()
         subprocess.check_output(cmd)
-        cmd = ["snap install /root/microk8s.snap --dangerous"]
+        cmd = ["snap install /var/tmp/microk8s.snap --dangerous"]
         subprocess.check_output(cmd_prefix + cmd)
         time.sleep(20)
         for i in snap_interfaces:
@@ -135,13 +137,13 @@ class VM:
     def _transfer_install_local_snap_multipass(self, channel_or_snap):
         print("Installing snap from {}".format(channel_or_snap))
         subprocess.check_call(
-            "/snap/bin/multipass transfer {} {}:/root/microk8s.snap".format(
+            "/snap/bin/multipass transfer {} {}:/var/tmp/microk8s.snap".format(
                 channel_or_snap, self.vm_name
             ).split()
         )
         subprocess.check_call(
             "/snap/bin/multipass exec {}  -- sudo "
-            "snap install /root/microk8s.snap --dangerous".format(self.vm_name).split()
+            "snap install /var/tmp/microk8s.snap --dangerous".format(self.vm_name).split()
         )
         for i in snap_interfaces:
             subprocess.check_call(
@@ -369,7 +371,7 @@ class TestCluster(object):
         Test a worker node is setup
         """
         print("Setting up a worker node")
-        vm = VM()
+        vm = VM(backend)
         vm.setup(channel_to_test)
         self.VM.append(vm)
 
