@@ -51,7 +51,6 @@ slots:
         - $HOME/.kube
         - $SNAP_DATA/credentials
 
-
 hooks:
   configure:
     plugs:
