@@ -26,10 +26,10 @@ function create_machine() {
 
   # Allow for the machine to boot and get an IP
   sleep 20
-  tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /root
+  tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /var/tmp
   DISTRO_DEPS_TMP="${DISTRO//:/_}"
   DISTRO_DEPS="${DISTRO_DEPS_TMP////-}"
-  lxc exec $NAME -- /bin/bash "/root/tests/lxc/install-deps/$DISTRO_DEPS"
+  lxc exec $NAME -- /bin/bash "/var/tmp/tests/lxc/install-deps/$DISTRO_DEPS"
   lxc exec $NAME -- reboot
   sleep 20
 
@@ -91,7 +91,7 @@ if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
   lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
   lxc exec $NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
-  lxc exec $NAME -- bash -c '/root/tests/connect-all-interfaces.sh'
+  lxc exec $NAME -- bash -c '/var/tmp/tests/connect-all-interfaces.sh'
 else
   lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL}
 fi
