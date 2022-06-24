@@ -10,8 +10,8 @@ arch_translate = {"aarch64": "arm64", "x86_64": "amd64"}
 
 # List of interfaces we need to manually connect in the case we test a local build
 snap_interfaces = [
+    "account-control",
     "docker-privileged",
-    "docker-support",
     "kubernetes-support",
     "k8s-journald",
     "k8s-kubelet",
