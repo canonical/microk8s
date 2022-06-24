@@ -371,7 +371,7 @@ class TestCluster(object):
         Test a worker node is setup
         """
         print("Setting up a worker node")
-        vm = VM()
+        vm = VM(backend)
         vm.setup(channel_to_test)
         self.VM.append(vm)
 
