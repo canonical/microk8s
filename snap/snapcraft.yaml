@@ -535,6 +535,7 @@ apps:
     command: microk8s-reset.wrapper
     plugs:
       - account-control
+      - home
       - mount-observe
       - network-control
       - network
