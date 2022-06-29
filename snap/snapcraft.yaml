@@ -531,6 +531,8 @@ apps:
       - network
   config:
     command: microk8s-config.wrapper
+    plugs:
+      - network-observe
   reset:
     command: microk8s-reset.wrapper
     plugs:
