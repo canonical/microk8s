@@ -417,7 +417,7 @@ _gen_server_cert() {
 gen_server_cert() {
     # Generate the server certificate
     # The file csr.conf is checked to determine if a regeneration of the cert must be done.
-    if compare_csr_conf; then
+    if csr_conf_updated; then
         _gen_server_cert
     fi
 }
@@ -431,7 +431,7 @@ _gen_proxy_client_cert() {
 gen_proxy_client_cert() {
     # Generate the proxy client certificate
     # The file csr.conf is checked to determine if a regeneration of the cert must be done.
-    if compare_csr_conf; then
+    if csr_conf_updated; then
         _gen_proxy_client_cert
     fi
 }
@@ -460,7 +460,7 @@ produce_certs() {
         ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
     fi
 
-    if compare_csr_conf; then
+    if csr_conf_updated; then
         _gen_server_cert
         _gen_proxy_client_cert
         echo "1"
@@ -497,10 +497,10 @@ render_csr_conf() {
     fi
 }
 
-compare_csr_conf() {
+csr_conf_updated() {
     # Compares the file csr.conf.rendered with csr.conf
     # Return
-    #  0 if no change
+    #  0 if different
     #  1 otherwise.
     render_csr_conf
 
@@ -510,9 +510,9 @@ compare_csr_conf() {
 
     if ! "${SNAP}/usr/bin/cmp" -s "${SNAP_DATA}/certs/csr.conf.rendered" "${SNAP_DATA}/certs/csr.conf"; then
         cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
-        return 1
+        return 0
     fi
-    return 0
+    return 1
 }
 
 get_node() {
