@@ -96,8 +96,8 @@ else
   lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL}
 fi
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
+lxc exec $NAME -- script -e -c "STRICT=\"yes\" pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
 lxc exec $NAME -- microk8s enable community
-lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
+lxc exec $NAME -- script -e -c "STRICT=\"yes\" pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
