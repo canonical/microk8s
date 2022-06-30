@@ -90,12 +90,13 @@ create_machine $NAME $PROXY
 if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
   lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
-  lxc exec $NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+  lxc exec $NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous
   lxc exec $NAME -- bash -c '/var/tmp/tests/connect-all-interfaces.sh'
 else
   lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL}
 fi
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
+lxc exec $NAME -- script -e -c "microk8s status --wait-ready"
 lxc exec $NAME -- script -e -c "STRICT=\"yes\" pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
 lxc exec $NAME -- microk8s enable community
 lxc exec $NAME -- script -e -c "STRICT=\"yes\" pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
