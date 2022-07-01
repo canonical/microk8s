@@ -31,7 +31,7 @@ def log(msg):
     default="",
     type=click.Choice(["", "force-operator-driver", "force-system-driver"]),
 )
-@click.option("--requires", multiple=True, default=["core/dns", "core/helm3"])
+@click.option("--requires", multiple=True, default=["dns", "helm3"])
 @click.option("--version", default="v1.11.0")
 @click.option("--driver", default="auto", type=click.Choice(["auto", "operator", "host"]))
 @click.option("--toolkit-version", default=None)
