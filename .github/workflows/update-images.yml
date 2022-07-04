@@ -1,0 +1,35 @@
+name: Update list of images
+
+on:
+  - workflow_dispatch
+  - schedule:
+      - cron: "0 10 * * *"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { branch: master, channel: latest/edge }
+          - { branch: 1.24, channel: 1.24 }
+          - { branch: 1.23, channel: 1.23 }
+          - { branch: 1.22, channel: 1.22 }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.0.2
+        with:
+          ref: ${{ matrix.branch }}
+      - name: Update image list
+        run: |
+          ./build-scripts/update-images.sh ${{ matrix.channel }} build-scripts/images.txt
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: update list of images used by ${{ matrix.channel }}
+          title: "[${{ matrix.branch }}] Update MicroK8s images"
+          body: update list of images used by ${{ matrix.channel }}
+          reviewers: neoaggelos,ktsakalozos
+          branch: auto-update-images/${{ matrix.branch }}
+          delete-branch: true
+          base: ${{ matrix.branch }}
