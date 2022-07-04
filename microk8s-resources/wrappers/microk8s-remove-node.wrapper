@@ -28,4 +28,4 @@ if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] && [ "$#" -eq 2 ] && ! [ "$2" == "-
   exit 1
 fi
 
-${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/reset.py "$@"
+${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/remove_node.py "$@"

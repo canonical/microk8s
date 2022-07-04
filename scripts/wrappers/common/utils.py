@@ -247,6 +247,7 @@ def is_community_addon(arch, addon_name):
 
 def get_available_addons(arch):
     available = []
+    strict = is_strict()
     for dir in os.listdir(snap_common() / "addons"):
         try:
             addons_yaml = snap_common() / "addons" / dir / "addons.yaml"
@@ -254,8 +255,20 @@ def get_available_addons(arch):
                 addons = yaml.safe_load(fin)
 
             for addon in addons["microk8s-addons"]["addons"]:
-                if arch in addon["supported_architectures"]:
+                to_be_added = True
+
+                if arch not in addon["supported_architectures"]:
+                    to_be_added = False
+
+                if "confinement" in addon:
+                    if strict and "strict" not in addon["confinement"]:
+                        to_be_added = False
+                    if not strict and "classic" not in addon["confinement"]:
+                        to_be_added = False
+
+                if to_be_added:
                     available.append({**addon, "repository": dir})
+
         except Exception:
             LOG.exception("could not load addons from %s", addons_yaml)
 
