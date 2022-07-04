@@ -68,11 +68,12 @@ microk8s-addons:
 """
 
 
-
-@pytest.mark.parametrize("confinement, result", [(True, ["dns", "rbac"]), (False, ["dns","dashboard"])])
-@patch('common.utils.is_strict')
-@patch('os.listdir')
-@patch('common.utils.snap_common')
+@pytest.mark.parametrize(
+    "confinement, result", [(True, ["dns", "rbac"]), (False, ["dns", "dashboard"])]
+)
+@patch("common.utils.is_strict")
+@patch("os.listdir")
+@patch("common.utils.snap_common")
 def test_get_available_addons(snap_common_mock, listdir_mock, strict_mock, confinement, result):
     strict_mock.return_value = confinement
     listdir_mock.return_value = ["/a/path/"]
