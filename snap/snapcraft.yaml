@@ -504,7 +504,6 @@ parts:
       then
         # Some actions are only available on amd64
         rm actions/*.gpu.sh
-        rm "actions/gpu.yaml"
         rm actions/*.istio.sh
         rm actions/*.knative.sh
         rm actions/*.fluentd.sh
