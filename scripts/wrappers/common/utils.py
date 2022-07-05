@@ -255,19 +255,16 @@ def get_available_addons(arch):
                 addons = yaml.safe_load(fin)
 
             for addon in addons["microk8s-addons"]["addons"]:
-                to_be_added = True
-
                 if arch not in addon["supported_architectures"]:
-                    to_be_added = False
+                    continue
 
                 if "confinement" in addon:
                     if strict and "strict" not in addon["confinement"]:
-                        to_be_added = False
+                        continue
                     if not strict and "classic" not in addon["confinement"]:
-                        to_be_added = False
+                        continue
 
-                if to_be_added:
-                    available.append({**addon, "repository": dir})
+                available.append({**addon, "repository": dir})
 
         except Exception:
             LOG.exception("could not load addons from %s", addons_yaml)
