@@ -9,7 +9,7 @@ import sys
 import json
 import socket
 
-from common.utils import (
+from common.cluster.utils import (
     get_callback_token,
     get_cluster_agent_port,
     is_node_running_dqlite,

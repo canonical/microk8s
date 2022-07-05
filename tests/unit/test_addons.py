@@ -21,7 +21,7 @@ from addons import (
     validate_addons_file,
     validate_addons_repo,
 )
-from common.utils import parse_xable_addon_args
+from common.utils import parse_xable_addon_args, get_available_addons
 
 
 ADDONS = [
@@ -31,6 +31,59 @@ ADDONS = [
     ("core", "conflict"),
     ("community", "conflict"),
 ]
+
+
+REPO_YAML = """
+microk8s-addons:
+  description: "List of all addons included in Microk8s."
+  addons:
+    - name: "dns"
+      description: "CoreDNS"
+      version: "1.9.0"
+      check_status: "pod/coredns"
+      supported_architectures:
+        - amd64
+        - arm64
+        - s390x
+
+    - name: "rbac"
+      description: "Role-Based Access Control for authorisation"
+      version: ""
+      check_status: "clusterrole.rbac.authorization.k8s.io/cluster-admin"
+      confinement: "strict"
+      supported_architectures:
+        - arm64
+        - amd64
+        - s390x
+
+    - name: "dashboard"
+      description: "The Kubernetes dashboard"
+      version: "2.3.0"
+      check_status: "pod/kubernetes-dashboard"
+      confinement: "classic"
+      supported_architectures:
+        - arm64
+        - amd64
+        - s390x
+"""
+
+
+@pytest.mark.parametrize(
+    "confinement, result", [(True, ["dns", "rbac"]), (False, ["dns", "dashboard"])]
+)
+@patch("common.utils.is_strict")
+@patch("os.listdir")
+@patch("common.utils.snap_common")
+def test_get_available_addons(snap_common_mock, listdir_mock, strict_mock, confinement, result):
+    strict_mock.return_value = confinement
+    listdir_mock.return_value = ["/a/path/"]
+    snap_common_mock.return_value = Path("/common_dir")
+
+    with patch("common.utils.open", mock_open(read_data=REPO_YAML)):
+        addons = get_available_addons("amd64")
+        assert len(addons) == len(result)
+        for addon in addons:
+            assert addon["name"] in result
 
 
 @pytest.mark.parametrize(
