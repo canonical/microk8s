@@ -1,0 +1,31 @@
+#!/bin/bash
+
+. "${SNAP}/actions/common/utils.sh"
+
+KUBECTL="${SNAP}/microk8s-kubectl.wrapper"
+
+# Calico reload deployment
+if ! [ -e "${SNAP_DATA}/var/lock/no-cni-reload" ] &&
+   [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
+   [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
+   [ -e "${SNAP_DATA}/var/lock/cni-loaded" ] &&
+   [ -e "${SNAP_DATA}/var/lock/no-flanneld" ] &&
+   [ -e "${SNAP_DATA}/var/lock/cni-needs-reload" ]
+then
+  if ! [ -e "${SNAP_DATA}/var/lock/skip-offloading" ] &&
+     ! grep -q "ChecksumOffloadBroken" "${SNAP_DATA}/args/cni-network/cni.yaml" &&
+     "${KUBECTL}" patch felixconfigurations default --patch '{"spec":{"featureDetectOverride":"ChecksumOffloadBroken=true"}}' --type=merge
+  then
+      echo "Patched calico for offloading"
+  fi
+
+  echo "Reloading the calico CNI"
+  if (is_apiserver_ready)  &&
+      "${KUBECTL}" --request-timeout 2m describe -n kube-system daemonset.apps/calico-node &&
+      "${KUBECTL}" --request-timeout 2m describe -n kube-system deployment.apps/calico-kube-controllers &&
+      "${KUBECTL}" --request-timeout 2m rollout restart -n kube-system daemonset.apps/calico-node &&
+      "${KUBECTL}" --request-timeout 2m rollout restart -n kube-system deployment.apps/calico-kube-controllers
+  then
+    rm "${SNAP_DATA}/var/lock/cni-needs-reload"
+  fi
+fi

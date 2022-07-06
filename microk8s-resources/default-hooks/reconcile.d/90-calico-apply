@@ -1,0 +1,16 @@
+#!/bin/bash
+
+. "${SNAP}/actions/common/utils.sh"
+
+KUBECTL="${SNAP}/microk8s-kubectl.wrapper"
+
+if [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
+   [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
+   ! [ -e "${SNAP_DATA}/var/lock/cni-loaded" ]
+then
+  echo "Setting up the CNI"
+  if (is_apiserver_ready) && "${KUBECTL}" apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
+  then
+    touch "${SNAP_DATA}/var/lock/cni-loaded"
+  fi
+fi
