@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# if we are refreshing in a no-flanneld we need to restart the CNI pods because they mount parts of $SNAP_DATA
-if [ -e "${SNAP_DATA}/var/lock/no-flanneld" ]
-then
-  touch "${SNAP_DATA}/var/lock/cni-needs-reload"
-fi
