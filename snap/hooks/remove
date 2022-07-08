@@ -52,32 +52,5 @@ rm -rf ${SNAP_COMMON}/run/containerd/* || true
 (cat /proc/mounts | grep ${SNAP_COMMON}/var/run/docker | cut -d ' ' -f 2 | xargs umount) || true
 (cat /proc/mounts | grep ${SNAP_COMMON}/var/lib/kubelet | cut -d ' ' -f 2 | xargs umount) || true
 
-if ! is_strict || (is_strict && snapctl is-connected network-control) 
-  then
-  for link in cni0 cilium_vxlan
-  do
-    if ${SNAP}/sbin/ip link show ${link}
-    then
-      ${SNAP}/sbin/ip link delete ${link}
-    fi
-  done
-fi
-
-if is_strict
-then
-  remove_all_containers
-else
-  kill_all_container_shims
-fi
-
-# Cleanup calico interface.
-if "${SNAP}/sbin/ip" link show vxlan.calico
-then
-  "${SNAP}/sbin/ip" link delete vxlan.calico || true
-fi
-
-# Cleanup cni network namespaces.
-for ns in `"${SNAP}/sbin/ip" netns list | grep "^cni-" | awk '{print $1}'`
-do
-  $SNAP/sbin/ip netns delete "${ns}" || true
-done
+# Run remove hooks
+$SNAP/usr/bin/python3 $SNAP/scripts/run-lifecycle-hooks.py remove || true

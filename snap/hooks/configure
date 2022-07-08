@@ -180,6 +180,12 @@ then
 
 fi
 
+# Install default-hooks
+if ! [ -d "${SNAP_COMMON}/hooks" ]
+then
+  cp -r --preserve=mode ${SNAP}/microk8s-resources/default-hooks ${SNAP_COMMON}/hooks
+fi
+
 # Make sure the server certificate includes the IP we are using
 if [ "$(produce_certs)" == "1" ]
 then
@@ -207,26 +213,6 @@ then
   echo "Patching 1.15 allow-privileged"
   "${SNAP}/bin/sed" -i '/allow-privileged/d' ${SNAP_DATA}/args/kubelet
     need_kubelet_restart=true
-fi
-
-if ([ -f "$SNAP_USER_COMMON/istio-auth.lock" ] || [ -f "$SNAP_USER_COMMON/istio-auth.lock" ]) && ! [ -f "$SNAP_DATA/bin/istioctl" ]
-then
-  ISTIO_VERSION="v1.0.5"
-  echo "Fetching istioctl version $ISTIO_VERSION."
-  ISTIO_ERSION=$(echo $ISTIO_VERSION | sed 's/v//g')
-  mkdir -p "${SNAP_DATA}/tmp/istio"
-  (cd "${SNAP_DATA}/tmp/istio"
-  fetch_as https://github.com/istio/istio/releases/download/${ISTIO_ERSION}/istio-${ISTIO_ERSION}-linux.tar.gz "$SNAP_DATA/tmp/istio/istio.tar.gz"
-  gzip -d "$SNAP_DATA/tmp/istio/istio.tar.gz"
-  tar -xvf "$SNAP_DATA/tmp/istio/istio.tar")
-  mkdir -p "$SNAP_DATA/bin/"
-  mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/bin/istioctl" "$SNAP_DATA/bin/"
-  chmod +x "$SNAP_DATA/bin/istioctl"
-  mkdir -p "$SNAP_DATA/actions/istio/"
-  cp "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}"/install/kubernetes/helm/istio/templates/crds.yaml "$SNAP_DATA/actions/istio/"
-  mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo-auth.yaml" "$SNAP_DATA/actions/istio/"
-  mv "$SNAP_DATA/tmp/istio/istio-${ISTIO_ERSION}/install/kubernetes/istio-demo.yaml" "$SNAP_DATA/actions/istio/"
-  rm -rf "$SNAP_DATA/tmp/istio"
 fi
 
 if ! [ -f "$SNAP_DATA/credentials/kubelet.config" ]
@@ -358,7 +344,7 @@ then
   mv ${CD_TOML_TMP} ${CD_TOML}
 fi
 
-for dir in ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock ${SNAP_DATA}/tmp/
+for dir in ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock ${SNAP_DATA}/tmp/ ${SNAP_COMMON}/hooks
 do
   chmod -R ug+rwX ${dir}
   chmod -R o-rwX ${dir}
@@ -374,7 +360,7 @@ fi
 
 if getent group ${group} >/dev/null 2>&1
 then
-  chgrp ${group} -R ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ || true
+  chgrp ${group} -R ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ ${SNAP_COMMON}/hooks || true
 fi
 
 if ! is_strict
@@ -489,13 +475,6 @@ if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
 then
   refresh_opt_in_config enable-v2 true etcd
   snapctl restart ${SNAP_NAME}.daemon-etcd
-fi
-
-if [ -L "${SNAP_DATA}/bin/cilium" ]
-then
-  echo "Cilium is enabled we need to reconfigure it."
-  rm -rf $SNAP_DATA/bin/cilium*
-  ${SNAP}/actions/enable.cilium.sh
 fi
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
@@ -630,6 +609,12 @@ then
   enable_snap
 fi
 
+# if we are refreshing in a no-flanneld we need to restart the CNI pods because they mount parts of $SNAP_DATA
+if [ -e "${SNAP_DATA}/var/lock/no-flanneld" ]
+then
+  touch "${SNAP_DATA}/var/lock/cni-needs-reload"
+fi
+
 # Restart reconfigured services
 if ${need_api_restart} ||
    ${need_proxy_restart} ||
@@ -647,41 +632,4 @@ fi
 if ${need_cluster_agent_restart}
 then
   snapctl restart ${SNAP_NAME}.daemon-cluster-agent
-fi
-
-# if we are refreshing in a no-flanneld we need to restart the CNI pods because they mount parts of $SNAP_DATA
-if [ -e "${SNAP_DATA}/var/lock/no-flanneld" ]
-then
-  touch "${SNAP_DATA}/var/lock/cni-needs-reload"
-fi
-
-if ! is_strict &&
-   [ -e "${SNAP_DATA}/args/cni-network/cni.yaml" ] &&
-   [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
-   ! [ -e "${SNAP_DATA}/var/lock/clustered.lock" ]
-then
-  echo "Setting up the CNI"
-  start_timer="$(date +%s)"
-  # Wait up to two minutes for the apiserver to come up.
-  # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
-  timeout="120"
-  KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-  while ! (is_apiserver_ready)
-  do
-    sleep 5
-    now="$(date +%s)"
-    if [[ "$now" > "$(($start_timer + $timeout))" ]] ; then
-      break
-    fi
-  done
-
-  # if the API server came up try to load the CNI manifest
-  now="$(date +%s)"
-  if [[ "$now" < "$(($start_timer + $timeout))" ]] ; then
-    if (is_apiserver_ready) &&
-        $KUBECTL apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
-    then
-      touch "${SNAP_DATA}/var/lock/cni-loaded"
-    fi
-  fi
 fi
