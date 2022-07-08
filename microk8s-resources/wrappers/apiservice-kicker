@@ -23,30 +23,6 @@ fi
 
 restart_attempt=0
 installed_registry_help=0
-nic_name="vxlan.calico"
-# This flag is used so we do not perform the offload check every time.
-# This check is shown to cause issues on rpi, see
-# https://bugs.launchpad.net/ubuntu/+source/linux-raspi/+bug/1955174
-installed_offloading=0
-
-is_nic_available() {
-  ip a show dev $nic_name > /dev/null 2>&1
-}
-
-deactivate_offloading() {
-  ethtool --offload $nic_name rx off tx off
-}
-
-check_offloading() {
-  # Return an error if at least one offload is enabled (rx or tx)
-  if ethtool --show-offload $nic_name 2>&1 | grep -E '^.x-checksumming:' | grep -q  ': on'; then
-    return 1
-  else
-    # if offloading is already disabled update the respective flag.
-    installed_offloading=1
-    return 0
-  fi
-}
 
 while true
 do
@@ -114,6 +90,12 @@ do
     then
       echo "Reloading the calico CNI"
       if (is_apiserver_ready)  &&
+          if ! [ -e "${SNAP_DATA}/var/lock/skip-offloading" ] &&
+             ! grep -q "ChecksumOffloadBroken" "${SNAP_DATA}/args/cni-network/cni.yaml" &&
+             "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" patch felixconfigurations default --patch '{"spec":{"featureDetectOverride":"ChecksumOffloadBroken=true"}}' --type=merge
+          then
+              echo "Patched calico for offloading"
+          fi
          "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m describe -n kube-system daemonset.apps/calico-node &&
          "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m describe -n kube-system deployment.apps/calico-kube-controllers &&
          "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m rollout restart -n kube-system daemonset.apps/calico-node &&
@@ -137,22 +119,6 @@ do
          "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" --request-timeout 2m rollout restart -n kube-system deployment.apps/cilium-operator
       then
         rm "${SNAP_DATA}/var/lock/cni-needs-reload"
-      fi
-    fi
-
-    if ! [ -e "${SNAP_DATA}/var/lock/skip-offloading" ] &&
-      [ $installed_offloading -eq 0 ] &&
-      [ -e "${SNAP_DATA}/var/lock/cni-loaded" ] &&
-      is_nic_available &&
-      ! check_offloading
-    then
-      echo "Network interface $nic_name found! Disabling offloading on it..."
-      deactivate_offloading
-      sleep 2
-      if check_offloading; then
-        echo "Offloading successfully disabled on interface $nic_name"
-      else
-        echo "Offloading has not been disabled correctly on interface $nic_name. Please check what happened"
       fi
     fi
 
