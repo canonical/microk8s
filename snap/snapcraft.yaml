@@ -190,6 +190,7 @@ parts:
     build-packages:
       - btrfs-tools
       - libseccomp-dev
+      - rsync
       - build-essential
       - curl
       - git
