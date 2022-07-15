@@ -1,0 +1,25 @@
+From facd1c26a641d2e6664bda7b5e1aaf9ff2c3309a Mon Sep 17 00:00:00 2001
+From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
+Date: Fri, 15 Jul 2022 10:40:10 +0300
+Subject: [PATCH] Add -s -w ldflags
+
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index f5a1160..49b314f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -34,7 +34,7 @@ BINDIR ?= /usr/local/bin
+ 
+ VERSION := $(shell git describe --tags --dirty --always)
+ VERSION := $(VERSION:v%=%)
+-GO_LDFLAGS := -X $(PROJECT)/pkg/version.Version=$(VERSION)
++GO_LDFLAGS := -X $(PROJECT)/pkg/version.Version=$(VERSION) -s -w
+ 
+ BUILD_PATH := $(shell pwd)/build
+ BUILD_BIN_PATH := $(BUILD_PATH)/bin
+-- 
+2.25.1
+
