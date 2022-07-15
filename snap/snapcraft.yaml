@@ -240,6 +240,12 @@ parts:
       ./build-component.sh kubernetes
       snapcraftctl set-version "$(components/kubernetes/version.sh)"
 
+  helm:
+    after: [golang]
+    plugin: nil
+    source: build-scripts/
+    override-build: ./build-component.sh helm
+
   libmnl:
     plugin: autotools
     source: https://www.netfilter.org/pub/libmnl/libmnl-1.0.4.tar.bz2
