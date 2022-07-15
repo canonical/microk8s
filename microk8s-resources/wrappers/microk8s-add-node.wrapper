@@ -17,14 +17,14 @@ then
   exit 1
 fi
 
-if [ -e  "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ] && [ -e "$SNAP_DATA/args/cni-network/05-cilium-cni.conf" ] ; then 
+if [ -e  "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ] && [ -e "$SNAP_DATA/args/cni-network/05-cilium-cni.conf" ] ; then
   echo "Cilium is enabled and is not suitable for multi node clusters."
   exit 1
 fi
 
 if echo "$*" | grep -q -- 'help'; then
   # Call add_token.py help
-  LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/cluster/add_token.py --help
+  LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/add_token.py --help
   exit 0
 fi
 
@@ -48,7 +48,7 @@ fi
 exit_if_stopped
 
 if [ ! -f "$SNAP_DATA/credentials/cluster-tokens.txt" ]; then
-  touch $SNAP_DATA/credentials/cluster-tokens.txt 
+  touch $SNAP_DATA/credentials/cluster-tokens.txt
 fi
 
 group=$(get_microk8s_group)

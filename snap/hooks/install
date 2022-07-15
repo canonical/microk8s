@@ -91,7 +91,7 @@ $SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/proxy.config
 $SNAP/bin/sed -i 's/PASSWORD/'"${proxy_token}"'/g' ${SNAP_DATA}/credentials/proxy.config
 
 # Install default-hooks
-cp -r --preserve=mode ${SNAP}/microk8s-resources/default-hooks ${SNAP_COMMON}/hooks
+cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
 
 for dir in ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_COMMON}/hooks
 do
