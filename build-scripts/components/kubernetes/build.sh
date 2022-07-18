@@ -10,6 +10,6 @@ done
 _output/bin/kubectl completion bash \
   | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" \
   | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl microk8s.kubectl/g" \
-  > kubectl.bash
+  > _output/kubectl.bash
 
-cp kubectl.bash "${INSTALL}/kubectl.bash"
+cp _output/kubectl.bash "${INSTALL}/kubectl.bash"
