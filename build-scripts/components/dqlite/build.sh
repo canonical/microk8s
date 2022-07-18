@@ -6,8 +6,8 @@ INSTALL="${1}"
 [ ! -f ./configure ] && [ -f ./bootstrap ] && env NOCONFIGURE=1 ./bootstrap
 [ ! -f ./configure ] && autoreconf --install
 
-export PKG_CONFIG_PATH="${INSTALL}/lib"
-./configure --prefix="${INSTALL}"
+export SQLITE_LIBS="-L${INSTALL}/lib -lsqlite3"
+./configure
 
 mkdir -p build
 
