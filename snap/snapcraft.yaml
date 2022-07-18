@@ -142,21 +142,21 @@ parts:
     source: build-scripts/
     build-attributes: [no-patchelf]
     plugin: nil
-    override-build: ./build-component raft
+    override-build: ./build-component.sh raft
 
   sqlite:
     after: [build-deps]
     source: build-scripts/
     build-attributes: [no-patchelf]
     plugin: nil
-    override-build: ./build-component sqlite
+    override-build: ./build-component.sh sqlite
 
   dqlite:
     after: [sqlite, raft]
     source: build-scripts/
     build-attributes: [no-patchelf]
     plugin: nil
-    override-build: ./build-component dqlite
+    override-build: ./build-component.sh dqlite
 
   dqlite-client:
     after: [dqlite]
