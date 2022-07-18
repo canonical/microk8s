@@ -6,7 +6,10 @@ INSTALL="${1}"
 [ ! -f ./configure ] && [ -f ./bootstrap ] && env NOCONFIGURE=1 ./bootstrap
 [ ! -f ./configure ] && autoreconf --install
 
+export SQLITE_CFLAGS="-I${INSTALL}/usr/include"
 export SQLITE_LIBS="-L${INSTALL}/lib -lsqlite3"
+export RAFT_CFLAGS="-I${INSTALL}/usr/include"
+export RAFT_LIBS="-L${INSTALL}/lib -lraft"
 ./configure
 
 mkdir -p build
