@@ -128,14 +128,23 @@ parts:
       - automake
       - autopoint
       - autotools-dev
+      - bison
       - btrfs-tools
       - build-essential
       - curl
+      - flex
       - git
+      - libjansson-dev
       - liblz4-dev
+      - libnetfilter-conntrack-dev
+      - libnetfilter-conntrack3
+      - libnfnetlink-dev
       - libseccomp-dev
       - libtool
+      - libuv1-dev
+      - pkg-config
       - rsync
+      - tcl
 
   raft:
     after: [build-deps]
@@ -153,8 +162,6 @@ parts:
     after: [build-deps]
     source: build-scripts/
     build-attributes: [no-patchelf]
-    build-packages:
-      - tcl
     plugin: nil
     override-build: ./build-component.sh sqlite
 
@@ -218,27 +225,19 @@ parts:
     override-build: ./build-component.sh helm
 
   libmnl:
+    after: [build-deps]
     plugin: autotools
     source: https://www.netfilter.org/pub/libmnl/libmnl-1.0.4.tar.bz2
 
   libnftnl:
-    after:
-      - libmnl
+    after: [libmnl]
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
-    build-packages:
-      - libjansson-dev
 
   iptables:
     after: [libnftnl]
     source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
     plugin: autotools
-    build-packages:
-      - bison
-      - flex
-      - libnfnetlink-dev
-      - libnetfilter-conntrack3
-      - libnetfilter-conntrack-dev
     configflags:
       - "--disable-shared"
       - "--enable-static"
@@ -251,7 +250,7 @@ parts:
     override-build: ./build-component.sh migrator
 
   containerd:
-    after: [build-deps, iptables, runc]
+    after: [runc]
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh containerd
@@ -270,7 +269,6 @@ parts:
       - -usr/share/man
 
   runc:
-    build-snaps: [go]
     after: [iptables, build-deps]
     source: build-scripts/
     plugin: nil
