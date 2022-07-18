@@ -10,6 +10,7 @@ INSTALL="${1}"
 
 mkdir -p build
 
+make -j"${SNAPCRAFT_PARALLEL_BUILD_COUNT}"
 make install DESTDIR="${PWD}/build"
 
 mkdir -p "${INSTALL}/lib" "${INSTALL}/usr/include"

@@ -12,6 +12,7 @@ export CFLAGS="-DSQLITE_ENABLE_DBSTAT_VTAB=1"
 
 mkdir -p build
 
+make -j"${SNAPCRAFT_PARALLEL_BUILD_COUNT}"
 make install DESTDIR="${PWD}/build"
 
 mkdir -p "${INSTALL}/bin" "${INSTALL}/lib" "${INSTALL}/usr/include"

@@ -143,6 +143,8 @@ parts:
     build-attributes: [no-patchelf]
     plugin: nil
     override-build: ./build-component.sh raft
+    stage-packages:
+      - libuv1
 
   sqlite:
     after: [build-deps]
