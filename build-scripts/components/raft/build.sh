@@ -14,5 +14,5 @@ make install DESTDIR="${PWD}/build"
 
 mkdir -p "${INSTALL}/lib" "${INSTALL}/usr/include"
 
-cp -r "build/usr/local/lib/libsqlite3"*"so"* "${INSTALL}/lib/"
+cp -r "build/usr/local/lib/libraft"*"so"* "${INSTALL}/lib/"
 cp -r "build/usr/local/include/"* "${INSTALL}/usr/include/"
