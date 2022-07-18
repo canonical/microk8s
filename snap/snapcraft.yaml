@@ -118,122 +118,92 @@ apps:
     command: microk8s-version.wrapper
 
 parts:
-  raft:
-    source: https://github.com/canonical/raft
-    source-tag: v0.13.0
-    build-attributes: [no-patchelf]
-    source-type: git
-    plugin: autotools
-    stage-packages:
-      - libuv1
-    build-packages:
-      - liblz4-dev
-    organize:
-      usr/lib/: lib/
-      include/: usr/include/
-    prime:
-      - lib/libraft*so*
-      - usr/include/
-
-  sqlite:
-    source: https://github.com/sqlite/sqlite
-    source-type: git
-    source-depth: 1
-    source-tag: version-3.33.0
-    build-attributes: [no-patchelf]
-    build-environment:
-      - CFLAGS: "-DSQLITE_ENABLE_DBSTAT_VTAB=1"
-    plugin: autotools
-    build-packages:
-      - tcl
-    override-build: |-
-      set -ex
-      git log -1 --format=format:%ci%n | sed -e 's/ [-+].*$//;s/ /T/;s/^/D /' > manifest
-      git log -1 --format=format:%H > manifest.uuid
-      cp /usr/share/misc/config.guess .
-      cp /usr/share/misc/config.sub .
-      autoreconf -f -i
-      set +ex
-      snapcraftctl build
-    organize:
-      include/: usr/include/
-    prime:
-      - bin/sqlite3
-      - lib/libsqlite3*so*
-      - usr/include/
-
-  dqlite:
-    after: [raft, sqlite]
-    source: https://github.com/canonical/dqlite
-    source-tag: v1.10.0
-    build-attributes: [no-patchelf]
-    source-type: git
-    plugin: autotools
-    stage-packages:
-      - libuv1
-    build-packages:
-      - libuv1-dev
-      - pkg-config
-    organize:
-      usr/lib/: lib/
-      include/: usr/include/
-    prime:
-      - lib/libdqlite*so*
-      - lib/*/libuv*
-      - usr/include/
-
-  golang:
+  build-deps:
     plugin: nil
     override-build: |
       snap install go --classic
       snap refresh go --channel 1.18
     build-packages:
+      - autoconf
+      - automake
+      - autopoint
+      - autotools-dev
       - btrfs-tools
-      - libseccomp-dev
-      - rsync
       - build-essential
       - curl
       - git
+      - liblz4-dev
+      - libseccomp-dev
+      - libtool
+      - rsync
+
+  raft:
+    after: [build-deps]
+    source: build-scripts/
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: ./build-component.sh raft
+    stage-packages:
+      - libuv1
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
+
+  sqlite:
+    after: [build-deps]
+    source: build-scripts/
+    build-attributes: [no-patchelf]
+    build-packages:
+      - tcl
+    plugin: nil
+    override-build: ./build-component.sh sqlite
+
+  dqlite:
+    after: [sqlite, raft]
+    source: build-scripts/
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: ./build-component.sh dqlite
 
   dqlite-client:
-    after: [sqlite, dqlite, golang]
+    after: [dqlite]
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh dqlite-client
 
   k8s-dqlite:
-    after: [dqlite-client, dqlite, golang]
+    after: [dqlite]
     source: build-scripts/
     plugin: nil
     override-build: ./build-component.sh k8s-dqlite
 
   etcd:
-    after: [golang]
+    after: [build-deps]
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh etcd
 
   traefik:
-    after: [golang]
+    after: [build-deps]
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh traefik
     build-attributes: [no-patchelf]
 
   cni:
-    after: [golang]
+    after: [build-deps]
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh cni
 
   flanneld:
-    after: [golang]
+    after: [build-deps]
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh flanneld
 
   kubernetes:
-    after: [golang]
+    after: [build-deps]
     plugin: nil
     build-attributes: [no-patchelf]
     source: build-scripts/
@@ -242,7 +212,7 @@ parts:
       snapcraftctl set-version "$(components/kubernetes/version.sh)"
 
   helm:
-    after: [golang]
+    after: [build-deps]
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh helm
@@ -275,13 +245,13 @@ parts:
     prime: [-bin/iptables-xml]
 
   migrator:
-    after: [golang]
+    after: [build-deps]
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh migrator
 
   containerd:
-    after: [golang, iptables, runc]
+    after: [build-deps, iptables, runc]
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh containerd
@@ -301,7 +271,7 @@ parts:
 
   runc:
     build-snaps: [go]
-    after: [iptables, golang]
+    after: [iptables, build-deps]
     source: build-scripts/
     plugin: nil
     override-build: ./build-component.sh runc
@@ -336,7 +306,7 @@ parts:
       - -usr/share/man
 
   cluster-agent:
-    after: [golang]
+    after: [build-deps]
     build-attributes: [no-patchelf]
     plugin: nil
     source: build-scripts/
@@ -417,7 +387,7 @@ parts:
       cp -r actions/ "${SNAPCRAFT_PART_INSTALL}/actions"
 
   microk8s-completion:
-    after: [golang]
+    after: [build-deps]
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh microk8s-completion
