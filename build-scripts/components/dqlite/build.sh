@@ -19,5 +19,4 @@ make install DESTDIR="${PWD}/build"
 mkdir -p "${INSTALL}/lib" "${INSTALL}/usr/include"
 
 cp -r "build/usr/local/lib/libdqlite"*"so"* "${INSTALL}/lib/"
-cp -r "build/usr/local/lib/pkgconfig/"*".pc" "${INSTALL}/lib/"
 cp -r "build/usr/local/include/"* "${INSTALL}/usr/include/"
