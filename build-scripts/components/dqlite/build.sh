@@ -1,15 +1,16 @@
 #!/bin/bash
 
-export INSTALL="${1}"
+INSTALL="${1}"
 
 [ ! -f ./configure ] && [ -f ./autogen.sh ] && env NOCONFIGURE=1 ./autogen.sh
 [ ! -f ./configure ] && [ -f ./bootstrap ] && env NOCONFIGURE=1 ./bootstrap
 [ ! -f ./configure ] && autoreconf --install
 
-export SQLITE_CFLAGS="-I${INSTALL}/usr/include"
-export SQLITE_LIBS="-L${INSTALL}/lib -lsqlite3"
-export RAFT_CFLAGS="-I${INSTALL}/usr/include"
-export RAFT_LIBS="-L${INSTALL}/lib -lraft"
+export SQLITE_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include"
+export SQLITE_LIBS="-L${SNAPCRAFT_STAGE}/lib -lsqlite3"
+export RAFT_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include"
+export RAFT_LIBS="-L${SNAPCRAFT_STAGE}/lib -lraft"
+
 ./configure
 
 mkdir -p build
