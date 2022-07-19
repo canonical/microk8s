@@ -27,7 +27,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4
         with:
           commit-message: update list of images used by ${{ matrix.channel }}
-          title: "[${{ matrix.branch }}] Update MicroK8s images"
+          title: "[${{ matrix.channel }}] Update MicroK8s images"
           body: update list of images used by ${{ matrix.channel }}
           reviewers: neoaggelos,ktsakalozos
           branch: auto-update-images/${{ matrix.branch }}
