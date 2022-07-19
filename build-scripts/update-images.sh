@@ -49,4 +49,9 @@ while ! sudo microk8s kubectl wait --for=condition=ready pod/nginx; do
   sleep 3
 done
 
+while ! sudo microk8s kubectl wait -n kube-system --for=jsonpath='{.status.readyReplicas}=1' deploy/coredns; do
+  echo 'waiting for dns'
+  sleep 3
+done
+
 sudo microk8s ctr image ls -q | grep -v sha256 | grep -v nginx:latest | sort > $2
