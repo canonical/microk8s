@@ -60,9 +60,6 @@ apps:
   daemon-proxy:
     command: run-null-daemon
     daemon: simple
-  daemon-k8s-dqlite:
-    command: run-k8s-dqlite-with-args
-    daemon: simple
   dashboard-proxy:
     command: microk8s-dashboard-proxy.wrapper
   kubectl:
@@ -177,12 +174,6 @@ parts:
     plugin: nil
     source: build-scripts/
     override-build: ./build-component.sh dqlite-client
-
-  k8s-dqlite:
-    after: [dqlite]
-    source: build-scripts/
-    plugin: nil
-    override-build: ./build-component.sh k8s-dqlite
 
   etcd:
     after: [build-deps]
