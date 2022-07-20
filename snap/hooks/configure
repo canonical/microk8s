@@ -188,6 +188,15 @@ if ! [ -d "${SNAP_COMMON}/hooks" ]
 then
   cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
 fi
+for event in reconcile reconcile-controlplane reconcile-worker remove post-refresh
+do
+  hooks_d="${SNAP_COMMON}/hooks/${event}.d"
+  mkdir -p "${hooks_d}"
+  for hook in "${SNAP}/default-hooks/${event}.d/"*
+  do
+    cp --preserve=mode "${hook}" "${hooks_d}/"
+  done
+done
 
 # Make sure the server certificate includes the IP we are using
 if [ "$(produce_certs)" == "1" ]

@@ -9,12 +9,6 @@ export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 
 source $SNAP/actions/common/utils.sh
 
-if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
-then
-  echo "api service kicker will not run on a cluster node"
-  exit 0
-fi
-
 if [ -e "${SNAP_DATA}/var/lock/low-memory-guard.lock" ]
 then
 	echo "not starting api service kicker because of low memory guard lock"
@@ -43,7 +37,8 @@ do
       chgrp ${group} ${SNAP_COMMON}/run/containerd.sock || true
     fi
 
-    if ! [ -e "${SNAP_DATA}/var/lock/no-cert-reissue" ] &&
+    if ! [ -e "${SNAP_DATA}/var/lock/clustered.lock" ] &&
+       ! [ -e "${SNAP_DATA}/var/lock/no-cert-reissue" ] &&
        ! grep -E "(--advertise-address|--bind-address)" $SNAP_DATA/args/kube-apiserver &> /dev/null &&
        ip route | grep default &> /dev/null
     then
@@ -76,26 +71,16 @@ do
       fi
     fi
 
-    # Run reconcile hooks
+    # Run common reconcile hooks
     $SNAP/usr/bin/python3 $SNAP/scripts/run-lifecycle-hooks.py reconcile || true
 
-    # If no local-registry-hosting documentation has been installed,
-    # install a help guide that points to the microk8s registry docs.
-    #
-    # Wait until the apiserver is up and is successfully responding to
-    # namespace checks before we check for the registry configmap.
-    if snapctl services microk8s.daemon-apiserver | grep active &> /dev/null ||
-       snapctl services microk8s.daemon-kubelite | grep active &> /dev/null
+    if [ ! -e "${SNAP_DATA}/var/lock/clustered.lock" ]
     then
-      if [ $installed_registry_help -eq 0 ] &&
-         "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get namespace kube-public &> /dev/null
-      then
-        if ! "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get configmap local-registry-hosting -n kube-public &> /dev/null
-        then
-          use_manifest registry/registry-help apply
-        fi
-
-        installed_registry_help=1
-      fi
+      # Run reconcile hooks for control plane nodes
+      $SNAP/usr/bin/python3 $SNAP/scripts/run-lifecycle-hooks.py reconcile-controlplane || true
+    else
+      # Run reconcile hooks for worker nodes
+      $SNAP/usr/bin/python3 $SNAP/scripts/run-lifecycle-hooks.py reconcile-worker || true
     fi
+
 done
