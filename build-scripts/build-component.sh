@@ -36,15 +36,21 @@ git config user.name "MicroK8s builder bot"
 git config user.email "microk8s-builder-bot@canonical.com"
 if echo "${VERSION}" | grep -e rc -e alpha -e beta; then
   if [ -d "${COMPONENT_DIRECTORY}/pre-patches" ]; then
-    git am "${COMPONENT_DIRECTORY}"/pre-patches/*
+    for patch in "${COMPONENT_DIRECTORY}"/pre-patches/*; do
+      git am < "${patch}"
+    done
   fi
 else
   if [ -d "${COMPONENT_DIRECTORY}/patches" ]; then
-    git am "${COMPONENT_DIRECTORY}"/patches/*
+    for patch in "${COMPONENT_DIRECTORY}"/patches/*; do
+      git am < "${patch}"
+    done
   fi
 fi
 if [ "x${STRICT}" == "xtrue" ] && [ -d "${COMPONENT_DIRECTORY}/strict-patches" ]; then
-  git am "${COMPONENT_DIRECTORY}"/strict-patches/*
+    for patch in "${COMPONENT_DIRECTORY}"/strict-patches/*; do
+      git am < "${patch}"
+    done
 fi
 
 bash -xe "${COMPONENT_DIRECTORY}/build.sh" "${INSTALL_DIRECTORY}"
