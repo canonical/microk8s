@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+
+"""
+Update traefik configuration with the list of known apiservers
+"""
+
+from datetime import datetime, timedelta
+import json
+import logging
+import os
+from pathlib import Path
+import sys
+from subprocess import check_output
+
+import yaml
+
+# quick exit if not worker node, or updating list of endpoints is disabled
+WORKER_LOCKFILE = Path(os.path.expandvars("$SNAP_DATA/var/lock/clustered.lock"))
+NO_UPDATE_LOCKFILE = Path(os.path.expandvars("$SNAP_DATA/var/lock/traefik-no-update"))
+if not WORKER_LOCKFILE.exists() or NO_UPDATE_LOCKFILE.exists():
+    sys.exit(0)
+
+
+LAST_UPDATE_LOCKFILE = Path(os.path.expandvars("$SNAP_DATA/var/lock/traefik-last-update"))
+INTERVAL = timedelta(seconds=10)
+TRAEFIK_CONFIG_FILE = Path(os.path.expandvars("$SNAP_DATA/args/traefik/provider.yaml"))
+
+# Exit if before interval
+try:
+    with open(LAST_UPDATE_LOCKFILE, "r") as fin:
+        last = datetime.fromtimestamp(int(fin.read()))
+except (TypeError, ValueError, OSError) as e:
+    last = None
+
+if last is not None and datetime.now() - last <= INTERVAL:
+    sys.exit(0)
+
+# Use the kubelet.config since worker nodes do not have an admin kubeconfig file
+KUBECTL = [
+    os.path.expandvars("$SNAP/microk8s-kubectl.wrapper"),
+    os.path.expandvars("--kubeconfig=$SNAP_DATA/credentials/kubelet.config"),
+]
+
+try:
+    stdout = check_output([*KUBECTL, "get", "endpoints", "kubernetes", "-o=json"])
+    result = json.loads(stdout)
+
+    endpoints = result["subsets"]
+    addresses = [
+        "{}:{}".format(addr, endpoints["ports"][0]["port"]) for addr in endpoints["addresses"]
+    ]
+except (OSError, json.JSONDecodeError, KeyError, IndexError, ValueError, TypeError):
+    logging.exception("Failed to parse list of endpoints from kubernetes service")
+
+# if no addresses were retrieved, skip the update step since something is wrong and we will
+# lock ourselves out of the cluster.
+if not addresses:
+    logging.warning("No endpoints found for kubernetes service")
+    sys.exit(0)
+
+# sort addresses
+servers = [{"address": addr} for addr in sorted(addresses)]
+
+try:
+    with open(TRAEFIK_CONFIG_FILE, "r") as fin:
+        cfg = yaml.safe_load(fin)
+
+    current_servers = cfg["tcp"]["services"]["kube-apiserver"]["loadBalancer"]["servers"]
+
+    if servers != current_servers:
+        print("Updating API servers list from {} to {}".format(current_servers, servers))
+
+    cfg["tcp"]["services"]["kube-apiserver"]["loadBalancer"]["servers"] = servers
+
+    with open(TRAEFIK_CONFIG_FILE, "w") as fout:
+        yaml.safe_dump(cfg, fout)
+
+except (OSError, yaml.error.YAMLError, KeyError):
+    logging.exception("Failed to update the traefik configuration file")
