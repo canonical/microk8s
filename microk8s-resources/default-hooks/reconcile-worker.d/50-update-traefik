@@ -22,7 +22,7 @@ if not WORKER_LOCKFILE.exists() or NO_UPDATE_LOCKFILE.exists():
 
 
 LAST_UPDATE_LOCKFILE = Path(os.path.expandvars("$SNAP_DATA/var/lock/traefik-last-update"))
-INTERVAL = timedelta(seconds=10)
+INTERVAL = timedelta(seconds=30)
 TRAEFIK_CONFIG_FILE = Path(os.path.expandvars("$SNAP_DATA/args/traefik/provider.yaml"))
 
 # Exit if before interval
@@ -45,18 +45,20 @@ try:
     stdout = check_output([*KUBECTL, "get", "endpoints", "kubernetes", "-o=json"])
     result = json.loads(stdout)
 
-    endpoints = result["subsets"]
     addresses = [
-        "{}:{}".format(addr, endpoints["ports"][0]["port"]) for addr in endpoints["addresses"]
+        "{}:{}".format(addr["ip"], subset["ports"][0]["port"])
+        for subset in result["subsets"]
+        for addr in subset["addresses"]
     ]
 except (OSError, json.JSONDecodeError, KeyError, IndexError, ValueError, TypeError):
     logging.exception("Failed to parse list of endpoints from kubernetes service")
+    sys.exit(1)
 
 # if no addresses were retrieved, skip the update step since something is wrong and we will
 # lock ourselves out of the cluster.
 if not addresses:
     logging.warning("No endpoints found for kubernetes service")
-    sys.exit(0)
+    sys.exit(1)
 
 # sort addresses
 servers = [{"address": addr} for addr in sorted(addresses)]
@@ -75,5 +77,9 @@ try:
     with open(TRAEFIK_CONFIG_FILE, "w") as fout:
         yaml.safe_dump(cfg, fout)
 
+    with open(LAST_UPDATE_LOCKFILE, "w") as fout:
+        print(datetime.now().timestamp(), file=fout)
+
 except (OSError, yaml.error.YAMLError, KeyError):
     logging.exception("Failed to update the traefik configuration file")
+    sys.exit(1)
