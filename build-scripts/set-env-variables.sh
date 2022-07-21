@@ -24,7 +24,7 @@ export RUNC_COMMIT="${RUNC_COMMIT:-f46b6ba2c9314cfc8caae24a32ec5fe9ef1059fe}"
 # Set this to the kubernetes fork you want to build binaries from
 export KUBERNETES_REPOSITORY="${KUBERNETES_REPOSITORY:-github.com/kubernetes/kubernetes}"
 
-export KUBE_TRACK="${KUBE_TRACK:-}"
+export KUBE_TRACK="${KUBE_TRACK:-1.24}"
 
 export KUBE_VERSION="${KUBE_VERSION:-}"
 export KUBE_SNAP_BINS="${KUBE_SNAP_BINS:-}"
