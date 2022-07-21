@@ -4,6 +4,6 @@ docker.io/calico/node:v3.19.1
 docker.io/calico/pod2daemon-flexvol:v3.19.1
 docker.io/cdkbot/hostpath-provisioner:1.1.0
 docker.io/coredns/coredns:1.8.0
-k8s.gcr.io/ingress-nginx/controller:v1.0.5
+k8s.gcr.io/ingress-nginx/controller:v1.2.0
 k8s.gcr.io/metrics-server/metrics-server:v0.5.0
 k8s.gcr.io/pause:3.1
