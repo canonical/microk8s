@@ -24,17 +24,24 @@ GIT_REPOSITORY="$(cat "${COMPONENT_DIRECTORY}/repository")"
 GIT_TAG="$("${COMPONENT_DIRECTORY}/version.sh")"
 
 COMPONENT_BUILD_DIRECTORY="${BUILD_DIRECTORY}/${COMPONENT_NAME}"
+
+# cleanup git repository if we cannot git checkout to the build tag
+if [ -d "${COMPONENT_BUILD_DIRECTORY}" ]; then
+  cd "${COMPONENT_BUILD_DIRECTORY}"
+  if ! git checkout "${GIT_TAG}"; then
+    cd "${BUILD_DIRECTORY}"
+    rm -rf "${COMPONENT_BUILD_DIRECTORY}"
+  fi
+fi
+
 if [ ! -d "${COMPONENT_BUILD_DIRECTORY}" ]; then
   git clone "${GIT_REPOSITORY}" --depth 1 -b "${GIT_TAG}" "${COMPONENT_BUILD_DIRECTORY}"
-else
-  cd "${COMPONENT_BUILD_DIRECTORY}"
-  git checkout "${GIT_TAG}"
 fi
 
 cd "${COMPONENT_BUILD_DIRECTORY}"
 git config user.name "MicroK8s builder bot"
 git config user.email "microk8s-builder-bot@canonical.com"
-if echo "${VERSION}" | grep -e rc -e alpha -e beta; then
+if echo "${GIT_TAG}" | grep -e rc -e alpha -e beta; then
   if [ -d "${COMPONENT_DIRECTORY}/pre-patches" ]; then
     for patch in "${COMPONENT_DIRECTORY}"/pre-patches/*; do
       git am < "${patch}"
