@@ -1,0 +1,84 @@
+From f154f915fe39d6b929dbe1e513011fd271fcd12c Mon Sep 17 00:00:00 2001
+From: Angelos Kolaitis <neoaggelos@gmail.com>
+Date: Fri, 15 Jul 2022 15:07:18 +0300
+Subject: [PATCH] microk8s autocompleter script
+
+---
+ cmd/helm/hack_microk8s_autocompleter.go | 51 +++++++++++++++++++++++++
+ cmd/helm/helm.go                        |  2 +-
+ 2 files changed, 52 insertions(+), 1 deletion(-)
+ create mode 100644 cmd/helm/hack_microk8s_autocompleter.go
+
+diff --git a/cmd/helm/hack_microk8s_autocompleter.go b/cmd/helm/hack_microk8s_autocompleter.go
+new file mode 100644
+index 00000000..e819f44b
+--- /dev/null
++++ b/cmd/helm/hack_microk8s_autocompleter.go
+@@ -0,0 +1,51 @@
++// go:build microk8s_hack
++
++package main
++
++import (
++	"bytes"
++	"log"
++	"os"
++	"strings"
++
++	"github.com/spf13/cobra"
++	"helm.sh/helm/v3/pkg/action"
++	"k8s.io/kubectl/pkg/cmd"
++)
++
++func main() {
++	command := &cobra.Command{Use: "microk8s"}
++	command.AddCommand(cmd.NewDefaultKubectlCommand())
++	helmCmd, _ := newRootCmd(&action.Configuration{}, nil, nil)
++	helmCmd.Use = "helm"
++	helm3Cmd, _ := newRootCmd(&action.Configuration{}, nil, nil)
++	helm3Cmd.Use = "helm3"
++	command.AddCommand(&cobra.Command{Use: "addons", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "add-node", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "config", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "enable", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "disable", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(helmCmd)
++	command.AddCommand(helm3Cmd)
++	command.AddCommand(&cobra.Command{Use: "helm3", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "images", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "inspect", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "join", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "refresh-certs", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "remove-node", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "reset", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "start", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "status", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "stop", Run: func(cmd *cobra.Command, args []string) {}})
++	command.AddCommand(&cobra.Command{Use: "version", Run: func(cmd *cobra.Command, args []string) {}})
++
++	var b bytes.Buffer
++	if err := command.GenBashCompletion(&b); err != nil {
++		log.Fatalf("failed to generate completion script: %v", err)
++	}
++	completionScript := b.String()
++	completionScript = strings.ReplaceAll(completionScript, `args=("${words[@]:1}")`, `args=("${words[@]:2}")`)
++	completionScript = strings.ReplaceAll(completionScript, `requestComp="${words[0]} __completeNoDesc ${args[*]}"`, `requestComp="${words[0]} ${words[1]} __completeNoDesc ${args[*]}"`)
++
++	os.WriteFile("microk8s.bash", []byte(completionScript), 0644)
++}
+diff --git a/cmd/helm/helm.go b/cmd/helm/helm.go
+index 15b0d5c7..6499d4ca 100644
+--- a/cmd/helm/helm.go
++++ b/cmd/helm/helm.go
+@@ -55,7 +55,7 @@ func warning(format string, v ...interface{}) {
+ 	fmt.Fprintf(os.Stderr, format, v...)
+ }
+ 
+-func main() {
++func Main() {
+ 	// Setting the name of the app for managedFields in the Kubernetes client.
+ 	// It is set here to the full name of "helm" so that renaming of helm to
+ 	// another name (e.g., helm2 or helm3) does not change the name of the
+-- 
+2.25.1
+

@@ -343,7 +343,7 @@ def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
     :param user: the user to use al login
     """
     snap_path = os.environ.get("SNAP")
-    config_template = "{}/microk8s-resources/{}".format(snap_path, "kubelet.config.template")
+    config_template = "{}/{}".format(snap_path, "kubelet.config.template")
     config = "{}/credentials/{}".format(snapdata_path, filename)
     shutil.copyfile(config, "{}.backup".format(config))
     try_set_file_permissions("{}.backup".format(config))
@@ -373,7 +373,7 @@ def create_x509_kubeconfig(ca, master_ip, api_port, filename, user, path_to_cert
     :param path_to_cert_key: path to certificate key file
     """
     snap_path = os.environ.get("SNAP")
-    config_template = "{}/microk8s-resources/{}".format(snap_path, "client-x509.config.template")
+    config_template = "{}/{}".format(snap_path, "client-x509.config.template")
     config = "{}/credentials/{}".format(snapdata_path, filename)
     shutil.copyfile(config, "{}.backup".format(config))
     try_set_file_permissions("{}.backup".format(config))
@@ -628,7 +628,7 @@ def create_admin_kubeconfig(ca, ha_admin_token=None):
     else:
         token = ha_admin_token
     assert token is not None
-    config_template = "{}/microk8s-resources/{}".format(snap_path, "client.config.template")
+    config_template = "{}/{}".format(snap_path, "client.config.template")
     config = "{}/credentials/client.config".format(snapdata_path)
     shutil.copyfile(config, "{}.backup".format(config))
     try_set_file_permissions("{}.backup".format(config))

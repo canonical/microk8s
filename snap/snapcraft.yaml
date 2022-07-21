@@ -1,5 +1,5 @@
 name: microk8s
-adopt-info: microk8s
+adopt-info: kubernetes
 summary: Kubernetes for workstations and appliances
 description: |-
   MicroK8s is a small, fast, secure, single node Kubernetes that installs on
@@ -15,6 +15,7 @@ base: core18
 apps:
   microk8s:
     command: microk8s.wrapper
+    completer: microk8s.bash
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple
@@ -105,8 +106,10 @@ apps:
     command: microk8s-linkerd.wrapper
   helm:
     command: microk8s-helm.wrapper
+    completer: helm.bash
   helm3:
     command: microk8s-helm3.wrapper
+    completer: helm3.bash
   cilium:
     command: microk8s-cilium.wrapper
   dbctl:
@@ -115,343 +118,143 @@ apps:
     command: microk8s-version.wrapper
 
 parts:
-  raft:
-    source: https://github.com/canonical/raft
-    source-tag: v0.13.0
-    build-attributes: [no-patchelf]
-    source-type: git
-    plugin: autotools
-    stage-packages:
-      - libuv1
+  build-deps:
+    plugin: nil
+    override-build: |
+      snap install go --classic
+      snap refresh go --channel 1.18
     build-packages:
-      - liblz4-dev
-    organize:
-      usr/lib/: lib/
-      include/: usr/include/
-    prime:
-      - lib/libraft*so*
-      - usr/include/
-
-  sqlite:
-    source: https://github.com/sqlite/sqlite
-    source-type: git
-    source-depth: 1
-    source-tag: version-3.33.0
-    build-attributes: [no-patchelf]
-    build-environment:
-      - CFLAGS: "-DSQLITE_ENABLE_DBSTAT_VTAB=1"
-    plugin: autotools
-    build-packages:
-      - tcl
-    override-build: |-
-      set -ex
-      git log -1 --format=format:%ci%n | sed -e 's/ [-+].*$//;s/ /T/;s/^/D /' > manifest
-      git log -1 --format=format:%H > manifest.uuid
-      cp /usr/share/misc/config.guess .
-      cp /usr/share/misc/config.sub .
-      autoreconf -f -i
-      set +ex
-      snapcraftctl build
-    organize:
-      include/: usr/include/
-    prime:
-      - bin/sqlite3
-      - lib/libsqlite3*so*
-      - usr/include/
-
-  dqlite:
-    after:
-      - raft
-      - sqlite
-    source: https://github.com/canonical/dqlite
-    source-tag: v1.10.0
-    build-attributes: [no-patchelf]
-    source-type: git
-    plugin: autotools
-    stage-packages:
-      - libuv1
-    build-packages:
-      - libuv1-dev
-      - pkg-config
-    organize:
-      usr/lib/: lib/
-      include/: usr/include/
-    prime:
-      - lib/libdqlite*so*
-      - lib/*/libuv*
-      - usr/include/
-
-  dqlite-client:
-    build-snaps: [go]
-    after: [sqlite, dqlite]
-    source: build-scripts/
-    plugin: dump
-    override-build: |
-      set -eux
-      snap refresh go --channel=1.15/stable || true
-      go version
-      export TAG=v1.11.1
-      export GOPATH=${SNAPCRAFT_STAGE}
-      export CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/"
-      export CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib"
-      export CGO_LDFLAGS_ALLOW="-Wl,-z,now"
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      mkdir -p $GOPATH/src/github.com/canonical/
-      (
-        cd $GOPATH/src/github.com/canonical/
-        rm -rf go-dqlite
-        git clone https://github.com/canonical/go-dqlite
-        cd go-dqlite
-        git checkout tags/"${TAG}" -b build
-        go build -v -tags libsqlite3 ./cmd/dqlite
-        cd ..
-      )
-      cp $GOPATH/src/github.com/canonical/go-dqlite/dqlite $SNAPCRAFT_PART_INSTALL/bin/
-
-  k8s-dqlite:
-    build-snaps: [go]
-    after: [dqlite-client, dqlite]
-    source: build-scripts/
-    plugin: dump
-    override-build: |
-      set -eux
-      . $SNAPCRAFT_PART_SRC/set-env-variables.sh
-      snap refresh go --channel=1.15/stable || true
-      go version
-      export GOPATH=${SNAPCRAFT_STAGE}
-      export CGO_LDFLAGS_ALLOW="-Wl,-z,now"
-      export CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/"
-      export CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib"
-      mkdir -p $GOPATH/src/github.com/canonical/
-      (
-        cd $GOPATH/src/github.com/canonical/
-        rm -rf k8s-dqlite
-        git clone https://github.com/canonical/k8s-dqlite
-        cd k8s-dqlite
-        git checkout tags/"${K8S_DQLITE_TAG}" -b build
-        go build  -tags libsqlite3,dqlite .
-        cd ..
-      )
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      cp $GOPATH/src/github.com/canonical/k8s-dqlite/k8s-dqlite $SNAPCRAFT_PART_INSTALL/bin/
-    stage-packages:
-      - openssl
-
-  etcd:
-    plugin: dump
-    source: build-scripts/
-    build-snaps: [go]
-    override-build: |
-      . ./set-env-variables.sh
-      case ${SNAPCRAFT_ARCH_TRIPLET%%-*} in
-      x86_64|aarch64)
-        echo "Supported arch by etcd - use official binary"
-        curl -LO https://github.com/etcd-io/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-$KUBE_ARCH.tar.gz
-        tar -xzvf etcd-*.tar.gz --strip-components=1
-        ;;
-      *)
-        echo "Unsupported arch by etcd - build from sources"
-        curl -LO https://github.com/etcd-io/etcd/archive/${ETCD_VERSION}.tar.gz
-        tar -xzf *.tar.gz
-        cd etcd-*
-        go mod vendor
-        ./build
-        cp -av bin/* ../
-        echo "End of build"
-      esac
-      snapcraftctl build
-    stage:
-      - etcd
-      - etcdctl
-
-  traefik:
-    plugin: dump
-    source: build-scripts/
-    build-snaps: [go]
-    build-attributes: [no-patchelf]
-    override-build: |
-      . ./set-env-variables.sh
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      case ${SNAPCRAFT_ARCH_TRIPLET%%-*} in
-      x86_64|aarch64)
-        echo "Supported arch by traefik - use official binary"
-        curl -LO https://github.com/traefik/traefik/releases/download/${TRAEFIK_VERSION}/traefik_${TRAEFIK_VERSION}_linux_${KUBE_ARCH}.tar.gz
-        tar -xzvf traefik_*.tar.gz
-        cp traefik $SNAPCRAFT_PART_INSTALL/bin/
-        ;;
-      *)
-        echo "Unsupported arch by traefik - building from sources"
-        snap refresh go --channel=1.16/stable || true
-        go version
-        export GOPATH=$(realpath ../go)
-        mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-        rm -rf $GOPATH
-        mkdir -p $GOPATH
-        curl -LO https://github.com/traefik/traefik/releases/download/${TRAEFIK_VERSION}/traefik-${TRAEFIK_VERSION}.src.tar.gz
-        mkdir -p $GOPATH/src/github.com/traefik/traefik
-        mv traefik*.tar.gz $GOPATH/src/github.com/traefik/traefik
-        (
-          cd $GOPATH/src/github.com/traefik/traefik
-          GO111MODULE=off go get github.com/containous/go-bindata/...
-          export GO111MODULE=on
-          tar -zxvf traefik*.tar.gz
-          rm -rf static/ autogen/;
-          #make generate-webui
-          export PATH=$PATH:$GOPATH/bin
-          go generate
-          go build ./cmd/traefik
-        )
-        cp $GOPATH/src/github.com/traefik/traefik/traefik $SNAPCRAFT_PART_INSTALL/bin/
-      esac
-    stage:
-      - bin/traefik
-
-  cni:
-    plugin: dump
-    source: build-scripts/
-    override-build: |
-      . ./set-env-variables.sh
-      rm -rf cni*
-      curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-$KUBE_ARCH-${CNI_VERSION}.tgz
-      mkdir cni
-      tar -xzvf cni-*.tgz -C cni/
-      snapcraftctl build
-    organize:
-      ./cni/*: opt/cni/bin/
-    filesets:
-      bins: [./opt/cni/bin/*]
-    stage: [$bins]
-
-  flanneld:
-    plugin: dump
-    source: build-scripts/
-    override-build: |
-      . ./set-env-variables.sh
-      curl -LO https://github.com/coreos/flannel/releases/download/${FLANNELD_VERSION}/flannel-${FLANNELD_VERSION}-linux-${KUBE_ARCH}.tar.gz
-      tar -xzvf flannel-*.tar.gz
-      snapcraftctl build
-    organize:
-      flanneld: opt/cni/bin/
-    stage:
-      - opt/cni/bin/flanneld
-
-  k8s-binaries:
-    after: [dqlite]
-    build-snaps: [go]
-    plugin: dump
-    build-attributes: [no-patchelf]
-    source: build-scripts/
-    build-packages:
+      - autoconf
+      - automake
+      - autopoint
+      - autotools-dev
+      - bison
+      - btrfs-tools
       - build-essential
       - curl
+      - flex
       - git
-    override-build: |
-      set -eux
-      snap refresh go --channel=1.18/stable || true
-      . ./set-env-variables.sh
+      - libjansson-dev
+      - liblz4-dev
+      - libnetfilter-conntrack-dev
+      - libnetfilter-conntrack3
+      - libnfnetlink-dev
+      - libseccomp-dev
+      - libtool
+      - libuv1-dev
+      - pkg-config
+      - rsync
+      - tcl
 
-      # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
-      # if "${KUBE_SNAP_BINS}" does not exist but it is set we will put the k8s binaries there
-      # if "${KUBE_SNAP_BINS}" does not exist and it is not set we do not need to keep the created binaries
-      if [ ! -e "${KUBE_SNAP_BINS}" ]; then
-        if [ -z "${KUBE_SNAP_BINS}" ]; then
-          . ./set-env-binaries-location.sh
-        fi
-        echo "Building k8s binaries"
-        . ./build-k8s-binaries.sh
-      else
-        echo "Binaries provided in $KUBE_SNAP_BINS"
-      fi
-      mkdir -p bins/
-      cp build/kube_bins/$KUBERNETES_TAG/$KUBE_ARCH/* bins/
-
-      # Add bash completion for microk8s kubectl.
-      bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
-      bins/kubectl completion bash | sed "s/complete -o default -F __start_kubectl kubectl/complete -o default -F __start_kubectl microk8s.kubectl/g" | sed "s/complete -o default -o nospace -F __start_kubectl kubectl/complete -o default -o nospace -F __start_kubectl kubectl/g" > kubectl.bash
-
-      snapcraftctl build
-    organize:
-      bins/*: .
+  raft:
+    after: [build-deps]
+    source: build-scripts/
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: ./build-component.sh raft
+    stage-packages:
+      - libuv1
     stage:
-      - kubelite
-      - kubectl
-      - kubectl.bash
+      - -usr/share/doc
+      - -usr/share/man
+
+  sqlite:
+    after: [build-deps]
+    source: build-scripts/
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: ./build-component.sh sqlite
+
+  dqlite:
+    after: [sqlite, raft]
+    source: build-scripts/
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: ./build-component.sh dqlite
+
+  dqlite-client:
+    after: [dqlite]
+    plugin: nil
+    source: build-scripts/
+    override-build: ./build-component.sh dqlite-client
+
+  k8s-dqlite:
+    after: [dqlite]
+    source: build-scripts/
+    plugin: nil
+    override-build: ./build-component.sh k8s-dqlite
+
+  etcd:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/
+    override-build: ./build-component.sh etcd
+
+  traefik:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/
+    override-build: ./build-component.sh traefik
+    build-attributes: [no-patchelf]
+
+  cni:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/
+    override-build: ./build-component.sh cni
+
+  flanneld:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/
+    override-build: ./build-component.sh flanneld
+
+  kubernetes:
+    after: [build-deps]
+    plugin: nil
+    build-attributes: [no-patchelf]
+    source: build-scripts/
+    override-build: |
+      ./build-component.sh kubernetes
+      snapcraftctl set-version "$(components/kubernetes/version.sh)"
+
+  helm:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/
+    override-build: ./build-component.sh helm
 
   libmnl:
+    after: [build-deps]
     plugin: autotools
     source: https://www.netfilter.org/pub/libmnl/libmnl-1.0.4.tar.bz2
 
   libnftnl:
-    after:
-      - libmnl
+    after: [libmnl]
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
-    build-packages:
-      - libjansson-dev
 
   iptables:
-    after:
-      - libnftnl
+    after: [libnftnl]
     source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
     plugin: autotools
-    build-packages:
-      - bison
-      - flex
-      - libnfnetlink-dev
-      - libnetfilter-conntrack3
-      - libnetfilter-conntrack-dev
     configflags:
       - "--disable-shared"
       - "--enable-static"
     prime: [-bin/iptables-xml]
 
   migrator:
-    build-snaps: [go]
-    source: https://github.com/canonical/go-migrator
-    source-type: git
-    plugin: go
-    go-channel: 1.15/stable
-    go-importpath: github.com/canonical/go-migrator
-    build-packages:
-      - gcc
-    prime:
-      - bin/migrator
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/
+    override-build: ./build-component.sh migrator
 
   containerd:
-    build-snaps: [go]
-    after: [iptables, runc]
-    build-attributes: [no-patchelf]
+    after: [runc]
+    plugin: nil
     source: build-scripts/
-    plugin: dump
-    build-packages:
-      - btrfs-tools
-      - libseccomp-dev
-    override-build: |
-      set -eux
-      . $SNAPCRAFT_PART_SRC/set-env-variables.sh
-      snap refresh go --channel=1.18/stable || true
-      go version
-      export GOPATH=$(realpath ../go)
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-
-      # Build containerd
-      rm -rf $GOPATH
-      mkdir -p $GOPATH
-      git clone https://github.com/containerd/containerd $GOPATH/containerd
-      (
-        cd $GOPATH/containerd
-        git checkout -f ${CONTAINERD_COMMIT}
-        # building the btrfs driver can be disabled via the
-        # build tag no_btrfs, removing this dependency
-        make
-      )
-      cp $GOPATH/containerd/bin/* $SNAPCRAFT_PART_INSTALL/bin/
-      rm $SNAPCRAFT_PART_INSTALL/bin/containerd-stress
-
-      # Assemble the snap
-      snapcraftctl build
-    organize:
-      containerd/install/bin/*: bin/
+    override-build: ./build-component.sh containerd
+    build-attributes: [no-patchelf]
     stage-packages:
       - libnss-myhostname
       - libnss-resolve
@@ -462,45 +265,17 @@ parts:
       - -sbin/xtables-multi
       - -sbin/iptables*
       - -lib/xtables
+      - -usr/share/doc
+      - -usr/share/man
 
   runc:
-    build-snaps: [go]
-    after: [iptables]
+    after: [iptables, build-deps]
     source: build-scripts/
-    plugin: dump
-    build-packages:
-      - btrfs-tools
-      - libseccomp-dev
-    override-build: |
-      set -eux
-      . $SNAPCRAFT_PART_SRC/set-env-variables.sh
-
-      snap refresh go --channel=1.18/stable || true
-      go version
-      export GOPATH=$(realpath ../go)
-
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      if [ -d ${GOPATH}/runc ]; then
-        rm -rf ${GOPATH}/runc
-      fi
-      git clone https://github.com/opencontainers/runc ${GOPATH}/runc
-      (
-        cd $GOPATH/runc
-        git checkout ${RUNC_COMMIT}
-        make BUILDTAGS='seccomp apparmor'
-      )
-      cp $GOPATH/runc/runc $SNAPCRAFT_PART_INSTALL/bin/
-
-      # Assemble the snap
-      snapcraftctl build
-    stage:
-      - -sbin/xtables-multi
-      - -sbin/iptables*
-      - -lib/xtables
+    plugin: nil
+    override-build: ./build-component.sh runc
 
   bash-utils:
-    source: snap
-    plugin: dump
+    plugin: nil
     stage-packages:
       - aufs-tools
       - coreutils
@@ -517,61 +292,39 @@ parts:
       - libatm1
       - members
       - net-tools
+      - openssl
       - sed
       - socat
       - squashfs-tools
       - tar
       - util-linux
       - zfsutils-linux
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
 
   cluster-agent:
-    build-snaps: [go]
-    build-packages: [make]
+    after: [build-deps]
     build-attributes: [no-patchelf]
-    plugin: dump
-    source: .
-    override-build: |
-      set -eux
-      snap refresh go --channel=1.18/stable || true
-
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      . build-scripts/set-env-variables.sh
-
-      go version
-      export GOPATH=$(realpath ../go)
-
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      if [ -d ${GOPATH}/cluster-agent ]; then
-        rm -rf ${GOPATH}/cluster-agent
-      fi
-      git clone ${CLUSTER_AGENT_REPO} -b ${CLUSTER_AGENT_TAG} ${GOPATH}/cluster-agent
-      (
-        cd ${GOPATH}/cluster-agent
-        make cluster-agent
-      )
-      cp ${GOPATH}/cluster-agent/cluster-agent $SNAPCRAFT_PART_INSTALL/bin
-
-      # Assemble the snap
-      snapcraftctl build
+    plugin: nil
+    source: build-scripts/
+    override-build: ./build-component.sh cluster-agent
 
   microk8s-addons:
-    plugin: dump
+    plugin: nil
     build-attributes: [no-patchelf]
-    build-packages:
-      - python3
-      - python3-yaml
-      - python3-click
-      - git
-    source: .
+    source: build-scripts/
     override-build: |
       set -eux
 
-      . build-scripts/set-env-variables.sh
+      . ./addon-repositories.sh
 
-      if [ -d "addons" ]; then
+      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
+        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      fi
+      if [ -d addons ]; then
         rm -rf addons
       fi
-      mkdir -p addons
 
       IFS=';'
       echo "${ADDONS_REPOS}" | while read line; do
@@ -585,72 +338,73 @@ parts:
       done
       echo "${ADDONS_REPOS_ENABLED}" > addons/.auto-add
 
-      snapcraftctl build
+      cp -r "addons" "${SNAPCRAFT_PART_INSTALL}/addons"
+
+  microk8s-scripts:
+    plugin: nil
+    source: scripts/
+    override-build: |
+      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
+        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      fi
+
+      cp -r . "${SNAPCRAFT_PART_INSTALL}/scripts"
+      cp inspect.sh "${SNAPCRAFT_PART_INSTALL}/inspect.sh"
+
+  microk8s-upgrade-scripts:
+    plugin: nil
+    source: upgrade-scripts/
+    override-build: |
+      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
+        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      fi
+
+      cp -r . "${SNAPCRAFT_PART_INSTALL}/upgrade-scripts"
 
   microk8s:
-    plugin: dump
-    build-attributes: [no-patchelf]
-    build-packages:
-      - make
-      - mercurial
-      - git
-      - rsync
-      - openssl
-      - file
-      - dpkg
-    source: .
-    prime:
-      - -README*
-      - -installer*
-      - -tests*
-      - -docs*
-      - -build*
-      - -go*
-      - -snap*
+    plugin: nil
+    source: microk8s-resources/
     override-build: |
-      set -eux
+      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
+        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      fi
 
-      . build-scripts/set-env-variables.sh
+      cp -r default-args "${SNAPCRAFT_PART_INSTALL}/default-args"
+      cp -r default-hooks "${SNAPCRAFT_PART_INSTALL}/default-hooks"
+      cp -r certs "${SNAPCRAFT_PART_INSTALL}/certs"
+      cp -r certs-beta "${SNAPCRAFT_PART_INSTALL}/certs-beta"
 
-      snapcraftctl set-version "${KUBE_VERSION}"
+      cp containerd-profile "${SNAPCRAFT_PART_INSTALL}/containerd-profile"
 
-      echo "Setting default daemon configs"
-      cp -r $KUBE_SNAP_ROOT/microk8s-resources/default-args .
+      cp client.config "${SNAPCRAFT_PART_INSTALL}/client.config"
+      cp client.config.template "${SNAPCRAFT_PART_INSTALL}/client.config.template"
+      cp kubelet.config.template "${SNAPCRAFT_PART_INSTALL}/kubelet.config.template"
+      cp client-x509.config.template "${SNAPCRAFT_PART_INSTALL}/client-x509.config.template"
 
-      echo "Building certs"
-      cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs .
-      cp -r $KUBE_SNAP_ROOT/microk8s-resources/certs-beta .
+      cp -r wrappers/* "${SNAPCRAFT_PART_INSTALL}/"
+      cp -r actions/ "${SNAPCRAFT_PART_INSTALL}/actions"
 
-      echo "Preparing containerd"
-      cp $KUBE_SNAP_ROOT/microk8s-resources/containerd-profile .
-
-      echo "Preparing user config"
-      cp $KUBE_SNAP_ROOT/microk8s-resources/client.config.template .
-
-      echo "Creating commands and wrappers"
-      cp $KUBE_SNAP_ROOT/microk8s-resources/wrappers/* .
-
-      cp -r $KUBE_SNAP_ROOT/microk8s-resources/actions .
-
-      echo "Creating inspect hook"
-      cp $KUBE_SNAP_ROOT/scripts/inspect.sh .
-
-      snapcraftctl build
+  microk8s-completion:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/
+    override-build: ./build-component.sh microk8s-completion
 
   python-requirements:
     plugin: python
     python-version: python3
-    source: .
     python-packages:
       - PyYAML == 5.3.1
       - netifaces == 0.10.9
       - jsonschema == 4.0.0
     stage-packages:
-      - openssl
       - python3-openssl
       - python3-requests
       - python3-click
       - python3-dateutil
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
 
 slots:
   microk8s:

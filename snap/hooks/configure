@@ -48,6 +48,7 @@ fi
 # and make sure the respective services use them.
 # Without this patch the user would have to remove and reainstall microk8s.
 # This patch can be removed at a later stage.
+# TODO(neoaggelos): investigate if this is needed
 if [ ! -d ${SNAP_DATA}/certs ] && grep -e "\-\-client-ca-file=\${SNAP}/certs/ca.crt" ${SNAP_DATA}/args/kube-apiserver
 then
   echo "Patching certificates location"
@@ -65,6 +66,7 @@ then
 fi
 
 #Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
+# TODO(neoaggelos): investigate if this is needed
 if [ ! -f ${SNAP_DATA}/certs/csr.conf.template ]
 then
    cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
@@ -114,11 +116,12 @@ mkdir -p ${SNAP_DATA}/tmp/
 
 # This will allow us to refresh the snap to the more secure version.
 # We need to make sure the client certificate used in microk8s kubectl is available under $SNAP_DATA
+# TODO(neoaggelos): investigate whether this is needed
 if [ ! -f ${SNAP_DATA}/credentials/client.config ]
 then
   echo "Patching client config location"
   mkdir -p ${SNAP_DATA}/credentials/
-  cp ${SNAP}/microk8s-resources/client.config ${SNAP_DATA}/credentials/
+  cp ${SNAP}/client.config ${SNAP_DATA}/credentials/
 fi
 
 # copy kubectl-env
@@ -183,7 +186,7 @@ fi
 # Install default-hooks
 if ! [ -d "${SNAP_COMMON}/hooks" ]
 then
-  cp -r --preserve=mode ${SNAP}/microk8s-resources/default-hooks ${SNAP_COMMON}/hooks
+  cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
 fi
 
 # Make sure the server certificate includes the IP we are using

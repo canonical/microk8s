@@ -1,15 +1,3 @@
 #!/bin/bash
 
-set -eu
-
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-
-if [ ! -f "${SNAP_DATA}/bin/helm" ]; then
-  echo "Helm not available, try enabling it with 'microk8s enable helm'" >&2
-  exit 0
-fi
-
-source $SNAP/actions/common/utils.sh
-"${SNAP_DATA}/bin/helm" --kubeconfig="${SNAP_DATA}"/credentials/client.config "$@"
+"${SNAP}/bin/helm" --kubeconfig="${SNAP_DATA}"/credentials/client.config "$@"

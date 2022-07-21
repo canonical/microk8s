@@ -73,7 +73,7 @@ def rebuild_client_config():
         print("Error, could not locate admin token. Resetting the node failed.")
         exit(2)
 
-    config_template = "{}/microk8s-resources/{}".format(snap_path, "client.config.template")
+    config_template = "{}/{}".format(snap_path, "client.config.template")
     config = "{}/credentials/client.config".format(snapdata_path)
     shutil.copyfile(config, "{}.backup".format(config))
     try_set_file_permissions("{}.backup".format(config))
@@ -239,7 +239,7 @@ def reinit_cluster():
         hostname = socket.gethostname()  # type: str
         ip = "127.0.0.1"  # type: str
         shutil.copy(
-            "{}/microk8s-resources/certs/csr-dqlite.conf.template".format(snap_path),
+            "{}/certs/csr-dqlite.conf.template".format(snap_path),
             "{}/var/tmp/csr-dqlite.conf".format(snapdata_path),
         )
         subprocess.check_call(
