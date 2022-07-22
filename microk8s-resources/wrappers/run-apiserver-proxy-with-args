@@ -6,7 +6,10 @@ export LD_LIBRARY_PATH="$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/
 
 source $SNAP/actions/common/utils.sh
 
-exit_if_service_not_expected_to_start apiserver-proxy
+if ! [ -e "$SNAP_DATA/var/lock/clustered.lock" ]; then
+  echo "Not a worker node, exitting"
+  exit 0
+fi
 
 if ! [ -e "$SNAP_DATA/args/apiserver-proxy" ]
 then

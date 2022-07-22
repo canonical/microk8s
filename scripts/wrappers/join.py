@@ -400,7 +400,6 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, hostname_overr
     create_x509_kubeconfig(
         ca,
         "127.0.0.1",
-        "16443",
         "proxy.config",
         "kubeproxy",
         cert["certificate_location"],
@@ -429,7 +428,6 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     create_x509_kubeconfig(
         ca,
         "127.0.0.1",
-        "16443",
         "kubelet.config",
         "kubelet",
         cert["certificate_location"],

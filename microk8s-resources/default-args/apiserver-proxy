@@ -1,4 +1,3 @@
 --config ${SNAP_DATA}/args/apiserver-proxy-config
---kubeconfig ${SNAP_DATA}/args/kubelet.config
---refresh-interval 5m
---listen 127.0.0.1:16443
+--kubeconfig ${SNAP_DATA}/credentials/kubelet.config
+--refresh-interval 30s
