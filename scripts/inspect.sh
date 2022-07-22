@@ -449,7 +449,7 @@ svc_control_plane_kicker="microk8s.daemon-control-plane-kicker"
 svc_flanneld="microk8s.daemon-flanneld"
 svc_etcd="microk8s.daemon-etcd"
 svc_dqlite="microk8s.daemon-k8s-dqlite"
-svc_traefik="microk8s.daemon-traefik"
+svc_api_server_proxy="microk8s.daemon-apiserver-proxy"
 svc_api_server_kicker="microk8s.daemon-apiserver-kicker"
 
 if ! is_strict
@@ -466,7 +466,7 @@ then
   svc_flanneld="snap.${svc_flanneld}"
   svc_etcd="snap.${svc_etcd}"
   svc_dqlite="snap.${svc_dqlite}"
-  svc_traefik="snap.${svc_traefik}"
+  svc_api_server_proxy="snap.${svc_api_server_proxy}"
   svc_api_server_kicker="snap.${svc_api_server_kicker}"
 fi
 
@@ -492,9 +492,9 @@ else
   check_service $svc_dqlite
 fi
 
-if ! [ -e "${SNAP_DATA}/var/lock/no-traefik" ]
+if ! [ -e "${SNAP_DATA}/var/lock/no-apiserver-proxy" ]
 then
-  check_service $svc_traefik
+  check_service $svc_api_server_proxy
 fi
 
 if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ]

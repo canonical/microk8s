@@ -139,12 +139,12 @@ then
   cp ${SNAP}/default-args/kubectl ${SNAP_DATA}/args/kubectl
 fi
 
-# copy trafik
-if [ ! -e ${SNAP_DATA}/args/traefik ]
+# copy apiserver-proxy
+if [ ! -e ${SNAP_DATA}/args/apiserver-proxy ]
 then
-  echo "Making sure we have traefik configuration"
-  cp -r ${SNAP}/default-args/traefik ${SNAP_DATA}/args/
-  set_service_not_expected_to_start traefik
+  echo "Making sure we have apiserver-proxy configuration"
+  cp -r ${SNAP}/default-args/apiserver-proxy ${SNAP_DATA}/args/
+  set_service_not_expected_to_start apiserver-proxy
 fi
 
 # Upgrading to containerd

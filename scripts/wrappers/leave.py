@@ -37,12 +37,11 @@ def reset_current_dqlite_worker_installation():
     Take a node out of a cluster
     """
     print("Configuring services.", flush=True)
-    disable_traefik()
+    disable_apiserver_proxy()
     os.remove(ca_cert_file)
 
     service("stop", "apiserver")
     service("stop", "k8s-dqlite")
-    time.sleep(10)
     rebuild_client_config()
 
     print("Generating new cluster certificates.", flush=True)
@@ -95,15 +94,15 @@ def rebuild_client_config():
         try_set_file_permissions(config)
 
 
-def disable_traefik():
+def disable_apiserver_proxy():
     """
-    Stop traefik
+    Stop apiserver-proxy
     """
     lock_path = os.path.expandvars("${SNAP_DATA}/var/lock")
-    lock = "{}/no-traefik".format(lock_path)
+    lock = "{}/no-apiserver-proxy".format(lock_path)
     if not os.path.exists(lock):
         open(lock, "a").close()
-    service("stop", "traefik")
+    service("stop", "apiserver-proxy")
 
 
 def unmark_worker_node():

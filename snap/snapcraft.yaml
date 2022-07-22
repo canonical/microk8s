@@ -39,8 +39,8 @@ apps:
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
-  daemon-traefik:
-    command: run-traefik-with-args
+  daemon-apiserver-proxy:
+    command: run-apiserver-proxy-with-args
     daemon: simple
   daemon-control-plane-kicker:
     command: run-null-daemon
@@ -189,13 +189,6 @@ parts:
     plugin: nil
     source: build-scripts/components/etcd
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh etcd
-
-  traefik:
-    after: [build-deps]
-    plugin: nil
-    source: build-scripts/components/traefik
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh traefik
-    build-attributes: [no-patchelf]
 
   cni:
     after: [build-deps]

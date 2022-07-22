@@ -1,0 +1,18 @@
+#!/bin/bash
+set -ex
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+ARCH="$($SNAP/bin/uname -m)"
+export LD_LIBRARY_PATH="$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+
+source $SNAP/actions/common/utils.sh
+
+exit_if_service_not_expected_to_start apiserver-proxy
+
+if ! [ -e "$SNAP_DATA/args/apiserver-proxy" ]
+then
+  exit 0
+fi
+
+# This is really the only way I could find to get the args passed in correctly.
+declare -a args="($(cat $SNAP_DATA/args/apiserver-proxy))"
+exec "$SNAP/bin/cluster-agent" apiserver-proxy "${args[@]}"
