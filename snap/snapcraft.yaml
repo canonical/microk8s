@@ -315,33 +315,8 @@ parts:
 
   microk8s-addons:
     plugin: nil
-    build-attributes: [no-patchelf]
-    source: build-scripts/
-    override-build: |
-      set -eux
-
-      . ./addon-repositories.sh
-
-      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
-        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
-      fi
-      if [ -d addons ]; then
-        rm -rf addons
-      fi
-
-      IFS=';'
-      echo "${ADDONS_REPOS}" | while read line; do
-        if [ -z "${line}" ];
-          then continue
-        fi
-        name="$(echo ${line} | cut -f1 -d',')"
-        repository="$(echo ${line} | cut -f2 -d',')"
-        reference="$(echo ${line} | cut -f3 -d',')"
-        git clone "${repository}" -b "${reference}" "addons/${name}"
-      done
-      echo "${ADDONS_REPOS_ENABLED}" > addons/.auto-add
-
-      cp -r "addons" "${SNAPCRAFT_PART_INSTALL}/addons"
+    source: build-scripts/addons
+    override-build: ./repositories.sh "${SNAPCRAFT_PART_INSTALL}"
 
   microk8s-scripts:
     plugin: nil
