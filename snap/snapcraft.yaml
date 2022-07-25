@@ -273,6 +273,7 @@ parts:
   runc:
     after: [iptables, build-deps]
     source: build-scripts/components/runc
+    build-attributes: [no-patchelf]
     plugin: nil
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh runc
 
