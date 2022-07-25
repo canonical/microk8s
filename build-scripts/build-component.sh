@@ -60,4 +60,4 @@ if [ "x${STRICT}" == "xtrue" ] && [ -d "${COMPONENT_DIRECTORY}/strict-patches" ]
     done
 fi
 
-bash -xe "${COMPONENT_DIRECTORY}/build.sh" "${INSTALL_DIRECTORY}"
+bash -xe "${COMPONENT_DIRECTORY}/build.sh" "${INSTALL_DIRECTORY}" "${GIT_TAG}"

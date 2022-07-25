@@ -13,9 +13,9 @@ build-scripts/
         $component_name/
             repository              <-- git repository to clone
             version.sh              <-- prints the repository tag or commit to checkout
-            build.sh                <-- runs as `build.sh $output`
+            build.sh                <-- runs as `build.sh $output $version`
                                         first argument is the output directory where
-                                        binaries should be placed.
+                                        binaries should be placed, second is the component version
             patches/
                 ...                 <-- list of patches to apply after checkout (for stable versions)
             pre-patches/

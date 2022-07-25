@@ -1,0 +1,74 @@
+From 91f16e8232437292eab8308250ca5d73ea9c4753 Mon Sep 17 00:00:00 2001
+From: Angelos Kolaitis <neoaggelos@gmail.com>
+Date: Fri, 22 Jul 2022 18:41:36 +0300
+Subject: [PATCH] single entrypoint for cni tools
+
+---
+ cni.go | 56 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+ create mode 100644 cni.go
+
+diff --git a/cni.go b/cni.go
+new file mode 100644
+index 0000000..93828f9
+--- /dev/null
++++ b/cni.go
+@@ -0,0 +1,56 @@
++package main
++
++import (
++	"os"
++	"path/filepath"
++
++	"github.com/docker/docker/pkg/reexec"
++
++	ipam_dhcp "github.com/containernetworking/plugins/plugins/ipam/dhcp"
++	ipam_host_local "github.com/containernetworking/plugins/plugins/ipam/host-local"
++	ipam_static "github.com/containernetworking/plugins/plugins/ipam/static"
++
++	main_bridge "github.com/containernetworking/plugins/plugins/main/bridge"
++	main_host_device "github.com/containernetworking/plugins/plugins/main/host-device"
++	main_ipvlan "github.com/containernetworking/plugins/plugins/main/ipvlan"
++	main_loopback "github.com/containernetworking/plugins/plugins/main/loopback"
++	main_macvlan "github.com/containernetworking/plugins/plugins/main/macvlan"
++	main_ptp "github.com/containernetworking/plugins/plugins/main/ptp"
++	main_vlan "github.com/containernetworking/plugins/plugins/main/vlan"
++
++	meta_bandwidth "github.com/containernetworking/plugins/plugins/meta/bandwidth"
++	meta_flannel "github.com/containernetworking/plugins/plugins/meta/flannel"
++	meta_firewall "github.com/containernetworking/plugins/plugins/meta/firewall"
++	meta_portmap "github.com/containernetworking/plugins/plugins/meta/portmap"
++	meta_sbr "github.com/containernetworking/plugins/plugins/meta/sbr"
++	meta_tuning "github.com/containernetworking/plugins/plugins/meta/tuning"
++	meta_vrf "github.com/containernetworking/plugins/plugins/meta/vrf"
++)
++
++func main() {
++	os.Args[0] = filepath.Base(os.Args[0])
++	if reexec.Init() {
++		return
++	}
++	panic("invalid entrypoint name")
++}
++
++func init() {
++	reexec.Register("dhcp", ipam_dhcp.Main)
++	reexec.Register("host-local", ipam_host_local.Main)
++	reexec.Register("static", ipam_static.Main)
++	reexec.Register("bridge", main_bridge.Main)
++	reexec.Register("host-device", main_host_device.Main)
++	reexec.Register("ipvlan", main_ipvlan.Main)
++	reexec.Register("loopback", main_loopback.Main)
++	reexec.Register("macvlan", main_macvlan.Main)
++	reexec.Register("ptp", main_ptp.Main)
++	reexec.Register("vlan", main_vlan.Main)
++	reexec.Register("bandwidth", meta_bandwidth.Main)
++	reexec.Register("flannel", meta_flannel.Main)
++	reexec.Register("firewall", meta_firewall.Main)
++	reexec.Register("portmap", meta_portmap.Main)
++	reexec.Register("sbr", meta_sbr.Main)
++	reexec.Register("tuning", meta_tuning.Main)
++	reexec.Register("vrf", meta_vrf.Main)
++}
+--
+2.25.1
