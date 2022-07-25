@@ -1,5 +1,5 @@
 name: microk8s
-adopt-info: kubernetes
+adopt-info: kubernetes-version
 summary: Kubernetes for workstations and appliances
 description: |-
   MicroK8s is a small, fast, secure, single node Kubernetes that installs on
@@ -148,10 +148,10 @@ parts:
 
   raft:
     after: [build-deps]
-    source: build-scripts/
+    source: build-scripts/components/raft
     build-attributes: [no-patchelf]
     plugin: nil
-    override-build: ./build-component.sh raft
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh raft
     stage-packages:
       - libuv1
     stage:
@@ -160,69 +160,72 @@ parts:
 
   sqlite:
     after: [build-deps]
-    source: build-scripts/
+    source: build-scripts/components/sqlite
     build-attributes: [no-patchelf]
     plugin: nil
-    override-build: ./build-component.sh sqlite
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh sqlite
 
   dqlite:
     after: [sqlite, raft]
-    source: build-scripts/
+    source: build-scripts/components/dqlite
     build-attributes: [no-patchelf]
     plugin: nil
-    override-build: ./build-component.sh dqlite
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh dqlite
 
   dqlite-client:
     after: [dqlite]
     plugin: nil
-    source: build-scripts/
-    override-build: ./build-component.sh dqlite-client
+    source: build-scripts/components/dqlite-client
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh dqlite-client
 
   k8s-dqlite:
     after: [dqlite]
-    source: build-scripts/
+    source: build-scripts/components/k8s-dqlite
     plugin: nil
-    override-build: ./build-component.sh k8s-dqlite
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
 
   etcd:
     after: [build-deps]
     plugin: nil
-    source: build-scripts/
-    override-build: ./build-component.sh etcd
+    source: build-scripts/components/etcd
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh etcd
 
   traefik:
     after: [build-deps]
     plugin: nil
-    source: build-scripts/
-    override-build: ./build-component.sh traefik
+    source: build-scripts/components/traefik
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh traefik
     build-attributes: [no-patchelf]
 
   cni:
     after: [build-deps]
     plugin: nil
-    source: build-scripts/
-    override-build: ./build-component.sh cni
+    source: build-scripts/components/cni
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cni
 
   flanneld:
     after: [build-deps]
     plugin: nil
-    source: build-scripts/
-    override-build: ./build-component.sh flanneld
+    source: build-scripts/components/flanneld
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flanneld
 
   kubernetes:
     after: [build-deps]
     plugin: nil
     build-attributes: [no-patchelf]
-    source: build-scripts/
-    override-build: |
-      ./build-component.sh kubernetes
-      snapcraftctl set-version "$(components/kubernetes/version.sh)"
+    source: build-scripts/components/kubernetes
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
+
+  kubernetes-version:
+    plugin: nil
+    source: build-scripts/components/kubernetes
+    override-build: snapcraftctl set-version "$(./version.sh)"
 
   helm:
     after: [build-deps]
     plugin: nil
-    source: build-scripts/
-    override-build: ./build-component.sh helm
+    source: build-scripts/components/helm
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh helm
 
   libmnl:
     after: [build-deps]
@@ -246,14 +249,14 @@ parts:
   migrator:
     after: [build-deps]
     plugin: nil
-    source: build-scripts/
-    override-build: ./build-component.sh migrator
+    source: build-scripts/components/migrator
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh migrator
 
   containerd:
     after: [runc]
     plugin: nil
-    source: build-scripts/
-    override-build: ./build-component.sh containerd
+    source: build-scripts/components/containerd
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh containerd
     build-attributes: [no-patchelf]
     stage-packages:
       - libnss-myhostname
@@ -270,9 +273,9 @@ parts:
 
   runc:
     after: [iptables, build-deps]
-    source: build-scripts/
+    source: build-scripts/components/runc
     plugin: nil
-    override-build: ./build-component.sh runc
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh runc
 
   bash-utils:
     plugin: nil
@@ -307,8 +310,8 @@ parts:
     after: [build-deps]
     build-attributes: [no-patchelf]
     plugin: nil
-    source: build-scripts/
-    override-build: ./build-component.sh cluster-agent
+    source: build-scripts/components/cluster-agent
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cluster-agent
 
   microk8s-addons:
     plugin: nil
@@ -387,8 +390,8 @@ parts:
   microk8s-completion:
     after: [build-deps]
     plugin: nil
-    source: build-scripts/
-    override-build: ./build-component.sh microk8s-completion
+    source: build-scripts/components/microk8s-completion
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh microk8s-completion
 
   python-requirements:
     plugin: python
