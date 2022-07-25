@@ -1,9 +1,11 @@
 #!/bin/bash
 
+VERSION="${2}"
+
 INSTALL="${1}"
 mkdir -p "${INSTALL}/bin"
 
-make
+make VERSION="${VERSION}"
 cp bin/helm "${INSTALL}/bin/helm"
 
 ./bin/helm completion bash \

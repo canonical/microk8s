@@ -2,8 +2,8 @@
 
 INSTALL="${1}"
 
-for app in kubelite kubectl; do
-  make WHAT="cmd/${app}"
+for app in kubectl kubelite; do
+  make WHAT="cmd/${app}" KUBE_STATIC_OVERRIDES=kubelite
   cp _output/bin/"${app}" "${INSTALL}/${app}"
 done
 
