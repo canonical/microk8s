@@ -227,11 +227,16 @@ parts:
     plugin: dump
     source: build-scripts/
     override-build: |
+      set -eux
+      snap refresh go --channel=1.16/stable || true
       . ./set-env-variables.sh
-      rm -rf cni*
-      curl -LO https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-linux-$KUBE_ARCH-${CNI_VERSION}.tgz
-      mkdir cni
-      tar -xzvf cni-*.tgz -C cni/
+
+      echo "Building cni binaries"
+      . ./build-cni-binaries.sh
+
+      mkdir -p cni/
+      cp build/cni_bins/* cni/
+
       snapcraftctl build
     organize:
       ./cni/*: opt/cni/bin/

@@ -15,6 +15,9 @@ mkdir -p $GOPATH
 
 git clone --depth 1 https://github.com/kubernetes/kubernetes $GOPATH/src/github.com/kubernetes/kubernetes/ -b $KUBERNETES_TAG
 
+rm -rf $SNAPCRAFT_PART_SRC/eks-distro
+git clone --depth 1 https://github.com/aws/eks-distro $SNAPCRAFT_PART_SRC/eks-distro
+
 (cd $GOPATH/src/$KUBERNETES_REPOSITORY
   git config user.email "microk8s-builder-bot@ubuntu.com"
   git config user.name "MicroK8s builder bot"
@@ -26,6 +29,13 @@ git clone --depth 1 https://github.com/kubernetes/kubernetes $GOPATH/src/github.
   fi
 
   for patch in "${SNAPCRAFT_PART_SRC}"/"$PATCHES"/*.patch
+  do
+    echo "Applying patch $patch"
+    git am < "$patch"
+  done
+
+  export EKS_TRACK=$(echo "$KUBE_TRACK" | tr -s . -)
+  for patch in "${SNAPCRAFT_PART_SRC}"/eks-distro/projects/kubernetes/kubernetes/"${EKS_TRACK}"/patches/*.patch
   do
     echo "Applying patch $patch"
     git am < "$patch"
