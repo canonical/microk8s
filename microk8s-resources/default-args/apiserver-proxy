@@ -1,0 +1,3 @@
+--config ${SNAP_DATA}/args/apiserver-proxy-config
+--kubeconfig ${SNAP_DATA}/credentials/kubelet.config
+--refresh-interval 30s

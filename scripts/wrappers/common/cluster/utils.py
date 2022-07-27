@@ -130,11 +130,11 @@ def is_node_dqlite_worker():
     """
     ha_lock = os.path.expandvars("${SNAP_DATA}/var/lock/ha-cluster")
     clustered_lock = os.path.expandvars("${SNAP_DATA}/var/lock/clustered.lock")
-    traefik_lock = os.path.expandvars("${SNAP_DATA}/var/lock/no-traefik")
+    no_apiserver_proxy_lock = os.path.expandvars("${SNAP_DATA}/var/lock/no-apiserver-proxy")
     return (
         os.path.isfile(ha_lock)
         and os.path.isfile(clustered_lock)
-        and not os.path.exists(traefik_lock)
+        and not os.path.exists(no_apiserver_proxy_lock)
     )
 
 
