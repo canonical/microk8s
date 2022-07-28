@@ -409,19 +409,19 @@ get_ips() {
 }
 
 gen_server_cert() (
-    export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
+    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 gen_proxy_client_cert() (
-    export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
+    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 produce_certs() {
-    export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
+    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     # Generate RSA keys if not yet
     for key in serviceaccount.key ca.key server.key front-proxy-ca.key front-proxy-client.key; do
         if ! [ -f ${SNAP_DATA}/certs/$key ]; then

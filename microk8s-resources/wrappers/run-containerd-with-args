@@ -21,7 +21,7 @@ fi
 # As the snap refreshes runc changes location, eg moves from
 # /snap/microk8s/123/usr/bin/runc to /snap/microk8s/124/usr/runc.
 # containerd-shims need to look for runc in  /snap/microk8s/current/usr/bin/runc
-SNAP_CURRENT="/snap/microk8s/current"
+SNAP_CURRENT=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
 CURRENT_PATH="$SNAP_CURRENT/usr/sbin:$SNAP_CURRENT/usr/bin:$SNAP_CURRENT/sbin:$SNAP_CURRENT/bin"
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$CURRENT_PATH:$PATH"
 ARCH="$($SNAP/bin/uname -m)"

@@ -81,7 +81,7 @@ then
   if [[ "$now" < "$(($start_timer + $timeout))" ]] ; then
     if (is_apiserver_ready)
     then
-        $SNAP/bin/migrator --mode restore --endpoint "unix:///var/snap/microk8s/current/var/kubernetes/backend/kine.sock:12379" --db-dir "$DB_DIR" --debug
+        $SNAP/bin/migrator --mode restore --endpoint "unix://${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379" --db-dir "$DB_DIR" --debug
     fi
   fi
 

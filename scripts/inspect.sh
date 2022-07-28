@@ -323,7 +323,7 @@ function suggest_fixes {
 
   # node name
   nodename="$(hostname)"
-  if [[ "$nodename" =~ [A-Z|_] ]] && ! grep -e "hostname-override" /var/snap/microk8s/current/args/kubelet &> /dev/null
+  if [[ "$nodename" =~ [A-Z|_] ]] && ! grep -e "hostname-override" "${SNAP_DATA}/args/kubelet" &> /dev/null
   then
     printf -- "\033[0;33mWARNING: \033[0m This machine's hostname contains capital letters and/or underscores. \n"
     printf -- "\t  This is not a valid name for a Kubernetes node, causing node registration to fail.\n"
@@ -383,7 +383,7 @@ function build_report_tarball {
 }
 
 function check_certificates {
-  exp_date_str="$(openssl x509 -enddate -noout -in /var/snap/microk8s/current/certs/ca.crt | cut -d= -f 2)"
+  exp_date_str="$(openssl x509 -enddate -noout -in "${SNAP_DATA}/certs/ca.crt" | cut -d= -f 2)"
   exp_date_secs="$(date -d "$exp_date_str" +%s)"
   now_secs=$(date +%s)
   difference=$(($exp_date_secs-$now_secs))

@@ -16,8 +16,8 @@ then
 fi
 
 # etcd will not start if the socket already exists.
-if [ -S "/var/snap/microk8s/current/etcd.socket:2379" ]; then
-  rm "/var/snap/microk8s/current/etcd.socket:2379"
+if [ -S "${SNAP_DATA}/etcd.socket:2379" ]; then
+  rm "${SNAP_DATA}/etcd.socket:2379"
 fi
 
 ARCH=$(arch)
