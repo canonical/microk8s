@@ -12,7 +12,7 @@ fi
 ARCH="$(${SNAP}/bin/uname -m)"
 export LD_LIBRARY_PATH="${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/$ARCH-linux-gnu:${SNAP}/usr/lib/$ARCH-linux-gnu"
 export PATH="${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:$PATH:/usr/bin:/usr/local/bin"
-export OPENSSL_CONF="/snap/microk8s/current/etc/ssl/openssl.cnf"
+export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
 
 
 cp -r --preserve=mode ${SNAP}/default-args ${SNAP_DATA}/args

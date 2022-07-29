@@ -237,9 +237,9 @@ def get_client_cert(master_ip, master_port, fname, token, username, group=None):
     info = "/CN={}".format(username)
     if group:
         info = "{}/O={}".format(info, group)
-    cer_req_file = "/var/snap/microk8s/current/certs/{}.csr".format(fname)
-    cer_key_file = "/var/snap/microk8s/current/certs/{}.key".format(fname)
-    cer_file = "/var/snap/microk8s/current/certs/{}.crt".format(fname)
+    cer_req_file = "{}/certs/{}.csr".format(snapdata_path, fname)
+    cer_key_file = "{}/certs/{}.key".format(snapdata_path, fname)
+    cer_file = "{}/certs/{}.crt".format(snapdata_path, fname)
     if not os.path.exists(cer_key_file):
         cmd_gen_cert_key = "{snap}/usr/bin/openssl genrsa -out {key} 2048".format(
             snap=snap_path, key=cer_key_file
