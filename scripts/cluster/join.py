@@ -433,7 +433,6 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, hostname_overr
     set_arg("--master", None, "kube-proxy")
     if hostname_override:
         set_arg("--hostname-override", hostname_override, "kube-proxy")
-    service("restart", "proxy")
 
 
 def update_cert_auth_kubelet(token, ca, master_ip, master_port):
@@ -466,7 +465,6 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
         "microk8s.io/cluster=true,node.kubernetes.io/microk8s-worker=microk8s-worker",
         "kubelet",
     )
-    service("restart", "kubelet")
 
 
 def update_kubelet(token, ca, master_ip, api_port):
