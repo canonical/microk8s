@@ -18,7 +18,7 @@ parts:
     plugin: nil
     override-build: |
       snap install go --classic
-      snap refresh go --channel 1.18
+      snap refresh go --channel 1.16
     build-packages:
       - autoconf
       - automake
@@ -73,12 +73,6 @@ parts:
     plugin: nil
     source: build-scripts/components/dqlite-client
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh dqlite-client
-
-  k8s-dqlite:
-    after: [dqlite]
-    source: build-scripts/components/k8s-dqlite
-    plugin: nil
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
 
   etcd:
     after: [build-deps]
@@ -302,9 +296,6 @@ apps:
     daemon: simple
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
-    daemon: simple
-  daemon-k8s-dqlite:
-    command: run-k8s-dqlite-with-args
     daemon: simple
   dashboard-proxy:
     command: microk8s-dashboard-proxy.wrapper

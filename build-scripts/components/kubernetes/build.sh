@@ -3,7 +3,12 @@
 INSTALL="${1}"
 
 for app in kubectl kubelite; do
-  make WHAT="cmd/${app}" KUBE_STATIC_OVERRIDES=kubelite
+  if [ "$app" = "kubelite" ]
+  then
+    make WHAT="cmd/${app}" GOFLAGS=-tags=libsqlite3,dqlite CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/" CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib" CGO_LDFLAGS_ALLOW="-Wl,-z,now" KUBE_CGO_OVERRIDES=kubelite
+  else
+    make WHAT="cmd/${app}" KUBE_STATIC_OVERRIDES=kubelite
+  fi
   cp _output/bin/"${app}" "${INSTALL}/${app}"
 done
 
