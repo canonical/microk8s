@@ -605,7 +605,6 @@ parts:
       if [ "${ARCH}" = "s390x" ]
       then
         rm actions/*.gpu.sh
-        rm actions/gpu.yaml
         rm actions/*.istio.sh
         rm actions/*.knative.sh
         rm actions/*.fluentd.sh
