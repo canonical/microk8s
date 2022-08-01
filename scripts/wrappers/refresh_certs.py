@@ -236,8 +236,8 @@ def install_ca(ca_dir):
     update_configs()
     msg = """
     The CA certificates have been replaced. Kubernetes will restart the pods of your workloads.
-    Any worker nodes you may have in your cluster need to be removed and \
-    re-joined to become aware of the new CA.
+    Any worker nodes you may have in your cluster need to be removed and re-joined to become
+    aware of the new CA.
     """
     click.echo(msg)
 
