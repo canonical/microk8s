@@ -45,12 +45,7 @@ then
   init_cluster
 fi
 
-if [ -e "$SNAP_DATA"/var/lock/lite.lock ]
-then
-  snapctl restart ${SNAP_NAME}.daemon-kubelite
-else
-  snapctl restart ${SNAP_NAME}.daemon-apiserver
-fi
+snapctl restart ${SNAP_NAME}.daemon-kubelite
 snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
 
 run_etcd="$(is_service_expected_to_start etcd)"

@@ -440,12 +440,6 @@ printf -- 'Inspecting services\n'
 svc_cluster_agent="microk8s.daemon-cluster-agent"
 svc_containerd="microk8s.daemon-containerd"
 svc_kubelite="microk8s.daemon-kubelite"
-svc_apiserver="microk8s.daemon-apiserver"
-svc_proxy="microk8s.daemon-proxy"
-svc_kubelet="microk8s.daemon-kubelet"
-svc_scheduler="microk8s.daemon-scheduler"
-svc_controller_manager="microk8s.daemon-controller-manager"
-svc_control_plane_kicker="microk8s.daemon-control-plane-kicker"
 svc_flanneld="microk8s.daemon-flanneld"
 svc_etcd="microk8s.daemon-etcd"
 svc_dqlite="microk8s.daemon-k8s-dqlite"
@@ -457,12 +451,6 @@ then
   svc_cluster_agent="snap.${svc_cluster_agent}"
   svc_containerd="snap.${svc_containerd}"
   svc_kubelite="snap.${svc_kubelite}"
-  svc_apiserver="snap.${svc_apiserver}"
-  svc_proxy="snap.${svc_proxy}"
-  svc_kubelet="snap.${svc_kubelet}"
-  svc_scheduler="snap.${svc_scheduler}"
-  svc_controller_manager="snap.${svc_controller_manager}"
-  svc_control_plane_kicker="snap.${svc_control_plane_kicker}"
   svc_flanneld="snap.${svc_flanneld}"
   svc_etcd="snap.${svc_etcd}"
   svc_dqlite="snap.${svc_dqlite}"
@@ -472,17 +460,7 @@ fi
 
 check_service $svc_cluster_agent
 check_service $svc_containerd
-if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
-then
-  check_service $svc_kubelite
-else
-  check_service $svc_apiserver
-  check_service $svc_proxy
-  check_service $svc_kubelet
-  check_service $svc_scheduler
-  check_service $svc_controller_manager
-  check_service $svc_control_plane_kicker
-fi
+check_service $svc_kubelite
 
 if ! [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then

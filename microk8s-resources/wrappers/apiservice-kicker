@@ -84,8 +84,7 @@ do
     #
     # Wait until the apiserver is up and is successfully responding to
     # namespace checks before we check for the registry configmap.
-    if snapctl services microk8s.daemon-apiserver | grep active &> /dev/null ||
-       snapctl services microk8s.daemon-kubelite | grep active &> /dev/null
+    if snapctl services microk8s.daemon-kubelite | grep active &> /dev/null
     then
       if [ $installed_registry_help -eq 0 ] &&
          "$SNAP/kubectl" "--kubeconfig=$SNAP_DATA/credentials/client.config" get namespace kube-public &> /dev/null

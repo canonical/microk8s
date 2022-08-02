@@ -545,12 +545,6 @@ then
   else
     snapctl start ${SNAP_NAME}.daemon-kubelite
   fi
-  snapctl stop ${SNAP_NAME}.daemon-apiserver
-  snapctl stop ${SNAP_NAME}.daemon-proxy
-  snapctl stop ${SNAP_NAME}.daemon-kubelet
-  snapctl stop ${SNAP_NAME}.daemon-controller-manager
-  snapctl stop ${SNAP_NAME}.daemon-scheduler
-  snapctl stop ${SNAP_NAME}.daemon-control-plane-kicker
 fi
 
 if ! [ -e ${SNAP_DATA}/args/kubelite ]
@@ -583,12 +577,7 @@ then
   cp ${SNAP}/default-args/k8s-dqlite ${SNAP_DATA}/args/k8s-dqlite
   cp ${SNAP}/default-args/k8s-dqlite-env ${SNAP_DATA}/args/k8s-dqlite-env
   need_api_restart=true
-  if [ -e ${SNAP_DATA}/var/lock/lite.lock ]
-  then
-    snapctl stop ${SNAP_NAME}.daemon-kubelite
-  else
-    snapctl stop ${SNAP_NAME}.daemon-apiserver
-  fi
+  snapctl stop ${SNAP_NAME}.daemon-kubelite
 
   refresh_opt_in_local_config etcd-servers unix://\${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379 kube-apiserver
   $SNAP/bin/sed -i '/\-\-storage\-backend=dqlite/d' ${SNAP_DATA}/args/kube-apiserver

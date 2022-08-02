@@ -16,15 +16,9 @@ fi
 echo "Restarting kube-apiserver"
 if [ -e "$BACKUP_DIR/args/kube-apiserver" ]; then
   cp "$BACKUP_DIR"/args/kube-apiserver "$SNAP_DATA/args/"
-  snapctl restart ${SNAP_NAME}.daemon-apiserver
 fi
 
-if [ -e "$SNAP_DATA"/var/lock/lite.lock ]
-then
-  snapctl restart ${SNAP_NAME}.daemon-kubelite
-else
-  snapctl restart ${SNAP_NAME}.daemon-apiserver
-fi
+snapctl restart ${SNAP_NAME}.daemon-kubelite
 
 ${SNAP}/microk8s-start.wrapper
 
