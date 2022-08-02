@@ -1,0 +1,805 @@
+name: microk8s
+adopt-info: kubernetes-version
+summary: Kubernetes for workstations and appliances
+description: |-
+  MicroK8s is a small, fast, secure, single node Kubernetes that installs on
+  just about any Linux box. Use it for offline development, prototyping,
+  testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's
+  also a great k8s for appliances - develop your IoT apps for k8s and deploy
+  them to MicroK8s on your boxes.
+
+grade: stable
+confinement: strict
+base: core18
+assumes: [snapd2.52]
+
+parts:
+  build-deps:
+    plugin: nil
+    override-build: |
+      snap install go --classic
+      snap refresh go --channel 1.18
+    build-packages:
+      - autoconf
+      - automake
+      - autopoint
+      - autotools-dev
+      - bison
+      - btrfs-tools
+      - build-essential
+      - curl
+      - flex
+      - git
+      - libjansson-dev
+      - liblz4-dev
+      - libnetfilter-conntrack-dev
+      - libnetfilter-conntrack3
+      - libnfnetlink-dev
+      - libseccomp-dev
+      - libtool
+      - libuv1-dev
+      - pkg-config
+      - rsync
+      - tcl
+
+  raft:
+    after: [build-deps]
+    source: build-scripts/components/raft
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh raft
+    stage-packages:
+      - libuv1
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
+
+  sqlite:
+    after: [build-deps]
+    source: build-scripts/components/sqlite
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh sqlite
+
+  dqlite:
+    after: [sqlite, raft]
+    source: build-scripts/components/dqlite
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh dqlite
+
+  dqlite-client:
+    after: [dqlite]
+    plugin: nil
+    source: build-scripts/components/dqlite-client
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh dqlite-client
+
+  k8s-dqlite:
+    after: [dqlite]
+    source: build-scripts/components/k8s-dqlite
+    plugin: nil
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
+
+  etcd:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/etcd
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh etcd
+
+  cni:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/cni
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cni
+
+  flanneld:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/flanneld
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flanneld
+
+  kubernetes:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/kubernetes
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
+
+  kubernetes-version:
+    plugin: nil
+    source: build-scripts/components/kubernetes
+    override-build: snapcraftctl set-version "$(./version.sh)"
+
+  helm:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/helm
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh helm
+
+  libmnl:
+    after: [build-deps]
+    plugin: autotools
+    source: https://www.netfilter.org/pub/libmnl/libmnl-1.0.4.tar.bz2
+
+  libnftnl:
+    after: [libmnl]
+    plugin: autotools
+    source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
+
+  iptables:
+    after: [libnftnl]
+    source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
+    plugin: autotools
+    configflags:
+      - "--disable-shared"
+      - "--enable-static"
+    prime: [-bin/iptables-xml]
+
+  migrator:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/migrator
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh migrator
+
+  containerd:
+    after: [runc]
+    plugin: nil
+    source: build-scripts/components/containerd
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh containerd
+    build-attributes: [no-patchelf]
+    stage-packages:
+      - libnss-myhostname
+      - libnss-resolve
+      - libnss-mymachines
+      - conntrack
+      - libssl1.0.0
+    stage:
+      - -sbin/xtables-multi
+      - -sbin/iptables*
+      - -lib/xtables
+      - -usr/share/doc
+      - -usr/share/man
+
+  runc:
+    after: [iptables, build-deps]
+    source: build-scripts/components/runc
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh runc
+
+  bash-utils:
+    plugin: nil
+    stage-packages:
+      - aufs-tools
+      - coreutils
+      - curl
+      - diffutils
+      - ethtool
+      - gawk
+      - git
+      - grep
+      - hostname
+      - iproute2
+      - jq
+      - kmod
+      - libatm1
+      - members
+      - nano
+      - net-tools
+      - openssl
+      - procps
+      - sed
+      - socat
+      - squashfs-tools
+      - tar
+      - util-linux
+      - zfsutils-linux
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
+
+  cluster-agent:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/cluster-agent
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cluster-agent
+
+  microk8s-addons:
+    plugin: nil
+    source: build-scripts/addons
+    override-build: ./repositories.sh "${SNAPCRAFT_PART_INSTALL}"
+
+  microk8s-scripts:
+    plugin: nil
+    source: scripts/
+    override-build: |
+      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
+        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      fi
+
+      cp -r . "${SNAPCRAFT_PART_INSTALL}/scripts"
+      cp inspect.sh "${SNAPCRAFT_PART_INSTALL}/inspect.sh"
+
+  microk8s-upgrade-scripts:
+    plugin: nil
+    source: upgrade-scripts/
+    override-build: |
+      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
+        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      fi
+
+      cp -r . "${SNAPCRAFT_PART_INSTALL}/upgrade-scripts"
+
+  microk8s:
+    plugin: nil
+    source: microk8s-resources/
+    override-build: |
+      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
+        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      fi
+
+      cp -r default-args "${SNAPCRAFT_PART_INSTALL}/default-args"
+      cp -r default-hooks "${SNAPCRAFT_PART_INSTALL}/default-hooks"
+      cp -r certs "${SNAPCRAFT_PART_INSTALL}/certs"
+      cp -r certs-beta "${SNAPCRAFT_PART_INSTALL}/certs-beta"
+
+      cp containerd-profile "${SNAPCRAFT_PART_INSTALL}/containerd-profile"
+
+      cp client.config "${SNAPCRAFT_PART_INSTALL}/client.config"
+      cp client.config.template "${SNAPCRAFT_PART_INSTALL}/client.config.template"
+      cp kubelet.config.template "${SNAPCRAFT_PART_INSTALL}/kubelet.config.template"
+      cp client-x509.config.template "${SNAPCRAFT_PART_INSTALL}/client-x509.config.template"
+
+      cp -r wrappers/* "${SNAPCRAFT_PART_INSTALL}/"
+      cp -r actions/ "${SNAPCRAFT_PART_INSTALL}/actions"
+
+  microk8s-completion:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/microk8s-completion
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh microk8s-completion
+
+  python-requirements:
+    plugin: python
+    python-version: python3
+    python-packages:
+      - PyYAML == 5.3.1
+      - netifaces == 0.10.9
+      - jsonschema == 4.0.0
+    stage-packages:
+      - python3-openssl
+      - python3-requests
+      - python3-click
+      - python3-dateutil
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
+
+apps:
+  microk8s:
+    command: microk8s.wrapper
+    completer: microk8s.bash
+    plugs:
+      - account-control
+      - docker-unprivileged
+      - dot-config-helm
+      - dot-kube
+      - firewall-control
+      - home-read-all
+      - home
+      - kernel-module-observe
+      - kubernetes-support
+      - login-session-observe
+      - log-observe
+      - mount-observe
+      - network
+      - network-control
+      - network-observe
+      - opengl
+      - system-observe
+  daemon-etcd:
+    command: run-etcd-with-args
+    daemon: simple
+    install-mode: disable
+    plugs:
+      - network-bind
+  daemon-flanneld:
+    command: run-flanneld-with-args
+    daemon: simple
+    install-mode: disable
+    plugs:
+      - network-bind
+      - network-control
+      - firewall-control
+  daemon-containerd:
+    command: run-containerd-with-args
+    daemon: notify
+    # when stopped send only sigterm
+    # https://forum.snapcraft.io/t/process-lifecycle-on-snap-refresh/140/37
+    stop-mode: sigterm
+    restart-condition: always
+    install-mode: disable
+    plugs:
+      - k8s-journald
+      - network-bind
+      - docker-privileged
+      - firewall-control
+      - network-control
+      - mount-observe
+      - kubernetes-support
+      - opengl
+      - cifs-mount
+      - fuse-support
+      - kernel-crypto-api
+  daemon-kubelite:
+    command: run-kubelite-with-args
+    daemon: simple
+    install-mode: disable
+    plugs:
+      - dot-kube
+      - docker-privileged
+      - firewall-control
+      - hardware-observe
+      - kubernetes-support
+      - mount-observe
+      - network-bind
+      - network-observe
+      - network-control
+      - process-control
+      - system-observe
+      - opengl
+      - kernel-module-observe
+  daemon-apiserver-kicker:
+    command: apiservice-kicker
+    daemon: simple
+    install-mode: disable
+    plugs:
+      - kernel-module-control
+      - network-bind
+      - network-observe
+      - network-control
+      - k8s-journald
+      - kubernetes-support
+  daemon-apiserver-proxy:
+    command: run-apiserver-proxy-with-args
+    daemon: simple
+    install-mode: disable
+    plugs:
+      - network-bind
+      - network-observe
+      - network-control
+  daemon-cluster-agent:
+    command: run-cluster-agent-with-args
+    daemon: simple
+    install-mode: disable
+    plugs:
+      - mount-observe
+      - network-bind
+      - network-observe
+      - network-control
+  daemon-k8s-dqlite:
+    command: run-k8s-dqlite-with-args
+    daemon: simple
+    install-mode: disable
+    plugs:
+      - network-bind
+      - docker-privileged
+      - firewall-control
+      - k8s-journald
+      - network-control
+  dashboard-proxy:
+    command: microk8s-dashboard-proxy.wrapper
+    plugs:
+      - network-bind
+      - network-control
+      - network-observe
+      - firewall-control
+      - k8s-kubeproxy
+      - kernel-module-observe
+      - mount-observe
+      - system-observe
+  kubectl:
+    command: microk8s-kubectl.wrapper
+    completer: kubectl.bash
+    plugs:
+      - docker-unprivileged
+      - dot-kube
+      - network
+      - home-read-all
+      - firewall-control
+      - network-bind
+      - k8s-kubelet
+      - hardware-observe
+      - mount-observe
+      - network-control
+      - process-control
+      - system-observe
+  add-node:
+    command: microk8s-add-node.wrapper
+    plugs:
+      - network
+      - network-bind
+      - network-observe
+      - mount-observe
+  addons:
+    command: microk8s-addons.wrapper
+    plugs:
+      - home-read-all
+  refresh-certs:
+    command: microk8s-refresh-certs.wrapper
+  images:
+    command: microk8s-images.wrapper
+  join:
+    command: microk8s-join.wrapper
+    plugs:
+      - network
+      - mount-observe
+  remove-node:
+    command: microk8s-remove-node.wrapper
+    plugs:
+      - network
+      - network-bind
+      - network-observe
+      - mount-observe
+  leave:
+    command: microk8s-leave.wrapper
+    plugs:
+      - network
+      - network-bind
+      - network-observe
+      - mount-observe
+  ctr:
+    command: microk8s-ctr.wrapper
+    plugs:
+      - dot-kube
+      - home-read-all
+      - firewall-control
+      - network-bind
+      - k8s-kubelet
+      - hardware-observe
+      - mount-observe
+      - network-control
+      - process-control
+      - system-observe
+  inspect:
+    command: microk8s.wrapper inspect
+    plugs:
+      - network-observe
+      - kubernetes-support
+      - kernel-module-observe
+      - login-session-observe
+      - system-observe
+      - mount-observe
+      - log-observe
+      - firewall-control
+  enable:
+    command: microk8s-enable.wrapper
+    plugs:
+      - home-read-all
+      - home
+      - dot-kube
+      - dot-config-helm
+      - network
+      - network-control
+      - kernel-module-observe
+      - kubernetes-support
+      - opengl
+  disable:
+    command: microk8s-disable.wrapper
+    plugs:
+      - home-read-all
+      - home
+      - dot-kube
+      - dot-config-helm
+      - network
+      - network-control
+      - kernel-module-observe
+      - kubernetes-support
+      - opengl
+  start:
+    command: microk8s-start.wrapper
+    plugs:
+      - network
+  stop:
+    command: microk8s-stop.wrapper
+    plugs:
+      - network
+  status:
+    command: microk8s-status.wrapper
+    plugs:
+      - network
+  config:
+    command: microk8s-config.wrapper
+    plugs:
+      - network-observe
+  reset:
+    command: microk8s-reset.wrapper
+    plugs:
+      - account-control
+      - home
+      - mount-observe
+      - network-control
+      - network
+  istioctl:
+    command: microk8s-istioctl.wrapper
+    plugs:
+      - network
+  linkerd:
+    command: microk8s-linkerd.wrapper
+    plugs:
+      - network
+  helm:
+    command: microk8s-helm.wrapper
+    completer: helm.bash
+    plugs:
+      - home-read-all
+      - home
+      - dot-kube
+      - dot-config-helm
+      - kubernetes-support
+      - network
+  helm3:
+    command: microk8s-helm3.wrapper
+    completer: helm3.bash
+    plugs:
+      - home-read-all
+      - home
+      - dot-kube
+      - dot-config-helm
+      - kubernetes-support
+      - network
+  cilium:
+    command: microk8s-cilium.wrapper
+    plugs:
+      - network-bind
+      - network-control
+      - firewall-control
+  dbctl:
+    command: microk8s-dbctl.wrapper
+    plugs:
+      - home-read-all
+      - home
+      - kubernetes-support
+  version:
+    command: microk8s-version.wrapper
+
+passthrough:
+  system-usernames:
+    snap_microk8s: shared
+  layout:
+    /usr/libexec:
+      bind: $SNAP_COMMON/usr/libexec
+    /usr/local/lib:
+      bind: $SNAP_COMMON/usr/local/lib
+    /lib/ufw/ufw-init:
+      bind-file: $SNAP/lib/ufw/ufw-init
+    /var/lib/cni:
+      bind: $SNAP_COMMON/var/lib/cni
+    /var/log/pods:
+      bind: $SNAP_COMMON/var/log/pods
+    /var/log/containers:
+      bind: $SNAP_COMMON/var/log/containers
+    /var/lib/kubelet:
+      bind: $SNAP_DATA/kubelet
+    /var/lib/kube-proxy:
+      bind: $SNAP_DATA/kube-proxy
+    /etc/service/enabled:
+      bind: $SNAP_COMMON/etc/service/enabled
+    /etc/nanorc:
+      bind-file: $SNAP_COMMON/etc/nanorc
+
+plugs:
+  home-read-all:
+    interface: home
+    read: all
+  docker-privileged:
+    interface: docker-support
+    privileged-containers: true
+  docker-unprivileged:
+    interface: docker-support
+    privileged-containers: false
+  k8s-kubelet:
+    interface: kubernetes-support
+    flavor: kubelet
+  k8s-kubeproxy:
+    interface: kubernetes-support
+    flavor: kubeproxy
+  k8s-journald:
+    interface: kubernetes-support
+    flavor: autobind-unix
+  dot-kube:
+    interface: personal-files
+    write:
+      - $HOME/.kube
+  dot-config-helm:
+    interface: personal-files
+    write:
+      - $HOME/.config/helm
+
+slots:
+  microk8s:
+    interface: content
+    content: microk8s
+    source:
+      read:
+        - $SNAP_DATA/credentials
+
+hooks:
+  configure:
+    plugs:
+      - account-control
+      - dot-kube
+      - firewall-control
+      - network
+      - network-observe
+  install:
+    plugs:
+      - account-control
+      - network-bind
+      - firewall-control
+      - network-control
+  remove:
+    plugs:
+      - k8s-kubelet
+      - mount-observe
+      - network-bind
+      - network-control
+      - firewall-control
+  connect-plug-network-control:
+    plugs:
+      - dot-kube
+      - network
+      - kernel-module-control
+      - network-control
+  disconnect-plug-network-control:
+    plugs:
+      - dot-kube
+      - kernel-module-control
+      - network
+      - network-control
+  connect-plug-account-control:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-docker-privileged:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-kubernetes-support:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-k8s-kubelet:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-k8s-kubeproxy:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-dot-kube:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-network:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-network-bind:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-network-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-firewall-control:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-process-control:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-kernel-module-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-mount-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-hardware-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-system-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-home:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-opengl:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-k8s-journald:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-cifs-mount:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+  connect-plug-fuse-support:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+  connect-plug-kernel-crypto-api:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+  connect-plug-dot-config-helm:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-log-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-login-session-observe:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
+  connect-plug-home-read-all:
+    plugs:
+      - dot-kube
+      - network
+      - network-bind
+      - network-control
