@@ -1,0 +1,25 @@
+From 1be61878980de11932c1efc7cf4652904dfc3515 Mon Sep 17 00:00:00 2001
+From: MicroK8s builder bot <microk8s-builder-bot@canonical.com>
+Date: Mon, 1 Aug 2022 18:31:03 +0300
+Subject: [PATCH] disable udp backend
+
+---
+ main.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/main.go b/main.go
+index 4fd8f7f..0b3cc1c 100644
+--- a/main.go
++++ b/main.go
+@@ -55,7 +55,7 @@ import (
+ 	_ "github.com/flannel-io/flannel/backend/ipip"
+ 	_ "github.com/flannel-io/flannel/backend/ipsec"
+ 	_ "github.com/flannel-io/flannel/backend/tencentvpc"
+-	_ "github.com/flannel-io/flannel/backend/udp"
++	// _ "github.com/flannel-io/flannel/backend/udp"
+ 	_ "github.com/flannel-io/flannel/backend/vxlan"
+ )
+ 
+-- 
+2.34.1
+
