@@ -11,111 +11,7 @@ description: |-
 grade: stable
 confinement: classic
 base: core18
-
-apps:
-  microk8s:
-    command: microk8s.wrapper
-    completer: microk8s.bash
-  daemon-etcd:
-    command: run-etcd-with-args
-    daemon: simple
-  daemon-flanneld:
-    command: run-flanneld-with-args
-    daemon: simple
-  daemon-containerd:
-    command: run-containerd-with-args
-    daemon: notify
-    # when stopped send only sigterm
-    # https://forum.snapcraft.io/t/process-lifecycle-on-snap-refresh/140/37
-    stop-mode: sigterm
-    restart-condition: always
-    plugs: [kubernetes-support]
-  daemon-kubelite:
-    command: run-kubelite-with-args
-    daemon: simple
-  daemon-apiserver:
-    command: run-null-daemon
-    daemon: simple
-  daemon-apiserver-kicker:
-    command: apiservice-kicker
-    daemon: simple
-  daemon-apiserver-proxy:
-    command: run-apiserver-proxy-with-args
-    daemon: simple
-  daemon-control-plane-kicker:
-    command: run-null-daemon
-    daemon: simple
-  daemon-cluster-agent:
-    command: run-cluster-agent-with-args
-    daemon: simple
-  daemon-controller-manager:
-    command: run-null-daemon
-    daemon: simple
-  daemon-scheduler:
-    command: run-null-daemon
-    daemon: simple
-  daemon-kubelet:
-    command: run-null-daemon
-    daemon: simple
-  daemon-proxy:
-    command: run-null-daemon
-    daemon: simple
-  daemon-k8s-dqlite:
-    command: run-k8s-dqlite-with-args
-    daemon: simple
-  dashboard-proxy:
-    command: microk8s-dashboard-proxy.wrapper
-  kubectl:
-    command: microk8s-kubectl.wrapper
-    completer: kubectl.bash
-  add-node:
-    command: microk8s-add-node.wrapper
-  addons:
-    command: microk8s-addons.wrapper
-  refresh-certs:
-    command: microk8s-refresh-certs.wrapper
-  images:
-    command: microk8s-images.wrapper
-  join:
-    command: microk8s-join.wrapper
-  remove-node:
-    command: microk8s-remove-node.wrapper
-  leave:
-    command: microk8s-leave.wrapper
-  ctr:
-    command: microk8s-ctr.wrapper
-  inspect:
-    command: microk8s.wrapper inspect
-  enable:
-    command: microk8s-enable.wrapper
-  disable:
-    command: microk8s-disable.wrapper
-  start:
-    command: microk8s-start.wrapper
-  stop:
-    command: microk8s-stop.wrapper
-  status:
-    command: microk8s-status.wrapper
-  config:
-    command: microk8s-config.wrapper
-  reset:
-    command: microk8s-reset.wrapper
-  istioctl:
-    command: microk8s-istioctl.wrapper
-  linkerd:
-    command: microk8s-linkerd.wrapper
-  helm:
-    command: microk8s-helm.wrapper
-    completer: helm.bash
-  helm3:
-    command: microk8s-helm3.wrapper
-    completer: helm3.bash
-  cilium:
-    command: microk8s-cilium.wrapper
-  dbctl:
-    command: microk8s-dbctl.wrapper
-  version:
-    command: microk8s-version.wrapper
+assumes: [snapd2.52]
 
 parts:
   build-deps:
@@ -287,8 +183,10 @@ parts:
       - kmod
       - libatm1
       - members
+      - nano
       - net-tools
       - openssl
+      - procps
       - sed
       - socat
       - squashfs-tools
@@ -301,7 +199,6 @@ parts:
 
   cluster-agent:
     after: [build-deps]
-    build-attributes: [no-patchelf]
     plugin: nil
     source: build-scripts/components/cluster-agent
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cluster-agent
@@ -377,10 +274,89 @@ parts:
       - -usr/share/doc
       - -usr/share/man
 
-slots:
+apps:
   microk8s:
-    interface: content
-    content: microk8s
-    source:
-      read:
-        - $SNAP_DATA/credentials
+    command: microk8s.wrapper
+    completer: microk8s.bash
+  daemon-etcd:
+    command: run-etcd-with-args
+    daemon: simple
+  daemon-flanneld:
+    command: run-flanneld-with-args
+    daemon: simple
+  daemon-containerd:
+    command: run-containerd-with-args
+    daemon: notify
+    # when stopped send only sigterm
+    # https://forum.snapcraft.io/t/process-lifecycle-on-snap-refresh/140/37
+    stop-mode: sigterm
+    restart-condition: always
+  daemon-kubelite:
+    command: run-kubelite-with-args
+    daemon: simple
+  daemon-apiserver-kicker:
+    command: apiservice-kicker
+    daemon: simple
+  daemon-apiserver-proxy:
+    command: run-apiserver-proxy-with-args
+    daemon: simple
+  daemon-cluster-agent:
+    command: run-cluster-agent-with-args
+    daemon: simple
+  daemon-k8s-dqlite:
+    command: run-k8s-dqlite-with-args
+    daemon: simple
+  dashboard-proxy:
+    command: microk8s-dashboard-proxy.wrapper
+  kubectl:
+    command: microk8s-kubectl.wrapper
+    completer: kubectl.bash
+  add-node:
+    command: microk8s-add-node.wrapper
+  addons:
+    command: microk8s-addons.wrapper
+  refresh-certs:
+    command: microk8s-refresh-certs.wrapper
+  images:
+    command: microk8s-images.wrapper
+  join:
+    command: microk8s-join.wrapper
+  remove-node:
+    command: microk8s-remove-node.wrapper
+  leave:
+    command: microk8s-leave.wrapper
+  ctr:
+    command: microk8s-ctr.wrapper
+  inspect:
+    command: microk8s.wrapper inspect
+  enable:
+    command: microk8s-enable.wrapper
+  disable:
+    command: microk8s-disable.wrapper
+  start:
+    command: microk8s-start.wrapper
+  stop:
+    command: microk8s-stop.wrapper
+  status:
+    command: microk8s-status.wrapper
+  config:
+    command: microk8s-config.wrapper
+  reset:
+    command: microk8s-reset.wrapper
+  istioctl:
+    command: microk8s-istioctl.wrapper
+  linkerd:
+    command: microk8s-linkerd.wrapper
+  helm:
+    command: microk8s-helm.wrapper
+    completer: helm.bash
+  helm3:
+    command: microk8s-helm3.wrapper
+    completer: helm3.bash
+  cilium:
+    command: microk8s-cilium.wrapper
+  dbctl:
+    command: microk8s-dbctl.wrapper
+  version:
+    command: microk8s-version.wrapper
+
