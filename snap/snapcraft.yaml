@@ -1,1 +1,361 @@
-./local/snapcraft.classic.yaml
+name: microk8s
+adopt-info: kubernetes-version
+summary: Kubernetes for workstations and appliances
+description: |-
+  MicroK8s is a small, fast, secure, single node Kubernetes that installs on
+  just about any Linux box. Use it for offline development, prototyping,
+  testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's
+  also a great k8s for appliances - develop your IoT apps for k8s and deploy
+  them to MicroK8s on your boxes.
+
+grade: stable
+confinement: classic
+base: core18
+assumes: [snapd2.52]
+
+parts:
+  build-deps:
+    plugin: nil
+    override-build: |
+      snap install go --classic
+      snap refresh go --channel 1.18
+    build-packages:
+      - autoconf
+      - automake
+      - autopoint
+      - autotools-dev
+      - bison
+      - btrfs-tools
+      - build-essential
+      - curl
+      - flex
+      - git
+      - libjansson-dev
+      - liblz4-dev
+      - libnetfilter-conntrack-dev
+      - libnetfilter-conntrack3
+      - libnfnetlink-dev
+      - libseccomp-dev
+      - libtool
+      - libuv1-dev
+      - pkg-config
+      - rsync
+      - tcl
+
+  raft:
+    after: [build-deps]
+    source: build-scripts/components/raft
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh raft
+    stage-packages:
+      - libuv1
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
+
+  sqlite:
+    after: [build-deps]
+    source: build-scripts/components/sqlite
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh sqlite
+
+  dqlite:
+    after: [sqlite, raft]
+    source: build-scripts/components/dqlite
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh dqlite
+
+  dqlite-client:
+    after: [dqlite]
+    plugin: nil
+    source: build-scripts/components/dqlite-client
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh dqlite-client
+
+  k8s-dqlite:
+    after: [dqlite]
+    source: build-scripts/components/k8s-dqlite
+    plugin: nil
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
+
+  etcd:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/etcd
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh etcd
+
+  cni:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/cni
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cni
+
+  flanneld:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/flanneld
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flanneld
+
+  kubernetes:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/kubernetes
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
+
+  kubernetes-version:
+    plugin: nil
+    source: build-scripts/components/kubernetes
+    override-build: snapcraftctl set-version "$(./version.sh)"
+
+  helm:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/helm
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh helm
+
+  libmnl:
+    after: [build-deps]
+    plugin: autotools
+    source: https://www.netfilter.org/pub/libmnl/libmnl-1.0.4.tar.bz2
+
+  libnftnl:
+    after: [libmnl]
+    plugin: autotools
+    source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
+
+  iptables:
+    after: [libnftnl]
+    source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
+    plugin: autotools
+    configflags:
+      - "--disable-shared"
+      - "--enable-static"
+    prime: [-bin/iptables-xml]
+
+  migrator:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/migrator
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh migrator
+
+  containerd:
+    after: [runc]
+    plugin: nil
+    source: build-scripts/components/containerd
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh containerd
+    build-attributes: [no-patchelf]
+    stage-packages:
+      - libnss-myhostname
+      - libnss-resolve
+      - libnss-mymachines
+      - conntrack
+      - libssl1.0.0
+    stage:
+      - -sbin/xtables-multi
+      - -sbin/iptables*
+      - -lib/xtables
+      - -usr/share/doc
+      - -usr/share/man
+
+  runc:
+    after: [iptables, build-deps]
+    source: build-scripts/components/runc
+    build-attributes: [no-patchelf]
+    plugin: nil
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh runc
+
+  bash-utils:
+    plugin: nil
+    stage-packages:
+      - aufs-tools
+      - coreutils
+      - curl
+      - diffutils
+      - ethtool
+      - gawk
+      - git
+      - grep
+      - hostname
+      - iproute2
+      - jq
+      - kmod
+      - libatm1
+      - members
+      - nano
+      - net-tools
+      - openssl
+      - procps
+      - sed
+      - socat
+      - squashfs-tools
+      - tar
+      - util-linux
+      - zfsutils-linux
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
+
+  cluster-agent:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/cluster-agent
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cluster-agent
+
+  microk8s-addons:
+    plugin: nil
+    source: build-scripts/addons
+    override-build: ./repositories.sh "${SNAPCRAFT_PART_INSTALL}"
+
+  microk8s-scripts:
+    plugin: nil
+    source: scripts/
+    override-build: |
+      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
+        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      fi
+
+      cp -r . "${SNAPCRAFT_PART_INSTALL}/scripts"
+      cp inspect.sh "${SNAPCRAFT_PART_INSTALL}/inspect.sh"
+
+  microk8s-upgrade-scripts:
+    plugin: nil
+    source: upgrade-scripts/
+    override-build: |
+      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
+        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      fi
+
+      cp -r . "${SNAPCRAFT_PART_INSTALL}/upgrade-scripts"
+
+  microk8s:
+    plugin: nil
+    source: microk8s-resources/
+    override-build: |
+      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
+        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      fi
+
+      cp -r default-args "${SNAPCRAFT_PART_INSTALL}/default-args"
+      cp -r default-hooks "${SNAPCRAFT_PART_INSTALL}/default-hooks"
+      cp -r certs "${SNAPCRAFT_PART_INSTALL}/certs"
+      cp -r certs-beta "${SNAPCRAFT_PART_INSTALL}/certs-beta"
+
+      cp containerd-profile "${SNAPCRAFT_PART_INSTALL}/containerd-profile"
+
+      cp client.config "${SNAPCRAFT_PART_INSTALL}/client.config"
+      cp client.config.template "${SNAPCRAFT_PART_INSTALL}/client.config.template"
+      cp kubelet.config.template "${SNAPCRAFT_PART_INSTALL}/kubelet.config.template"
+      cp client-x509.config.template "${SNAPCRAFT_PART_INSTALL}/client-x509.config.template"
+
+      cp -r wrappers/* "${SNAPCRAFT_PART_INSTALL}/"
+      cp -r actions/ "${SNAPCRAFT_PART_INSTALL}/actions"
+
+  microk8s-completion:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/microk8s-completion
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh microk8s-completion
+
+  python-requirements:
+    plugin: python
+    python-version: python3
+    python-packages:
+      - PyYAML == 5.3.1
+      - netifaces == 0.10.9
+      - jsonschema == 4.0.0
+    stage-packages:
+      - python3-openssl
+      - python3-requests
+      - python3-click
+      - python3-dateutil
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
+
+apps:
+  microk8s:
+    command: microk8s.wrapper
+    completer: microk8s.bash
+  daemon-etcd:
+    command: run-etcd-with-args
+    daemon: simple
+  daemon-flanneld:
+    command: run-flanneld-with-args
+    daemon: simple
+  daemon-containerd:
+    command: run-containerd-with-args
+    daemon: notify
+    # when stopped send only sigterm
+    # https://forum.snapcraft.io/t/process-lifecycle-on-snap-refresh/140/37
+    stop-mode: sigterm
+    restart-condition: always
+  daemon-kubelite:
+    command: run-kubelite-with-args
+    daemon: simple
+  daemon-apiserver-kicker:
+    command: apiservice-kicker
+    daemon: simple
+  daemon-apiserver-proxy:
+    command: run-apiserver-proxy-with-args
+    daemon: simple
+  daemon-cluster-agent:
+    command: run-cluster-agent-with-args
+    daemon: simple
+  daemon-k8s-dqlite:
+    command: run-k8s-dqlite-with-args
+    daemon: simple
+  dashboard-proxy:
+    command: microk8s-dashboard-proxy.wrapper
+  kubectl:
+    command: microk8s-kubectl.wrapper
+    completer: kubectl.bash
+  add-node:
+    command: microk8s-add-node.wrapper
+  addons:
+    command: microk8s-addons.wrapper
+  refresh-certs:
+    command: microk8s-refresh-certs.wrapper
+  images:
+    command: microk8s-images.wrapper
+  join:
+    command: microk8s-join.wrapper
+  remove-node:
+    command: microk8s-remove-node.wrapper
+  leave:
+    command: microk8s-leave.wrapper
+  ctr:
+    command: microk8s-ctr.wrapper
+  inspect:
+    command: microk8s.wrapper inspect
+  enable:
+    command: microk8s-enable.wrapper
+  disable:
+    command: microk8s-disable.wrapper
+  start:
+    command: microk8s-start.wrapper
+  stop:
+    command: microk8s-stop.wrapper
+  status:
+    command: microk8s-status.wrapper
+  config:
+    command: microk8s-config.wrapper
+  reset:
+    command: microk8s-reset.wrapper
+  istioctl:
+    command: microk8s-istioctl.wrapper
+  linkerd:
+    command: microk8s-linkerd.wrapper
+  helm:
+    command: microk8s-helm.wrapper
+    completer: helm.bash
+  helm3:
+    command: microk8s-helm3.wrapper
+    completer: helm3.bash
+  cilium:
+    command: microk8s-cilium.wrapper
+  dbctl:
+    command: microk8s-dbctl.wrapper
+  version:
+    command: microk8s-version.wrapper
