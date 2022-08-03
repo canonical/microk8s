@@ -6,7 +6,7 @@ INSTALL="${1}/opt/cni/bin"
 mkdir -p "${INSTALL}"
 
 DIR=`realpath $(dirname "${0}")`
-GIT_TAG="$("${DIR}/version.sh")"
+GIT_TAG="$("${DIR}/../kubernetes/version.sh")"
 
 if [ ! -d "${SNAPCRAFT_PART_BUILD}/eks-distro" ]; then
   git clone --depth 1 https://github.com/aws/eks-distro $SNAPCRAFT_PART_BUILD/eks-distro
@@ -14,7 +14,8 @@ else
   (cd $SNAPCRAFT_PART_BUILD/eks-distro && git fetch --all && git pull)
 fi
 
-for patch in "${SNAPCRAFT_PART_BUILD}"/eks-distro/projects/containernetworking/plugins/patches/*.patch
+export EKS_TRACK=$(echo "$GIT_TAG" | cut -f1,2 -d'.' | tr -s . - | cut -c2-)
+for patch in "${SNAPCRAFT_PART_BUILD}"/eks-distro/projects/containernetworking/plugins/"${EKS_TRACK}"/patches/*.patch
 do
   echo "Applying patch $patch"
   git am < "$patch"
