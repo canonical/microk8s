@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "main"
+echo "MK-698/traefik-compatible-config"
