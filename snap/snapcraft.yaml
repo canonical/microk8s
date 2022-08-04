@@ -93,7 +93,7 @@ parts:
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flanneld
 
   kubernetes:
-    after: [build-deps]
+    after: [build-deps, dqlite]
     plugin: nil
     source: build-scripts/components/kubernetes
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
