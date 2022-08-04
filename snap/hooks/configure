@@ -139,6 +139,13 @@ then
   cp ${SNAP}/default-args/kubectl ${SNAP_DATA}/args/kubectl
 fi
 
+# copy traefik
+if [ ! -e ${SNAP_DATA}/args/traefik ]
+then
+  echo "Making sure we have traefik configuration"
+  cp -r ${SNAP}/default-args/traefik ${SNAP_DATA}/args/
+fi
+
 # copy apiserver-proxy
 if [ ! -e ${SNAP_DATA}/args/apiserver-proxy ]
 then
@@ -605,10 +612,6 @@ fi
 
 # Refresh calico if needed
 refresh_calico_if_needed
-
-# Migrate worker nodes from traefik
-"$SNAP/usr/bin/python3" "${SNAP}/scripts/worker/migrate-from-traefik.py"
-snapctl restart "${SNAP_NAME}.daemon-apiserver-proxy"
 
 if is_strict
 then
