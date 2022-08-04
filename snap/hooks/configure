@@ -613,6 +613,9 @@ fi
 # Refresh calico if needed
 refresh_calico_if_needed
 
+# Refresh apiserver proxy
+snapctl restart "${SNAP_NAME}.daemon-apiserver-proxy"
+
 if is_strict
 then
   enable_snap
