@@ -320,18 +320,12 @@ def service(operation, service_name):
     :param service_name: The service name
     :param operation: Operation to perform on the service
     """
-    if (
-        service_name == "apiserver"
-        or service_name == "proxy"
-        or service_name == "kubelet"
-        or service_name == "scheduler"
-        or service_name == "controller-manager"
-    ) and is_kubelite():
-        subprocess.check_call("snapctl {} microk8s.daemon-kubelite".format(operation).split())
+    if service_name in ["apiserver", "proxy", "kubelet", "scheduler", "controller-manager"]:
+        daemon = "microk8s.daemon-kubelite"
     else:
-        subprocess.check_call(
-            "snapctl {} microk8s.daemon-{}".format(operation, service_name).split()
-        )
+        daemon = "microk8s.daemon-{}".format(service_name)
+
+    subprocess.check_call(["snapctl", operation, daemon])
 
 
 def mark_no_cert_reissue():
