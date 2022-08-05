@@ -50,6 +50,25 @@ cluster_key_file = "{}/cluster.key".format(cluster_dir)
 FINGERPRINT_MIN_LEN = 12
 
 
+def get_traefik_port():
+    """
+    Return the port Traefik listens to. Try read the port from the Traefik configuration or return the default value
+    """
+    config_file = "{}/args/traefik/traefik-template.yaml".format(snapdata_path)
+    with open(config_file) as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+        if (
+            "entryPoints" in data
+            and "apiserver" in data["entryPoints"]
+            and "address" in data["entryPoints"]["apiserver"]
+        ):
+            port = data["entryPoints"]["apiserver"]["address"]
+            port = port.replace(":", "")
+            return port
+        else:
+            return "16443"
+
+
 def join_request(conn, api_version, req_data, master_ip, verify_peer, fingerprint):
     json_params = json.dumps(req_data)
     headers = {"Content-type": "application/json", "Accept": "application/json"}
@@ -312,13 +331,14 @@ def ca_one_line(ca):
     return base64.b64encode(ca.encode("utf-8")).decode("utf-8")
 
 
-def create_kubeconfig(token, ca, master_ip, filename, user):
+def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
     """
     Create a kubeconfig file. The file in stored under credentials named after the user
 
     :param token: the token to be in the kubeconfig
     :param ca: the ca
     :param master_ip: the master node IP
+    :param api_port: the API server port
     :param filename: the name of the config file
     :param user: the user to use al login
     """
@@ -335,16 +355,18 @@ def create_kubeconfig(token, ca, master_ip, filename, user):
             config_txt = config_txt.replace("NAME", user)
             config_txt = config_txt.replace("TOKEN", token)
             config_txt = config_txt.replace("127.0.0.1", master_ip)
+            config_txt = config_txt.replace("16443", api_port)
             fp.write(config_txt)
         try_set_file_permissions(config)
 
 
-def create_x509_kubeconfig(ca, master_ip, filename, user, path_to_cert, path_to_cert_key):
+def create_x509_kubeconfig(ca, master_ip, api_port, filename, user, path_to_cert, path_to_cert_key):
     """
     Create a kubeconfig file. The file in stored under credentials named after the user
 
     :param ca: the ca
     :param master_ip: the master node IP
+    :param api_port: the API server port
     :param filename: the name of the config file
     :param user: the user to use al login
     :param path_to_cert: path to certificate file
@@ -364,6 +386,7 @@ def create_x509_kubeconfig(ca, master_ip, filename, user, path_to_cert, path_to_
             config_txt = config_txt.replace("PATHTOCERT", path_to_cert)
             config_txt = config_txt.replace("PATHTOKEYCERT", path_to_cert_key)
             config_txt = config_txt.replace("127.0.0.1", master_ip)
+            config_txt = config_txt.replace("16443", api_port)
             fp.write(config_txt)
         try_set_file_permissions(config)
 
@@ -396,10 +419,12 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, hostname_overr
     :param hostname_override: the hostname override in case the hostname is not resolvable
     """
     proxy_token = "{}-proxy".format(token)
+    traefik_port = get_traefik_port()
     cert = get_client_cert(master_ip, master_port, "kube-proxy", proxy_token, "system:kube-proxy")
     create_x509_kubeconfig(
         ca,
         "127.0.0.1",
+        traefik_port,
         "proxy.config",
         "kubeproxy",
         cert["certificate_location"],
@@ -420,6 +445,7 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     :param master_port: the master node port where the cluster agent listens
     """
     kubelet_token = "{}-kubelet".format(token)
+    traefik_port = get_traefik_port()
     kubelet_user = "system:node:{}".format(socket.gethostname())
     cert = get_client_cert(
         master_ip, master_port, "kubelet", kubelet_token, kubelet_user, "system:nodes"
@@ -427,6 +453,7 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     create_x509_kubeconfig(
         ca,
         "127.0.0.1",
+        traefik_port,
         "kubelet.config",
         "kubelet",
         cert["certificate_location"],
@@ -736,16 +763,18 @@ def update_apiserver_proxy(master_ip, api_port):
     if os.path.exists(lock):
         os.remove(lock)
 
-    # see github.com/canonical/microk8s-cluster-agent/pkg/proxy.Config
-    config = {
-        "endpoints": ["{}:{}".format(master_ip, api_port)],
-    }
+    # add the initial control plane endpoint
+    addresses = [{"address": "{}:{}".format(master_ip, api_port)}]
 
-    proxy_config_file = os.path.expandvars("${SNAP_DATA}/args/apiserver-proxy-config")
-    with open(proxy_config_file, "w") as fout:
-        json.dump(config, fout)
+    traefik_providers = os.path.expandvars("${SNAP_DATA}/args/traefik/provider-template.yaml")
+    traefik_providers_out = os.path.expandvars("${SNAP_DATA}/args/traefik/provider.yaml")
+    with open(traefik_providers) as f:
+        p = yaml.safe_load(f)
+        p["tcp"]["services"]["kube-apiserver"]["loadBalancer"]["servers"] = addresses
+        with open(traefik_providers_out, "w") as out_file:
+            yaml.dump(p, out_file)
 
-    try_set_file_permissions(proxy_config_file)
+    try_set_file_permissions(traefik_providers_out)
     service("restart", "apiserver-proxy")
 
 

@@ -383,7 +383,7 @@ class TestCluster(object):
 
         # Check that kubelet talks to the control plane node via the local proxy
         print("Checking the worker's configuration")
-        provider = vm.run("cat /var/snap/microk8s/current/args/apiserver-proxy-config")
+        provider = vm.run("cat /var/snap/microk8s/current/args/traefik/provider.yaml")
         assert master_ip in provider.decode()
         kubelet = vm.run("cat /var/snap/microk8s/current/credentials/kubelet.config")
         assert "127.0.0.1" in kubelet.decode()
