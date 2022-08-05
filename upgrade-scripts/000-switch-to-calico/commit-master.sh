@@ -41,14 +41,7 @@ cp "$SNAP_DATA"/args/kube-proxy "$BACKUP_DIR/args"
 echo "Restarting kube proxy"
 refresh_opt_in_config "cluster-cidr" "10.1.0.0/16" kube-proxy
 
-if [ -e "$SNAP_DATA"/var/lock/lite.lock ]
-then
-  snapctl restart ${SNAP_NAME}.daemon-kubelite
-else
-  snapctl restart ${SNAP_NAME}.daemon-apiserver
-  snapctl restart ${SNAP_NAME}.daemon-kubelet
-  snapctl restart ${SNAP_NAME}.daemon-proxy
-fi
+snapctl restart ${SNAP_NAME}.daemon-kubelite
 
 set_service_not_expected_to_start flanneld
 snapctl stop ${SNAP_NAME}.daemon-flanneld

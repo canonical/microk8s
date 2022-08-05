@@ -5,13 +5,7 @@ source $SNAP/actions/common/utils.sh
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
 
-if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
-then
-  snapctl stop ${SNAP_NAME}.daemon-kubelite 2>&1 || true
-else
-  snapctl stop ${SNAP_NAME}.daemon-kubelet 2>&1 || true
-fi
-snapctl stop ${SNAP_NAME}.daemon-docker 2>&1 || true
+snapctl stop ${SNAP_NAME}.daemon-kubelite 2>&1 || true
 
 # Sym link the host's /var/lib/kubelet to the Snap's.  This will be fixed with layouts when
 # this Snap is strictly confined.

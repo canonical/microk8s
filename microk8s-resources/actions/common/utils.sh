@@ -226,12 +226,7 @@ restart_service() {
 
     if [ "$1" == "apiserver" ] || [ "$1" == "proxy" ] || [ "$1" == "kubelet" ] || [ "$1" == "scheduler" ] || [ "$1" == "controller-manager" ]
     then
-      if [ -e "${SNAP_DATA}/var/lock/lite.lock" ]
-      then
-        run_with_sudo preserve_env snapctl restart "microk8s.daemon-kubelite"
-      else
-        run_with_sudo preserve_env snapctl restart "microk8s.daemon-$1"
-      fi
+      run_with_sudo preserve_env snapctl restart "microk8s.daemon-kubelite"
     else
       run_with_sudo preserve_env snapctl restart "microk8s.daemon-$1"
     fi
@@ -693,7 +688,6 @@ get_container_shim_pids() {
 
 kill_all_container_shims() {
   run_with_sudo systemctl kill snap.microk8s.daemon-kubelite.service --signal=SIGKILL &>/dev/null || true
-  run_with_sudo systemctl kill snap.microk8s.daemon-kubelet.service --signal=SIGKILL &>/dev/null || true
   run_with_sudo systemctl kill snap.microk8s.daemon-containerd.service --signal=SIGKILL &>/dev/null || true
 }
 
