@@ -201,6 +201,7 @@ parts:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/cluster-agent
+    build-attributes: [no-patchelf]
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cluster-agent
 
   microk8s-addons:
