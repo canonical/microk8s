@@ -517,7 +517,7 @@ def mark_worker_node():
         lock_file = "{}/var/lock/{}".format(snapdata_path, lock)
         open(lock_file, "a").close()
         os.chmod(lock_file, 0o700)
-    services = ["kubelite", "etcd", "apiserver-kicker", "apiserver-proxy", "k8s-dqlite"]
+    services = ["kubelite", "etcd", "apiserver-kicker", "apiserver-proxy"]
     for s in services:
         service("restart", s)
 
@@ -667,7 +667,6 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     :param host: the hostname others see of this node
     """
     service("stop", "apiserver")
-    service("stop", "k8s-dqlite")
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
     shutil.move(cluster_dir, cluster_backup_dir)
@@ -685,7 +684,6 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     with open("{}/init.yaml".format(cluster_dir), "w") as f:
         yaml.dump(init_data, f)
 
-    service("start", "k8s-dqlite")
     service("start", "apiserver")
 
     waits = 10

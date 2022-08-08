@@ -41,7 +41,6 @@ def reset_current_dqlite_worker_installation():
     os.remove(ca_cert_file)
 
     service("stop", "apiserver")
-    service("stop", "k8s-dqlite")
     rebuild_client_config()
 
     print("Generating new cluster certificates.", flush=True)
@@ -180,7 +179,6 @@ def reset_current_dqlite_installation():
     my_ep, other_ep = get_dqlite_endpoints()
 
     service("stop", "apiserver")
-    service("stop", "k8s-dqlite")
     time.sleep(10)
 
     delete_dqlite_node(my_ep, other_ep)
@@ -188,7 +186,6 @@ def reset_current_dqlite_installation():
     print("Generating new cluster certificates.", flush=True)
     reinit_cluster()
 
-    service("start", "k8s-dqlite")
     service("start", "apiserver")
 
     apply_cni()
