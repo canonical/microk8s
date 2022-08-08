@@ -13,7 +13,7 @@ new file mode 100644
 index 0000000..93828f9
 --- /dev/null
 +++ b/cni.go
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,54 @@
 +package main
 +
 +import (
@@ -40,7 +40,6 @@ index 0000000..93828f9
 +	meta_portmap "github.com/containernetworking/plugins/plugins/meta/portmap"
 +	meta_sbr "github.com/containernetworking/plugins/plugins/meta/sbr"
 +	meta_tuning "github.com/containernetworking/plugins/plugins/meta/tuning"
-+	meta_vrf "github.com/containernetworking/plugins/plugins/meta/vrf"
 +)
 +
 +func main() {
@@ -68,7 +67,6 @@ index 0000000..93828f9
 +	reexec.Register("portmap", meta_portmap.Main)
 +	reexec.Register("sbr", meta_sbr.Main)
 +	reexec.Register("tuning", meta_tuning.Main)
-+	reexec.Register("vrf", meta_vrf.Main)
 +}
 --
 2.25.1

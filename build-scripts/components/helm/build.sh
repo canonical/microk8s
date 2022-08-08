@@ -5,6 +5,8 @@ VERSION="${2}"
 INSTALL="${1}"
 mkdir -p "${INSTALL}/bin"
 
+snap refresh go --channel 1.18
+
 make VERSION="${VERSION}"
 cp bin/helm "${INSTALL}/bin/helm"
 
@@ -20,3 +22,5 @@ cp bin/helm "${INSTALL}/bin/helm"
 
 cp bin/helm.bash "${INSTALL}/helm.bash"
 cp bin/helm3.bash "${INSTALL}/helm3.bash"
+
+snap refresh go --channel 1.16/stable
