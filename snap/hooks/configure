@@ -367,7 +367,7 @@ group=$(get_microk8s_group)
 # Try to create the snap_microk8s group. Do not fail the installation if something goes wrong
 if ! getent group ${group} >/dev/null 2>&1
 then
-  groupadd --system ${group} || true
+  groupadd ${group} || true
 fi
 
 if getent group ${group} >/dev/null 2>&1
