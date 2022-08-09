@@ -18,7 +18,7 @@ parts:
     plugin: nil
     override-build: |
       snap install go --classic
-      snap refresh go --channel 1.18
+      snap refresh go --channel 1.19
     build-packages:
       - autoconf
       - automake
