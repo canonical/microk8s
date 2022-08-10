@@ -98,7 +98,7 @@ def validate_addons_file(repo_dir: Path) -> None:
                                     "type": "array",
                                     "items": {
                                         "type": "string",
-                                        "enum": ["amd64", "arm64", "s390x"],
+                                        "enum": ["amd64", "arm64", "s390x", "ppc64le"],
                                     },
                                 },
                             },

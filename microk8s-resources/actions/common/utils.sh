@@ -248,7 +248,10 @@ restart_service() {
 
 
 arch() {
-    echo $SNAP_ARCH
+  case "${SNAP_ARCH}" in
+    ppc64el)  echo ppc64le        ;;
+    *)        echo "${SNAP_ARCH}" ;;
+  esac
 }
 
 
