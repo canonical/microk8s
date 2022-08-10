@@ -29,7 +29,14 @@ def is_strict():
 
 def get_current_arch():
     # architecture mapping
-    arch_mapping = {"aarch64": "arm64", "armv7l": "armhf", "x86_64": "amd64", "s390x": "s390x"}
+    arch_mapping = {
+        "aarch64": "arm64",
+        "armv7l": "armhf",
+        "x86_64": "amd64",
+        "s390x": "s390x",
+        "ppc64le": "ppc64le",
+        "ppc64el": "ppc64le",
+    }
 
     return arch_mapping[platform.machine()]
 
