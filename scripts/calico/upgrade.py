@@ -142,17 +142,17 @@ def try_upgrade(cni_file, new_cni_file):
     """
 
     # If cni files are not in place do nothing
-    if not (os.path.exists(cni_file) and os.path.exists(cni_file)):
+    if not (os.path.exists(cni_file) and os.path.exists(new_cni_file)):
         return False
 
     # If the current cni.yaml is not calico do nothing
     if not is_calico_cni_manifest(cni_file):
         return False
 
-    # If the current cni.yaml is not from 3.19 do nothing
+    # If the current cni.yaml is not from 3.21 do nothing
     # s390x will be filtered out because it is in 3.15
     current_version = get_installed_version_of_calico(cni_file)
-    if "3.19" not in current_version:
+    if "3.21" not in current_version:
         return False
 
     backup_old_cni(cni_file)

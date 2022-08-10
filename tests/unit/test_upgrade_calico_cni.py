@@ -35,7 +35,7 @@ class TestCNIUpgrade(object):
         Test extracting the Calico version
         """
         res = get_installed_version_of_calico(self._calico_new_yaml)
-        assert res == "v3.21.4"
+        assert res == "v3.23.4"
 
     def test_get_autodetect_method(self):
         """
@@ -54,11 +54,11 @@ class TestCNIUpgrade(object):
         res = get_calicos_autodetection_method(self._calico_new_yaml)
         assert res == "first-found"
         res = get_installed_version_of_calico(self._calico_old_copy_yaml)
-        assert res == "v3.19.1"
+        assert res == "v3.21.1"
         res = try_upgrade(self._calico_old_copy_yaml, self._calico_new_yaml)
         assert os.path.exists(self._calico_old_copy_backup_yaml)
         res = get_installed_version_of_calico(self._calico_old_copy_yaml)
-        assert res == "v3.21.4"
+        assert res == "v3.23.4"
         os.remove(self._calico_old_copy_yaml)
         os.remove(self._calico_old_copy_backup_yaml)
 
