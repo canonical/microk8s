@@ -90,11 +90,12 @@ snap install microk8s_*_amd64.snap --classic --dangerous
 
 The calico CNI manifest can be found under `upgrade-scripts/000-switch-to-calico/resources/calico.yaml`.
 Building the manifest is subject to the upstream calico project k8s installation process.
-At the time of the v3.23.4 release. The `calico.yaml` manifest is a slightly modified version of:
-`https://projectcalico.docs.tigera.io/archive/v3.21/manifests/calico.yaml`:
+The `calico.yaml` manifest is a slightly modified version of:
+`https://projectcalico.docs.tigera.io/archive/v3.23/manifests/calico.yaml`:
 
+- Set the calico backend from "bird" to "vxlan": `calico_backend: "vxlan"`
 - `CALICO_IPV4POOL_CIDR` was set to "10.1.0.0/16"
-- `CNI_NET_DIR` was set to "/var/snap/microk8s/current/args/cni-network"
+- `CNI_NET_DIR` had to be added and set to "/var/snap/microk8s/current/args/cni-network"
 - We set the following mount paths:
   1. `var-run-calico` to `/var/snap/microk8s/current/var/run/calico`
   1. `var-lib-calico` to `/var/snap/microk8s/current/var/lib/calico`
@@ -104,7 +105,6 @@ At the time of the v3.23.4 release. The `calico.yaml` manifest is a slightly mod
   1. `host-local-net-dir` to `/var/snap/microk8s/current/var/lib/cni/networks`
   1. `policysync` to `/var/snap/microk8s/current/var/run/nodeagent`
 - We enabled vxlan following the instructions in [the official docs.](https://docs.projectcalico.org/getting-started/kubernetes/installation/config-options#switching-from-ip-in-ip-to-vxlan)
-- `FELIX_LOGSEVERITYSCREEN` was set to "error"
 - The `liveness` and `readiness` probes of `bird-live` was commented out 
 - We set the IP autodetection method to
 
@@ -116,7 +116,7 @@ At the time of the v3.23.4 release. The `calico.yaml` manifest is a slightly mod
   ```dtd
           "nodename_file_optional": true,
   ```
-- The sys `mountpath` is commented out. This disables eBPF support but allows the CNI to deploy inside an LXC container. 
+- The `mount-bpffs` pod is commented out. This disables eBPF support but allows the CNI to deploy inside an LXC container. 
 
 ## Running the tests locally
 
