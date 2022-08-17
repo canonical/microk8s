@@ -169,7 +169,7 @@ def pull_and_validate(name: str, repo_dir: Path):
         sys.exit(1)
 
 
-def clone_and_validate(repo_dir: Path, remote_url:str):
+def clone_and_validate(repo_dir: Path, remote_url: str):
     if repo_dir.exists():
         shutil.rmtree(repo_dir)
     subprocess.check_call([GIT, "clone", remote_url, repo_dir])
