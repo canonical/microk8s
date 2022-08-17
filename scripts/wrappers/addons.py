@@ -214,8 +214,8 @@ def update(name: str):
     click.echo("Updating repository {}".format(name))
     remote_url = subprocess.check_output(
         [GIT, "remote", "get-url", "origin"], cwd=repo_dir, stderr=subprocess.DEVNULL
-    ).decode()
-    if remote_url.startswith(snap()):
+    ).decode().strip()
+    if remote_url.startswith(str(snap().parent)):
         # This is a repository that we have in the snap.
         # If the branch name we follow has not changed a simple git pull is enough
         # If the branch name changed we need to git repo add --force
@@ -226,7 +226,9 @@ def update(name: str):
             [GIT, "rev-parse", "--abbrev-ref", "HEAD"], cwd=remote_url, stderr=subprocess.DEVNULL
         ).decode()
         if followed_branch_name != snapped_branch_name:
-            add(name, remote_url, None, True)
+            shutil.rmtree(repo_dir)
+            subprocess.check_call([GIT, "clone", remote_url, repo_dir])
+            subprocess.check_call(["chgrp", get_group(), "-R", repo_dir])
         else:
             commit_before_pull = git_current_commit(repo_dir)
             subprocess.check_call([GIT, "pull"], cwd=repo_dir)
