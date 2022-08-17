@@ -220,10 +220,10 @@ def update(name: str):
         # If the branch name we follow has not changed a simple git pull is enough
         # If the branch name changed we need to git repo add --force
         followed_branch_name = subprocess.check_output(
-            [GIT, "rev-parse",  "--abbrev-ref", "HEAD"], cwd=repo_dir, stderr=subprocess.DEVNULL
+            [GIT, "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_dir, stderr=subprocess.DEVNULL
         ).decode()
         snapped_branch_name = subprocess.check_output(
-            [GIT, "rev-parse",  "--abbrev-ref", "HEAD"], cwd=remote_url, stderr=subprocess.DEVNULL
+            [GIT, "rev-parse", "--abbrev-ref", "HEAD"], cwd=remote_url, stderr=subprocess.DEVNULL
         ).decode()
         if followed_branch_name != snapped_branch_name:
             add(name, remote_url, None, True)
