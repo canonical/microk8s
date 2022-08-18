@@ -11,7 +11,7 @@ import click
 import jsonschema
 import yaml
 
-from common.utils import get_current_arch, snap_common, get_group
+from common.utils import get_current_arch, snap_common, get_group, snap
 
 GIT = os.path.expandvars("$SNAP/git.wrapper")
 
@@ -156,6 +156,34 @@ def get_addons_list(repo_dir: Path) -> List[str]:
     return [addon["name"] for addon in contents["microk8s-addons"]["addons"]]
 
 
+def pull_and_validate(name: str, repo_dir: Path):
+    commit_before_pull = git_current_commit(repo_dir)
+    subprocess.check_call([GIT, "pull"], cwd=repo_dir)
+
+    try:
+        validate_addons_repo(repo_dir)
+    except RepoValidationError as err:
+        click.echo(err.message, err=True)
+        click.echo(f"Rolling back repository {name}")
+        git_rollback(commit_before_pull, repo_dir)
+        sys.exit(1)
+
+
+def clone_and_validate(remote_url: str, repo_dir: Path):
+    if repo_dir.exists():
+        shutil.rmtree(repo_dir)
+    subprocess.check_call([GIT, "clone", remote_url, repo_dir])
+    subprocess.check_call(["chgrp", get_group(), "-R", repo_dir])
+
+    try:
+        validate_addons_repo(repo_dir)
+    except RepoValidationError as err:
+        click.echo(err.message, err=True)
+        click.echo(f"Removing {repo_dir}")
+        shutil.rmtree(repo_dir)
+        sys.exit(1)
+
+
 @repository.command("add", help="Add a MicroK8s addons repository")
 @click.argument("name")
 @click.argument("repository")
@@ -211,18 +239,30 @@ def update(name: str):
         click.echo("Error: built-in repository '{}' cannot be updated".format(name), err=True)
         sys.exit(1)
 
-    commit_before_pull = git_current_commit(repo_dir)
-
     click.echo("Updating repository {}".format(name))
-    subprocess.check_call([GIT, "pull"], cwd=repo_dir)
-
-    try:
-        validate_addons_repo(repo_dir)
-    except RepoValidationError as err:
-        click.echo(err.message, err=True)
-        click.echo(f"Rolling back repository {name}")
-        git_rollback(commit_before_pull, repo_dir)
-        sys.exit(1)
+    remote_url = (
+        subprocess.check_output(
+            [GIT, "remote", "get-url", "origin"], cwd=repo_dir, stderr=subprocess.DEVNULL
+        )
+        .decode()
+        .strip()
+    )
+    if remote_url.startswith(str(snap().parent)):
+        # This is a repository that we have in the snap.
+        # If the branch name we follow has not changed a simple git pull is enough
+        # If the branch name changed we need to git repo add --force
+        followed_branch_name = subprocess.check_output(
+            [GIT, "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_dir, stderr=subprocess.DEVNULL
+        ).decode()
+        snapped_branch_name = subprocess.check_output(
+            [GIT, "rev-parse", "--abbrev-ref", "HEAD"], cwd=remote_url, stderr=subprocess.DEVNULL
+        ).decode()
+        if followed_branch_name != snapped_branch_name:
+            clone_and_validate(remote_url, repo_dir)
+        else:
+            pull_and_validate(name, repo_dir)
+    else:
+        pull_and_validate(name, repo_dir)
 
 
 class GettingGitCommitError(Exception):
