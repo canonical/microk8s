@@ -8,7 +8,7 @@ import sys
 import click
 import yaml
 
-from common.utils import get_current_arch, snap_common, get_group, snap
+from common.utils import get_current_arch, snap_common, snap
 
 GIT = os.path.expandvars("$SNAP/git.wrapper")
 
@@ -16,34 +16,6 @@ addons = click.Group()
 
 repository = click.Group("repo")
 addons.add_command(repository)
-
-
-def pull_and_validate(name: str, repo_dir: Path):
-    commit_before_pull = git_current_commit(repo_dir)
-    subprocess.check_call([GIT, "pull"], cwd=repo_dir)
-
-    try:
-        validate_addons_repo(repo_dir)
-    except RepoValidationError as err:
-        click.echo(err.message, err=True)
-        click.echo(f"Rolling back repository {name}")
-        git_rollback(commit_before_pull, repo_dir)
-        sys.exit(1)
-
-
-def clone_and_validate(remote_url: str, repo_dir: Path):
-    if repo_dir.exists():
-        shutil.rmtree(repo_dir)
-    subprocess.check_call([GIT, "clone", remote_url, repo_dir])
-    subprocess.check_call(["chgrp", get_group(), "-R", repo_dir])
-
-    try:
-        validate_addons_repo(repo_dir)
-    except RepoValidationError as err:
-        click.echo(err.message, err=True)
-        click.echo(f"Removing {repo_dir}")
-        shutil.rmtree(repo_dir)
-        sys.exit(1)
 
 
 @repository.command("add", help="Add a MicroK8s addons repository")
@@ -121,11 +93,12 @@ def update(name: str):
             [GIT, "rev-parse", "--abbrev-ref", "HEAD"], cwd=remote_url, stderr=subprocess.DEVNULL
         ).decode()
         if followed_branch_name != snapped_branch_name:
-            clone_and_validate(remote_url, repo_dir)
+            subprocess.check_call([GIT, "clone", remote_url, repo_dir])
+            subprocess.check_call(["chgrp", "microk8s", "-R", repo_dir])
         else:
-            pull_and_validate(name, repo_dir)
+            subprocess.check_call([GIT, "pull"], cwd=repo_dir)
     else:
-        pull_and_validate(name, repo_dir)
+        subprocess.check_call([GIT, "pull"], cwd=repo_dir)
 
 
 @repository.command("list", help="List configured MicroK8s addons repositories")
