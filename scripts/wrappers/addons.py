@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import json
 import os
+from pathlib import PosixPath
 import shutil
 import subprocess
 import sys
@@ -8,14 +9,24 @@ import sys
 import click
 import yaml
 
-from common.utils import get_current_arch, snap_common
+from common.utils import get_current_arch, snap_common, snap
 
 GIT = os.path.expandvars("$SNAP/git.wrapper")
 
 addons = click.Group()
-
 repository = click.Group("repo")
+
 addons.add_command(repository)
+
+
+def validate_repo(name: str, repo_dir: PosixPath):
+    if not (repo_dir / "addons.yaml").exists():
+        click.echo(
+            "Error: repository '{}' does not contain an addons.yaml file".format(name), err=True
+        )
+        click.echo("Remove it with:", err=True)
+        click.echo("    microk8s addons repo remove {}".format(name), err=True)
+        sys.exit(1)
 
 
 @repository.command("add", help="Add a MicroK8s addons repository")
@@ -75,15 +86,33 @@ def update(name: str):
         sys.exit(1)
 
     click.echo("Updating repository {}".format(name))
-    subprocess.check_call([GIT, "pull"], cwd=repo_dir)
-
-    if not (repo_dir / "addons.yaml").exists():
-        click.echo(
-            "Error: repository '{}' does not contain an addons.yaml file".format(name), err=True
+    remote_url = (
+        subprocess.check_output(
+            [GIT, "remote", "get-url", "origin"], cwd=repo_dir, stderr=subprocess.DEVNULL
         )
-        click.echo("Remove it with:", err=True)
-        click.echo("    microk8s addons repo remove {}".format(name), err=True)
-        sys.exit(1)
+        .decode()
+        .strip()
+    )
+    if remote_url.startswith(str(snap().parent)):
+        # This is a repository that we have in the snap.
+        # If the branch name we follow has not changed a simple git pull is enough
+        # If the branch name changed we need to git repo add --force
+        followed_branch_name = subprocess.check_output(
+            [GIT, "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_dir, stderr=subprocess.DEVNULL
+        ).decode()
+        snapped_branch_name = subprocess.check_output(
+            [GIT, "rev-parse", "--abbrev-ref", "HEAD"], cwd=remote_url, stderr=subprocess.DEVNULL
+        ).decode()
+        if followed_branch_name != snapped_branch_name:
+            subprocess.check_call([GIT, "clone", remote_url, repo_dir])
+            subprocess.check_call(["chgrp", "microk8s", "-R", repo_dir])
+            validate_repo(name, repo_dir)
+        else:
+            subprocess.check_call([GIT, "pull"], cwd=repo_dir)
+            validate_repo(name, repo_dir)
+    else:
+        subprocess.check_call([GIT, "pull"], cwd=repo_dir)
+        validate_repo(name, repo_dir)
 
 
 @repository.command("list", help="List configured MicroK8s addons repositories")

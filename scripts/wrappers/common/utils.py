@@ -30,6 +30,13 @@ def snap_data() -> Path:
         return Path("/var/snap/microk8s/current")
 
 
+def snap() -> Path:
+    try:
+        return Path(os.environ["SNAP"])
+    except KeyError:
+        return Path("/snap/microk8s/current")
+
+
 def snap_common() -> Path:
     try:
         return Path(os.environ["SNAP_COMMON"])
