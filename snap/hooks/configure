@@ -22,6 +22,10 @@ then
   echo "Checking snap interfaces..."
 
   check_snap_interfaces # Check for interfaces but do not start until this script has run.
+else
+  # In classic we do not make use of the status flag. Here we clean any "blocked" message that may have
+  # come from a failed strict deployment
+  snapctl set-health okay
 fi
 
 need_api_restart=false
