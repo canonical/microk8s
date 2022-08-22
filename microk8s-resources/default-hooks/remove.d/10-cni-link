@@ -4,7 +4,7 @@
 
 if ! is_strict || (is_strict && snapctl is-connected network-control)
 then
-  for link in cni0 calico.vxlan
+  for link in cni0 vxlan.calico
   do
     if "${SNAP}/sbin/ip" link show "${link}"
     then
