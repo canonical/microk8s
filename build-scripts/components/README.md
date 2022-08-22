@@ -7,8 +7,10 @@ The directory structure looks like this:
 ```
 build-scripts/
     build-component.sh              <-- runs as `build-component.sh $component_name`
-                                        checks out the git repository, applies the specified
-                                        patches, then runs the `build.sh` step for the component
+                                        - checks out the git repository
+                                        - runs the `pre-patch.sh` script (if any)
+                                        - applies the patches (if any)
+                                        - runs the `build.sh` script to build the component
     component/
         $component_name/
             repository              <-- git repository to clone
@@ -16,6 +18,8 @@ build-scripts/
             build.sh                <-- runs as `build.sh $output $version`
                                         first argument is the output directory where
                                         binaries should be placed, second is the component version
+            pre-patch.sh            <-- runs as `pre-patch.sh`. takes any action needed before applying
+                                        the component patches
             patches/
                 ...                 <-- list of patches to apply after checkout (for stable versions)
             pre-patches/
