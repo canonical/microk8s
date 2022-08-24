@@ -1,4 +1,4 @@
-From 16262f01a972ef4f2f88c5953e8114106e834351 Mon Sep 17 00:00:00 2001
+From ae9147faf2e2ad7142702d2fa5d821a9efdff85e Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
@@ -6,23 +6,23 @@ Subject: [PATCH] Kubelite integration
 ---
  cmd/kube-apiserver/app/server.go    |  9 ++--
  cmd/kube-scheduler/app/server.go    |  6 ++-
- cmd/kubelet/app/server.go           | 11 ++--
+ cmd/kubelet/app/server.go           | 13 +++--
  cmd/kubelite/app/daemons/daemon.go  | 84 +++++++++++++++++++++++++++++
  cmd/kubelite/app/options/options.go | 79 +++++++++++++++++++++++++++
  cmd/kubelite/app/server.go          | 79 +++++++++++++++++++++++++++
  cmd/kubelite/kubelite.go            | 28 ++++++++++
  pkg/volume/csi/csi_plugin.go        | 10 ++--
- 8 files changed, 296 insertions(+), 10 deletions(-)
+ 8 files changed, 296 insertions(+), 12 deletions(-)
  create mode 100644 cmd/kubelite/app/daemons/daemon.go
  create mode 100644 cmd/kubelite/app/options/options.go
  create mode 100644 cmd/kubelite/app/server.go
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index 0887d9124ba..c7ece2136a1 100644
+index aa2995428ba..9cc861190d5 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
-@@ -86,7 +86,7 @@ func init() {
+@@ -87,7 +87,7 @@ func init() {
  }
  
  // NewAPIServerCommand creates a *cobra.Command object with default parameters
@@ -31,7 +31,7 @@ index 0887d9124ba..c7ece2136a1 100644
  	s := options.NewServerRunOptions()
  	cmd := &cobra.Command{
  		Use: "kube-apiserver",
-@@ -124,8 +124,11 @@ cluster's shared state through which all other components interact.`,
+@@ -125,8 +125,11 @@ cluster's shared state through which all other components interact.`,
  			if errs := completedOptions.Validate(); len(errs) != 0 {
  				return utilerrors.NewAggregate(errs)
  			}
@@ -46,10 +46,10 @@ index 0887d9124ba..c7ece2136a1 100644
  		Args: func(cmd *cobra.Command, args []string) error {
  			for _, arg := range args {
 diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
-index e6bda61b6e6..049b52fefaa 100644
+index c352ba664d0..54177aa117d 100644
 --- a/cmd/kube-scheduler/app/server.go
 +++ b/cmd/kube-scheduler/app/server.go
-@@ -128,7 +128,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
+@@ -129,7 +129,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
  	ctx, cancel := context.WithCancel(context.Background())
  	defer cancel()
  	go func() {
@@ -63,10 +63,10 @@ index e6bda61b6e6..049b52fefaa 100644
  		cancel()
  	}()
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 86c73b030d5..efeb017e92f 100644
+index 6d064326ec7..98d99d828e5 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
-@@ -114,7 +114,7 @@ const (
+@@ -116,7 +116,7 @@ const (
  )
  
  // NewKubeletCommand creates a *cobra.Command object with default parameters
@@ -75,11 +75,10 @@ index 86c73b030d5..efeb017e92f 100644
  	cleanFlagSet := pflag.NewFlagSet(componentKubelet, pflag.ContinueOnError)
  	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
  	kubeletFlags := options.NewKubeletFlags()
-@@ -253,7 +253,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -253,6 +253,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+ 			if err := checkPermissions(); err != nil {
  				klog.ErrorS(err, "kubelet running with insufficient permissions")
  			}
- 			// set up signal context here in order to be reused by kubelet and docker shim
--			ctx := genericapiserver.SetupSignalContext()
 +			runctx := context.Background()
 +			if len(ctx) == 0 {
 +				runctx = genericapiserver.SetupSignalContext()
@@ -89,9 +88,13 @@ index 86c73b030d5..efeb017e92f 100644
  
  			// make the kubelet's config safe for logging
  			config := kubeletServer.KubeletConfiguration.DeepCopy()
-@@ -264,7 +269,7 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -262,11 +268,8 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+ 			// log the kubelet's config for inspection
  			klog.V(5).InfoS("KubeletConfiguration", "configuration", config)
  
+-			// set up signal context for kubelet shutdown
+-			ctx := genericapiserver.SetupSignalContext()
+-
  			// run the kubelet
 -			return Run(ctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate)
 +			return Run(runctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate)
@@ -394,23 +397,21 @@ index 00000000000..667b24f68e6
 +	println("Stopping kubelite")
 +}
 diff --git a/pkg/volume/csi/csi_plugin.go b/pkg/volume/csi/csi_plugin.go
-index 3b0a5773e58..6da5e3d4ea1 100644
+index 592aaaeaaf6..4a47b4d87a3 100644
 --- a/pkg/volume/csi/csi_plugin.go
 +++ b/pkg/volume/csi/csi_plugin.go
-@@ -243,20 +243,24 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
+@@ -243,18 +243,22 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
  	}
  
  	// Initializing the label management channels
 -	nim = nodeinfomanager.NewNodeInfoManager(host.GetNodeName(), host, migratedPlugins)
 +	localNim := nodeinfomanager.NewNodeInfoManager(host.GetNodeName(), host, migratedPlugins)
  
- 	if utilfeature.DefaultFeatureGate.Enabled(features.CSIMigration) {
- 		// This function prevents Kubelet from posting Ready status until CSINode
- 		// is both installed and initialized
--		if err := initializeCSINode(host); err != nil {
-+		if err := initializeCSINode(host, localNim); err != nil {
- 			return errors.New(log("failed to initialize CSINode: %v", err))
- 		}
+ 	// This function prevents Kubelet from posting Ready status until CSINode
+ 	// is both installed and initialized
+-	if err := initializeCSINode(host); err != nil {
++	if err := initializeCSINode(host, localNim); err != nil {
+ 		return errors.New(log("failed to initialize CSINode: %v", err))
  	}
  
 +	if _, ok := host.(volume.KubeletVolumeHost); ok {
