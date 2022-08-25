@@ -1,4 +1,4 @@
-name: Build MicroK8s snap on PR and push to master
+name: Build and test MicroK8s snap
 
 on:
   push:
