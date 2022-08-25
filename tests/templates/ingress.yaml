@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: microbot
+  name: microbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: microbot
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: microbot
+    spec:
+      containers:
+        - image: cdkbot/microbot-$ARCH
+          imagePullPolicy: ""
+          name: microbot
+          ports:
+            - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            timeoutSeconds: 30
+          resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microbot
+  labels:
+    app: microbot
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app: microbot
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: microbot-ingress-nip
+spec:
+  rules:
+    - host: microbot.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: microbot
+                port:
+                  number: 80
