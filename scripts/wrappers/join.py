@@ -789,12 +789,11 @@ def print_worker_usage():
     print(
         "If the API servers are behind a loadbalancer please set the '--refresh-interval' to '0s' in:"
     )
-    print("    /var/snap/microk8s/current/args/apiserver-proxy")    
-    print(
-        "and replace the API server endpoints with the one provided by the loadbalancer in:"
-    )    
+    print("    /var/snap/microk8s/current/args/apiserver-proxy")
+    print("and replace the API server endpoints with the one provided by the loadbalancer in:")
     print("    /var/snap/microk8s/current/args/traefik/provider.yaml")
     print("")
+
 
 def join_dqlite_worker_node(info, master_ip, master_port, token):
     """
