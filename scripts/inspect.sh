@@ -467,7 +467,11 @@ then
   check_service $svc_flanneld
   check_service $svc_etcd
 else
-  check_service $svc_dqlite
+  if ! [ -e "${SNAP_DATA}/var/lock/no-k8s-dqlite" ]
+  then
+    # workers do not run dqlite
+    check_service $svc_dqlite
+  fi
 fi
 
 if ! [ -e "${SNAP_DATA}/var/lock/no-apiserver-proxy" ]

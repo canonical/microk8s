@@ -778,6 +778,24 @@ def update_apiserver_proxy(master_ip, api_port):
     service("restart", "apiserver-proxy")
 
 
+def print_worker_usage():
+    """
+    Print Worker usage
+    """
+    print("")
+    print("The node has joined the cluster and will appear in the nodes list in a few seconds.")
+    print("")
+    print("This worker node gets automatically configured with the API server endpoints.")
+    print(
+        "If the API servers are behind a loadbalancer please set the '--refresh-interval' to '0s' in:"
+    )
+    print("    /var/snap/microk8s/current/args/apiserver-proxy")    
+    print(
+        "and replace the API server endpoints with the one provided by the loadbalancer in:"
+    )    
+    print("    /var/snap/microk8s/current/args/traefik/provider.yaml")
+    print("")
+
 def join_dqlite_worker_node(info, master_ip, master_port, token):
     """
     Join this node as a worker to a cluster running dqlite.
@@ -806,6 +824,7 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     update_apiserver_proxy(master_ip, info["apiport"])
     mark_worker_node()
     mark_no_cert_reissue()
+    print_worker_usage()
 
 
 def join_dqlite_master_node(info, master_ip, token):
