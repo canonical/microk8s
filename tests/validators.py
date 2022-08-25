@@ -23,12 +23,8 @@ def validate_dns_dashboard():
     Validate the dashboard addon by trying to access the kubernetes dashboard.
     The dashboard will return an HTML indicating that it is up and running.
     """
-    wait_for_pod_state(
-        "", "kube-system", "running", label="k8s-app=kubernetes-dashboard"
-    )
-    wait_for_pod_state(
-        "", "kube-system", "running", label="k8s-app=dashboard-metrics-scraper"
-    )
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=kubernetes-dashboard")
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=dashboard-metrics-scraper")
     attempt = 30
     while attempt > 0:
         try:
@@ -54,13 +50,14 @@ def validate_storage():
     output = kubectl("describe deployment hostpath-provisioner -n kube-system")
     if "hostpath-provisioner-{}:1.0.0".format(get_arch()) in output:
         # we are running with a hostpath-provisioner that is old and we need to patch it
-        kubectl(
-            "set image  deployment hostpath-provisioner -n kube-system hostpath-provisioner=cdkbot/hostpath-provisioner:1.1.0"
+        cmd = (
+            "set image  deployment hostpath-provisioner"
+            "-n kube-system"
+            "hostpath-provisioner=cdkbot/hostpath-provisioner:1.1.0"
         )
+        kubectl(cmd)
 
-    wait_for_pod_state(
-        "", "kube-system", "running", label="k8s-app=hostpath-provisioner"
-    )
+    wait_for_pod_state("", "kube-system", "running", label="k8s-app=hostpath-provisioner")
     manifest = TEMPLATES / "pvc.yaml"
     kubectl("apply -f {}".format(manifest))
     wait_for_pod_state("hostpath-test-pod", "default", "running")
@@ -104,9 +101,7 @@ def common_ingress():
     while attempt >= 0:
         try:
             resp = requests.get("http://microbot.127.0.0.1.nip.io/")
-            if resp.status_code == 200 and "microbot.png" in resp.content.decode(
-                "utf-8"
-            ):
+            if resp.status_code == 200 and "microbot.png" in resp.content.decode("utf-8"):
                 service_ok = True
                 break
         except requests.RequestException:
@@ -123,13 +118,9 @@ def validate_ingress():
     daemonset = kubectl("get ds")
     if "nginx-ingress-microk8s-controller" in daemonset:
         wait_for_pod_state("", "default", "running", label="app=default-http-backend")
-        wait_for_pod_state(
-            "", "default", "running", label="name=nginx-ingress-microk8s"
-        )
+        wait_for_pod_state("", "default", "running", label="name=nginx-ingress-microk8s")
     else:
-        wait_for_pod_state(
-            "", "ingress", "running", label="name=nginx-ingress-microk8s"
-        )
+        wait_for_pod_state("", "ingress", "running", label="name=nginx-ingress-microk8s")
 
     manifest = TEMPLATES / "ingress.yaml"
     update_yaml_with_arch(manifest)

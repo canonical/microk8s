@@ -96,13 +96,11 @@ class TestUpgrade(object):
         # AMD64 only tests
         if platform.machine() == "x86_64" and under_time_pressure == "False":
             try:
-                ip_ranges = "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111,192.168.1.240/28"
-                enable = microk8s_enable(
-                    "{}:{}".format("metallb", ip_ranges), timeout_insec=500
+                ip_ranges = (
+                    "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111,192.168.1.240/28"
                 )
-                assert (
-                    "MetalLB is enabled" in enable and "Nothing to do for" not in enable
-                )
+                enable = microk8s_enable("{}:{}".format("metallb", ip_ranges), timeout_insec=500)
+                assert "MetalLB is enabled" in enable and "Nothing to do for" not in enable
                 validate_metallb_config(ip_ranges)
                 test_matrix["metallb"] = validate_metallb_config
             except CalledProcessError:
