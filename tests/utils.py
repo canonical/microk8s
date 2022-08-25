@@ -9,6 +9,13 @@ from subprocess import check_output, CalledProcessError, check_call
 arch_translate = {"aarch64": "arm64", "x86_64": "amd64"}
 
 
+def get_arch():
+    """
+    Returns the architecture we are running on
+    """
+    return arch_translate[platform.machine()]
+
+
 def run_until_success(cmd, timeout_insec=60, err_out=None):
     """
     Run a command until it succeeds or times out.
