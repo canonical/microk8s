@@ -45,7 +45,6 @@ function create_machine() {
 set -uex
 
 DISTRO=$1
-NAME=machine-$RANDOM
 FROM_CHANNEL=$2
 TO_CHANNEL=$3
 PROXY=""
@@ -58,16 +57,14 @@ fi
 # therefore we do not need to run it inside a VM/container
 apt-get install python3-pip -y
 pip3 install -U pytest requests pyyaml sh
-#LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHANNEL} pytest -s tests/test-cluster.py
+LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHANNEL} pytest -s tests/test-cluster.py
 
 # Test addons upgrade
 
+NAME=machine-$RANDOM
 create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-if lxc exec $NAME -- script -e -c "ls /var/snap/microk8s/common/addons/core/tests/test-upgrade.py"
-then
-  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/snap/microk8s/common/addons/core/tests/test-upgrade.py"
-fi
+lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/snap/microk8s/common/addons/core/tests/test-upgrade.py"
 lxc delete $NAME --force
 
 # Test upgrade-path
