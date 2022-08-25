@@ -17,8 +17,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install tox --fix-missing
+          sudo pip3 install -U pytest sh
       - name: Check Units
         run: |
           tox -e scripts
           tox -e wrappers
           tox -e cluster
+      - name: Verify branches
+        run: |
+          pytest -s ./tests/verify-branches.py
