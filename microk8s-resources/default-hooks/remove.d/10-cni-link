@@ -12,3 +12,17 @@ then
     fi
   done
 fi
+
+if ! is_strict || (is_strict && snapctl is-connected network-control)
+then
+  for podnamespace in \
+    $(microk8s kubectl get po -A -o \
+    jsonpath="{range .items[*]}{.metadata.namespace}{'.'}{.metadata.name}{'\n'}{end}")
+  do
+    digest=$(echo -n $podnamespace | sha1sum | cut -b -11)
+    if "${SNAP}/sbin/ip" link show "cali${digest}"
+    then
+      "${SNAP}/sbin/ip" link delete "cali${digst}" || true
+    fi
+  done
+fi
