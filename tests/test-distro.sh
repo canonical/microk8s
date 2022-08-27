@@ -57,10 +57,17 @@ fi
 # therefore we do not need to run it inside a VM/container
 apt-get install python3-pip -y
 pip3 install -U pytest requests pyyaml sh
-LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHANNEL} pytest -s tests/test-cluster.py
+EXIT_CODE=0
+export LXC_PROFILE="tests/lxc/microk8s.profile"
+export BACKEND="lxc"
+export CHANNEL_TO_TEST=${TO_CHANNEL}
+timeout 3600 pytest -s tests/test-cluster.py || EXIT_CODE=$?
+if [ $EXIT_CODE -ne 0 ]; then
+    echo "Test clusterring took longer than expected"
+    exit $EXIT_CODE
+fi
 
 # Test addons upgrade
-
 NAME=machine-$RANDOM
 create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
