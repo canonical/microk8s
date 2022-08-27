@@ -64,7 +64,7 @@ LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHAN
 NAME=machine-$RANDOM
 create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/snap/microk8s/common/addons/core/tests/test-upgrade.py"
+lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade.py"
 lxc delete $NAME --force
 
 # Test upgrade-path
