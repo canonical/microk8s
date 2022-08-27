@@ -277,7 +277,6 @@ apps:
   microk8s:
     command: microk8s.wrapper
     completer: microk8s.bash
-    stop-command: $SNAPCRAFT_PROJECT_DIR/scripts/dump-workload-endpoints.sh
   daemon-etcd:
     command: run-etcd-with-args
     daemon: simple

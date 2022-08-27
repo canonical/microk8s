@@ -46,6 +46,8 @@ then
   stopcmd="snapctl stop microk8s.daemon-kubelite --disable"
 fi
 
+dump_workload_endpoints
+
 $stopcmd
 stop_status=$?
 
