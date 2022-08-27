@@ -57,14 +57,20 @@ fi
 # therefore we do not need to run it inside a VM/container
 apt-get install python3-pip -y
 pip3 install -U pytest requests pyyaml sh
-EXIT_CODE=0
 export LXC_PROFILE="tests/lxc/microk8s.profile"
 export BACKEND="lxc"
 export CHANNEL_TO_TEST=${TO_CHANNEL}
-timeout 3600 pytest -s tests/test-cluster.py || EXIT_CODE=$?
-if [ $EXIT_CODE -ne 0 ]; then
-    echo "Test clusterring took longer than expected"
-    exit $EXIT_CODE
+TRY_ATTEMPT=0
+while ! (timeout 3600 pytest -s tests/test-cluster.py) &&
+      ! [ ${TRY_ATTEMPT} -eq 3 ]
+do
+  TRY_ATTEMPT=$((TRY_ATTEMPT+1))
+  sleep 1
+done
+if [ ${TRY_ATTEMPT} -eq 30 ]
+then
+  echo "Test clusterring took longer than expected"
+  exit 1
 fi
 
 # Test addons upgrade
