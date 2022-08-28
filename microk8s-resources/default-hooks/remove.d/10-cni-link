@@ -15,7 +15,8 @@ fi
 
 if ! is_strict || (is_strict && snapctl is-connected network-control)
 then
-  for workloadendpoint in cat "${SNAP_DATA}"/.workload_endpoints
+  echo "Gathering workload endpoints from $SNAP_DATA/.workload_endpoints"
+  for workloadendpoint in $(cat "${SNAP_DATA}"/.workload_endpoints)
   do
     if "${SNAP}/sbin/ip" link show "${workloadendpoint}"
     then
