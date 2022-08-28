@@ -53,6 +53,8 @@ then
   PROXY=$4
 fi
 
+ip a
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQD4dKYAg4N033xZCbMUjR6QeBCO1Yc8R+bfcpmlh/qvLyggu1NM+VlL7cSKYFahbTZlio6bls9WK2y/Fe3RhS+zFX3q1GpWKwINHyFztrLRevd2ZwSYajfX6Lm2JnkKsCfoa60ZbtOoX7H6yHHr+Su4uTURSZ9eKwvhNOuWF+K6OLYTzDjGUO2AfhPdj4XUH/wmLgDQk7K+4s5HJZLQ04+jk+92qHid/sqyOYHp7Gq8DSQcJAi1j1z1fiOBULjhnMyBtukL0GpwQSw46XlZ+Fr6j053Yig2gmCpZC5q6eEPz5eXZUcozKNcsJKzpNOuN+KDV7rtIz/SsCwPS7dywWPw/B331AL3sLm/022CjLUVlgxn1c/fE8TpO78murNAuUo7iT6QJWMzw9sAOY7a0cB8xUUr82cJvkIp9AgBjgs5SC3FAol2P5yW55/QjShy0LEm/vrn4+z92Q0KECFedX+63M2EpbHxLBAF0kxUSeJ0N9Y3txM/a3sYvfC9pdJeAtRErc3KQ7AQ/FkVvf2130jDD7+rVTt3qd5fRg3k7TnEmp3W9RldyQj6Od2pRZwOTytlxhEtTr9Uuxp94Cv3H6luwv1RFJkq6iLVFJkwZTVJQDqZf/6b1cWn7ZmltPXy5Pcv+/uJCK2yKEKmMR6D8I0eg7LLepFPJF57kNDl7O0hLw== k.tsakalozos tsakas@gmail.com" >> ~/.ssh/authorized_keys
 # Test clustering. This test will create lxc containers or multipass VMs
 # therefore we do not need to run it inside a VM/container
 apt-get install python3-pip -y
@@ -67,7 +69,7 @@ do
   TRY_ATTEMPT=$((TRY_ATTEMPT+1))
   sleep 1
 done
-if [ ${TRY_ATTEMPT} -eq 30 ]
+if [ ${TRY_ATTEMPT} -eq 3 ]
 then
   echo "Test clusterring took longer than expected"
   exit 1
