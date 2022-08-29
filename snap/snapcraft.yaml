@@ -293,6 +293,7 @@ apps:
   daemon-kubelite:
     command: run-kubelite-with-args
     daemon: simple
+    stop-command: $SNAP/scripts/dump-workload-endpoints.sh
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
