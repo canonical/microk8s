@@ -366,10 +366,20 @@ class TestCluster(object):
         self.VM[0].run("/snap/bin/microk8s.join {}".format(endpoint[0]))
 
         print("Waiting for nodes to be ready")
-        connected_nodes = self.VM[0].run("/snap/bin/microk8s.kubectl get no")
-        while "NotReady" in connected_nodes.decode():
-            time.sleep(5)
-            connected_nodes = self.VM[0].run("/snap/bin/microk8s.kubectl get no")
+        attempt = 0
+        while attempt < 10:
+            try:
+                connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+                if "NotReady" in connected_nodes.decode():
+                    time.sleep(5)
+                    continue
+                print(connected_nodes.decode())
+                break
+            except ChildProcessError:
+                time.sleep(10)
+                attempt += 1
+                if attempt == 10:
+                    raise
 
         attempt = 100
         while True:
@@ -408,7 +418,7 @@ class TestCluster(object):
                 connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
                 if "NotReady" in connected_nodes.decode():
                     time.sleep(5)
-                connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+                    continue
                 print(connected_nodes.decode())
                 break
             except ChildProcessError:
