@@ -3,6 +3,7 @@ import random
 import time
 import pytest
 import os
+import signal
 import subprocess
 from os import path
 
@@ -163,14 +164,15 @@ class VM:
             return output
         elif self.backend == "lxc":
             cmd_prefix = "/snap/bin/lxc exec {}  -- ".format(self.vm_name)
-            outout = ""
-            with subprocess.Popen(cmd_prefix + cmd, shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid) as process:
+            with subprocess.Popen(
+                cmd_prefix + cmd, shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid
+            ) as process:
                 try:
                     output = process.communicate(timeout=300)[0]
                     if process.returncode != 0:
                         raise ChildProcessError("Failed to run command")
                 except subprocess.TimeoutExpired:
-                    os.killpg(process.pid, signal.SIGKILL) # send signal to the process group
+                    os.killpg(process.pid, signal.SIGKILL)  # send signal to the process group
                     print("Process timed out")
                     output = process.communicate()[0]
             return output
