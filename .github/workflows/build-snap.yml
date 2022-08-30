@@ -134,7 +134,6 @@ jobs:
     steps:
       - name: Checking out repo
         uses: actions/checkout@v3.0.2
-    name: Test core addons upgrade
       - name: Install test dependencies
         run: |
           set -x
