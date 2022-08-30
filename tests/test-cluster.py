@@ -80,7 +80,7 @@ class VM:
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
-                cmd = "snap install microk8s --classic --channel {}".format(channel_or_snap)
+                cmd = "snap install microk8s --channel {}".format(channel_or_snap)
                 time.sleep(20)
                 print("About to run {}".format(cmd))
                 output = ""
