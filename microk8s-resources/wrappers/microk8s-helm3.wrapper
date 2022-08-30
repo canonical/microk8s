@@ -1,3 +1,14 @@
 #!/bin/bash
 
+export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
+source $SNAP/actions/common/utils.sh
+
+if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  echo "This MicroK8s deployment is acting as a node in a cluster. Please use the microk8s helm on the master."
+  exit 0
+fi
+
+exit_if_stopped
+
 "${SNAP}/bin/helm" --kubeconfig="${SNAP_DATA}"/credentials/client.config "$@"
