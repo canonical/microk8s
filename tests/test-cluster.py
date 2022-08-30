@@ -17,7 +17,7 @@ reuse_vms = None
 channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/edge")
 backend = os.environ.get("BACKEND", None)
 profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
-
+a = "some"
 
 class VM:
     """
