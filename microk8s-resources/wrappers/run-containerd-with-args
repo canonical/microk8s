@@ -53,7 +53,7 @@ RUNTIME="runc"
 RUNTIME_TYPE="io.containerd.runc.v1"
 SNAPSHOTTER=$(snapshotter)
 
-if mount | grep -q 'cgroup2 on /sys/fs/cgroup'; then
+if mount -t cgroup2 | grep -q 'type cgroup2'; then
   RUNTIME_TYPE="io.containerd.runc.v2"
 fi
 
