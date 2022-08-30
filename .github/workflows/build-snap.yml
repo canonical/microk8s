@@ -62,10 +62,10 @@ jobs:
         run: |
           sudo -E UPGRADE_MICROK8S_FROM=latest/edge/strict UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade-path.py
 
-    test-addons-core:
-      name: Test core addons
-      runs-on: ubuntu-20.04
-      needs: build
+  test-addons-core:
+    name: Test core addons
+    runs-on: ubuntu-20.04
+    needs: build
 
     steps:
       - name: Checking out repo
