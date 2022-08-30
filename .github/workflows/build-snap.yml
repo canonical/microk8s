@@ -82,8 +82,9 @@ jobs:
       - name: Running addons tests in strict mode
         run: |
           set -x
-          sudo snap install microk8s.snap --dangerous
+          sudo snap install build/microk8s.snap --dangerous
           sudo ./tests/connect-all-interfaces.sh
+          sudo microk8s status --wait-ready --timeout 300
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
           export STRICT="yes"
@@ -114,6 +115,8 @@ jobs:
         run: |
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
+          sudo ./tests/connect-all-interfaces.sh
+          sudo microk8s status --wait-ready --timeout 300
           sudo microk8s enable community
           export UNDER_TIME_PRESSURE="True"
           export STRICT="yes"
