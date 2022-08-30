@@ -1,9 +1,9 @@
 import string
 import random
 import time
-
 import pytest
 import os
+import signal
 import subprocess
 from os import path
 
@@ -79,10 +79,19 @@ class VM:
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
-                cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
-                cmd = ["snap install microk8s --classic --channel {}".format(channel_or_snap)]
+                cmd = "snap install microk8s --classic --channel {}".format(channel_or_snap)
                 time.sleep(20)
-                subprocess.check_output(cmd_prefix + cmd)
+                print("About to run {}".format(cmd))
+                output = ""
+                attempt = 0
+                while attempt < 3:
+                    try:
+                        output = self.run(cmd)
+                        break
+                    except ChildProcessError:
+                        time.sleep(10)
+                        attempt += 1
+                print(output.decode())
         else:
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
@@ -153,8 +162,18 @@ class VM:
             )
             return output
         elif self.backend == "lxc":
-            cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c ".format(self.vm_name).split()
-            output = subprocess.check_output(cmd_prefix + [cmd])
+            cmd_prefix = "/snap/bin/lxc exec {}  -- ".format(self.vm_name)
+            with subprocess.Popen(
+                cmd_prefix + cmd, shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid
+            ) as process:
+                try:
+                    output = process.communicate(timeout=300)[0]
+                    if process.returncode != 0:
+                        raise ChildProcessError("Failed to run command")
+                except subprocess.TimeoutExpired:
+                    os.killpg(process.pid, signal.SIGKILL)  # send signal to the process group
+                    print("Process timed out")
+                    output = process.communicate()[0]
             return output
         else:
             raise Exception("Not implemented for backend {}".format(self.backend))
@@ -211,11 +230,20 @@ class TestCluster(object):
 
             # Wait for nodes to be ready
             print("Waiting for nodes to register")
-            connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
-            while "NotReady" in connected_nodes.decode():
-                time.sleep(5)
-                connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
-            print(connected_nodes.decode())
+            attempt = 0
+            while attempt < 10:
+                try:
+                    connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+                    if "NotReady" in connected_nodes.decode():
+                        time.sleep(5)
+                    connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+                    print(connected_nodes.decode())
+                    break
+                except ChildProcessError:
+                    time.sleep(10)
+                    attempt += 1
+                    if attempt == 10:
+                        raise
 
             # Wait for CNI pods
             print("Waiting for cni")
@@ -339,10 +367,20 @@ class TestCluster(object):
         self.VM[0].run("/snap/bin/microk8s.join {}".format(endpoint[0]))
 
         print("Waiting for nodes to be ready")
-        connected_nodes = self.VM[0].run("/snap/bin/microk8s.kubectl get no")
-        while "NotReady" in connected_nodes.decode():
-            time.sleep(5)
-            connected_nodes = self.VM[0].run("/snap/bin/microk8s.kubectl get no")
+        attempt = 0
+        while attempt < 10:
+            try:
+                connected_nodes = self.VM[0].run("/snap/bin/microk8s.kubectl get no")
+                if "NotReady" in connected_nodes.decode():
+                    time.sleep(5)
+                    continue
+                print(connected_nodes.decode())
+                break
+            except ChildProcessError:
+                time.sleep(10)
+                attempt += 1
+                if attempt == 10:
+                    raise
 
         attempt = 100
         while True:
@@ -375,11 +413,20 @@ class TestCluster(object):
 
         # Wait for nodes to be ready
         print("Waiting for node to register")
-        connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
-        while "NotReady" in connected_nodes.decode():
-            time.sleep(5)
-            connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
-        print(connected_nodes.decode())
+        attempt = 0
+        while attempt < 10:
+            try:
+                connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+                if "NotReady" in connected_nodes.decode():
+                    time.sleep(5)
+                    continue
+                print(connected_nodes.decode())
+                break
+            except ChildProcessError:
+                time.sleep(10)
+                attempt += 1
+                if attempt == 10:
+                    raise
 
         # Check that kubelet talks to the control plane node via the local proxy
         print("Checking the worker's configuration")

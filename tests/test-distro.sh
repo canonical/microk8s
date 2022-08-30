@@ -57,14 +57,27 @@ fi
 # therefore we do not need to run it inside a VM/container
 apt-get install python3-pip -y
 pip3 install -U pytest requests pyyaml sh
-LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHANNEL} pytest -s tests/test-cluster.py
+export LXC_PROFILE="tests/lxc/microk8s.profile"
+export BACKEND="lxc"
+export CHANNEL_TO_TEST=${TO_CHANNEL}
+TRY_ATTEMPT=0
+while ! (timeout 3600 pytest -s tests/test-cluster.py) &&
+      ! [ ${TRY_ATTEMPT} -eq 3 ]
+do
+  TRY_ATTEMPT=$((TRY_ATTEMPT+1))
+  sleep 1
+done
+if [ ${TRY_ATTEMPT} -eq 3 ]
+then
+  echo "Test clusterring took longer than expected"
+  exit 1
+fi
 
 # Test addons upgrade
-
 NAME=machine-$RANDOM
 create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/snap/microk8s/common/addons/core/tests/test-upgrade.py"
+lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade.py"
 lxc delete $NAME --force
 
 # Test upgrade-path
