@@ -19,6 +19,7 @@ parts:
     override-build: |
       snap install go --classic
       snap refresh go --channel 1.16
+      python3 -m pip install PyYAML
     build-packages:
       - autoconf
       - automake
@@ -201,6 +202,11 @@ parts:
     plugin: nil
     source: build-scripts/addons
     override-build: ./repositories.sh "${SNAPCRAFT_PART_INSTALL}"
+
+  eks-images:
+    plugin: nil
+    source: build-scripts/images
+    override-build: ./parse.sh "${SNAPCRAFT_PART_INSTALL}"
 
   microk8s-scripts:
     plugin: nil
