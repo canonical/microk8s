@@ -168,7 +168,10 @@ def mark_apply_needed(lock_file):
     """
     Remove the lock file provided so the apiserver kicker will re apply the CNI manifest
     """
-    os.remove(lock_file)
+    try:
+        os.remove(lock_file)
+    except OSError:
+        pass
 
 
 def main():

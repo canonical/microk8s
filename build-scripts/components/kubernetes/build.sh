@@ -2,6 +2,8 @@
 
 INSTALL="${1}"
 
+export KUBE_GIT_VERSION_FILE="${PWD}/.version.sh"
+
 for app in kubectl kubelite; do
   make WHAT="cmd/${app}" KUBE_STATIC_OVERRIDES=kubelite
   cp _output/bin/"${app}" "${INSTALL}/${app}"

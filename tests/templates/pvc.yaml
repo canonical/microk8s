@@ -1,0 +1,30 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: myclaim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: hostpath-test-pod
+spec:
+  containers:
+    - name: hostpath-test-container
+      image: busybox
+      command:
+        ["/bin/sh", "-c", "while true; do date >> /mnt/dates; sleep 2; done"]
+      volumeMounts:
+        - name: hostpath-volume
+          mountPath: "/mnt"
+  restartPolicy: "Never"
+  volumes:
+    - name: hostpath-volume
+      persistentVolumeClaim:
+        claimName: myclaim

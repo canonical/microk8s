@@ -41,6 +41,11 @@ fi
 cd "${COMPONENT_BUILD_DIRECTORY}"
 git config user.name "MicroK8s builder bot"
 git config user.email "microk8s-builder-bot@canonical.com"
+
+if [ -e "${COMPONENT_DIRECTORY}/pre-patch.sh" ]; then
+  bash -xe "${COMPONENT_DIRECTORY}/pre-patch.sh"
+fi
+
 if echo "${GIT_TAG}" | grep -e rc -e alpha -e beta; then
   if [ -d "${COMPONENT_DIRECTORY}/pre-patches" ]; then
     for patch in "${COMPONENT_DIRECTORY}"/pre-patches/*; do
