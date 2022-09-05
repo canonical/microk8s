@@ -296,7 +296,6 @@ class TestCluster(object):
         vm.run("snap remove --purge microk8s")
         assert vm.run("/usr/bin/ip a | grep cali") == ""
 
-
     def test_nodes_in_ha(self):
         """
         Test all nodes are seeing the database while removing nodes
