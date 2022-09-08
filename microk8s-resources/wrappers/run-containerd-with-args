@@ -48,7 +48,7 @@ fi
 
 app=containerd
 
-PAUSE_IMAGE=$(cat $SNAP/PAUSE_IMAGE)
+source "$SNAP/images/images-list"
 RUNTIME="runc"
 RUNTIME_TYPE="io.containerd.runc.v1"
 SNAPSHOTTER=$(snapshotter)
