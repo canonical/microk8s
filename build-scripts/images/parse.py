@@ -1,4 +1,3 @@
-import subprocess
 import yaml
 import sys
 
