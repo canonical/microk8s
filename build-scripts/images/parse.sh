@@ -16,5 +16,5 @@ EKS_RELEASE=$(cat "${SNAPCRAFT_PART_BUILD}"/eks-distro/release/"${EKS_TRACK}"/pr
 
 curl "https://distro.eks.amazonaws.com/kubernetes-$EKS_TRACK/kubernetes-$EKS_TRACK-eks-$EKS_RELEASE.yaml" -o "${SNAPCRAFT_PART_BUILD}/kubernetes-$EKS_TRACK-eks-$EKS_RELEASE.yaml"
 
-mkdir -p $INSTALL/images
-python3 parse.py "${SNAPCRAFT_PART_BUILD}/kubernetes-$EKS_TRACK-eks-$EKS_RELEASE.yaml" "$INSTALL/images"
+mkdir -p $INSTALL/etc
+python3 parse.py "${SNAPCRAFT_PART_BUILD}/kubernetes-$EKS_TRACK-eks-$EKS_RELEASE.yaml" "$INSTALL/etc"

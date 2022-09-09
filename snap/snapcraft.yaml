@@ -18,7 +18,6 @@ parts:
     plugin: nil
     override-build: |
       snap install go --classic --channel 1.17/stable
-      python3 -m pip install PyYAML
     build-packages:
       - autoconf
       - automake
@@ -39,6 +38,7 @@ parts:
       - libtool
       - libuv1-dev
       - pkg-config
+      - python3-yaml
       - rsync
       - tcl
 

@@ -9,10 +9,7 @@ eksd,https://github.com/canonical/microk8s-aws-addons,main
 "
 
 # List of addon repositories to automatically enable
-ADDONS_REPOS_ENABLED="
-core
-eksd
-"
+ADDONS_REPOS_ENABLED="core eksd"
 
 INSTALL="${1}"
 if [ -d "${INSTALL}/addons" ]; then
