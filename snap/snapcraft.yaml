@@ -38,6 +38,7 @@ parts:
       - libtool
       - libuv1-dev
       - pkg-config
+      - python3-yaml
       - rsync
       - tcl
 
@@ -206,6 +207,11 @@ parts:
     plugin: nil
     source: build-scripts/addons
     override-build: ./repositories.sh "${SNAPCRAFT_PART_INSTALL}"
+
+  eks-images:
+    plugin: nil
+    source: build-scripts/images
+    override-build: ./parse.sh "${SNAPCRAFT_PART_INSTALL}"
 
   microk8s-scripts:
     plugin: nil
