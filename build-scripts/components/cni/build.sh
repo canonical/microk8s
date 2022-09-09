@@ -16,6 +16,6 @@ export CGO_ENABLED=0
 go build -o cni -ldflags "-s -w -extldflags -static -X github.com/containernetworking/plugins/pkg/utils/buildversion.BuildVersion=${VERSION}" ./cni.go
 
 cp cni "${INSTALL}/"
-for plugin in dhcp host-local static bridge host-device ipvlan loopback macvlan ptp vlan bandwidth flannel firewall portmap sbr tuning vrf; do
+for plugin in dhcp host-local static bridge host-device ipvlan loopback macvlan ptp vlan bandwidth flannel firewall portmap sbr tuning; do
   ln -f -s ./cni "${INSTALL}/${plugin}"
 done
