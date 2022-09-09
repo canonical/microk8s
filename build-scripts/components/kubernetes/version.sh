@@ -3,6 +3,10 @@
 KUBE_TRACK="${KUBE_TRACK:-1.22}"            # example: "1.24"
 KUBE_VERSION="${KUBE_VERSION:-}"        # example: "v1.24.2"
 
+if [ -e "${SNAPCRAFT_STAGE}/KUBE_VERSION" ]; then
+  KUBE_VERSION=$(cat "$SNAPCRAFT_STAGE/KUBE_VERSION")
+fi
+
 if [ -z "${KUBE_VERSION}" ]; then
   if [ -z "${KUBE_TRACK}" ]; then
     KUBE_VERSION="$(curl -L --silent "https://dl.k8s.io/release/stable.txt")"

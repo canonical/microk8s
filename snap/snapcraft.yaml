@@ -1,5 +1,5 @@
 name: microk8s
-adopt-info: kubernetes-version
+adopt-info: eksd
 summary: Kubernetes for workstations and appliances
 description: |-
   MicroK8s is a small, fast, secure, single node Kubernetes that installs on
@@ -93,8 +93,14 @@ parts:
     source: build-scripts/components/flanneld
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flanneld
 
+  eksd:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/eksd
+    override-build: ./build.sh "${SNAPCRAFT_PART_INSTALL}"
+
   kubernetes:
-    after: [build-deps, dqlite]
+    after: [build-deps, eksd, dqlite]
     plugin: nil
     source: build-scripts/components/kubernetes
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
@@ -202,11 +208,6 @@ parts:
     plugin: nil
     source: build-scripts/addons
     override-build: ./repositories.sh "${SNAPCRAFT_PART_INSTALL}"
-
-  eks-images:
-    plugin: nil
-    source: build-scripts/images
-    override-build: ./parse.sh "${SNAPCRAFT_PART_INSTALL}"
 
   microk8s-scripts:
     plugin: nil
