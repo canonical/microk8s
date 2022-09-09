@@ -11,7 +11,9 @@ if __name__ == "__main__":
             manifest = yaml.safe_load(stream)
             with open(f"{sys.argv[2]}/images-list", "w+") as list:
                 for component in manifest["status"]["components"]:
-                    component_path = "{}/eksd-components/{}".format(os.environ["SNAPCRAFT_PART_BUILD"], component["name"])
+                    component_path = "{}/eksd-components/{}".format(
+                        os.environ["SNAPCRAFT_PART_BUILD"], component["name"]
+                    )
                     Path(component_path).mkdir(parents=True, exist_ok=True)
 
                     with open(f"{component_path}/git-tag", "w+") as tag_file:
