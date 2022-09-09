@@ -287,7 +287,8 @@ class TestCluster(object):
         vm.setup(channel_to_test)
         print("Waiting for machine {}".format(vm.vm_name))
         vm.run("/snap/bin/microk8s.status --wait-ready --timeout 240")
-        while True:
+        timeout = time.time() + 240
+        while time.time() <= timeout:
             pods = vm.run("/snap/bin/microk8s.kubectl get po -n kube-system -o wide")
             for line in pods.decode().splitlines():
                 if "calico" in line and "Running" in line:
