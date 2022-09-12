@@ -15,10 +15,6 @@ if __name__ == "__main__":
                         os.environ["SNAPCRAFT_PART_BUILD"], component["name"]
                     )
                     Path(component_path).mkdir(parents=True, exist_ok=True)
-
-                    with open(f"{component_path}/git-tag", "w+") as tag_file:
-                        tag_file.write(component["gitTag"])
-
                     for asset in component["assets"]:
                         if asset["name"] == "pause-image":
                             list.write("PAUSE_IMAGE={}\n".format(asset["image"]["uri"]))
