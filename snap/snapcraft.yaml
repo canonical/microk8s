@@ -105,11 +105,6 @@ parts:
     source: build-scripts/components/kubernetes
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
 
-  kubernetes-version:
-    plugin: nil
-    source: build-scripts/components/kubernetes
-    override-build: snapcraftctl set-version "$(./version.sh)"
-
   helm:
     after: [build-deps]
     plugin: nil
