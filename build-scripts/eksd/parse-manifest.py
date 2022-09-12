@@ -1,5 +1,7 @@
+import os
 import yaml
 import sys
+from pathlib import Path
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -9,6 +11,10 @@ if __name__ == "__main__":
             manifest = yaml.safe_load(stream)
             with open(f"{sys.argv[2]}/images-list", "w+") as list:
                 for component in manifest["status"]["components"]:
+                    component_path = "{}/eksd-components/{}".format(
+                        os.environ["SNAPCRAFT_PART_BUILD"], component["name"]
+                    )
+                    Path(component_path).mkdir(parents=True, exist_ok=True)
                     for asset in component["assets"]:
                         if asset["name"] == "pause-image":
                             list.write("PAUSE_IMAGE={}\n".format(asset["image"]["uri"]))
