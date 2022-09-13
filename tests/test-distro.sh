@@ -60,24 +60,10 @@ pip3 install -U pytest requests pyyaml sh
 LXC_PROFILE="tests/lxc/microk8s.profile" BACKEND="lxc" CHANNEL_TO_TEST=${TO_CHANNEL} pytest -s tests/test-cluster.py
 
 # Test addons upgrade
-
 NAME=machine-$RANDOM
 create_machine $NAME $PROXY
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
 lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/snap/microk8s/common/addons/core/tests/test-upgrade.py"
-lxc delete $NAME --force
-
-# Test upgrade-path
-NAME=machine-$RANDOM
-create_machine $NAME $PROXY
-# use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
-then
-  lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
-  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=/tmp/microk8s_latest_amd64.snap pytest -s /var/tmp/tests/test-upgrade-path.py"
-else
-  lxc exec $NAME -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /var/tmp/tests/test-upgrade-path.py"
-fi
 lxc delete $NAME --force
 
 # Test addons
