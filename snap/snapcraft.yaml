@@ -19,7 +19,6 @@ parts:
     override-build: |
       snap install go --classic
       snap refresh go --channel 1.16
-      python3 -m pip install PyYAML
     build-packages:
       - autoconf
       - automake
@@ -40,6 +39,7 @@ parts:
       - libtool
       - libuv1-dev
       - pkg-config
+      - python3-yaml
       - rsync
       - tcl
 

@@ -1,8 +1,10 @@
 # MicroK8s
 
-![](https://img.shields.io/badge/Kubernetes-1.25-326de6.svg)
+![](https://img.shields.io/badge/Kubernetes-1.22-EKSD-326de6.svg)
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">
+
+This branch ships Kubernetes with the [1.22-EKSD](https://distro.eks.amazonaws.com/) patches from Amazon.
 
 ## The smallest, fastest Kubernetes
 

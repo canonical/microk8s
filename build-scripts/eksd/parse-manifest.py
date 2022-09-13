@@ -1,26 +1,26 @@
-import os
 import yaml
 import sys
-from pathlib import Path
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(1)
-    with open(sys.argv[1], "r") as stream:
-        try:
-            manifest = yaml.safe_load(stream)
-            with open(f"{sys.argv[2]}/images-list", "w+") as list:
-                for component in manifest["status"]["components"]:
-                    component_path = "{}/eksd-components/{}".format(
-                        os.environ["SNAPCRAFT_PART_BUILD"], component["name"]
-                    )
-                    Path(component_path).mkdir(parents=True, exist_ok=True)
-                    for asset in component["assets"]:
-                        if asset["name"] == "pause-image":
-                            list.write("PAUSE_IMAGE={}\n".format(asset["image"]["uri"]))
-                        elif asset["name"] == "coredns-image":
-                            list.write("COREDNS_IMAGE={}\n".format(asset["image"]["uri"]))
-                        elif asset["name"] == "metrics-server-image":
-                            list.write("METRICS_SERVER_IMAGE={}\n".format(asset["image"]["uri"]))
-        except yaml.YAMLError as exc:
-            print(exc)
+
+    eks_manifest_file = sys.argv[1]
+    configuration_file = f"{sys.argv[2]}/configuration.sh"
+
+    with open(eks_manifest_file) as fin:
+        manifest = yaml.safe_load(fin)
+
+    kvs = {}
+
+    for component in manifest["status"]["components"]:
+        for asset in component["assets"]:
+            if asset["name"] == "pause-image":
+                kvs["PAUSE_IMAGE"] = asset["image"]["uri"]
+            elif asset["name"] == "coredns-image":
+                kvs["COREDNS_IMAGE"] = asset["image"]["uri"]
+            elif asset["name"] == "metrics-server-image":
+                kvs["METRICS_SERVER_IMAGE"] = asset["image"]["uri"]
+
+    with open(configuration_file, "w+") as fout:
+        fout.write("\n".join("{}={}".format(k, v) for k, v in kvs.items()))
