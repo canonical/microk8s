@@ -54,8 +54,14 @@ echo "5/7 -- Install MicroK8s on an airgap environment"
 create_machine "airgap-test" $PROXY
 lxc exec airgap-test -- bash -c "
   snap install core18
-  netplan set ethernets.eth0.dhcp4-overrides.use-routes=false
-  netplan set ethernets.eth0.routes='[{ to: 0.0.0.0/0, scope: link }]'
+  echo '
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4-overrides: { use-routes: false }
+      routes: [{ to: 0.0.0.0/0, scope: link }]
+' > /etc/netplan/70-airgap.yaml
   netplan apply
 "
 if lxc exec airgap-test -- bash -c "ping -c1 1.1.1.1"; then
