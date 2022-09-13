@@ -52,6 +52,12 @@ lxc exec airgap-registry -- bash -c '
 
 echo "5/7 -- Install MicroK8s on an airgap environment"
 create_machine "airgap-test" $PROXY
+if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
+then
+  lxc file push ${TO_CHANNEL} airgap-test/tmp/microk8s.snap
+else
+  lxc exec airgap-test -- snap download microk8s --channel=${TO_CHANNEL} --target-directory /tmp --basename microk8s
+fi
 lxc exec airgap-test -- bash -c "
   snap install core18
   echo '
@@ -68,13 +74,7 @@ if lxc exec airgap-test -- bash -c "ping -c1 1.1.1.1"; then
   echo "machine for airgap test has internet access when it should not"
   exit 1
 fi
-if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
-then
-  lxc file push ${TO_CHANNEL} airgap-test/tmp/microk8s_latest_amd64.snap
-  lxc exec airgap-test -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
-else
-  lxc exec airgap-test -- snap install microk8s --channel=${TO_CHANNEL} --classic
-fi
+lxc exec airgap-test -- snap install /tmp/microk8s.snap --dangerous --classic
 
 echo "6/7 -- Configure MicroK8s registry mirrors"
 lxc exec airgap-test -- bash -c '
