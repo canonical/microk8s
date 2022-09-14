@@ -559,6 +559,16 @@ def update_kubelet_node_ip(args_string, hostname_override):
         set_arg("--node-ip", hostname_override, "kubelet")
 
 
+def update_kubelet_hostname_override(args_string):
+    """
+    Remove the kubelet --hostname-override argument if it was set on the node that we join.
+
+    :param args_string: the kubelet arguments
+    """
+    if "--hostname-override" in args_string:
+        set_arg("--hostname-override", None, "kubelet")
+
+
 def replace_admin_token(token):
     """
     Replaces the admin token in the known tokens
@@ -832,6 +842,7 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
 
     store_base_kubelet_args(info["kubelet_args"])
     update_kubelet_node_ip(info["kubelet_args"], hostname_override)
+    update_kubelet_hostname_override(info["kubelet_args"])
     update_cert_auth_kubeproxy(token, info["ca"], master_ip, master_port, hostname_override)
     update_cert_auth_kubelet(token, info["ca"], master_ip, master_port)
 
@@ -878,6 +889,7 @@ def join_dqlite_master_node(info, master_ip, token):
     create_admin_kubeconfig(info["ca"], info["admin_token"])
     store_base_kubelet_args(info["kubelet_args"])
     update_kubelet_node_ip(info["kubelet_args"], hostname_override)
+    update_kubelet_hostname_override(info["kubelet_args"])
     store_callback_token(info["callback_token"])
     update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
     # We want to update the local CNI yaml but we do not want to apply it.
@@ -899,6 +911,7 @@ def join_etcd(connection_parts, verify=True):
     callback_token = generate_callback_token()
     info = get_connection_info(master_ip, master_port, token, callback_token=callback_token)
     store_base_kubelet_args(info["kubelet_args"])
+    update_kubelet_hostname_override(info["kubelet_args"])
     hostname_override = None
     if "hostname_override" in info:
         hostname_override = info["hostname_override"]
