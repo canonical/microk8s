@@ -60,6 +60,7 @@ else
 fi
 lxc exec airgap-test -- bash -c "
   snap install core18
+  snap install snapd
   echo '
 network:
   version: 2
