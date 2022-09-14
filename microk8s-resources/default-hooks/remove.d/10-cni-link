@@ -4,20 +4,15 @@
 
 if ! is_strict || (is_strict && snapctl is-connected network-control)
 then
-  for link in cni0 vxlan.calico
+  for link in cni0
   do
     if "${SNAP}/sbin/ip" link show "${link}"
     then
       "${SNAP}/sbin/ip" link delete "${link}" || true
     fi
   done
+  for calink in $("${SNAP}/sbin/ip" -j --pretty link show |\
+                 awk '/cali/ {print $2}' | tr -d '",')
+  do "${SNAP}/sbin/ip" link delete "${calink}"
+  done
 fi
-
-echo "Gathering workload endpoints from $SNAP_DATA/.workload_endpoints"
-for workloadendpoint in $(cat "${SNAP_DATA}"/.workload_endpoints)
-do
-  if "${SNAP}/sbin/ip" link show "${workloadendpoint}"
-  then
-    "${SNAP}/sbin/ip" link delete "${workloadendpoint}" || true
-  fi
-done

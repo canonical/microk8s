@@ -948,17 +948,3 @@ wait_for_default_route() {
     sleep 2
   done
 }
-
-dump_workload_endpoints() {
-  > "${SNAP_DATA}"/.workload_endpoints
-
-  KUBECTL="$SNAP/kubectl --kubeconfig=${SNAP_DATA}/credentials/client.config"
-  for podnamespace in \
-    $($KUBECTL get po -A -o \
-    jsonpath="{range .items[*]}{.metadata.namespace}{'.'}{.metadata.name}{'\n'}{end}")
-    do
-      digest=$(echo -n $podnamespace | sha1sum | cut -b -11)
-      echo "cali${digest}" >> "${SNAP_DATA}"/.workload_endpoints
-    done
-
-  }
