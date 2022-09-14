@@ -20,13 +20,13 @@ pacman -S --noconfirm python
 pacman -S --noconfirm docker
 sudo systemctl enable --now docker.service
 echo "127.0.0.1       localhost" | sudo tee -a /etc/hosts
-pip3 install -U pytest requests pyyaml
+pip3 install pytest requests pyyaml
 
 # wait for the snapd seeding to take place!
 n=0
 until [ $n -ge 7 ]
 do
-  sudo snap install core && break  # substitute your command here
+  sudo snap install core18 && break  # substitute your command here
   n=$[$n+1]
   sleep 10
 done
