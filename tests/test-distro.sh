@@ -53,6 +53,13 @@ then
   PROXY=$4
 fi
 
+# Test airgap installation.
+# DISABLE_AIRGAP_TESTS=1 can be set to disable them.
+DISABLE_AIRGAP_TESTS="${DISABLE_AIRGAP_TESTS:-0}"
+if [ "x${DISABLE_AIRGAP_TESTS}" != "x1" ]; then
+  . tests/test-airgap.sh
+fi
+
 # Test clustering. This test will create lxc containers or multipass VMs
 # therefore we do not need to run it inside a VM/container
 apt-get install python3-pip -y
@@ -110,10 +117,3 @@ lxc exec $NAME -- microk8s enable community
 lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
-
-# Test airgap installation.
-# DISABLE_AIRGAP_TESTS=1 can be set to disable them.
-DISABLE_AIRGAP_TESTS="${DISABLE_AIRGAP_TESTS:-0}"
-if [ "x${DISABLE_AIRGAP_TESTS}" != "x1" ]; then
-  . tests/test-airgap.sh
-fi
