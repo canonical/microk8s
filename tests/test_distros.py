@@ -76,7 +76,7 @@ class InstallTests:
         return True
 
     def test_node_setup(self):
-        """Test that expceted nodes exist"""
+        """Test that expected nodes exist"""
         assert isinstance(self.node, Node)
 
     def test_snap_install(self):
