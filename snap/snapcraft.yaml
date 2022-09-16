@@ -186,6 +186,7 @@ parts:
       - net-tools
       - openssl
       - procps
+      - python3-jsonschema
       - sed
       - socat
       - squashfs-tools

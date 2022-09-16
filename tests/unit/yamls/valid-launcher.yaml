@@ -1,0 +1,10 @@
+addons:
+  - name: dns
+    status: enable
+  - name: ingress
+    status: disable
+  - name: foo
+    status: enable
+    args:
+      - "--arg-a=A"
+      - "--arg-b=B"
