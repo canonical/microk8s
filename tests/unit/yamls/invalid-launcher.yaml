@@ -1,5 +1,5 @@
 wrongsection:
-    - name: dns
-      status: enabled
-    - name: ingress
-      status: disabled
+  - name: dns
+    status: enabled
+  - name: ingress
+    status: disabled
