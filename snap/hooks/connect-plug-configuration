@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -eux
+
+mkdir -p $SNAP_COMMON/etc/
+cp -R $SNAP/etc/launcher $SNAP_COMMON/etc/

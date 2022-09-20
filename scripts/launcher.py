@@ -39,14 +39,14 @@ properties:
 
 class Executor(ABC):
     @abstractmethod
-    def Enable(self, addon: str, args: list[str]):
+    def Enable(self, addon: str, args: list):
         """
         Enable an addon
         """
         pass
 
     @abstractmethod
-    def Disable(self, addon: str, args: list[str]):
+    def Disable(self, addon: str, args: list):
         """
         Disable an addon
         """
@@ -58,12 +58,12 @@ class EchoCommander(Executor):
     The class just prints out the commands to be executed. It is used for dry runs and debugging.
     """
 
-    def Enable(self, addon: str, args: list[str]):
-        args_str = "" if args is None else " ".join(args)
+    def Enable(self, addon: str, args: list):
+        args_str = " ".join(args)
         click.echo(f"microk8s enable {addon} {args_str}")
 
-    def Disable(self, addon: str, args: list[str]):
-        args_str = "" if args is None else " ".join(args)
+    def Disable(self, addon: str, args: list):
+        args_str = " ".join(args)
         click.echo(f"microk8s disable {addon} {args_str}")
 
 
@@ -77,23 +77,22 @@ class CliCommander(Executor):
         self.enable_cmd = os.path.expandvars("$SNAP/microk8s-enable.wrapper")
         self.disable_cmd = os.path.expandvars("$SNAP/microk8s-disable.wrapper")
 
-    def Enable(self, addon: str, args: list[str]):
-        args_str = "" if args is None else " ".join(args)
+    def Enable(self, addon: str, args: list):
+        args_str = " ".join(args)
         click.echo(f"microk8s enable {addon} {args_str}")
         command = [self.enable_cmd, addon]
-        if args:
-            command.append(args)
+        if len(args) > 0:
+            command = command + args
         output = check_output(command)
         click.echo(output)
 
-    def Disable(self, addon: str, args: list[str]):
-        args_str = "" if args is None else " ".join(args)
+    def Disable(self, addon: str, args: list):
+        args_str = " ".join(args)
         click.echo(f"microk8s enable {addon} {args_str}")
         command = [self.disable_cmd, addon]
-        if args:
-            command.append(args)
+        if len(args) > 0:
+            command = command + args
         output = check_output(command)
-        args_str = "" if args is None else " ".join(args)
         click.echo(output)
 
 
@@ -132,7 +131,7 @@ def launcher(configuration: str, dry):
         executor = CliCommander()
 
     for addon in cfg["addons"]:
-        args = None
+        args = []
         if "args" in addon.keys():
             args = addon["args"]
         if "status" in addon.keys() and addon["status"] == "disable":

@@ -807,3 +807,9 @@ hooks:
       - network
       - network-bind
       - network-control
+  connect-plug-configuration:
+    plugs:
+      - configuration
+  disconnect-plug-configuration:
+    plugs:
+      - configuration
