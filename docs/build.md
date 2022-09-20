@@ -105,18 +105,21 @@ The `calico.yaml` manifest is a slightly modified version of:
   1. `host-local-net-dir` to `/var/snap/microk8s/current/var/lib/cni/networks`
   1. `policysync` to `/var/snap/microk8s/current/var/run/nodeagent`
 - We enabled vxlan following the instructions in [the official docs.](https://docs.projectcalico.org/getting-started/kubernetes/installation/config-options#switching-from-ip-in-ip-to-vxlan)
-- The `liveness` and `readiness` probes of `bird-live` was commented out 
+- The `liveness` and `readiness` probes of `bird-live` was commented out
 - We set the IP autodetection method to
 
   ```dtd
               - name: IP_AUTODETECTION_METHOD
               value: "first-found"
   ```
+
 - In the `cni_network_config` in the calico manifest we also set:
+
   ```dtd
           "nodename_file_optional": true,
   ```
-- The `mount-bpffs` pod is commented out. This disables eBPF support but allows the CNI to deploy inside an LXC container. 
+
+- The `mount-bpffs` pod is commented out. This disables eBPF support but allows the CNI to deploy inside an LXC container.
 
 ## Running the tests locally
 
@@ -159,7 +162,8 @@ pytest -s test-upgrade.py
 Note: the `ingress` and `dashboard-ingress` tests make use of nip.io for wildcard ingress domains on localhost. [DNS rebinding protection](https://en.wikipedia.org/wiki/DNS_rebinding) may prevent the resolution of the domains used in the tests.
 
 A workaround is adding these entries to `/etc/hosts`:
-```
+
+```text
 127.0.0.1 kubernetes-dashboard.127.0.0.1.nip.io
 127.0.0.1 microbot.127.0.0.1.nip.io
 ```

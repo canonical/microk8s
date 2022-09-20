@@ -1,6 +1,6 @@
 # MicroK8s
 
-![](https://img.shields.io/badge/Kubernetes-1.25-326de6.svg)
+![Kubernetes Version](https://img.shields.io/badge/Kubernetes-1.25-326de6.svg)
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">
 
@@ -14,12 +14,12 @@ flavours of Linux](https://snapcraft.io/microk8s). Perfect for:
 - Edge
 - CI/CD
 
- > Canonical might have assembled the easiest way to provision a single node Kubernetes cluster - [Kelsey Hightower](https://twitter.com/kelseyhightower/status/1120834594138406912)
+> Canonical might have assembled the easiest way to provision a single node Kubernetes cluster - [Kelsey Hightower](https://twitter.com/kelseyhightower/status/1120834594138406912)
 
 ## Why MicroK8s?
 
 - **Small**. Developers want the smallest K8s for laptop and workstation
-  development.  MicroK8s provides a standalone K8s compatible with Azure
+  development. MicroK8s provides a standalone K8s compatible with Azure
   AKS, Amazon EKS, Google GKE when you run it on Ubuntu.
 
 - **Simple**. Minimize administration and operations with a single-package
@@ -50,36 +50,37 @@ doing something fun with MicroK8s!
 
 Install MicroK8s with:
 
-```
+```sh
 snap install microk8s --classic
 ```
 
 MicroK8s includes a `microk8s kubectl` command:
 
-```
+```sh
 sudo microk8s kubectl get nodes
 sudo microk8s kubectl get services
 ```
 
 To use MicroK8s with your existing kubectl:
 
-```
+```sh
 sudo microk8s kubectl config view --raw > $HOME/.kube/config
 ```
 
-#### User access without sudo
-The *microk8s* user group is created during the snap installation. Users in that group
+### User access without sudo
+
+The _microk8s_ user group is created during the snap installation. Users in that group
 are granted access to `microk8s` commands. To add a user to that group:
-```
+
+```sh
 sudo usermod -a -G microk8s <username>
 ```
 
-
-#### Kubernetes add-ons
+### Kubernetes add-ons
 
 MicroK8s installs a barebones upstream Kubernetes. Additional services like dns and the Kubernetes dashboard can be enabled using the `microk8s enable` command.
 
-```
+```sh
 sudo microk8s enable dns dashboard
 ```
 
