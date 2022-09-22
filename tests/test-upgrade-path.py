@@ -1,7 +1,6 @@
 import pytest
 import os
 import time
-import requests
 from utils import (
     wait_for_installation,
     run_until_success,
@@ -26,28 +25,8 @@ class TestUpgradePath(object):
         Deploy an old snap and try to refresh until the current one.
 
         """
-        start_channel = 19
-        last_stable_minor = None
-        if upgrade_from.startswith("latest") or "/" not in upgrade_from:
-            attempt = 0
-            release_url = "https://dl.k8s.io/release/stable.txt"
-            while attempt < 10 and not last_stable_minor:
-                r = requests.get(release_url)
-                if r.status_code == 200:
-                    last_stable_str = r.content.decode().strip()
-                    # We have "v1.18.4" and we need the "18"
-                    last_stable_parts = last_stable_str.split(".")
-                    last_stable_minor = int(last_stable_parts[1])
-                else:
-                    time.sleep(3)
-                    attempt += 1
-        else:
-            channel_parts = upgrade_from.split(".")
-            channel_parts = channel_parts[1].split("/")
-            print(channel_parts)
-            last_stable_minor = int(channel_parts[0])
-
-        last_stable_minor -= 1
+        start_channel = 22
+        last_stable_minor = 22
 
         print("")
         print(
@@ -57,7 +36,7 @@ class TestUpgradePath(object):
         )
         assert last_stable_minor is not None
 
-        channel = "1.{}/stable".format(start_channel)
+        channel = "1.{}-eksd/stable".format(start_channel)
         print("Installing {}".format(channel))
         cmd = "sudo snap install microk8s --classic --channel={}".format(channel)
         run_until_success(cmd)
@@ -65,7 +44,7 @@ class TestUpgradePath(object):
         channel_minor = start_channel
         channel_minor += 1
         while channel_minor <= last_stable_minor:
-            channel = "1.{}/stable".format(channel_minor)
+            channel = "1.{}-eksd/stable".format(channel_minor)
             print("Refreshing to {}".format(channel))
             cmd = "sudo snap refresh microk8s --classic --channel={}".format(channel)
             run_until_success(cmd)
