@@ -11,5 +11,5 @@ snapcraftctl set-version "v$KUBE_TRACK-$EKS_RELEASE"
 
 curl "https://distro.eks.amazonaws.com/kubernetes-$EKS_TRACK/kubernetes-$EKS_TRACK-eks-$EKS_RELEASE.yaml" -o "${SNAPCRAFT_PART_BUILD}/kubernetes-$EKS_TRACK-eks-$EKS_RELEASE.yaml"
 
-mkdir -p $INSTALL/images
-python3 parse-manifest.py "${SNAPCRAFT_PART_BUILD}/kubernetes-$EKS_TRACK-eks-$EKS_RELEASE.yaml" "$INSTALL/images"
+mkdir -p $INSTALL/etc
+python3 parse-manifest.py "${SNAPCRAFT_PART_BUILD}/kubernetes-$EKS_TRACK-eks-$EKS_RELEASE.yaml" "$INSTALL/etc"
