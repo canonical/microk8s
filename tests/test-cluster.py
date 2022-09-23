@@ -455,7 +455,9 @@ class TestCluster(object):
             lock_files = vm.run("ls /var/snap/microk8s/current/var/lock/")
             assert "no-cert-reissue" in lock_files.decode()
 
-    @pytest.mark.skipif(get_arch() != "amd64", reason="Launch configuration test is only available in AMD64")
+    @pytest.mark.skipif(
+        get_arch() != "amd64", reason="Launch configuration test is only available in AMD64"
+    )
     def test_launch_configuration(self):
         """
         Test launch configurations by installing the demo snap and connecting the content interface
@@ -479,4 +481,3 @@ class TestCluster(object):
                 if attempt == 50:
                     raise
         vm.run("snap disconnect microk8s:configuration content-demo-microk8s:configuration")
-
