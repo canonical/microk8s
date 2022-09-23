@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "1.25"
+echo "1.22-eksd"
