@@ -55,7 +55,7 @@ fi
 
 # Test airgap installation.
 # DISABLE_AIRGAP_TESTS=1 can be set to disable them.
-DISABLE_AIRGAP_TESTS="${DISABLE_AIRGAP_TESTS:-0}"
+DISABLE_AIRGAP_TESTS="${DISABLE_AIRGAP_TESTS:-1}"
 if [ "x${DISABLE_AIRGAP_TESTS}" != "x1" ]; then
   . tests/test-airgap.sh
 fi
