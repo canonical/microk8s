@@ -278,6 +278,25 @@ class TestCluster(object):
                 assert False
             print("Calico found in node {}".format(vm.vm_name))
 
+    def test_calico_interfaces_removed_on_snap_remove(self):
+        """
+        Test that calico interfaces are not present on the node
+        when the microk8s snap is removed.
+        """
+        vm = VM(backend)
+        vm.setup(channel_to_test)
+        print("Waiting for machine {}".format(vm.vm_name))
+        vm.run("/snap/bin/microk8s.status --wait-ready --timeout 240")
+        timeout = time.time() + 240
+        while time.time() <= timeout:
+            pods = vm.run("/snap/bin/microk8s.kubectl get po -n kube-system -o wide")
+            for line in pods.decode().splitlines():
+                if "calico" in line and "Running" in line:
+                    break
+            time.sleep(5)
+        vm.run("snap remove --purge microk8s")
+        assert vm.run("/usr/bin/ip a | grep cali") == ""
+
     def test_nodes_in_ha(self):
         """
         Test all nodes are seeing the database while removing nodes
