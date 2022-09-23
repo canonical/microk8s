@@ -613,6 +613,10 @@ plugs:
     interface: personal-files
     write:
       - $HOME/.config/helm
+  configuration:
+    interface: content
+    content: configuration
+    target: $SNAP/etc/launcher
 
 slots:
   microk8s:
@@ -802,3 +806,9 @@ hooks:
       - network
       - network-bind
       - network-control
+  connect-plug-configuration:
+    plugs:
+      - configuration
+  disconnect-plug-configuration:
+    plugs:
+      - configuration
