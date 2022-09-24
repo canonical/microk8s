@@ -44,7 +44,7 @@ lxc exec airgap-registry -- bash -c '
 echo "4/7 -- Push images to registry mirror"
 lxc exec airgap-registry -- bash -c '
   for image in $(microk8s ctr image ls -q | grep -v "sha256:"); do
-    mirror=$(echo $image | sed '"'s,\(docker.io\|k8s.gcr.io\|quay.io\),airgap-registry:32000,g'"')
+    mirror=$(echo $image | sed '"'s,\(docker.io\|k8s.gcr.io\|quay.io\|public.ecr.aws\),airgap-registry:32000,g'"')
     sudo microk8s ctr image convert ${image} ${mirror}
     sudo microk8s ctr image push ${mirror} --plain-http
   done
@@ -86,7 +86,7 @@ lxc exec airgap-test -- bash -c '
       capabilities = [\"pull\", \"resolve\"]
   " > hosts.toml
 
-  for registry in k8s.gcr.io docker.io quay.io; do
+  for registry in k8s.gcr.io docker.io quay.io public.ecr.aws ; do
     mkdir -p /var/snap/microk8s/current/args/certs.d/$registry
     cp hosts.toml /var/snap/microk8s/current/args/certs.d/$registry/hosts.toml
   done
