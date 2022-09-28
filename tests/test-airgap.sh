@@ -27,6 +27,7 @@ if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
   lxc file push ${TO_CHANNEL} airgap-registry/tmp/microk8s_latest_amd64.snap
   lxc exec airgap-registry -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+  lxc exec airgap-registry -- bash -c '/root/tests/connect-all-interfaces.sh'
 else
   lxc exec airgap-registry -- snap install microk8s --channel=${TO_CHANNEL} --classic
 fi
@@ -76,6 +77,7 @@ if lxc exec airgap-test -- bash -c "ping -c1 1.1.1.1"; then
   exit 1
 fi
 lxc exec airgap-test -- snap install /tmp/microk8s.snap --dangerous --classic
+lxc exec airgap-test -- bash -c '/root/tests/connect-all-interfaces.sh'
 
 echo "6/7 -- Configure MicroK8s registry mirrors"
 lxc exec airgap-test -- bash -c '
@@ -98,5 +100,5 @@ lxc exec airgap-test -- bash -c 'sudo microk8s enable hostpath-storage dns'
 airgap_wait_for_pods airgap-test
 
 echo "Cleaning up"
-# lxc rm airgap-registry --force
+lxc rm airgap-registry --force
 lxc rm airgap-test --force
