@@ -9,7 +9,7 @@ import yaml
 import kubernetes
 
 
-class NotFound(Exception):
+class NotFoundError(Exception):
     pass
 
 
@@ -245,20 +245,20 @@ class Kubernetes:
         service_list = self.api.list_namespaced_service(namespace)
 
         if not service_list.items:
-            raise NotFound(f"No services in namespace {namespace}")
+            raise NotFoundError(f"No services in namespace {namespace}")
 
         for service in service_list.items:
             if service.metadata.name == name:
                 return service.spec.cluster_ip
 
-        raise NotFound(f"cluster_ip not found for {name} in {namespace}")
+        raise NotFoundError(f"cluster_ip not found for {name} in {namespace}")
 
     def get_service_load_balancer_ip(self, namespace, name):
         """Get an LB IP for a service by name"""
         service_list = self.api.list_namespaced_service(namespace)
 
         if not service_list.items:
-            raise NotFound(f"No services in namespace {namespace}")
+            raise NotFoundError(f"No services in namespace {namespace}")
 
         for service in service_list.items:
             if service.metadata.name == name:
@@ -267,7 +267,7 @@ class Kubernetes:
                 except TypeError:
                     pass
 
-        raise NotFound(f"load_balancer_ip not found for {name} in {namespace}")
+        raise NotFoundError(f"load_balancer_ip not found for {name} in {namespace}")
 
     def wait_load_balancer_ip(self, namespace, name, timeout=60):
         deadline = self._get_deadline(timeout)
@@ -278,7 +278,7 @@ class Kubernetes:
 
                 if ip:
                     return ip
-            except NotFound:
+            except NotFoundError:
                 pass
 
             if datetime.datetime.now() > deadline:
@@ -292,7 +292,7 @@ class Kubernetes:
         )
 
         if not pod_list.items:
-            raise NotFound(f"No pods in namespace {namespace} with label {label}")
+            raise NotFoundError(f"No pods in namespace {namespace} with label {label}")
 
         return pod_list.items
 
