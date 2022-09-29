@@ -295,7 +295,8 @@ class TestCluster(object):
                     break
             time.sleep(5)
         vm.run("snap remove --purge microk8s")
-        assert vm.run("/bin/ip a | grep cali") == ""
+        interfaces = vm.run("/sbin/ip a")
+        assert "cali" not in interfaces.decode()
 
     def test_nodes_in_ha(self):
         """
