@@ -4754,7 +4754,7 @@ spec:
                             the Condition will be set to 'ResizeStarted'.
                           items:
                             description:
-                              PersistentVolumeClaimCondition contails details
+                              PersistentVolumeClaimCondition contains details
                               about state of pvc
                             properties:
                               lastProbeTime:
