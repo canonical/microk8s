@@ -295,10 +295,7 @@ class TestCluster(object):
                     break
             time.sleep(5)
         vm.run("snap remove --purge microk8s")
-        if path.exists("/usr/bin/ip"):
-            assert vm.run("/usr/bin/ip a | grep cali") == ""
-        else:
-            assert vm.run("/sbin/ip a | grep cali") == ""
+        assert vm.run("/bin/ip a | grep cali") == ""
 
     def test_nodes_in_ha(self):
         """
