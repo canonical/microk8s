@@ -345,21 +345,23 @@ parts:
       snap refresh go --channel=1.16/stable || true
       go version
       export GOPATH=$(realpath ../go)
-      export GO111MODULE=off
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
 
       # Build containerd
       rm -rf $GOPATH
       mkdir -p $GOPATH
-      go get -d github.com/containerd/containerd
+      git clone https://github.com/containerd/containerd $GOPATH/containerd
       (
-        cd $GOPATH/src/github.com/containerd/containerd
+        cd $GOPATH/containerd
         git checkout -f ${CONTAINERD_COMMIT}
         # building the btrfs driver can be disabled via the
         # build tag no_btrfs, removing this dependency
+        go mod init github.com/containerd/containerd
+        go mod tidy
+        go mod vendor
         make
       )
-      cp $GOPATH/src/github.com/containerd/containerd/bin/* $SNAPCRAFT_PART_INSTALL/bin/
+      cp $GOPATH/containerd/bin/* $SNAPCRAFT_PART_INSTALL/bin/
       rm $SNAPCRAFT_PART_INSTALL/bin/containerd-stress
 
       # Assemble the snap
