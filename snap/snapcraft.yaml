@@ -29,7 +29,7 @@ parts:
       - autotools-dev
       - bison
       - btrfs-progs
-      - libbtrfs-dev 
+      - libbtrfs-dev
       - build-essential
       - curl
       - flex
