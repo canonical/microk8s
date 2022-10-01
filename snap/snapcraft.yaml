@@ -10,8 +10,12 @@ description: |-
 
 grade: stable
 confinement: classic
-base: core18
+base: core22
 assumes: [snapd2.52]
+environment:
+  PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$SNAP/usr/local/bin:$SNAP/usr/local/sbin:$PATH
+  PYTHONPATH: $PYTHONPATH:/usr/lib/python3.10:/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3.10:$SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages
+  PYTHONWARNINGS: ignore
 
 parts:
   build-deps:
@@ -24,7 +28,8 @@ parts:
       - autopoint
       - autotools-dev
       - bison
-      - btrfs-tools
+      - btrfs-progs
+      - libbtrfs-dev 
       - build-essential
       - curl
       - flex
@@ -128,9 +133,6 @@ parts:
     after: [libnftnl]
     source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
     plugin: autotools
-    configflags:
-      - "--disable-shared"
-      - "--enable-static"
     prime: [-bin/iptables-xml]
 
   migrator:
@@ -150,7 +152,7 @@ parts:
       - libnss-resolve
       - libnss-mymachines
       - conntrack
-      - libssl1.0.0
+      - libssl3
     stage:
       - -sbin/xtables-multi
       - -sbin/iptables*
@@ -168,7 +170,6 @@ parts:
   bash-utils:
     plugin: nil
     stage-packages:
-      - aufs-tools
       - coreutils
       - curl
       - diffutils
@@ -258,8 +259,8 @@ parts:
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh microk8s-completion
 
   python-requirements:
+    source: .
     plugin: python
-    python-version: python3
     python-packages:
       - PyYAML == 5.3.1
       - netifaces == 0.10.9
@@ -272,6 +273,18 @@ parts:
     stage:
       - -usr/share/doc
       - -usr/share/man
+    # see LP: #1882994
+    override-build: |
+      snapcraftctl build
+      `find $SNAPCRAFT_PART_INSTALL -name '__pycache__' | xargs rm -r`
+      `find $SNAPCRAFT_PART_INSTALL -name 'RECORD' | xargs rm`
+      rm $SNAPCRAFT_PART_INSTALL/pyvenv.cfg
+      rm $SNAPCRAFT_PART_INSTALL/bin/activate
+      rm $SNAPCRAFT_PART_INSTALL/bin/activate.csh
+      rm $SNAPCRAFT_PART_INSTALL/bin/activate.fish
+      rm $SNAPCRAFT_PART_INSTALL/bin/python3
+      rm $SNAPCRAFT_PART_INSTALL/bin/python
+      ln -s /usr/bin/python3 $SNAPCRAFT_PART_INSTALL/usr/bin/python3
 
 apps:
   microk8s:
