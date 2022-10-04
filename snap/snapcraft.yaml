@@ -258,33 +258,33 @@ parts:
     source: build-scripts/components/microk8s-completion
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh microk8s-completion
 
-  python-requirements:
-    source: .
-    plugin: python
-    python-packages:
-      - PyYAML == 5.3.1
-      - netifaces == 0.10.9
-      - jsonschema == 4.0.0
+  python-runtime:
+    plugin: nil
     stage-packages:
+      - libpython3-stdlib
+      - libpython3.10-stdlib
+      - libpython3.10-minimal
+      - python3-pip
+      - python3-setuptools
+      - python3-wheel
+      - python3-venv
+      - python3-minimal
+      - python3-distutils
+      - python3-pkg-resources
+      - python3.10-minimal
       - python3-openssl
       - python3-requests
       - python3-click
       - python3-dateutil
+
+  python-requirements:
+    source: build-scripts/python-requirements
+    plugin: python
+    python-requirements:
+      - requirements.txt
     stage:
       - -usr/share/doc
       - -usr/share/man
-    # see LP: #1882994
-    override-build: |
-      snapcraftctl build
-      `find $SNAPCRAFT_PART_INSTALL -name '__pycache__' | xargs rm -r`
-      `find $SNAPCRAFT_PART_INSTALL -name 'RECORD' | xargs rm`
-      rm $SNAPCRAFT_PART_INSTALL/pyvenv.cfg
-      rm $SNAPCRAFT_PART_INSTALL/bin/activate
-      rm $SNAPCRAFT_PART_INSTALL/bin/activate.csh
-      rm $SNAPCRAFT_PART_INSTALL/bin/activate.fish
-      rm $SNAPCRAFT_PART_INSTALL/bin/python3
-      rm $SNAPCRAFT_PART_INSTALL/bin/python
-      ln -s /usr/bin/python3 $SNAPCRAFT_PART_INSTALL/usr/bin/python3
 
 apps:
   microk8s:
