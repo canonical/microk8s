@@ -64,6 +64,10 @@ fi
 # therefore we do not need to run it inside a VM/container
 apt-get install python3-pip -y
 pip3 install -U pytest requests pyyaml sh
+apt-get install awscli -y
+snap install kubectl --classic
+wget https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.9/aws-iam-authenticator_0.5.9_linux_amd64 -O /usr/bin/aws-iam-authenticator
+chmod +x /usr/bin/aws-iam-authenticator
 export LXC_PROFILE="tests/lxc/microk8s.profile"
 export BACKEND="lxc"
 export CHANNEL_TO_TEST=${TO_CHANNEL}
@@ -104,3 +108,18 @@ lxc exec $NAME -- microk8s enable community
 lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if [[ $BRANCH == *"eksd"* ]]; then
+  if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
+  then
+    snap install ${TO_CHANNEL} --dangerous --classic
+  else
+    snap install microk8s --channel=${TO_CHANNEL} --classic
+  fi
+
+  microk8s status --wait-ready
+
+  pytest -s /var/snap/microk8s/common/addons/eksd/tests/test-addons.py
+fi
