@@ -84,6 +84,17 @@ then
   fi
 fi
 
+# Configure host resolv.conf file with non-loopback upstream nameservers
+resolv_conf="$(cat $SNAP_DATA/args/kubelet | grep "--resolv-conf" | tr "=" " " | gawk '{print $2}')"
+if [ -z "$resolv_conf" ]
+then
+  host_resolv_conf="$("$SNAP/usr/bin/python3" "$SNAP/scripts/find-resolv-conf.py")"
+  if [ ! -z "$host_resolv_conf" ]; then
+    refresh_opt_in_local_config "resolv-conf" "${host_resolv_conf}" "kubelet"
+    echo "Configured kubelet to use ${host_resolv_conf} for DNS configuration"
+  fi
+fi
+
 #UFW configuration
 if ! is_strict && (ufw version &> /dev/null)
 then
