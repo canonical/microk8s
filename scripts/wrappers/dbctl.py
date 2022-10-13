@@ -13,7 +13,7 @@ from common.utils import (
     is_cluster_locked,
     is_ha_enabled,
     snap_data,
-    safe_extract
+    safe_extract,
 )
 
 
