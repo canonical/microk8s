@@ -503,6 +503,7 @@ def get_status(available_addons, isReady):
 
     return enabled, disabled
 
+
 def is_within_directory(directory, target):
 
     abs_directory = os.path.abspath(directory)
@@ -512,6 +513,7 @@ def is_within_directory(directory, target):
 
     return prefix == abs_directory
 
+
 def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
 
     for member in tar.getmembers():
@@ -519,4 +521,4 @@ def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
         if not is_within_directory(path, member_path):
             raise Exception("Attempted Path Traversal in Tar File")
 
-    tar.extractall(path, members, numeric_owner=numeric_owner) 
+    tar.extractall(path, members, numeric_owner=numeric_owner)
