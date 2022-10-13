@@ -116,7 +116,22 @@ The `calico.yaml` manifest is a slightly modified version of:
   ```dtd
           "nodename_file_optional": true,
   ```
-- The `mount-bpffs` pod is commented out. This disables eBPF support but allows the CNI to deploy inside an LXC container. 
+- The `mount-bpffs` pod is commented out. This disables eBPF support but allows the CNI to deploy inside an LXC container.
+- The bpffs mount is commented out:
+
+  ```dtd
+            - name: bpffs
+              mountPath: /sys/fs/bpf
+  ```
+  end
+
+  ```dtd
+
+        - name: bpffs
+          hostPath:
+            path: /sys/fs/bpf
+            type: Directory
+  ```
 
 ## Running the tests locally
 
