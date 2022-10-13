@@ -4115,7 +4115,7 @@ rules:
     resources:
       - endpointslices
     verbs:
-      - watch 
+      - watch
       - list
   - apiGroups: [""]
     resources:
@@ -4531,8 +4531,8 @@ spec:
               mountPath: /var/run/nodeagent
             # For eBPF mode, we need to be able to mount the BPF filesystem at /sys/fs/bpf so we mount in the
             # parent directory.
-            - name: bpffs
-              mountPath: /sys/fs/bpf
+            # - name: bpffs
+            #   mountPath: /sys/fs/bpf
             - name: cni-log-dir
               mountPath: /var/log/calico/cni
               readOnly: true
@@ -4555,10 +4555,10 @@ spec:
           hostPath:
             path: /sys/fs/
             type: DirectoryOrCreate
-        - name: bpffs
-          hostPath:
-            path: /sys/fs/bpf
-            type: Directory
+        # - name: bpffs
+        #   hostPath:
+        #     path: /sys/fs/bpf
+        #     type: Directory
         # # mount /proc at /nodeproc to be used by mount-bpffs initContainer to mount root cgroup2 fs.
         # - name: nodeproc
         #   hostPath:
@@ -4686,5 +4686,3 @@ spec:
 
 ---
 # Source: calico/templates/configure-canal.yaml
-
-
