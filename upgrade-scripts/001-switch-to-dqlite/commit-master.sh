@@ -45,8 +45,8 @@ then
   init_cluster
 fi
 
-snapctl restart ${SNAP_NAME}.daemon-kubelite
 snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
+snapctl restart ${SNAP_NAME}.daemon-kubelite
 
 run_etcd="$(is_service_expected_to_start etcd)"
 if [ "${run_etcd}" == "1" ]
@@ -86,6 +86,7 @@ then
   set_service_expected_to_start k8s-dqlite
 fi
 
+rm -rf ${SNAP_DATA}/var/lock/cni-loaded
 ${SNAP}/microk8s-start.wrapper
 ${SNAP}/microk8s-status.wrapper --wait-ready --timeout 120
 
