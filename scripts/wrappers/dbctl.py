@@ -13,6 +13,7 @@ from common.utils import (
     is_cluster_locked,
     is_ha_enabled,
     snap_data,
+    safe_extract,
 )
 
 
@@ -107,7 +108,7 @@ def restore(fname_tar, debug=False):
     kine_ep = get_kine_endpoint()
     with tempfile.TemporaryDirectory() as tmpdirname:
         with tarfile.open(fname_tar, "r:gz") as tar:
-            tar.extractall(path=tmpdirname)
+            safe_extract(tar, path=tmpdirname)
         if fname_tar.endswith(".tar.gz"):
             fname = fname_tar[:-7]
         else:
