@@ -27,8 +27,6 @@ refresh_opt_in_config "allow-privileged" "true" kube-apiserver
 
 # Reconfigure kubelet/containerd to pick up the new CNI config and binary.
 cp "$SNAP_DATA"/args/kubelet "$BACKUP_DIR/args"
-echo "Restarting kubelet"
-refresh_opt_in_config "cni-bin-dir" "\${SNAP_DATA}/opt/cni/bin/" kubelet
 
 cp "$SNAP_DATA"/args/containerd-template.toml "$BACKUP_DIR/args"
 if grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
@@ -38,9 +36,9 @@ if grep -qE "bin_dir.*SNAP}\/" $SNAP_DATA/args/containerd-template.toml; then
 fi
 
 cp "$SNAP_DATA"/args/kube-proxy "$BACKUP_DIR/args"
-echo "Restarting kube proxy"
 refresh_opt_in_config "cluster-cidr" "10.1.0.0/16" kube-proxy
 
+echo "Restarting kubelite"
 snapctl restart ${SNAP_NAME}.daemon-kubelite
 
 set_service_not_expected_to_start flanneld
