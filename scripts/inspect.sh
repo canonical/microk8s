@@ -267,7 +267,7 @@ function suggest_fixes {
   fi
 
   if ! grep -q 'cgroup/memory' /proc/self/mountinfo; then
-    if ! grep -q 'cgroup/unified.* cgroup2 ' /proc/self/mountinfo; then
+    if ! grep -q 'cgroup2' /proc/self/mountinfo; then
       printf -- '\033[0;33mWARNING: \033[0m The memory cgroup is not enabled. \n'
       printf -- 'The cluster may not be functioning properly. Please ensure cgroups are enabled \n'
       printf -- 'See for example: https://microk8s.io/docs/install-alternatives#heading--arm \n'
