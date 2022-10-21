@@ -30,7 +30,7 @@ jobs:
         working-directory: ${{ github.workspace }}/installer
         run: move microk8s.exe ./windows/microk8s.exe
       - name: Download EnVar plugin for NSIS
-        uses: carlosperate/download-file-action@v1.1.1
+        uses: carlosperate/download-file-action@v2.0.0
         with:
           file-url: https://github.com/GsNSIS/EnVar/releases/download/v0.3.1/EnVar-Plugin.zip
           file-name: envar_plugin.zip
@@ -38,13 +38,13 @@ jobs:
       - name: Extract EnVar plugin
         run: 7z x -o"C:/Program Files (x86)/NSIS" "${{ github.workspace }}/envar_plugin.zip"
       - name: Download Multipass installer
-        uses: carlosperate/download-file-action@v1.1.1
+        uses: carlosperate/download-file-action@v2.0.0
         with:
           file-url: https://github.com/canonical/multipass/releases/download/v1.8.0/multipass-1.8.0+win-win64.exe
           file-name: multipass.exe
           location: ${{ github.workspace }}/installer/windows
       - name: Download kubectl
-        uses: carlosperate/download-file-action@v1.1.1
+        uses: carlosperate/download-file-action@v2.0.0
         with:
           file-url: https://storage.googleapis.com/kubernetes-release/release/v1.20.0/bin/windows/amd64/kubectl.exe
           file-name: kubectl.exe
