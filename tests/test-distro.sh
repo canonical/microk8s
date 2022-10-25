@@ -117,8 +117,6 @@ lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/commu
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
 
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
-
 if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
   snap install ${TO_CHANNEL} --dangerous --classic
