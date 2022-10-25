@@ -119,15 +119,16 @@ lxc delete $NAME --force
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-if [[ $BRANCH == *"eksd"* ]]; then
-  if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
-  then
-    snap install ${TO_CHANNEL} --dangerous --classic
-  else
-    snap install microk8s --channel=${TO_CHANNEL} --classic
-  fi
+if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
+then
+  snap install ${TO_CHANNEL} --dangerous --classic
+else
+  snap install microk8s --channel=${TO_CHANNEL} --classic
+fi
 
-  microk8s status --wait-ready
+microk8s status --wait-ready
 
+if [ -d "/var/snap/microk8s/common/addons/eksd" ]
+then
   pytest -s /var/snap/microk8s/common/addons/eksd/tests/test-addons.py
 fi
