@@ -66,7 +66,15 @@ apt-get install python3-pip -y
 pip3 install -U pytest requests pyyaml sh
 apt-get install awscli -y
 snap install kubectl --classic
-wget https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.9/aws-iam-authenticator_0.5.9_linux_amd64 -O /usr/bin/aws-iam-authenticator
+ARCH=$(uname -m)
+if [[ $ARCH == *"x86_64"* ]]
+then
+  wget https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.9/aws-iam-authenticator_0.5.9_linux_amd64 -O /usr/bin/aws-iam-authenticator
+fi
+if [[ $ARCH == *"aarch64"* ]]
+then
+  wget https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.9/aws-iam-authenticator_0.5.9_linux_arm64 -O /usr/bin/aws-iam-authenticator
+fi
 chmod +x /usr/bin/aws-iam-authenticator
 export LXC_PROFILE="tests/lxc/microk8s.profile"
 export BACKEND="lxc"
