@@ -16,7 +16,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install tox --fix-missing
-          sudo pip3 install -U pytest sh
+          sudo pip3 install -U pytest==7.1.3 sh==1.14.3
       - name: Check Units
         run: |
           tox -e scripts
