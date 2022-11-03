@@ -128,6 +128,9 @@ then
 else
   cp "${RESOURCES}/calico.yaml" "${SNAP_DATA}/args/cni-network/cni.yaml"
 fi
+
+cp "${RESOURCES}/kubernetes-services-endpoint.yaml" "${SNAP_DATA}/args/cni-network/kubernetes-services-endpoint.yaml"
+
 mkdir -p "$SNAP_DATA/opt/cni/bin/"
 cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
 
