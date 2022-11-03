@@ -1,4 +1,4 @@
-From ae9147faf2e2ad7142702d2fa5d821a9efdff85e Mon Sep 17 00:00:00 2001
+From 98248511028d794b32849b1c344406fba581fedd Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
@@ -9,10 +9,10 @@ Subject: [PATCH] Kubelite integration
  cmd/kubelet/app/server.go           | 13 +++--
  cmd/kubelite/app/daemons/daemon.go  | 84 +++++++++++++++++++++++++++++
  cmd/kubelite/app/options/options.go | 79 +++++++++++++++++++++++++++
- cmd/kubelite/app/server.go          | 79 +++++++++++++++++++++++++++
+ cmd/kubelite/app/server.go          | 81 ++++++++++++++++++++++++++++
  cmd/kubelite/kubelite.go            | 28 ++++++++++
  pkg/volume/csi/csi_plugin.go        | 10 ++--
- 8 files changed, 296 insertions(+), 12 deletions(-)
+ 8 files changed, 298 insertions(+), 12 deletions(-)
  create mode 100644 cmd/kubelite/app/daemons/daemon.go
  create mode 100644 cmd/kubelite/app/options/options.go
  create mode 100644 cmd/kubelite/app/server.go
@@ -279,10 +279,10 @@ index 00000000000..80f1d8b09fc
 +}
 diff --git a/cmd/kubelite/app/server.go b/cmd/kubelite/app/server.go
 new file mode 100644
-index 00000000000..e7452a09e3e
+index 00000000000..9227c93f70c
 --- /dev/null
 +++ b/cmd/kubelite/app/server.go
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,81 @@
 +/*
 +Copyright © 2020 NAME HERE <EMAIL ADDRESS>
 +
@@ -334,8 +334,10 @@ index 00000000000..e7452a09e3e
 +			go daemon.StartScheduler(schedulerArgs, ctx)
 +		}
 +
-+		proxyArgs := options.ReadArgsFromFile(opts.ProxyArgsFile)
-+		go daemon.StartProxy(proxyArgs)
++		if opts.ProxyArgsFile != "" {
++			proxyArgs := options.ReadArgsFromFile(opts.ProxyArgsFile)
++			go daemon.StartProxy(proxyArgs)
++		}
 +
 +		kubeletArgs := options.ReadArgsFromFile(opts.KubeletArgsFile)
 +		daemon.StartKubelet(kubeletArgs, ctx)
