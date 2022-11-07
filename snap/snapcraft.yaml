@@ -402,16 +402,26 @@ parts:
     prime: [-bin/iptables-xml]
 
   migrator:
+    plugin: dump
     build-snaps: [go]
-    source: https://github.com/canonical/go-migrator
-    source-type: git
-    plugin: go
-    go-channel: 1.15/stable
-    go-importpath: github.com/canonical/go-migrator
-    build-packages:
-      - gcc
-    prime:
-      - bin/migrator
+    source: build-scripts/
+    override-build: |
+      set -eux
+      snap refresh go --channel=1.19/stable || true
+      go version
+      . ./set-env-variables.sh
+      export GOPATH=${SNAPCRAFT_STAGE}
+      mkdir -p $GOPATH/src/github.com/canonical/
+      (
+        cd $GOPATH/src/github.com/canonical/
+        rm -rf go-migrator
+        git clone https://github.com/canonical/go-migrator
+        cd go-migrator
+        go build -ldflags "-s -w" -o migrator ./main.go
+        cd ..
+      )
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      cp $GOPATH/src/github.com/canonical/go-migrator/migrator $SNAPCRAFT_PART_INSTALL/bin/
 
   containerd:
     build-snaps: [go]
@@ -473,13 +483,16 @@ parts:
       snap refresh go --channel=1.16/stable || true
       go version
       export GOPATH=$(realpath ../go)
-      export GO111MODULE=off
+      export GO111MODULE=on
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin
 
       # Build runc
-      go get -d github.com/opencontainers/runc
+      mkdir -p $GOPATH/src/github.com/opencontainers/
       (
-        cd $GOPATH/src/github.com/opencontainers/runc
+        cd $GOPATH/src/github.com/opencontainers/
+        rm -rf runc
+        git clone https://github.com/opencontainers/runc.git
+        cd runc
         git checkout ${RUNC_COMMIT}
         make BUILDTAGS='seccomp apparmor'
       )
