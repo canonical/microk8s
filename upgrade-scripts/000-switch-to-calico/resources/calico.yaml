@@ -4310,7 +4310,7 @@ spec:
         # It can be deleted if this is a fresh installation, or if you have already
         # upgraded to use calico-ipam.
         - name: upgrade-ipam
-          image: docker.io/calico/cni:v3.23.3
+          image: docker.io/calico/cni:v3.23.5
           command: ["/opt/cni/bin/calico-ipam", "-upgrade"]
           envFrom:
           - configMapRef:
@@ -4337,7 +4337,7 @@ spec:
         # This container installs the CNI binaries
         # and CNI network config file on each node.
         - name: install-cni
-          image: docker.io/calico/cni:v3.23.3
+          image: docker.io/calico/cni:v3.23.5
           command: ["/opt/cni/bin/install"]
           envFrom:
           - configMapRef:
@@ -4381,7 +4381,7 @@ spec:
         # # i.e. bpf at /sys/fs/bpf and cgroup2 at /run/calico/cgroup. Calico-node initialisation is executed
         # # in best effort fashion, i.e. no failure for errors, to not disrupt pod creation in iptable mode.
         # - name: "mount-bpffs"
-        #   image: docker.io/calico/node:v3.23.3
+        #   image: docker.io/calico/node:v3.23.5
         #   command: ["calico-node", "-init", "-best-effort"]
         #   volumeMounts:
         #     #- mountPath: /sys/fs
@@ -4406,7 +4406,7 @@ spec:
         # container programs network policy and routes on each
         # host.
         - name: calico-node
-          image: docker.io/calico/node:v3.23.3
+          image: docker.io/calico/node:v3.23.5
           envFrom:
           - configMapRef:
               # Allow KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT to be overridden for eBPF mode.
@@ -4630,7 +4630,7 @@ spec:
       priorityClassName: system-cluster-critical
       containers:
         - name: calico-kube-controllers
-          image: docker.io/calico/kube-controllers:v3.23.3
+          image: docker.io/calico/kube-controllers:v3.23.5
           env:
             # Choose which controllers to run.
             - name: ENABLED_CONTROLLERS
