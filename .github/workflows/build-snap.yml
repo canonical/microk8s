@@ -54,7 +54,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.0
+        uses: actions/download-artifact@v3.0.1
         with:
           name: microk8s.snap
           path: build
@@ -79,7 +79,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.0
+        uses: actions/download-artifact@v3.0.1
         with:
           name: microk8s.snap
           path: build
@@ -109,7 +109,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.0
+        uses: actions/download-artifact@v3.0.1
         with:
           name: microk8s.snap
           path: build
@@ -137,7 +137,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.0
+        uses: actions/download-artifact@v3.0.1
         with:
           name: microk8s.snap
           path: build
