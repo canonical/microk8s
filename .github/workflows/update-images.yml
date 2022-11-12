@@ -11,10 +11,18 @@ jobs:
     strategy:
       matrix:
         include:
+          # Latest branches
           - { branch: master, channel: latest/edge }
+          # Stable branches
+          - { branch: 1.25, channel: 1.25 }
           - { branch: 1.24, channel: 1.24 }
           - { branch: 1.23, channel: 1.23 }
           - { branch: 1.22, channel: 1.22 }
+          # Strict branches
+          - { branch: 1.25-strict, channel: 1.25-strict }
+          # EKSD branches
+          - { branch: 1.23-eksd, channel: 1.23-eksd }
+          - { branch: 1.22-eksd, channel: 1.22-eksd }
     steps:
       - name: Checkout
         uses: actions/checkout@v3.1.0
