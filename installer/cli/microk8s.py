@@ -309,7 +309,7 @@ def dashboard_proxy() -> None:
         output = instance.run(command, hide_output=True)
         secret_name = None
         for line in output.split(b"\n"):
-            if line.startswith(b"default-token"):
+            if line.startswith(b"microk8s-dashboard-token"):
                 secret_name = line.split()[0].decode()
                 break
 
