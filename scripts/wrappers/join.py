@@ -256,9 +256,13 @@ def get_client_cert(master_ip, master_port, fname, token, username, group=None):
     info = "/CN={}".format(username)
     if group:
         info = "{}/O={}".format(info, group)
-    cer_req_file = "{}/certs/{}.csr".format(snapdata_path, fname)
-    cer_key_file = "{}/certs/{}.key".format(snapdata_path, fname)
-    cer_file = "{}/certs/{}.crt".format(snapdata_path, fname)
+
+    # the filenames must survive snap refreshes, so replace revision number with current
+    snapdata_current = os.path.abspath(os.path.join(snapdata_path, "..", "current"))
+
+    cer_req_file = "{}/certs/{}.csr".format(snapdata_current, fname)
+    cer_key_file = "{}/certs/{}.key".format(snapdata_current, fname)
+    cer_file = "{}/certs/{}.crt".format(snapdata_current, fname)
     if not os.path.exists(cer_key_file):
         cmd_gen_cert_key = "{snap}/usr/bin/openssl genrsa -out {key} 2048".format(
             snap=snap_path, key=cer_key_file
