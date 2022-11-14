@@ -22,7 +22,6 @@ jobs:
           - { branch: 1.25-strict, channel: 1.25-strict }
           # EKSD branches
           - { branch: 1.23-eksd, channel: 1.23-eksd }
-          - { branch: 1.22-eksd, channel: 1.22-eksd }
     steps:
       - name: Checkout
         uses: actions/checkout@v3.1.0
