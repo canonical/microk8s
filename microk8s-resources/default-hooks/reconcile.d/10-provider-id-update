@@ -1,0 +1,18 @@
+#!/bin/bash
+
+. "${SNAP}/actions/common/utils.sh"
+
+KUBECTL="${SNAP}/microk8s-kubectl.wrapper"
+
+if [ -e "${SNAP_DATA}/var/lock/providerid-needs-update" ]
+then
+  echo "Updating providerID"
+  INSTANCE_ID=$(curl -sS http://169.254.169.254/latest/meta-data/instance-id)
+  A_ZONE=$(curl -sS http://169.254.169.254/latest/meta-data/placement/availability-zone)
+  hostname=$(hostname)
+  if (is_apiserver_ready) &&
+      "${KUBECTL}" --request-timeout 2m patch node $hostname -p "{\"spec\":{\"providerID\":\"aws:///$A_ZONE/$INSTANCE_ID\"}}"
+  then
+    rm "${SNAP_DATA}/var/lock/providerid-needs-update"
+  fi
+fi
