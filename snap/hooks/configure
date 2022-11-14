@@ -606,6 +606,16 @@ then
   snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
 fi
 
+# Fix hard-coded snap revision numbers in worker node services of existing clusters
+# https://github.com/canonical/microk8s/pull/3554
+for svc in kubelet proxy; do
+  cfg="${SNAP_DATA}/credentials/${svc}.config"
+  if [ -e ${cfg} ]; then
+    sed -i 's,/var/snap/microk8s/[x0-9]*/,/var/snap/microk8s/current/,' "${cfg}" || true
+    sed -i 's,/var/snap/microk8s/[x0-9]*/,/var/snap/microk8s/current/,' "${cfg}" || true
+  fi
+done
+
 # Refresh calico if needed
 refresh_calico_if_needed
 
