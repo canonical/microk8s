@@ -85,7 +85,7 @@ then
 fi
 
 # Configure host resolv.conf file with non-loopback upstream nameservers
-resolv_conf="$(cat $SNAP_DATA/args/kubelet | grep "--resolv-conf" | tr "=" " " | gawk '{print $2}')"
+resolv_conf="$(cat $SNAP_DATA/args/kubelet | grep -- "--resolv-conf" | tr "=" " " | gawk '{print $2}')"
 if [ -z "$resolv_conf" ]
 then
   host_resolv_conf="$("$SNAP/usr/bin/python3" "$SNAP/scripts/find-resolv-conf.py")"
