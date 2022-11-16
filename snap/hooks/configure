@@ -612,9 +612,15 @@ for svc in kubelet proxy; do
   cfg="${SNAP_DATA}/credentials/${svc}.config"
   if [ -e ${cfg} ]; then
     sed -i 's,/var/snap/microk8s/[x0-9]*/,/var/snap/microk8s/current/,' "${cfg}" || true
-    sed -i 's,/var/snap/microk8s/[x0-9]*/,/var/snap/microk8s/current/,' "${cfg}" || true
   fi
 done
+
+# (1.26) Removed --log-dir argument from kubelet
+if grep -e "\-\-log\-dir" "${SNAP_DATA}/args/kubelet"
+then
+  "${SNAP}/bin/sed" -i '/\-\-log\-dir/d' "${SNAP_DATA}/args/kubelet"
+  need_api_restart=true
+fi
 
 # Refresh calico if needed
 refresh_calico_if_needed
