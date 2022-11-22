@@ -197,7 +197,7 @@ def exit_if_no_permission():
         )
         print("")
         print("    sudo usermod -a -G microk8s {}".format(user))
-        print("    sudo chown -f -R $USER ~/.kube")
+        print("    sudo chown -R $USER ~/.kube")
         print("")
         print(
             "After this, reload the user groups either via a reboot or by running 'newgrp microk8s'."

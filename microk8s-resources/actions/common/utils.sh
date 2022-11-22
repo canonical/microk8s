@@ -18,7 +18,7 @@ exit_if_no_permissions() {
     echo "You can either try again with sudo or add the user $USER to the '${group}' group:" >&2
     echo "" >&2
     echo "    sudo usermod -a -G ${group} $USER" >&2
-    echo "    sudo chown -f -R $USER ~/.kube" >&2
+    echo "    sudo chown -R $USER ~/.kube" >&2
     echo "" >&2
     echo "After this, reload the user groups either via a reboot or by running 'newgrp ${group}'." >&2
     exit 1
