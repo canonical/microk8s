@@ -127,15 +127,15 @@ parts:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
     build-environment:
-    - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
+      - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
 
   iptables:
     after: [libnftnl]
     source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
     plugin: autotools
     build-environment:
-    - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
-    - LIBNFTNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
+      - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
+      - LIBNFTNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
     autotools-configure-parameters:
       - "--disable-shared"
       - "--enable-static"
