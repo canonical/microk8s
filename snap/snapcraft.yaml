@@ -10,8 +10,10 @@ description: |-
 license: Apache-2.0
 grade: stable
 confinement: classic
-base: core18
+base: core20
 assumes: [snapd2.52]
+environment:
+  PYTHONPATH: $PYTHONPATH:/usr/lib/python3.8:/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3.8:$SNAP/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages
 
 parts:
   build-deps:
@@ -24,7 +26,8 @@ parts:
       - autopoint
       - autotools-dev
       - bison
-      - btrfs-tools
+      - btrfs-progs
+      - libbtrfs-dev
       - build-essential
       - curl
       - flex
@@ -123,12 +126,17 @@ parts:
     after: [libmnl]
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
+    build-environment:
+    - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
 
   iptables:
     after: [libnftnl]
     source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
     plugin: autotools
-    configflags:
+    build-environment:
+    - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
+    - LIBNFTNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
+    autotools-configure-parameters:
       - "--disable-shared"
       - "--enable-static"
     prime: [-bin/iptables-xml]
@@ -150,7 +158,7 @@ parts:
       - libnss-resolve
       - libnss-mymachines
       - conntrack
-      - libssl1.0.0
+      - libssl1.1
     stage:
       - -sbin/xtables-multi
       - -sbin/iptables*
@@ -177,6 +185,7 @@ parts:
       - git
       - grep
       - hostname
+      - ufw
       - iproute2
       - jq
       - kmod
@@ -257,14 +266,28 @@ parts:
     source: build-scripts/components/microk8s-completion
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh microk8s-completion
 
-  python-requirements:
-    plugin: python
-    python-version: python3
-    python-packages:
-      - PyYAML == 5.3.1
-      - netifaces == 0.10.9
-      - jsonschema == 4.0.0
+  python-runtime:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/python
+    override-build: |
+      pip3 install -r requirements.txt
+    build-packages:
+      - python3-dev
+    build-environment:
+      - C_INCLUDE_PATH: /usr/include/python3.8
     stage-packages:
+      - libpython3-stdlib
+      - libpython3.8-stdlib
+      - libpython3.8-minimal
+      - python3-pip
+      - python3-setuptools
+      - python3-wheel
+      - python3-venv
+      - python3-minimal
+      - python3-distutils
+      - python3-pkg-resources
+      - python3.8-minimal
       - python3-openssl
       - python3-requests
       - python3-click
