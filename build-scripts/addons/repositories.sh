@@ -4,8 +4,8 @@
 # (name),(repository),(reference)
 ADDONS_REPOS="
 core,https://github.com/canonical/microk8s-core-addons,1.23-eksd
-community,https://github.com/canonical/microk8s-community-addons,main
-eksd,https://github.com/canonical/microk8s-aws-addons,main
+community,https://github.com/canonical/microk8s-community-addons,1.23-eksd
+eksd,https://github.com/canonical/microk8s-aws-addons,1.23-eksd
 "
 
 # List of addon repositories to automatically enable
