@@ -7,7 +7,7 @@ description: |-
   testing, or use it on a VM as a small, cheap, reliable k8s for CI/CD. It's
   also a great k8s for appliances - develop your IoT apps for k8s and deploy
   them to MicroK8s on your boxes.
-
+license: Apache-2.0
 grade: stable
 confinement: classic
 base: core18
