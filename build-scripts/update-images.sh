@@ -12,7 +12,6 @@
 sudo snap install microk8s --classic --channel $1
 sudo microk8s status --wait-ready
 
-sudo microk8s addons repo add core https://github.com/canonical/microk8s-core-addons --force
 sudo microk8s enable storage ingress metrics-server dns
 
 sudo microk8s kubectl apply -f - <<EOF
