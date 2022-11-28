@@ -7,9 +7,14 @@ mkdir -p "${INSTALL}"
 
 # these would very tedious to apply with a patch
 go get github.com/docker/docker/pkg/reexec
-go mod vendor
+go get github.com/flannel-io/cni-plugin@v1.2.0
+go get -t github.com/containernetworking/plugins/integration
+rm -rf plugins/meta/flannel
+git clone --depth 1 --branch v1.2.0 https://github.com/flannel-io/cni-plugin.git plugins/meta/flannel
+go mod edit -replace github.com/flannel-io/cni-plugin@v1.2.0=./plugins/meta/flannel
 sed -i 's/^package main/package plugin_main/' plugins/*/*/*.go
 sed -i 's/^func main()/func Main()/' plugins/*/*/*.go
+go mod vendor
 
 export CGO_ENABLED=0
 
