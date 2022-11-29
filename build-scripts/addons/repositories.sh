@@ -3,8 +3,8 @@
 # List of addon repositories to bundle in the snap
 # (name),(repository),(reference)
 ADDONS_REPOS="
-core,https://github.com/canonical/microk8s-core-addons,main
-community,https://github.com/canonical/microk8s-community-addons,main
+core,https://github.com/canonical/microk8s-core-addons,1.24-eksd
+community,https://github.com/canonical/microk8s-community-addons,1.24-eksd
 eksd,https://github.com/canonical/microk8s-aws-addons,1.24-eksd
 "
 
