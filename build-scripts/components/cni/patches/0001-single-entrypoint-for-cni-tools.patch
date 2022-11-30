@@ -35,7 +35,7 @@ index 0000000..93828f9
 +	main_vlan "github.com/containernetworking/plugins/plugins/main/vlan"
 +
 +	meta_bandwidth "github.com/containernetworking/plugins/plugins/meta/bandwidth"
-+	meta_flannel "github.com/containernetworking/plugins/plugins/meta/flannel"
++	meta_flannel "github.com/flannel-io/cni-plugin"
 +	meta_firewall "github.com/containernetworking/plugins/plugins/meta/firewall"
 +	meta_portmap "github.com/containernetworking/plugins/plugins/meta/portmap"
 +	meta_sbr "github.com/containernetworking/plugins/plugins/meta/sbr"

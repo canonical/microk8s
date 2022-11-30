@@ -1,5 +1,5 @@
 name: microk8s
-adopt-info: kubernetes-version
+adopt-info: eksd
 summary: Kubernetes for workstations and appliances
 description: |-
   MicroK8s is a small, fast, secure, single node Kubernetes that installs on
@@ -17,7 +17,7 @@ parts:
   build-deps:
     plugin: nil
     override-build: |
-      snap install go --classic --channel 1.19/stable
+      snap install go --classic --channel 1.18/stable
     build-packages:
       - autoconf
       - automake
@@ -38,6 +38,7 @@ parts:
       - libtool
       - libuv1-dev
       - pkg-config
+      - python3-yaml
       - rsync
       - tcl
 
@@ -97,16 +98,17 @@ parts:
     source: build-scripts/components/flanneld
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flanneld
 
-  kubernetes:
+  eksd:
     after: [build-deps]
+    plugin: nil
+    source: build-scripts/eksd
+    override-build: ./build.sh "${SNAPCRAFT_PART_INSTALL}"
+
+  kubernetes:
+    after: [build-deps, eksd]
     plugin: nil
     source: build-scripts/components/kubernetes
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
-
-  kubernetes-version:
-    plugin: nil
-    source: build-scripts/components/kubernetes
-    override-build: snapcraftctl set-version "$(./version.sh)"
 
   helm:
     after: [build-deps]
