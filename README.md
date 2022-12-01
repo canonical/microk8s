@@ -100,3 +100,7 @@ contribute to MicroK8s.
 <a href="https://github.com/canonical/microk8s/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=canonical/microk8s" />
 </a>
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=canonical/microk8s&type=Date)](https://star-history.com/#canonical/microk8s&Date)
