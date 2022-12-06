@@ -7,8 +7,8 @@ KUBECTL="${SNAP}/microk8s-kubectl.wrapper"
 if [ -e "${SNAP_DATA}/var/lock/providerid-needs-update" ]
 then
   echo "Updating providerID"
-  INSTANCE_ID=$(curl -sS -m 5 http://169.254.169.254/latest/meta-data/instance-id)
-  A_ZONE=$(curl -sS -m 5 http://169.254.169.254/latest/meta-data/placement/availability-zone)
+  INSTANCE_ID=$(curl -sS -m 5 http://169.254.169.254/latest/meta-data/instance-id || true)
+  A_ZONE=$(curl -sS -m 5 http://169.254.169.254/latest/meta-data/placement/availability-zone || true)
   if [[ ! -z "$INSTANCE_ID" ]] && [[ ! -z "$A_ZONE" ]]
   then
     hostname=$(hostname)

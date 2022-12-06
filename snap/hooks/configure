@@ -225,8 +225,8 @@ fi
 
 if is_ec2_instance
 then
-  INSTANCE_ID=$(curl -sS -m 5 http://169.254.169.254/latest/meta-data/instance-id)
-  A_ZONE=$(curl -sS -m 5 http://169.254.169.254/latest/meta-data/placement/availability-zone)
+  INSTANCE_ID=$(curl -sS -m 5 http://169.254.169.254/latest/meta-data/instance-id || true)
+  A_ZONE=$(curl -sS -m 5 http://169.254.169.254/latest/meta-data/placement/availability-zone || true)
   if [[ ! -z "$INSTANCE_ID" ]] && [[ ! -z "$A_ZONE" ]]
   then
     sed -i -n -e '/^--provider-id /!p' -e "\$a--provider-id aws:///$A_ZONE/$INSTANCE_ID" ${SNAP_DATA}/args/kubelet
