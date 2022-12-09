@@ -289,6 +289,10 @@ class TestCluster(object):
                 assert False
             print("Calico found in node {}".format(vm.vm_name))
 
+    @pytest.mark.skipif(
+        os.environ.get("STRICT") == "yes",
+        reason="Skipping test_calico_interfaces_removed_on_snap_remove tests in strict",
+    )
     def test_calico_interfaces_removed_on_snap_remove(self):
         """
         Test that calico interfaces are not present on the node

@@ -80,6 +80,7 @@ chmod +x /usr/bin/aws-iam-authenticator
 export LXC_PROFILE="tests/lxc/microk8s.profile"
 export BACKEND="lxc"
 export CHANNEL_TO_TEST=${TO_CHANNEL}
+export STRICT="yes"
 TRY_ATTEMPT=0
 while ! (timeout 3600 pytest -s tests/test-cluster.py) &&
       ! [ ${TRY_ATTEMPT} -eq 3 ]
