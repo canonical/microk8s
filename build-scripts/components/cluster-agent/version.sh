@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "1.24"
+echo "1.25"

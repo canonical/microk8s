@@ -26,7 +26,7 @@ class TestUpgradePath(object):
 
         """
         start_channel = 22
-        last_stable_minor = 22
+        last_stable_minor = 24
 
         print("")
         print(
