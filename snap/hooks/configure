@@ -160,6 +160,12 @@ then
   cp -r ${SNAP}/default-args/apiserver-proxy ${SNAP_DATA}/args/
 fi
 
+# (1.24 -> 1.25) migrate from traefik to apiserver-proxy
+if [ -e ${SNAP_DATA}/var/lock/no-traefik ]
+then
+  touch ${SNAP_DATA}/var/lock/no-apiserver-proxy
+fi
+
 # Upgrading to containerd
 if [ ! -e ${SNAP_DATA}/args/containerd ] ||
    grep -e "\-\-docker unix://\${SNAP_DATA}/docker.sock" ${SNAP_DATA}/args/kubelet
