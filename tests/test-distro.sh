@@ -65,17 +65,9 @@ fi
 apt-get install python3-pip -y
 pip3 install -U pytest requests pyyaml sh
 apt-get install awscli -y
+apt-get install jq -y
 snap install kubectl --classic
 ARCH=$(uname -m)
-if [[ $ARCH == *"x86_64"* ]]
-then
-  wget https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.9/aws-iam-authenticator_0.5.9_linux_amd64 -O /usr/bin/aws-iam-authenticator
-fi
-if [[ $ARCH == *"aarch64"* ]]
-then
-  wget https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.9/aws-iam-authenticator_0.5.9_linux_arm64 -O /usr/bin/aws-iam-authenticator
-fi
-chmod +x /usr/bin/aws-iam-authenticator
 export LXC_PROFILE="tests/lxc/microk8s.profile"
 export BACKEND="lxc"
 export CHANNEL_TO_TEST=${TO_CHANNEL}
@@ -141,5 +133,7 @@ microk8s status --wait-ready
 
 if [ -d "/var/snap/microk8s/common/addons/eksd" ]
 then
-  pytest -s /var/snap/microk8s/common/addons/eksd/tests/test-addons.py
+  if [ -f "/var/snap/microk8s/common/addons/eksd/tests/test-addons.sh" ]; then
+    . /var/snap/microk8s/common/addons/eksd/tests/test-addons.sh
+  fi
 fi
