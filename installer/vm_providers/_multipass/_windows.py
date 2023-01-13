@@ -39,9 +39,9 @@ logger = logging.getLogger(__name__)
 
 
 _MULTIPASS_RELEASES_API_URL = "https://api.github.com/repos/canonical/multipass/releases"
-_MULTIPASS_DL_VERSION = "1.2.0"
+_MULTIPASS_DL_VERSION = "1.10.1"
 _MULTIPASS_DL_NAME = "multipass-{version}+win-win64.exe".format(version=_MULTIPASS_DL_VERSION)
-_MULTIPASS_DL_SHA3_384 = "6478cb37294052259f7a0337077264f5494e0788f23d4b5e2acac8f553ca5bc55031737c484397418e68e4ad2d0dc62f"  # noqa: E501
+_MULTIPASS_DL_SHA3_384 = "57f183873e089450a4200cbfc3dd524b076b1745449320af82712f9cb0ef245f27bc1a1823a44d4ae27abcb893ca1844"  # noqa: E501
 
 
 def windows_reload_multipass_path_env():
