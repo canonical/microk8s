@@ -1,5 +1,5 @@
 urllib3==1.26.5
-click~=7.0
+click==7.1.2
 progressbar33==2.4
 psutil==5.9.0
 requests==2.25.1
@@ -7,5 +7,8 @@ requests_unixsocket==0.1.5
 pysha3==1.0.2; python_version < '3.6'
 simplejson==3.8.2
 toml==0.10.0
+certifi==2020.12.5
+chardet==3.0.4
+idna==2.7
 pyinstaller
 https://pyyaml.org/download/pyyaml/PyYAML-5.3.1-cp38-cp38-win_amd64.whl; sys_platform == 'win32'
