@@ -5,6 +5,7 @@ import requests
 from utils import (
     wait_for_installation,
     run_until_success,
+    is_strict,
 )
 
 upgrade_from = os.environ.get("UPGRADE_MICROK8S_FROM", "beta")
@@ -27,6 +28,8 @@ class TestUpgradePath(object):
 
         """
         start_channel = 19
+        if is_strict():
+            start_channel = 25
         last_stable_minor = None
         if upgrade_from.startswith("latest") or "/" not in upgrade_from:
             attempt = 0
@@ -44,6 +47,8 @@ class TestUpgradePath(object):
         else:
             channel_parts = upgrade_from.split(".")
             channel_parts = channel_parts[1].split("/")
+            if is_strict():
+                channel_parts = channel_parts[0].split("-")
             print(channel_parts)
             last_stable_minor = int(channel_parts[0])
 
@@ -52,22 +57,32 @@ class TestUpgradePath(object):
         print("")
         print(
             "Testing refresh path from 1.{} to 1.{} and finally refresh to {}".format(
-                start_channel, last_stable_minor, upgrade_to
+                "{}-strict".format(start_channel) if is_strict() else start_channel,
+                "{}-strict".format(last_stable_minor) if is_strict() else last_stable_minor,
+                upgrade_to,
             )
         )
         assert last_stable_minor is not None
 
-        channel = "1.{}/stable".format(start_channel)
+        channel = "1.{}/stable".format(
+            "{}-strict".format(start_channel) if is_strict() else start_channel
+        )
         print("Installing {}".format(channel))
-        cmd = "sudo snap install microk8s --classic --channel={}".format(channel)
+        cmd = "sudo snap install microk8s --channel={} {}".format(
+            channel, "" if is_strict() else "--classic"
+        )
         run_until_success(cmd)
         wait_for_installation()
         channel_minor = start_channel
         channel_minor += 1
         while channel_minor <= last_stable_minor:
-            channel = "1.{}/stable".format(channel_minor)
+            channel = "1.{}/stable".format(
+                "{}-strict".format(channel_minor) if is_strict() else channel_minor
+            )
             print("Refreshing to {}".format(channel))
-            cmd = "sudo snap refresh microk8s --classic --channel={}".format(channel)
+            cmd = "sudo snap refresh microk8s --channel={} {}".format(
+                channel, "" if is_strict() else "--classic"
+            )
             run_until_success(cmd)
             wait_for_installation()
             time.sleep(30)
@@ -75,7 +90,9 @@ class TestUpgradePath(object):
 
         print("Installing {}".format(upgrade_to))
         if upgrade_to.endswith(".snap"):
-            cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to)
+            cmd = "sudo snap install {} --dangerous {}".format(
+                upgrade_to, "" if is_strict() else "--classic"
+            )
         else:
             cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to)
         run_until_success(cmd, timeout_insec=600)
