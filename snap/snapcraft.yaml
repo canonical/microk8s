@@ -127,19 +127,22 @@ parts:
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
     build-environment:
-      - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
+      - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/lib
 
   iptables:
     after: [libnftnl]
     source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
     plugin: autotools
     build-environment:
-      - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
-      - LIBNFTNL_LIBS: $SNAPCRAFT_STAGE/usr/local/lib
+      - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/lib
+      - LIBNFTNL_LIBS: $SNAPCRAFT_STAGE/usr/lib
     autotools-configure-parameters:
+      - "--prefix=/usr"
+      - "--exec-prefix=/"
       - "--disable-shared"
       - "--enable-static"
-    prime: [-bin/iptables-xml]
+    prime:
+      - -bin/iptables-xml
 
   migrator:
     after: [build-deps]
@@ -185,7 +188,6 @@ parts:
       - git
       - grep
       - hostname
-      - ufw
       - iproute2
       - jq
       - kmod
@@ -204,6 +206,27 @@ parts:
     stage:
       - -usr/share/doc
       - -usr/share/man
+    override-prime: |
+      snapcraftctl prime
+      rm -vf lib/systemd/system/zfs-import.service
+
+  ufw:
+    plugin: nil
+    stage-packages:
+      - ufw
+    stage:
+      - -usr/share/doc
+      - -usr/share/man
+      - -lib/*/*
+      - -sbin/ip*tables*
+      - -sbin/xtables-multi
+      - -usr/bin/iptables-xml
+      - -usr/sbin/ip*tables*
+      - -usr/sbin/nfnl_osf
+      - -usr/lib/*/*
+      - -usr/share/doc-base
+      - -usr/share/iptables
+      - -usr/share/lintian
 
   cluster-agent:
     after: [build-deps]
