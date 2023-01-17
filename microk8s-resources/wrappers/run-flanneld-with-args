@@ -46,7 +46,7 @@ fi
 declare -a args="($(cat $SNAP_DATA/args/flanneld))"
 if ! is_strict
 then
-  export CORE_LD_LIBRARY_PATH="$SNAP/../../core18/current/lib/$ARCH-linux-gnu"
+  export CORE_LD_LIBRARY_PATH="$SNAP/../../core20/current/lib/$ARCH-linux-gnu"
   export LD_LIBRARY_PATH="$CORE_LD_LIBRARY_PATH:$LD_LIBRARY_PATH"
 fi
 exec "$SNAP_DATA/opt/cni/bin/flanneld" "${args[@]}"

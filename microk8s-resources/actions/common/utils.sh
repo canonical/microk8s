@@ -831,7 +831,7 @@ fetch_as() {
     ARCH="$($SNAP/bin/uname -m)"
     LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu" "${SNAP}/usr/bin/curl" -L $1 -o $2
   else
-    CA_CERT=/snap/core18/current/etc/ssl/certs/ca-certificates.crt
+    CA_CERT=/snap/core20/current/etc/ssl/certs/ca-certificates.crt
     run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $1 -o $2
   fi
 }
