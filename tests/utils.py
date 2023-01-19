@@ -256,3 +256,9 @@ def is_container():
         print("no indication of a container in /proc")
 
     return False
+
+
+def is_strict():
+    if "STRICT" in os.environ and os.environ["STRICT"] == "yes":
+        return True
+    return False
