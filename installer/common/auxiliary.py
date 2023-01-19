@@ -9,6 +9,7 @@ from os.path import realpath
 from shutil import disk_usage
 
 from .file_utils import get_kubeconfig_path, get_kubectl_directory
+from . import definitions
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +25,14 @@ class Auxiliary(ABC):
         :return: None
         """
         self._args = args
-        self.requested_disk = self._args.disk * 1024 * 1024 * 1024
-        self.requested_memory = self._args.mem * 1024 * 1024 * 1024
-        self.requested_cores = self._args.cpu
+        try:
+            self.requested_disk = self._args.disk * 1024 * 1024 * 1024
+            self.requested_memory = self._args.mem * 1024 * 1024 * 1024
+            self.requested_cores = self._args.cpu
+        except AttributeError:
+            self.requested_disk = definitions.DEFAULT_DISK_GB
+            self.requested_memory = definitions.DEFAULT_MEMORY_GB
+            self.requested_cores = definitions.DEFAULT_CORES
 
     @staticmethod
     def _free_disk_space() -> int:
