@@ -336,9 +336,11 @@ apps:
     # https://forum.snapcraft.io/t/process-lifecycle-on-snap-refresh/140/37
     stop-mode: sigterm
     restart-condition: always
+    start-timeout: 5m
   daemon-kubelite:
     command: run-kubelite-with-args
     daemon: simple
+    after: [daemon-containerd]
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
