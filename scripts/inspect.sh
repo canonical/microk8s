@@ -418,6 +418,17 @@ function check_low_memory_guard {
   fi
 }
 
+function check_hostname {
+  HOST=$(hostname)
+  if echo "${HOST}" | grep -q "[A-Z]" 2> /dev/null
+  then
+    printf -- "\033[0;33mWARNING: \033[0m The hostname of this server is '${HOST}'.\n"
+    printf -- "Having uppercase letters in the hostname may cause issues with RBAC.\n"
+    printf -- "Consider changing the hostname to only have lowercase letters with:\n"
+    printf -- "\n"
+    printf -- "    hostnamectl set-hostname $(echo ${HOST} | tr '[:upper:]' '[:lower:]')\n"
+  fi
+}
 
 if [[ (${#@} -ne 0) && (("$*" == "--help") || ("$*" == "-h")) ]]; then
   print_help
@@ -432,6 +443,7 @@ mkdir -p ${SNAP_DATA}/inspection-report
 printf -- 'Inspecting system\n'
 check_memory
 check_low_memory_guard
+check_hostname
 
 printf -- 'Inspecting Certificates\n'
 check_certificates
