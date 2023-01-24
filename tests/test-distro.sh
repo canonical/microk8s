@@ -137,3 +137,10 @@ then
     . /var/snap/microk8s/common/addons/eksd/tests/test-addons.sh
   fi
 fi
+
+if [ -f "/var/snap/microk8s/common/addons/core/tests/test-addons.py" ] &&
+   grep test_gpu /var/snap/microk8s/common/addons/core/tests/test-addons.py -q
+then
+  timeout 3600 pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py::TestAddons::test_gpu
+fi
+
