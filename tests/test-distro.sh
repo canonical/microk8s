@@ -72,27 +72,28 @@ export LXC_PROFILE="tests/lxc/microk8s.profile"
 export BACKEND="lxc"
 export CHANNEL_TO_TEST=${TO_CHANNEL}
 
-#if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
-#then
-#  snap install ${TO_CHANNEL} --dangerous --classic
-#else
-#  snap install microk8s --channel=${TO_CHANNEL} --classic
-#fi
+export TO_CHANNEL="latest/edge"
+if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
+then
+  snap install ${TO_CHANNEL} --dangerous --classic
+else
+  snap install microk8s --channel=${TO_CHANNEL} --classic
+fi
 
-#microk8s status --wait-ready
+microk8s status --wait-ready
 
-#if [ -d "/var/snap/microk8s/common/addons/eksd" ]
-#then
-#  if [ -f "/var/snap/microk8s/common/addons/eksd/tests/test-addons.sh" ]; then
-#    . /var/snap/microk8s/common/addons/eksd/tests/test-addons.sh
-#  fi
-#fi
+if [ -d "/var/snap/microk8s/common/addons/eksd" ]
+then
+  if [ -f "/var/snap/microk8s/common/addons/eksd/tests/test-addons.sh" ]; then
+    . /var/snap/microk8s/common/addons/eksd/tests/test-addons.sh
+  fi
+fi
 
-#if [ -f "/var/snap/microk8s/common/addons/core/tests/test-addons.py" ] &&
-#   grep test_gpu /var/snap/microk8s/common/addons/core/tests/test-addons.py -q
-#then
-#  timeout 3600 pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py::TestAddons::test_gpu
-#fi
+if [ -f "/var/snap/microk8s/common/addons/core/tests/test-addons.py" ] &&
+   grep test_gpu /var/snap/microk8s/common/addons/core/tests/test-addons.py -q
+then
+  timeout 3600 pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py::TestAddons::test_gpu
+fi
 
 
 TRY_ATTEMPT=0
