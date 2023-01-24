@@ -55,10 +55,10 @@ fi
 
 # Test airgap installation.
 # DISABLE_AIRGAP_TESTS=1 can be set to disable them.
-#DISABLE_AIRGAP_TESTS="${DISABLE_AIRGAP_TESTS:-0}"
-#if [ "x${DISABLE_AIRGAP_TESTS}" != "x1" ]; then
-#  . tests/test-airgap.sh
-#fi
+DISABLE_AIRGAP_TESTS="${DISABLE_AIRGAP_TESTS:-0}"
+if [ "x${DISABLE_AIRGAP_TESTS}" != "x1" ]; then
+  . tests/test-airgap.sh
+fi
 
 # Test clustering. This test will create lxc containers or multipass VMs
 # therefore we do not need to run it inside a VM/container
@@ -71,30 +71,6 @@ ARCH=$(uname -m)
 export LXC_PROFILE="tests/lxc/microk8s.profile"
 export BACKEND="lxc"
 export CHANNEL_TO_TEST=${TO_CHANNEL}
-
-export TO_CHANNEL="latest/edge"
-if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
-then
-  snap install ${TO_CHANNEL} --dangerous --classic
-else
-  snap install microk8s --channel=${TO_CHANNEL} --classic
-fi
-
-microk8s status --wait-ready
-
-if [ -d "/var/snap/microk8s/common/addons/eksd" ]
-then
-  if [ -f "/var/snap/microk8s/common/addons/eksd/tests/test-addons.sh" ]; then
-    . /var/snap/microk8s/common/addons/eksd/tests/test-addons.sh
-  fi
-fi
-
-if [ -f "/var/snap/microk8s/common/addons/core/tests/test-addons.py" ] &&
-   grep test_gpu /var/snap/microk8s/common/addons/core/tests/test-addons.py -q
-then
-  timeout 3600 pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py::TestAddons::test_gpu
-fi
-
 
 TRY_ATTEMPT=0
 while ! (timeout 3600 pytest -s tests/test-cluster.py) &&
@@ -147,4 +123,24 @@ lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/commu
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
 
+if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
+then
+  snap install ${TO_CHANNEL} --dangerous --classic
+else
+  snap install microk8s --channel=${TO_CHANNEL} --classic
+fi
 
+microk8s status --wait-ready
+
+if [ -d "/var/snap/microk8s/common/addons/eksd" ]
+then
+  if [ -f "/var/snap/microk8s/common/addons/eksd/tests/test-addons.sh" ]; then
+    . /var/snap/microk8s/common/addons/eksd/tests/test-addons.sh
+  fi
+fi
+
+if [ -f "/var/snap/microk8s/common/addons/core/tests/test-addons.py" ] &&
+   grep test_gpu /var/snap/microk8s/common/addons/core/tests/test-addons.py -q
+then
+  timeout 3600 pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py::TestAddons::test_gpu
+fi
