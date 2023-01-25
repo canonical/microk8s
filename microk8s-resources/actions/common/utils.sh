@@ -219,6 +219,21 @@ skip_opt_in_config() {
     fi
 }
 
+# Function to remove deprecated arguments
+remove_deprecated_args() {
+  # Set the deprecated argument(s) to be removed
+  local -n deprecated_args=$1
+
+  # Set the service name
+  local service_name=$2
+
+  # Loop through the deprecated arguments and remove them from the manifest file
+  for arg in "${deprecated_args[@]}"; do
+    echo "Removing deprecated argument: $arg from $service_name"
+    skip_opt_in_local_config "$arg" "$service_name"
+  done
+}
+
 
 restart_service() {
     # restart a systemd service

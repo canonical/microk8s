@@ -67,6 +67,11 @@ then
   fi
 fi
 
+# Sanatize arguments for API server
+deprecated_args=("insecure-port" "feature-gates=RemoveSelfLink")
+remove_deprecated_args deprecated_args "kube-apiserver"
+
+
 ## Kubelet configuration
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
 if [ -z "$pod_cidr" ]
@@ -153,6 +158,10 @@ else
   echo "\`/var/lib/kubelet\` already exists. CSI add-ons have to point to $SNAP_COMMON for kubelet."
 fi
 
+# Sanatize arguments for kubelet
+deprecated_args=("log-dir")
+remove_deprecated_args deprecated_args "kubelet"
+
 ## Kube-proxy configuration
 
 if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]
@@ -218,3 +227,7 @@ fi
 
 declare -a args="($(cat $SNAP_DATA/args/$app))"
 exec "$SNAP/$app" "${args[@]}"
+
+# Sanatize arguments for kube-proxy
+deprecated_args=("proxy-mode")
+remove_deprecated_args deprecated_args "kube-proxy"
