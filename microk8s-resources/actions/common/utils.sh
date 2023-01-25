@@ -219,43 +219,85 @@ skip_opt_in_config() {
     fi
 }
 
+handle_args() {
+  local args=("$@")
+  for arg in "${args[@]}"; do
+    echo "Removing argument: $arg from $service_name"
+    skip_opt_in_local_config "$arg" "$service_name"
+  done
+}
+
 # Function to sanitize arguments for API server
 sanatize_args_kubeapi_server() {
-  local deprecated_args=("insecure-port" "feature-gates=RemoveSelfLink")
+  local args=("insecure-port"
+    "insecure-bind-address"
+    "port"
+    "address"
+    "feature-gates=RemoveSelfLink"
+    "service-account-api-audiences"
+    "experimental-encryption-provider-config"
+    "target-ram-mb"
+    )
 
   # Set the service name
   local service_name="kube-apiserver"
 
-  for arg in "${deprecated_args[@]}"; do
-    echo "Removing argument: $arg from $service_name"
-    skip_opt_in_local_config "$arg" "$service_name"
-  done
+  handle_args "${args[@]}"
 }
 
 # Function to sanitize arguments for kubelet
 sanatize_args_kubelet() {
-  local deprecated_args=("log-dir")
+  local args=("log-dir"
+    "experimental-kernel-memcg-notification"
+    "pod-infra-container-image"
+    "experimental-dockershim-root-directory"
+    "docker-endpoint"
+    "image-pull-progress-deadline"
+    "network-plugin"
+    "cni-conf-dir"
+    "cni-bin-dir"
+    "cni-cache-dir"
+    "network-plugin-mtu"
+    "non-masquerade-cidr"
+    )
 
   # Set the service name
   local service_name="kubelet"
 
-  for arg in "${deprecated_args[@]}"; do
-    echo "Removing argument: $arg from $service_name"
-    skip_opt_in_local_config "$arg" "$service_name"
-  done
+  handle_args "${args[@]}"
 }
 
 # Function to sanitize arguments for kube-proxy
 sanatize_args_kube_proxy() {
-  local deprecated_args=("proxy-mode")
+  local args=("proxy-mode")
 
   # Set the service name
   local service_name="kube-proxy"
 
-  for arg in "${deprecated_args[@]}"; do
-    echo "Removing argument: $arg from $service_name"
-    skip_opt_in_local_config "$arg" "$service_name"
-  done
+  handle_args "${args[@]}"
+}
+
+# Function to sanitize arguments for kube-controller-manager
+sanatize_args_kube_controller_manager() {
+  local args=("address"
+  "port"
+  "experimental-cluster-signing-duration"
+  )
+
+  # Set the service name
+  local service_name="kube-controller-manager"
+
+  handle_args "${args[@]}"
+}
+
+# Function to sanitize arguments for kube-scheduler
+sanatize_args_kube_scheduler() {
+  local args=("address")
+
+  # Set the service name
+  local service_name="kube-scheduler"
+
+  handle_args "${args[@]}"
 }
 
 
