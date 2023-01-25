@@ -67,9 +67,13 @@ then
   fi
 fi
 
-# Sanatize arguments for API server
-deprecated_args=("insecure-port" "feature-gates=RemoveSelfLink")
-remove_deprecated_args deprecated_args "kube-apiserver"
+# Sanatize arguments for kube-api server
+if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
+then 
+  echo "Skipping argument sanitisation for kube-apiserver"
+else
+  sanatize_args_kubeapi_server
+fi
 
 
 ## Kubelet configuration
@@ -159,8 +163,13 @@ else
 fi
 
 # Sanatize arguments for kubelet
-deprecated_args=("log-dir")
-remove_deprecated_args deprecated_args "kubelet"
+if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
+then 
+  echo "Skipping argument sanitisation for kubelet"
+else
+  sanatize_args_kubelet
+fi
+
 
 ## Kube-proxy configuration
 
@@ -229,5 +238,9 @@ declare -a args="($(cat $SNAP_DATA/args/$app))"
 exec "$SNAP/$app" "${args[@]}"
 
 # Sanatize arguments for kube-proxy
-deprecated_args=("proxy-mode")
-remove_deprecated_args deprecated_args "kube-proxy"
+if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
+then 
+  echo "Skipping argument sanitisation for kube-proxy"
+else
+  sanatize_args_kube_proxy
+fi

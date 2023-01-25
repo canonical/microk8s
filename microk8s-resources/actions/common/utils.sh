@@ -219,20 +219,45 @@ skip_opt_in_config() {
     fi
 }
 
-# Function to remove deprecated arguments
-remove_deprecated_args() {
-  # Set the deprecated argument(s) to be removed
-  local -n deprecated_args=$1
+# Function to sanitize arguments for API server
+sanatize_args_kubeapi_server() {
+  local deprecated_args=("insecure-port" "feature-gates=RemoveSelfLink")
 
   # Set the service name
-  local service_name=$2
+  local service_name="kube-apiserver"
 
-  # Loop through the deprecated arguments and remove them from the manifest file
   for arg in "${deprecated_args[@]}"; do
-    echo "Removing deprecated argument: $arg from $service_name"
+    echo "Removing argument: $arg from $service_name"
     skip_opt_in_local_config "$arg" "$service_name"
   done
 }
+
+# Function to sanitize arguments for kubelet
+sanatize_args_kubelet() {
+  local deprecated_args=("log-dir")
+
+  # Set the service name
+  local service_name="kubelet"
+
+  for arg in "${deprecated_args[@]}"; do
+    echo "Removing argument: $arg from $service_name"
+    skip_opt_in_local_config "$arg" "$service_name"
+  done
+}
+
+# Function to sanitize arguments for kube-proxy
+sanatize_args_kube_proxy() {
+  local deprecated_args=("proxy-mode")
+
+  # Set the service name
+  local service_name="kube-proxy"
+
+  for arg in "${deprecated_args[@]}"; do
+    echo "Removing argument: $arg from $service_name"
+    skip_opt_in_local_config "$arg" "$service_name"
+  done
+}
+
 
 
 restart_service() {
