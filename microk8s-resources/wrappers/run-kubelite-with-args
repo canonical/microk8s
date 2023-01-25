@@ -226,9 +226,6 @@ then
   echo "1" > /proc/sys/net/bridge/bridge-nf-call-iptables
 fi
 
-declare -a args="($(cat $SNAP_DATA/args/$app))"
-exec "$SNAP/$app" "${args[@]}"
-
 # Sanatize arguments for kube-proxy
 if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
 then 
@@ -252,3 +249,6 @@ then
 else
   sanatize_args_kube_scheduler
 fi
+
+declare -a args="($(cat $SNAP_DATA/args/$app))"
+exec "$SNAP/$app" "${args[@]}"

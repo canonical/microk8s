@@ -220,6 +220,7 @@ skip_opt_in_config() {
 }
 
 handle_args() {
+  local service_name="$1"
   local args=("$@")
   for arg in "${args[@]}"; do
     echo "Removing argument: $arg from $service_name"
@@ -237,12 +238,12 @@ sanatize_args_kubeapi_server() {
     "service-account-api-audiences"
     "experimental-encryption-provider-config"
     "target-ram-mb"
-    )
+  )
 
   # Set the service name
   local service_name="kube-apiserver"
 
-  handle_args "${args[@]}"
+  handle_args "$service_name" "${args[@]}"
 }
 
 # Function to sanitize arguments for kubelet
@@ -259,12 +260,12 @@ sanatize_args_kubelet() {
     "cni-cache-dir"
     "network-plugin-mtu"
     "non-masquerade-cidr"
-    )
+  )
 
   # Set the service name
   local service_name="kubelet"
 
-  handle_args "${args[@]}"
+  handle_args "$service_name" "${args[@]}"
 }
 
 # Function to sanitize arguments for kube-proxy
@@ -274,20 +275,20 @@ sanatize_args_kube_proxy() {
   # Set the service name
   local service_name="kube-proxy"
 
-  handle_args "${args[@]}"
+  handle_args "$service_name" "${args[@]}"
 }
 
 # Function to sanitize arguments for kube-controller-manager
 sanatize_args_kube_controller_manager() {
   local args=("address"
-  "port"
-  "experimental-cluster-signing-duration"
+    "port"
+    "experimental-cluster-signing-duration"
   )
 
   # Set the service name
   local service_name="kube-controller-manager"
 
-  handle_args "${args[@]}"
+  handle_args "$service_name" "${args[@]}"
 }
 
 # Function to sanitize arguments for kube-scheduler
@@ -297,7 +298,7 @@ sanatize_args_kube_scheduler() {
   # Set the service name
   local service_name="kube-scheduler"
 
-  handle_args "${args[@]}"
+  handle_args "$service_name" "${args[@]}"
 }
 
 
