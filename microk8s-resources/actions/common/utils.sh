@@ -220,6 +220,182 @@ skip_opt_in_config() {
 }
 
 
+remove_args() {
+  # Removes arguments from respective service
+  # argument $1: the service
+  # rest of arguments: the arguments to be removed
+  local service_name="$1"
+  shift
+  local args=("$@")
+  for arg in "${args[@]}"; do
+    if grep -q "$arg" "$SNAP_DATA/args/$service_name"; then
+      echo "Removing argument: $arg from $service_name"
+      skip_opt_in_local_config "$arg" "$service_name"
+    fi
+  done
+}
+
+
+sanatise_argskubeapi_server() {
+  # Function to sanitize arguments for API server
+  local args=(
+    # Removed klog flags from 1.26+
+    # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
+    "log-dir"
+    "log-file"
+    "log-flush-frequency"
+    "logtostderr"
+    "alsologtostderr"
+    "one-output"
+    "stderrthreshold"
+    "log-file-max-size"
+    "skip-log-headers"
+    "add-dir-header"
+    "skip-headers"
+    "log-backtrace-at"
+    # Remove insecure-port from 1.24+
+    "insecure-port"
+    "insecure-bind-address"
+    "port"
+    "address"
+    # Remove service-account-api-audiences from 1.25+
+    # https://github.com/kubernetes/kubernetes/commit/92707cafbb67a5664324eb891ef70ab3d1dd4a97
+    "service-account-api-audiences"
+    # extra
+    "feature-gates=RemoveSelfLink"
+    "experimental-encryption-provider-config"
+    "target-ram-mb"
+  )
+
+  remove_args "kube-apiserver" "${args[@]}"
+}
+
+
+sanatise_argskubelet() {
+  # Function to sanitize arguments for kubelet
+  local args=(
+    # Removed klog flags from 1.26+
+    # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
+    "log-dir"
+    "log-file"
+    "log-flush-frequency"
+    "logtostderr"
+    "alsologtostderr"
+    "one-output"
+    "stderrthreshold"
+    "log-file-max-size"
+    "skip-log-headers"
+    "add-dir-header"
+    "skip-headers"
+    "log-backtrace-at"
+    # Removed dockershim flags from 1.24+
+    # https://github.com/kubernetes/enhancements/issues/2221
+    "docker-endpoint"
+    "image-pull-progress-deadline"
+    "network-plugin"
+    "cni-conf-dir"
+    "cni-bin-dir"
+    "cni-cache-dir"
+    "network-plugin-mtu"
+    # extra
+    "experimental-kernel-memcg-notification"
+    "pod-infra-container-image"
+    "experimental-dockershim-root-directory"
+    "non-masquerade-cidr"
+  )
+
+  remove_args "kubelet" "${args[@]}"
+}
+
+
+sanatise_argskube_proxy() {
+  # Function to sanitize arguments for kube-proxy
+
+  # userspace proxy-mode is not allowed on the 1.26+ k8s
+  # https://kubernetes.io/blog/2022/11/18/upcoming-changes-in-kubernetes-1-26/#removal-of-kube-proxy-userspace-modes 
+  if grep -- "--proxy-mode=userspace" $SNAP_DATA/args/kube-proxy
+  then
+    echo "Removing --proxy-mode=userspace flag from kube-proxy, since it breaks Calico."
+    skip_opt_in_local_config "proxy-mode" "kube-proxy"
+  fi
+
+  local args=(
+    # Removed klog flags from 1.26+
+    # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
+    "log-dir"
+    "log-file"
+    "log-flush-frequency"
+    "logtostderr"
+    "alsologtostderr"
+    "one-output"
+    "stderrthreshold"
+    "log-file-max-size"
+    "skip-log-headers"
+    "add-dir-header"
+    "skip-headers"
+    "log-backtrace-at"
+  )
+
+  remove_args "kube-proxy" "${args[@]}"
+}
+
+
+sanatise_argskube_controller_manager() {
+  # Function to sanitize arguments for kube-controller-manager
+  local args=(
+    # Removed klog flags from 1.26+
+    # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
+    "log-dir"
+    "log-file"
+    "log-flush-frequency"
+    "logtostderr"
+    "alsologtostderr"
+    "one-output"
+    "stderrthreshold"
+    "log-file-max-size"
+    "skip-log-headers"
+    "add-dir-header"
+    "skip-headers"
+    "log-backtrace-at"
+    # Remove insecure ports from 1.24+
+    # https://github.com/kubernetes/kubernetes/pull/96216/files
+    "address"
+    "port"
+    # extra
+    "experimental-cluster-signing-duration"
+  )
+
+  remove_args "kube-controller-manager" "${args[@]}"
+}
+
+
+sanatise_argskube_scheduler() {
+  # Function to sanitize arguments for kube-scheduler
+  local args=(
+    # Removed klog flags from 1.26+
+    # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
+    "log-dir"
+    "log-file"
+    "log-flush-frequency"
+    "logtostderr"
+    "alsologtostderr"
+    "one-output"
+    "stderrthreshold"
+    "log-file-max-size"
+    "skip-log-headers"
+    "add-dir-header"
+    "skip-headers"
+    "log-backtrace-at"
+    # Remove insecure ports from 1.24+
+    # https://github.com/kubernetes/kubernetes/pull/96345/files
+    "address"
+    "port"
+  )
+
+  remove_args "kube-scheduler" "${args[@]}"
+}
+
+
 restart_service() {
     # restart a systemd service
     # argument $1 is the service name

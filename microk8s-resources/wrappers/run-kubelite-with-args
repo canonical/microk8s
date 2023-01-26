@@ -67,6 +67,19 @@ then
   fi
 fi
 
+# Sanatize arguments
+if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
+then 
+  echo "Skipping argument sanitisation."
+else
+  echo "Sanitise arguments."
+  sanatise_argskubeapi_server
+  sanatise_argskubelet
+  sanatise_argskube_proxy
+  sanatise_argskube_scheduler
+  sanatise_argskube_controller_manager
+fi
+
 ## Kubelet configuration
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
 if [ -z "$pod_cidr" ]
@@ -187,14 +200,6 @@ if grep -E lxc /proc/1/environ &&
   ! grep -E "conntrack-max-per-core" $SNAP_DATA/args/kube-proxy
 then
   refresh_opt_in_local_config "conntrack-max-per-core" "0" kube-proxy
-fi
-
-# userspace proxy-mode is not allowed on the 1.26+ k8s
-# https://kubernetes.io/blog/2022/11/18/upcoming-changes-in-kubernetes-1-26/#removal-of-kube-proxy-userspace-modes 
-if grep -- "--proxy-mode=userspace" $SNAP_DATA/args/kube-proxy
-then
-  echo "Removing --proxy-mode=userspace flag from kube-proxy, since it breaks Calico."
-  skip_opt_in_local_config "proxy-mode" "kube-proxy"
 fi
 
 if ! [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ]
