@@ -72,6 +72,7 @@ if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ]
 then 
   echo "Skipping argument sanitisation."
 else
+  echo "Sanitise arguments."
   sanatise_argskubeapi_server
   sanatise_argskubelet
   sanatise_argskube_proxy

@@ -228,8 +228,10 @@ remove_args() {
   shift
   local args=("$@")
   for arg in "${args[@]}"; do
-    echo "Removing argument: $arg from $service_name"
-    skip_opt_in_local_config "$arg" "$service_name"
+    if grep -q "$arg" "$SNAP_DATA/args/$service_name"; then
+      echo "Removing argument: $arg from $service_name"
+      skip_opt_in_local_config "$arg" "$service_name"
+    fi
   done
 }
 
