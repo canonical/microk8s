@@ -223,7 +223,7 @@ skip_opt_in_config() {
 remove_args() {
   # Removes arguments from respective service
   # argument $1: the service
-  # rest of arguemnts: the arguments to be removed
+  # rest of arguments: the arguments to be removed
   local service_name="$1"
   shift
   local args=("$@")
@@ -234,7 +234,7 @@ remove_args() {
 }
 
 
-sanatize_args_kubeapi_server() {
+sanatise_argskubeapi_server() {
   # Function to sanitize arguments for API server
   local args=(
     # Removed klog flags from 1.26+
@@ -269,7 +269,7 @@ sanatize_args_kubeapi_server() {
 }
 
 
-sanatize_args_kubelet() {
+sanatise_argskubelet() {
   # Function to sanitize arguments for kubelet
   local args=(
     # Removed klog flags from 1.26+
@@ -306,7 +306,7 @@ sanatize_args_kubelet() {
 }
 
 
-sanatize_args_kube_proxy() {
+sanatise_argskube_proxy() {
   # Function to sanitize arguments for kube-proxy
 
   # userspace proxy-mode is not allowed on the 1.26+ k8s
@@ -338,7 +338,7 @@ sanatize_args_kube_proxy() {
 }
 
 
-sanatize_args_kube_controller_manager() {
+sanatise_argskube_controller_manager() {
   # Function to sanitize arguments for kube-controller-manager
   local args=(
     # Removed klog flags from 1.26+
@@ -367,7 +367,7 @@ sanatize_args_kube_controller_manager() {
 }
 
 
-sanatize_args_kube_scheduler() {
+sanatise_argskube_scheduler() {
   # Function to sanitize arguments for kube-scheduler
   local args=(
     # Removed klog flags from 1.26+

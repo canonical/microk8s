@@ -72,11 +72,11 @@ if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ]
 then 
   echo "Skipping argument sanitisation."
 else
-  sanatize_args_kubeapi_server
-  sanatize_args_kubelet
-  sanatize_args_kube_proxy
-  sanatize_args_kube_scheduler
-  sanatize_args_kube_controller_manager
+  sanatise_argskubeapi_server
+  sanatise_argskubelet
+  sanatise_argskube_proxy
+  sanatise_argskube_scheduler
+  sanatise_argskube_controller_manager
 fi
 
 ## Kubelet configuration
