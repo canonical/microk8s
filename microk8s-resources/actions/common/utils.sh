@@ -219,8 +219,13 @@ skip_opt_in_config() {
     fi
 }
 
-handle_args() {
+
+remove_args() {
+  # Removes arguments from respective service
+  # argument $1: the service
+  # rest of arguemnts: the arguments to be removed
   local service_name="$1"
+  shift
   local args=("$@")
   for arg in "${args[@]}"; do
     echo "Removing argument: $arg from $service_name"
@@ -228,30 +233,61 @@ handle_args() {
   done
 }
 
-# Function to sanitize arguments for API server
+
 sanatize_args_kubeapi_server() {
-  local args=("insecure-port"
+  # Function to sanitize arguments for API server
+  local args=(
+    # Removed klog flags from 1.26+
+    # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
+    "log-dir"
+    "log-file"
+    "log-flush-frequency"
+    "logtostderr"
+    "alsologtostderr"
+    "one-output"
+    "stderrthreshold"
+    "log-file-max-size"
+    "skip-log-headers"
+    "add-dir-header"
+    "skip-headers"
+    "log-backtrace-at"
+    # Remove insecure-port from 1.24+
+    "insecure-port"
     "insecure-bind-address"
     "port"
     "address"
-    "feature-gates=RemoveSelfLink"
+    # Remove service-account-api-audiences from 1.25+
+    # https://github.com/kubernetes/kubernetes/commit/92707cafbb67a5664324eb891ef70ab3d1dd4a97
     "service-account-api-audiences"
+    # extra
+    "feature-gates=RemoveSelfLink"
     "experimental-encryption-provider-config"
     "target-ram-mb"
   )
 
-  # Set the service name
-  local service_name="kube-apiserver"
-
-  handle_args "$service_name" "${args[@]}"
+  remove_args "kube-apiserver" "${args[@]}"
 }
 
-# Function to sanitize arguments for kubelet
+
 sanatize_args_kubelet() {
-  local args=("log-dir"
-    "experimental-kernel-memcg-notification"
-    "pod-infra-container-image"
-    "experimental-dockershim-root-directory"
+  # Function to sanitize arguments for kubelet
+  local args=(
+    # Removed klog flags from 1.26+
+    # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
+    "log-dir"
+    "log-file"
+    "log-flush-frequency"
+    "logtostderr"
+    "alsologtostderr"
+    "one-output"
+    "stderrthreshold"
+    "log-file-max-size"
+    "skip-log-headers"
+    "add-dir-header"
+    "skip-headers"
+    "log-backtrace-at"
+    # Removed dockershim flags from 1.24+
+    # https://github.com/kubernetes/enhancements/issues/2221
     "docker-endpoint"
     "image-pull-progress-deadline"
     "network-plugin"
@@ -259,48 +295,103 @@ sanatize_args_kubelet() {
     "cni-bin-dir"
     "cni-cache-dir"
     "network-plugin-mtu"
+    # extra
+    "experimental-kernel-memcg-notification"
+    "pod-infra-container-image"
+    "experimental-dockershim-root-directory"
     "non-masquerade-cidr"
   )
 
-  # Set the service name
-  local service_name="kubelet"
-
-  handle_args "$service_name" "${args[@]}"
+  remove_args "kubelet" "${args[@]}"
 }
 
-# Function to sanitize arguments for kube-proxy
+
 sanatize_args_kube_proxy() {
-  local args=("proxy-mode")
+  # Function to sanitize arguments for kube-proxy
 
-  # Set the service name
-  local service_name="kube-proxy"
+  # userspace proxy-mode is not allowed on the 1.26+ k8s
+  # https://kubernetes.io/blog/2022/11/18/upcoming-changes-in-kubernetes-1-26/#removal-of-kube-proxy-userspace-modes 
+  if grep -- "--proxy-mode=userspace" $SNAP_DATA/args/kube-proxy
+  then
+    echo "Removing --proxy-mode=userspace flag from kube-proxy, since it breaks Calico."
+    skip_opt_in_local_config "proxy-mode" "kube-proxy"
+  fi
 
-  handle_args "$service_name" "${args[@]}"
+  local args=(
+    # Removed klog flags from 1.26+
+    # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
+    "log-dir"
+    "log-file"
+    "log-flush-frequency"
+    "logtostderr"
+    "alsologtostderr"
+    "one-output"
+    "stderrthreshold"
+    "log-file-max-size"
+    "skip-log-headers"
+    "add-dir-header"
+    "skip-headers"
+    "log-backtrace-at"
+  )
+
+  remove_args "kube-proxy" "${args[@]}"
 }
 
-# Function to sanitize arguments for kube-controller-manager
+
 sanatize_args_kube_controller_manager() {
-  local args=("address"
+  # Function to sanitize arguments for kube-controller-manager
+  local args=(
+    # Removed klog flags from 1.26+
+    # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
+    "log-dir"
+    "log-file"
+    "log-flush-frequency"
+    "logtostderr"
+    "alsologtostderr"
+    "one-output"
+    "stderrthreshold"
+    "log-file-max-size"
+    "skip-log-headers"
+    "add-dir-header"
+    "skip-headers"
+    "log-backtrace-at"
+    # Remove insecure ports from 1.24+
+    # https://github.com/kubernetes/kubernetes/pull/96216/files
+    "address"
     "port"
+    # extra
     "experimental-cluster-signing-duration"
   )
 
-  # Set the service name
-  local service_name="kube-controller-manager"
-
-  handle_args "$service_name" "${args[@]}"
+  remove_args "kube-controller-manager" "${args[@]}"
 }
 
-# Function to sanitize arguments for kube-scheduler
+
 sanatize_args_kube_scheduler() {
-  local args=("address")
+  # Function to sanitize arguments for kube-scheduler
+  local args=(
+    # Removed klog flags from 1.26+
+    # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
+    "log-dir"
+    "log-file"
+    "log-flush-frequency"
+    "logtostderr"
+    "alsologtostderr"
+    "one-output"
+    "stderrthreshold"
+    "log-file-max-size"
+    "skip-log-headers"
+    "add-dir-header"
+    "skip-headers"
+    "log-backtrace-at"
+    # Remove insecure ports from 1.24+
+    # https://github.com/kubernetes/kubernetes/pull/96345/files
+    "address"
+    "port"
+  )
 
-  # Set the service name
-  local service_name="kube-scheduler"
-
-  handle_args "$service_name" "${args[@]}"
+  remove_args "kube-scheduler" "${args[@]}"
 }
-
 
 
 restart_service() {

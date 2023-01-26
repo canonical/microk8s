@@ -67,14 +67,17 @@ then
   fi
 fi
 
-# Sanatize arguments for kube-api server
+# Sanatize arguments
 if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
 then 
-  echo "Skipping argument sanitisation for kube-apiserver"
+  echo "Skipping argument sanitisation."
 else
   sanatize_args_kubeapi_server
+  sanatize_args_kubelet
+  sanatize_args_kube_proxy
+  sanatize_args_kube_scheduler
+  sanatize_args_kube_controller_manager
 fi
-
 
 ## Kubelet configuration
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
@@ -162,15 +165,6 @@ else
   echo "\`/var/lib/kubelet\` already exists. CSI add-ons have to point to $SNAP_COMMON for kubelet."
 fi
 
-# Sanatize arguments for kubelet
-if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
-then 
-  echo "Skipping argument sanitisation for kubelet"
-else
-  sanatize_args_kubelet
-fi
-
-
 ## Kube-proxy configuration
 
 if [ -e "$SNAP_DATA/args/cni-network/cni.yaml" ]
@@ -224,30 +218,6 @@ if [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ] &&
    grep 0 /proc/sys/net/bridge/bridge-nf-call-iptables
 then
   echo "1" > /proc/sys/net/bridge/bridge-nf-call-iptables
-fi
-
-# Sanatize arguments for kube-proxy
-if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
-then 
-  echo "Skipping argument sanitisation for kube-proxy"
-else
-  sanatize_args_kube_proxy
-fi
-
-# Sanatize arguments for kube-controller-manager
-if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
-then 
-  echo "Skipping argument sanitisation for kube-controller-manager"
-else
-  sanatize_args_kube_controller_manager
-fi
-
-# Sanatize arguments for kube-scheduler
-if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
-then 
-  echo "Skipping argument sanitisation for kube-scheduler"
-else
-  sanatize_args_kube_scheduler
 fi
 
 declare -a args="($(cat $SNAP_DATA/args/$app))"
