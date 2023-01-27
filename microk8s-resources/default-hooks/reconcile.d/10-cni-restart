@@ -30,5 +30,5 @@ if  ! [ -e "${SNAP_DATA}/var/lock/skip-offloading" ] &&
     "${KUBECTL}" patch felixconfigurations default --patch '{"spec":{"featureDetectOverride":"ChecksumOffloadBroken=true"}}' --type=merge
 then
     echo "Patched calico for offloading"
-    rm "${SNAP_DATA}/var/lock/try-offloading-patch"
+    mv "${SNAP_DATA}/var/lock/try-offloading-patch" "${SNAP_DATA}/var/lock/offloading-patch-applied"
 fi

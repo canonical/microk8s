@@ -643,7 +643,6 @@ fi
 if [ -e "${SNAP_DATA}/var/lock/no-flanneld" ]
 then
   touch "${SNAP_DATA}/var/lock/cni-needs-reload"
-  touch "${SNAP_DATA}/var/lock/try-offloading-patch"
 fi
 
 # Restart reconfigured services

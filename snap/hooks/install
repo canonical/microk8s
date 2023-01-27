@@ -113,6 +113,7 @@ set_service_not_expected_to_start apiserver-proxy
 
 touch "${SNAP_DATA}/var/lock/ha-cluster"
 touch "${SNAP_DATA}/var/lock/lite.lock"
+touch "${SNAP_DATA}/var/lock/try-offloading-patch"
 
 RESOURCES="${SNAP}/upgrade-scripts/000-switch-to-calico/resources"
 BACKUP_DIR="${SNAP_DATA}/var/tmp/upgrades/000-switch-to-calico"
