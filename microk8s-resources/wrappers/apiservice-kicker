@@ -101,7 +101,7 @@ do
       fi
 
       if [ -e $SNAP_COMMON/etc/launcher/configuration/config.yaml ] &&
-         $SNAP/usr/bin/python3 $SNAP/scripts/launcher.py $SNAP_COMMON/etc/launcher/configuration/config.yaml
+         $SNAP/bin/cluster-agent init --config-file $SNAP_COMMON/etc/launcher/configuration/config.yaml
       then
         mv $SNAP_COMMON/etc/launcher/configuration/config.yaml $SNAP_COMMON/etc/launcher/configuration/config.yaml.applied
       fi
