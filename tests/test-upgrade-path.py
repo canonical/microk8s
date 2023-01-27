@@ -58,7 +58,7 @@ class TestUpgradePath(object):
 
         # channel = "1.{}/stable".format(start_channel)
 
-        channel = "latest/edge/strict"
+        channel = "1.26-strict/edge"
         print("Installing {}".format(channel))
         cmd = "sudo snap install microk8s --channel={}".format(channel)
         run_until_success(cmd)
