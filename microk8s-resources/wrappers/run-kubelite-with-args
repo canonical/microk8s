@@ -59,6 +59,18 @@ then
   fi
 fi
 
+# Sanatize arguments
+if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
+then 
+  echo "Skipping argument sanitisation."
+else
+  echo "Sanitise arguments."
+  sanatise_argskubeapi_server
+  sanatise_argskubelet
+  sanatise_argskube_scheduler
+  sanatise_argskube_controller_manager
+fi
+
 ## Kubelet configuration
 pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
 if [ -z "$pod_cidr" ]

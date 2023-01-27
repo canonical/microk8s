@@ -208,6 +208,87 @@ skip_opt_in_config() {
     fi
 }
 
+remove_args() {
+  # Removes arguments from respective service
+  # argument $1: the service
+  # rest of arguments: the arguments to be removed
+  local service_name="$1"
+  shift
+  local args=("$@")
+  for arg in "${args[@]}"; do
+    if grep -q "$arg" "$SNAP_DATA/args/$service_name"; then
+      echo "Removing argument: $arg from $service_name"
+      skip_opt_in_local_config "$arg" "$service_name"
+    fi
+  done
+}
+
+
+sanatise_argskubeapi_server() {
+  # Function to sanitize arguments for API server
+  local args=(
+    # Remove insecure-port from 1.24+
+    "insecure-port"
+    "insecure-bind-address"
+    "port"
+    "address"
+    # extra
+    "feature-gates=RemoveSelfLink"
+    "experimental-encryption-provider-config"
+    "target-ram-mb"
+  )
+
+  remove_args "kube-apiserver" "${args[@]}"
+}
+
+
+sanatise_argskubelet() {
+  # Function to sanitize arguments for kubelet
+  local args=(
+    # Removed dockershim flags from 1.24+
+    # https://github.com/kubernetes/enhancements/issues/2221
+    "docker-endpoint"
+    "image-pull-progress-deadline"
+    "network-plugin"
+    "cni-conf-dir"
+    "cni-bin-dir"
+    "cni-cache-dir"
+    "network-plugin-mtu"
+    # extra
+    "pod-infra-container-image"
+    "experimental-dockershim-root-directory"
+    "non-masquerade-cidr"
+  )
+
+  remove_args "kubelet" "${args[@]}"
+}
+
+
+sanatise_argskube_controller_manager() {
+  # Function to sanitize arguments for kube-controller-manager
+  local args=(
+    # Remove insecure ports from 1.24+
+    # https://github.com/kubernetes/kubernetes/pull/96216/files
+    "address"
+    "port"
+  )
+
+  remove_args "kube-controller-manager" "${args[@]}"
+}
+
+
+sanatise_argskube_scheduler() {
+  # Function to sanitize arguments for kube-scheduler
+  local args=(
+    # Remove insecure ports from 1.24+
+    # https://github.com/kubernetes/kubernetes/pull/96345/files
+    "address"
+    "port"
+  )
+
+  remove_args "kube-scheduler" "${args[@]}"
+}
+
 
 restart_service() {
     # restart a systemd service
