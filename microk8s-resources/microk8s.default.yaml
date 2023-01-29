@@ -1,0 +1,5 @@
+# Default launch configuration for MicroK8s.
+---
+version: 0.1.0
+addons:
+  - name: dns

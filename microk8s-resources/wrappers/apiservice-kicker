@@ -81,6 +81,23 @@ do
     # Run reconcile hooks
     $SNAP/usr/bin/python3 $SNAP/scripts/run-lifecycle-hooks.py reconcile || true
 
+    # Apply configuration files from $SNAP_COMMON/etc/launcher/
+    match_config_files="${SNAP_COMMON}/etc/launcher/"*.yaml
+    for config in ${match_config_files}; do
+      # bash will return the regex if no files were found, in that case skip
+      if [ "${config}" == "${match_config_files}" ]; then
+        continue
+      fi
+
+      echo "Applying ${config}"
+      if "${SNAP}/bin/cluster-agent" init --config-file "${config}"; then
+        echo "Successfully applied ${config}"
+        mv "${config}" "${config}.applied"
+      else
+        echo "Failed to apply ${config}"
+      fi
+    done
+
     # If no local-registry-hosting documentation has been installed,
     # install a help guide that points to the microk8s registry docs.
     #

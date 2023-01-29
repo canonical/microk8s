@@ -35,6 +35,24 @@ need_kubelet_restart=false
 need_controller_restart=false
 need_scheduler_restart=false
 
+# If the configurations directory is missing from SNAP_COMMON, we are upgrading from an older MicroK8s version.
+if [ ! -d "${SNAP_COMMON}/etc/launcher" ]
+then
+  mkdir -p "${SNAP_COMMON}/etc/launcher"
+fi
+
+# snap set microk8s config="$(cat config.yaml)"
+config="$(snapctl get config || true)"
+if [ ! -z "${config}" ]
+then
+  # Only write config file if not already applied.
+  applied_config="$(cat ${SNAP_COMMON}/etc/launcher/snap-set.yaml.applied || true)"
+  if [ -z "${applied_config}" ] || [ "${config}" != "${applied_config}" ]
+  then
+    echo "${config}" > "${SNAP_COMMON}/etc/launcher/snap-set.yaml"
+  fi
+fi
+
 # If the addons directory is missing from SNAP_COMMON, then we are upgrading from an older MicroK8s version.
 if [ ! -d "${SNAP_COMMON}/addons" ]
 then
