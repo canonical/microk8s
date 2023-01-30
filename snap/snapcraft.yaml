@@ -343,7 +343,7 @@ parts:
       - git
     override-build: |
       set -eux
-      snap refresh go --channel=1.17/stable || true
+      snap refresh go --channel=1.19/stable || true
       . ./set-env-variables.sh
 
       # if "${KUBE_SNAP_BINS}" exist we have to use the binaries from there
