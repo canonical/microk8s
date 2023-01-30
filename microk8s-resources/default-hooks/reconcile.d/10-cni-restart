@@ -25,10 +25,10 @@ then
 fi
 
 if  ! [ -e "${SNAP_DATA}/var/lock/skip-offloading" ] &&
-    [ -e "${SNAP_DATA}/var/lock/try-offloading-patch" ] &&
+    ! [ -e "${SNAP_DATA}/var/lock/offloading-patch-applied" ] &&
     ! grep -q "ChecksumOffloadBroken" "${SNAP_DATA}/args/cni-network/cni.yaml" &&
     "${KUBECTL}" patch felixconfigurations default --patch '{"spec":{"featureDetectOverride":"ChecksumOffloadBroken=true"}}' --type=merge
 then
     echo "Patched calico for offloading"
-    mv "${SNAP_DATA}/var/lock/try-offloading-patch" "${SNAP_DATA}/var/lock/offloading-patch-applied"
+    touch "${SNAP_DATA}/var/lock/offloading-patch-applied"
 fi
