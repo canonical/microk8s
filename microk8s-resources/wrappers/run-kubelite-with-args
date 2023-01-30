@@ -15,6 +15,11 @@ source $SNAP/actions/common/utils.sh
 
 app=kubelite
 
+if [ -e ${SNAP_DATA}/args/${app}-env ]
+then
+  source ${SNAP_DATA}/args/${app}-env
+fi
+
 if ! [ -e ${SNAP_DATA}/var/lock/lite.lock ]
 then
   echo "${app} will not run"
