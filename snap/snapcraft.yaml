@@ -79,6 +79,7 @@ parts:
   k8s-dqlite:
     after: [dqlite]
     source: build-scripts/components/k8s-dqlite
+    build-attributes: [no-patchelf]
     plugin: nil
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
 
@@ -102,6 +103,7 @@ parts:
 
   kubernetes:
     after: [build-deps]
+    build-attributes: [no-patchelf]
     plugin: nil
     source: build-scripts/components/kubernetes
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes

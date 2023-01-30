@@ -1,11 +1,5 @@
-# Environment variables k8s-dqlite will run with
-#
-# Enable dqlite debugging flags
-# LIBRAFT_TRACE="1"
-# LIBDQLITE_TRACE="1"
-#
 # In a node where FIPS is enabled, ie /proc/sys/crypto/fips_enabled is set to 1
 # Force FIPS to be used with. If not set GOFIPS is implicetely selected.
 export GOFIPS=0
 # Point to the location of libcrypto.so
-# export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu/:/snap/microk8s/current/lib/"
+# export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu/"
