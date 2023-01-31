@@ -14,7 +14,6 @@ export LD_LIBRARY_PATH="${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/$ARCH-linux-gnu:
 export PATH="${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:$PATH:/usr/bin:/usr/local/bin"
 export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
 
-
 cp -r --preserve=mode ${SNAP}/default-args ${SNAP_DATA}/args
 mv ${SNAP_DATA}/args/certs.d/localhost__32000 ${SNAP_DATA}/args/certs.d/localhost:32000
 
@@ -27,6 +26,19 @@ then
 else
   echo "\`/var/lib/kubelet\` already exists.  Will not be linking to $SNAP_COMMON"
 fi
+
+# Copy initial configuration from well-known paths.
+# This is done prior to any other initialization.
+mkdir -p "${SNAP_COMMON}/etc/launcher"
+for config_file in /root/.microk8s.yaml /etc/microk8s.yaml "${SNAP}/microk8s.default.yaml"; do
+  if [ -f "${config_file}" ]; then
+    echo "Found config file ${config_file}, will use to initialize cluster."
+    cp "${config_file}" "${SNAP_COMMON}/etc/launcher/install.yaml" || true
+
+    # Stop on first file found
+    break
+  fi
+done
 
 # Create the certificates
 mkdir ${SNAP_DATA}/certs
