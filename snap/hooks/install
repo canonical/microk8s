@@ -29,14 +29,24 @@ fi
 
 # Copy initial configuration from well-known paths.
 # This is done prior to any other initialization.
+#
+# The following paths are checked in order for a config file.
+# Only the first file found will be used, the rest will be ignored.
+#
+# - $SNAP_USER_COMMON/.microk8s.yaml  <-- user-defined config file, typically in /root/snap/microk8s/common/.microk8s.yaml
+# - $SNAP_COMMON/.microk8s.yaml       <-- user-defined config file, typically in /var/snap/microk8s/common/.microk8s.yaml
+# - $SNAP/microk8s.default.yaml       <-- default config file bundled with the snap
+#
+# If the pre-init step fails, the snap installation will fail, as it is considered to be a user error.
 mkdir -p "${SNAP_COMMON}/etc/launcher"
-for config_file in /root/.microk8s.yaml /etc/microk8s.yaml "${SNAP}/microk8s.default.yaml"; do
+for config_file in "$SNAP_USER_COMMON/.microk8s.yaml" "$SNAP_COMMON/.microk8s.yaml" "$SNAP/microk8s.default.yaml"; do
   if [ -f "${config_file}" ]; then
     echo "Found config file ${config_file}, will use to initialize cluster."
-    cp "${config_file}" "${SNAP_COMMON}/etc/launcher/install.yaml" || true
 
-    # Stop on first file found
-    break
+    if cp "${config_file}" "${SNAP_COMMON}/etc/launcher/install.yaml" then
+      "${SNAP}/bin/cluster-agent" init --pre-init --config-file "${SNAP_COMMON}/etc/launcher/install.yaml"
+      break
+    fi
   fi
 done
 
