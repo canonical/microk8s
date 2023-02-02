@@ -32,9 +32,3 @@ ulimit -n 65536 || true
 # this get inherited to the running containers
 #
 ulimit -l 16384 || true
-
-# In a node where FIPS is enabled, ie /proc/sys/crypto/fips_enabled is set to 1
-# Force FIPS to be used with. If not set GOFIPS is implicetely selected.
-export GOFIPS=0
-# Point to the location of libcrypto.so
-# export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu/"

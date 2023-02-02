@@ -15,11 +15,6 @@ source $SNAP/actions/common/utils.sh
 
 app=kubelite
 
-if [ -e ${SNAP_DATA}/args/${app}-env ]
-then
-  source ${SNAP_DATA}/args/${app}-env
-fi
-
 if ! [ -e ${SNAP_DATA}/var/lock/lite.lock ]
 then
   echo "${app} will not run"
@@ -224,6 +219,11 @@ if [ -f /proc/sys/net/bridge/bridge-nf-call-iptables ] &&
    grep 0 /proc/sys/net/bridge/bridge-nf-call-iptables
 then
   echo "1" > /proc/sys/net/bridge/bridge-nf-call-iptables
+fi
+
+if [ -e ${SNAP_DATA}/args/${app}-env ]
+then
+  source ${SNAP_DATA}/args/${app}-env
 fi
 
 declare -a args="($(cat $SNAP_DATA/args/$app))"
