@@ -12,5 +12,8 @@ then
   if (is_apiserver_ready) && "${KUBECTL}" apply -f "${SNAP_DATA}/args/cni-network/cni.yaml"
   then
     touch "${SNAP_DATA}/var/lock/cni-loaded"
+
+    # We just installed Calico, no need to refresh
+    rm "${SNAP_DATA}/var/lock/cni-needs-reload" || true
   fi
 fi
