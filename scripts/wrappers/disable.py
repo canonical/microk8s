@@ -35,7 +35,7 @@ def disable(addons):
     is_cluster_locked()
     exit_if_no_permission()
     ensure_started()
-    wait_for_ready(timeout=30)
+    wait_for_ready(timeout=30, with_ready_node=False)
 
     xable("disable", addons)
 
