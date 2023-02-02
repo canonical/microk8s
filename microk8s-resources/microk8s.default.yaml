@@ -1,5 +1,8 @@
 # Default launch configuration for MicroK8s.
 ---
 version: 0.1.0
+extraKubeletArgs:
+  --cluster-domain: cluster.local
+  --cluster-dns: 10.152.183.10
 addons:
   - name: dns
