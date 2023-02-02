@@ -98,5 +98,5 @@ lxc exec airgap-test -- bash -c 'sudo microk8s enable hostpath-storage dns'
 airgap_wait_for_pods airgap-test
 
 echo "Cleaning up"
-# lxc rm airgap-registry --force
+lxc rm airgap-registry --force
 lxc rm airgap-test --force
