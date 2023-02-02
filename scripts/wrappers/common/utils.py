@@ -84,15 +84,11 @@ def run(*args, die=True):
     return result.stdout.decode("utf-8")
 
 
-def is_cluster_ready():
+def is_cluster_ready(with_ready_node=True):
     try:
-        service_output = kubectl_get("all")
-        node_output = kubectl_get("nodes")
-        # Make sure to compare with the word " Ready " with spaces.
-        if " Ready " in node_output and "service/kubernetes" in service_output:
-            return True
-        else:
-            return False
+        return "service/kubernetes" in kubectl_get("all") and (
+            not with_ready_node or " Ready " in kubectl_get("nodes")
+        )
     except Exception:
         return False
 
@@ -154,11 +150,11 @@ def is_cluster_locked():
         sys.exit(1)
 
 
-def wait_for_ready(timeout):
+def wait_for_ready(timeout, with_ready_node=True):
     start_time = time.time()
 
     while True:
-        if is_cluster_ready():
+        if is_cluster_ready(with_ready_node=with_ready_node):
             return True
         elif timeout and time.time() > start_time + timeout:
             return False
@@ -466,13 +462,13 @@ def xable(action: str, addon_args: list):
             click.echo("Addon {}/{} is already {}d".format(repo_name, addon_name, action))
             continue
 
-        wait_for_ready(timeout=30)
+        wait_for_ready(timeout=30, with_ready_node=False)
         p = subprocess.run(
             [snap_common() / "addons" / repo_name / "addons" / addon_name / action, *args]
         )
         if p.returncode:
             sys.exit(p.returncode)
-        wait_for_ready(timeout=30)
+        wait_for_ready(timeout=30, with_ready_node=False)
 
 
 def is_enabled(addon, item):
