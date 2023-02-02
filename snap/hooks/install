@@ -43,7 +43,7 @@ for config_file in "$SNAP_USER_COMMON/.microk8s.yaml" "$SNAP_COMMON/.microk8s.ya
   if [ -f "${config_file}" ]; then
     echo "Found config file ${config_file}, will use to initialize cluster."
 
-    if cp "${config_file}" "${SNAP_COMMON}/etc/launcher/install.yaml" then
+    if cp "${config_file}" "${SNAP_COMMON}/etc/launcher/install.yaml"; then
       "${SNAP}/bin/cluster-agent" init --pre-init --config-file "${SNAP_COMMON}/etc/launcher/install.yaml"
       break
     fi
