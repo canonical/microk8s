@@ -27,6 +27,11 @@ else
   echo "\`/var/lib/kubelet\` already exists.  Will not be linking to $SNAP_COMMON"
 fi
 
+# Create the certificates
+mkdir ${SNAP_DATA}/certs
+# Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
+cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
+
 # Copy initial configuration from well-known paths.
 # This is done prior to any other initialization.
 #
@@ -50,10 +55,7 @@ for config_file in "$SNAP_USER_COMMON/.microk8s.yaml" "$SNAP_COMMON/.microk8s.ya
   fi
 done
 
-# Create the certificates
-mkdir ${SNAP_DATA}/certs
-# Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
-cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
+# Produce cluster certificates
 produce_certs
 rm -rf .srl
 
