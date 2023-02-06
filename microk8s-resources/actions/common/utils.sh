@@ -684,8 +684,8 @@ function update_configs {
   $SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
   # Create the known tokens
   proxy_token=`grep kube-proxy ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
-  hostname=$(hostname)
-  kubelet_token=`grep kubelet-0 ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  kubelet_token=`grep kubelet-0, ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
   controller_token=`grep kube-controller-manager ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
   scheduler_token=`grep kube-scheduler ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
   # Create the client kubeconfig for the controller
@@ -882,7 +882,7 @@ refresh_calico_if_needed() {
 }
 
 remove_docker_specific_args() {
-  # Remove docker specific arguments and return 0 if kubelet needs to be restarted 
+  # Remove docker specific arguments and return 0 if kubelet needs to be restarted
   if grep -e "\-\-network-plugin" ${SNAP_DATA}/args/kubelet ||
     grep -e "\-\-cni-conf-dir" ${SNAP_DATA}/args/kubelet ||
     grep -e "\-\-cni-bin-dir" ${SNAP_DATA}/args/kubelet
