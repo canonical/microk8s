@@ -506,6 +506,11 @@ gen_proxy_client_cert() (
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
+refresh_csr_conf() {
+  render_csr_conf
+  cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
+}
+
 produce_certs() {
     export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     # Generate RSA keys if not yet
