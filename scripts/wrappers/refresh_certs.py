@@ -128,10 +128,15 @@ def reproduce_front_proxy_client_cert():
     Produce the front proxy client certificate
     """
     subprocess.check_call("rm -rf {}/certs/front-proxy-client.crt".format(snapdata_path).split())
-    p = subprocess.Popen(
-        ["bash", "-c", ". {}/actions/common/utils.sh; gen_proxy_client_cert".format(snap_path)]
+    subprocess.check_call(
+        [
+            "bash",
+            "-c",
+            ". {}/actions/common/utils.sh; refresh_csr_conf; gen_proxy_client_cert".format(
+                snap_path
+            ),
+        ]
     )
-    p.communicate()
     subprocess.check_call("rm -rf .slr".split())
     restart("kubelite")
 
@@ -141,10 +146,13 @@ def reproduce_server_cert():
     Produce the server certificate
     """
     subprocess.check_call("rm -rf {}/certs/server.crt".format(snapdata_path).split())
-    p = subprocess.Popen(
-        ["bash", "-c", ". {}/actions/common/utils.sh; gen_server_cert".format(snap_path)]
+    subprocess.check_call(
+        [
+            "bash",
+            "-c",
+            ". {}/actions/common/utils.sh; refresh_csr_conf; gen_server_cert".format(snap_path),
+        ]
     )
-    p.communicate()
     subprocess.check_call("rm -rf .slr".split())
     restart("kubelite")
     restart("cluster-agent")
