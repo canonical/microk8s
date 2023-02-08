@@ -118,7 +118,7 @@ jobs:
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
           sudo microk8s enable community
-          sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/tests; pytest -s -ra test-addons.py"
+          sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/; pytest -s -ra ./tests/"
 
   test-addons-core-upgrade:
     name: Test core addons upgrade
