@@ -5,7 +5,7 @@ the MicroK8s build process.
 
 The Kubernetes patches are under `build-scripts/patches/`.
 
-The patchd are maintained in the [kubernetes-dqlite repository](https://github.com/canonical/kubernetes-dqlite).
+The patches are maintained in the [kubernetes-dqlite repository](https://github.com/canonical/kubernetes-dqlite).
 To produce them checkout the kubernetes-dqlite repository and head to the Kubernetes
 branch you would like to build. For example:
 ```
