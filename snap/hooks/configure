@@ -261,7 +261,7 @@ then
   touch ${SNAP_DATA}/credentials/known_tokens.csv
   chmod 660 ${SNAP_DATA}/credentials/known_tokens.csv
   kubelet_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
-  hostname=$(hostname)
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
   echo "${kubelet_token},system:node:${hostname},kubelet-0,\"system:nodes\"" >> ${SNAP_DATA}/credentials/known_tokens.csv
   ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
 

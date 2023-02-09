@@ -153,7 +153,7 @@ def get_connection_info(
         if cluster_type == "dqlite":
             req_data = {
                 "token": token,
-                "hostname": socket.gethostname(),
+                "hostname": socket.gethostname().lower(),
                 "port": cluster_agent_port,
                 "worker": worker,
             }
@@ -162,7 +162,7 @@ def get_connection_info(
         else:
             req_data = {
                 "token": token,
-                "hostname": socket.gethostname(),
+                "hostname": socket.gethostname().lower(),
                 "port": cluster_agent_port,
                 "callback": callback_token,
             }
@@ -450,7 +450,7 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     """
     kubelet_token = "{}-kubelet".format(token)
     traefik_port = get_traefik_port()
-    kubelet_user = "system:node:{}".format(socket.gethostname())
+    kubelet_user = "system:node:{}".format(socket.gethostname().lower())
     cert = get_client_cert(
         master_ip, master_port, "kubelet", kubelet_token, kubelet_user, "system:nodes"
     )
