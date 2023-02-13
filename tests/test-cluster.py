@@ -14,7 +14,7 @@ from os import path
 reuse_vms = None
 
 # Channel we want to test. A full path to a local snap can be used for local builds
-channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/edge")
+channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/stable")
 backend = os.environ.get("BACKEND", None)
 profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
 
@@ -495,11 +495,21 @@ class TestUpgradeCluster(object):
 
             # For eksd and stable tracks, we need a previous version on these tracks.
             # Eg, to test 1.24-eksd, we need 1.23-eksd track.
-            if "-" in track:
-                track = str(float(track.split("-")[0]) - 0.01) + "-" + track.split("-")[1]
+            major = track.split(".")[0]
+            minor = track.split(".")[1].split("-")[0]
+            branch = track.split("-")[1] if len(track.split("-")) > 1 else ""
+
+            if minor == "0" and major >= "1":
+                major = str(int(major) - 1)
+                minor = "9"
             else:
-                track = float(track) - 0.01
-            older_version = str(track) + "/" + "stable"
+                if "-" in track:
+                    minor = str(int(minor.split("-")[0]) - 1)
+                else:
+                    minor = str(int(minor) - 1)
+
+            branch = "-" + branch if branch != "" else ""
+            older_version = major + "." + minor + branch + "/" + "stable"
             print("Old version is {}".format(older_version))
 
             type(self).VM = []
@@ -518,40 +528,15 @@ class TestUpgradeCluster(object):
                     vm.setup(older_version)
                     self.VM.append(vm)
 
-            # Form cluster
-            vm_master = self.VM[0]
-            connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
-            for vm in self.VM:
-                if vm.vm_name in connected_nodes.decode():
-                    continue
-                else:
-                    print("Adding machine {} to cluster".format(vm.vm_name))
-                    add_node = vm_master.run("/snap/bin/microk8s.add-node")
-                    endpoint = [ep for ep in add_node.decode().split() if ":25000/" in ep]
-                    vm.run("/snap/bin/microk8s.join {}".format(endpoint[0]))
-
-            # Wait for nodes to be ready
-            print("Waiting for nodes to register")
-            attempt = 0
-            while attempt < 10:
-                try:
-                    connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
-                    if "NotReady" in connected_nodes.decode():
-                        time.sleep(5)
-                    connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
-                    print(connected_nodes.decode())
-                    break
-                except ChildProcessError:
-                    time.sleep(10)
-                    attempt += 1
-                    if attempt == 10:
-                        raise
+            vm_older_version = self.VM[0]
 
             # Wait for CNI pods
             print("Waiting for cni")
             while True:
                 ready_pods = 0
-                pods = vm_master.run("/snap/bin/microk8s.kubectl get po -n kube-system -o wide")
+                pods = vm_older_version.run(
+                    "/snap/bin/microk8s.kubectl get po -n kube-system -o wide"
+                )
                 for line in pods.decode().splitlines():
                     if "calico" in line and "Running" in line:
                         ready_pods += 1
@@ -559,7 +544,6 @@ class TestUpgradeCluster(object):
                     print(pods.decode())
                     break
                 time.sleep(5)
-
             yield
 
         finally:
@@ -573,24 +557,25 @@ class TestUpgradeCluster(object):
         """
         Test n versioned node joining a n-1 versioned cluster.
         """
-        print("Setting up an older versioned node")
+        print("Setting up an newer versioned node")
         vm = VM()
         vm.setup(channel_to_test)
         self.VM.append(vm)
 
         # Form cluster
-        vm_master = self.VM[0]
+        vm_older_version = self.VM[0]
         print("Adding newer versioned machine {} to cluster".format(vm.vm_name))
-        add_node = vm_master.run("/snap/bin/microk8s.add-node")
+        add_node = vm_older_version.run("/snap/bin/microk8s.add-node")
         endpoint = [ep for ep in add_node.decode().split() if ":25000/" in ep]
         vm.run("/snap/bin/microk8s.join {}".format(endpoint[0]))
 
+        time.sleep(10)
         # Wait for nodes to be ready
         print("Waiting for node to register")
         attempt = 0
         while attempt < 10:
             try:
-                connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+                connected_nodes = vm_older_version.run("/snap/bin/microk8s.kubectl get no")
                 if "NotReady" in connected_nodes.decode():
                     time.sleep(5)
                     continue
