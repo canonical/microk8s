@@ -514,19 +514,16 @@ class TestUpgradeCluster(object):
 
             type(self).VM = []
             if not reuse_vms:
-                size = 1
-                for i in range(0, size):
-                    print("Creating machine {}".format(i))
-                    vm = VM(backend)
-                    vm.setup(older_version)
-                    print("Waiting for machine {}".format(i))
-                    vm.run("/snap/bin/microk8s.status --wait-ready --timeout 120")
-                    self.VM.append(vm)
+                print("Creating machine")
+                vm = VM(backend)
+                vm.setup(older_version)
+                print("Waiting for machine")
+                vm.run("/snap/bin/microk8s.status --wait-ready --timeout 120")
+                self.VM.append(vm)
             else:
-                for vm_name in reuse_vms:
-                    vm = VM(backend, vm_name)
-                    vm.setup(older_version)
-                    self.VM.append(vm)
+                vm = VM(backend, reuse_vms[0])
+                vm.setup(older_version)
+                self.VM.append(vm)
 
             vm_older_version = self.VM[0]
 
@@ -569,14 +566,14 @@ class TestUpgradeCluster(object):
         endpoint = [ep for ep in add_node.decode().split() if ":25000/" in ep]
         vm.run("/snap/bin/microk8s.join {}".format(endpoint[0]))
 
-        time.sleep(10)
         # Wait for nodes to be ready
-        print("Waiting for node to register")
+        print("Waiting for two node to be Ready")
         attempt = 0
         while attempt < 10:
             try:
                 connected_nodes = vm_older_version.run("/snap/bin/microk8s.kubectl get no")
-                if "NotReady" in connected_nodes.decode():
+                num_nodes = connected_nodes.count("Ready")
+                if num_nodes != 2:
                     time.sleep(5)
                     continue
                 print(connected_nodes.decode())
