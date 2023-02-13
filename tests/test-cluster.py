@@ -3,6 +3,7 @@ import random
 import time
 import pytest
 import os
+import requests
 import signal
 import subprocess
 from os import path
@@ -474,16 +475,36 @@ class TestUpgradeCluster(object):
         """
         try:
             print("Setting up cluster of an older version")
-            track, risk_level = channel_to_test.split('/')
+            if channel_to_test.startswith("latest") or "/" not in channel_to_test:
+                attempt = 0
+                release_url = "https://dl.k8s.io/release/stable.txt"
+                while attempt < 10:
+                    r = requests.get(release_url)
+                    if r.status_code == 200:
+                        last_stable_str = r.content.decode().strip()
+                        last_stable_str = last_stable_str.replace("v", "")
+                        last_stable_str = ".".join(last_stable_str.split(".")[:2])
+                        break
+                    else:
+                        time.sleep(3)
+                        attempt += 1
+
+            track, _ = channel_to_test.split("/")
             if track == "latest":
-                track = "1.26"   # TODO: remove this hardcoding
-            track = float(track) - 0.01
-            older_version = str(track) + '/' + risk_level
+                track = last_stable_str
+
+            # For eksd and stable tracks, we need a previous version on these tracks.
+            # Eg, to test 1.24-eksd, we need 1.23-eksd track.
+            if "-" in track:
+                track = str(float(track.split("-")[0]) - 0.01) + "-" + track.split("-")[1]
+            else:
+                track = float(track) - 0.01
+            older_version = str(track) + "/" + "stable"
             print("Old version is {}".format(older_version))
 
             type(self).VM = []
             if not reuse_vms:
-                size = 3
+                size = 1
                 for i in range(0, size):
                     print("Creating machine {}".format(i))
                     vm = VM(backend)
