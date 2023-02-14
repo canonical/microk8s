@@ -3,6 +3,7 @@ import random
 import time
 import pytest
 import os
+import datetime
 import requests
 import signal
 import subprocess
@@ -572,8 +573,16 @@ class TestUpgradeCluster(object):
         # Wait for nodes to be ready
         print("Waiting for two node to be Ready")
         attempt = 0
+        timeout_insec = 300
+        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
         while attempt < 10:
             try:
+                # Timeout after few minutes.
+                if datetime.datetime.now() > deadline:
+                    raise TimeoutError(
+                        "Nodes not in Ready state after {} seconds.".format(timeout_insec)
+                    )
+
                 connected_nodes = vm_older_version.run("/snap/bin/microk8s.kubectl get no")
                 num_nodes = connected_nodes.count(b" Ready")
                 if num_nodes != 2:
