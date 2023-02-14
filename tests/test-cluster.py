@@ -479,15 +479,18 @@ class TestUpgradeCluster(object):
                 attempt = 0
                 release_url = "https://dl.k8s.io/release/stable.txt"
                 while attempt < 10:
-                    r = requests.get(release_url)
-                    if r.status_code == 200:
-                        last_stable_str = r.content.decode().strip()
-                        last_stable_str = last_stable_str.replace("v", "")
-                        last_stable_str = ".".join(last_stable_str.split(".")[:2])
-                        break
-                    else:
+                    try:
+                        r = requests.get(release_url)
+                        if r.status_code == 200:
+                            last_stable_str = r.content.decode().strip()
+                            last_stable_str = last_stable_str.replace("v", "")
+                            last_stable_str = ".".join(last_stable_str.split(".")[:2])
+                            break
+                    except TimeoutError:
                         time.sleep(3)
                         attempt += 1
+                        if attempt == 10:
+                            raise
 
             track, _ = channel_to_test.split("/")
             if track == "latest":
