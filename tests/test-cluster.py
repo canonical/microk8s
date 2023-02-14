@@ -572,7 +572,7 @@ class TestUpgradeCluster(object):
         while attempt < 10:
             try:
                 connected_nodes = vm_older_version.run("/snap/bin/microk8s.kubectl get no")
-                num_nodes = connected_nodes.count("Ready")
+                num_nodes = connected_nodes.count(b" Ready")
                 if num_nodes != 2:
                     time.sleep(5)
                     continue
