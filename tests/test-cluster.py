@@ -3,6 +3,8 @@ import random
 import time
 import pytest
 import os
+import datetime
+import requests
 import signal
 import subprocess
 from os import path
@@ -13,7 +15,7 @@ from os import path
 reuse_vms = None
 
 # Channel we want to test. A full path to a local snap can be used for local builds
-channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/edge")
+channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/stable")
 backend = os.environ.get("BACKEND", None)
 profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
 
@@ -39,7 +41,8 @@ class VM:
             self.vm_name = attach_vm
 
     def setup(self, channel_or_snap):
-        """Setup the VM with the right snap.
+        """
+        Setup the VM with the right snap.
 
         :param channel_or_snap: the snap channel or the path to the local snap build
         """
@@ -413,12 +416,12 @@ class TestCluster(object):
                     continue
             break
 
-    def test_worker_noode(self):
+    def test_worker_node(self):
         """
         Test a worker node is setup
         """
         print("Setting up a worker node")
-        vm = VM()
+        vm = VM(backend)
         vm.setup(channel_to_test)
         self.VM.append(vm)
 
@@ -463,3 +466,132 @@ class TestCluster(object):
         for vm in self.VM:
             lock_files = vm.run("ls /var/snap/microk8s/current/var/lock/")
             assert "no-cert-reissue" in lock_files.decode()
+
+
+class TestUpgradeCluster(object):
+    @pytest.fixture(autouse=True, scope="module")
+    def setup_old_versioned_cluster(self):
+        """
+        Provision VMs of the previous version and form the cluster.
+        """
+        try:
+            print("Setting up cluster of an older version")
+            if channel_to_test.startswith("latest") or "/" not in channel_to_test:
+                attempt = 0
+                release_url = "https://dl.k8s.io/release/stable.txt"
+                while attempt < 10:
+                    try:
+                        r = requests.get(release_url)
+                        if r.status_code == 200:
+                            last_stable_str = r.content.decode().strip()
+                            last_stable_str = last_stable_str.replace("v", "")
+                            last_stable_str = ".".join(last_stable_str.split(".")[:2])
+                            break
+                    except TimeoutError:
+                        time.sleep(3)
+                        attempt += 1
+                        if attempt == 10:
+                            raise
+
+            track, _ = channel_to_test.split("/")
+            if track == "latest":
+                track = last_stable_str
+
+            # For eksd and stable tracks, we need a previous version on these tracks.
+            # Eg, to test 1.24-eksd, we need 1.23-eksd track.
+            major = track.split(".")[0]
+            minor = track.split(".")[1].split("-")[0]
+            branch = track.split("-")[1] if len(track.split("-")) > 1 else ""
+
+            if minor == "0" and major >= "1":
+                major = str(int(major) - 1)
+                minor = "9"
+            else:
+                if "-" in track:
+                    minor = str(int(minor.split("-")[0]) - 1)
+                else:
+                    minor = str(int(minor) - 1)
+
+            branch = "-" + branch if branch != "" else ""
+            older_version = major + "." + minor + branch + "/" + "stable"
+            print("Old version is {}".format(older_version))
+
+            type(self).VM = []
+            if not reuse_vms:
+                print("Creating machine")
+                vm = VM(backend)
+                vm.setup(older_version)
+                print("Waiting for machine")
+                vm.run("/snap/bin/microk8s.status --wait-ready --timeout 120")
+                self.VM.append(vm)
+            else:
+                vm = VM(backend, reuse_vms[0])
+                vm.setup(older_version)
+                self.VM.append(vm)
+
+            vm_older_version = self.VM[0]
+
+            # Wait for CNI pods
+            print("Waiting for cni")
+            while True:
+                ready_pods = 0
+                pods = vm_older_version.run(
+                    "/snap/bin/microk8s.kubectl get po -n kube-system -o wide"
+                )
+                for line in pods.decode().splitlines():
+                    if "calico" in line and "Running" in line:
+                        ready_pods += 1
+                if ready_pods == (len(self.VM) + 1):
+                    print(pods.decode())
+                    break
+                time.sleep(5)
+            yield
+
+        finally:
+            print("Cleanup up cluster")
+            if not reuse_vms:
+                for vm in self.VM:
+                    print("Releasing machine {} in {}".format(vm.vm_name, vm.backend))
+                    vm.release()
+
+    def test_mixed_version_join(self):
+        """
+        Test n versioned node joining a n-1 versioned cluster.
+        """
+        print("Setting up an newer versioned node")
+        vm = VM(backend)
+        vm.setup(channel_to_test)
+        self.VM.append(vm)
+
+        # Form cluster
+        vm_older_version = self.VM[0]
+        print("Adding newer versioned machine {} to cluster".format(vm.vm_name))
+        add_node = vm_older_version.run("/snap/bin/microk8s.add-node")
+        endpoint = [ep for ep in add_node.decode().split() if ":25000/" in ep]
+        vm.run("/snap/bin/microk8s.join {}".format(endpoint[0]))
+
+        # Wait for nodes to be ready
+        print("Waiting for two node to be Ready")
+        attempt = 0
+        timeout_insec = 300
+        deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
+        while attempt < 10:
+            try:
+                # Timeout after few minutes.
+                if datetime.datetime.now() > deadline:
+                    raise TimeoutError(
+                        "Nodes not in Ready state after {} seconds.".format(timeout_insec)
+                    )
+
+                connected_nodes = vm_older_version.run("/snap/bin/microk8s.kubectl get no")
+                num_nodes = connected_nodes.count(b" Ready")
+                if num_nodes != 2:
+                    time.sleep(5)
+                    continue
+                print(connected_nodes.decode())
+                break
+            except ChildProcessError:
+                time.sleep(10)
+                attempt += 1
+                if attempt == 10:
+                    raise
