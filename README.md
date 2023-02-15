@@ -1,6 +1,10 @@
 # MicroK8s
 
-![](https://img.shields.io/badge/Kubernetes-1.26-326de6.svg)
+![](https://img.shields.io/github/v/release/canonical/microk8s)
+![](https://img.shields.io/github/license/canonical/microk8s)
+![](https://img.shields.io/github/contributors/canonical/microk8s)
+![](https://img.shields.io/github/commit-activity/m/canonical/microk8s)
+
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">
 
