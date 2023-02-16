@@ -131,7 +131,7 @@ def get_connection_info(
         if cluster_type == "dqlite":
             req_data = {
                 "token": token,
-                "hostname": socket.gethostname(),
+                "hostname": socket.gethostname().lower(),
                 "port": cluster_agent_port,
             }
 
@@ -139,7 +139,7 @@ def get_connection_info(
         else:
             req_data = {
                 "token": token,
-                "hostname": socket.gethostname(),
+                "hostname": socket.gethostname().lower(),
                 "port": cluster_agent_port,
                 "callback": callback_token,
             }
