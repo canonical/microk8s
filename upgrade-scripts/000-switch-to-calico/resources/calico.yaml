@@ -4481,6 +4481,8 @@ spec:
               value: "false"
             - name: FELIX_HEALTHENABLED
               value: "true"
+            - name: FELIX_FEATUREDETECTOVERRIDE
+              value: ChecksumOffloadBroken=true
           securityContext:
             privileged: true
           resources:
