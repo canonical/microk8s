@@ -4,6 +4,7 @@ set -eu
 
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 ARCH="$($SNAP/bin/uname -m)"
+export OPENSSL_CONF="$SNAP/etc/ssl/openssl.cnf"
 export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 export PYTHONNOUSERSITE=false
 export LC_ALL="${LC_ALL:-C.UTF-8}"

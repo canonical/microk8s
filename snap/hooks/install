@@ -44,7 +44,7 @@ echo "${admin_token},admin,admin,\"system:masters\"" > ${SNAP_DATA}/credentials/
 proxy_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
 echo "${proxy_token},system:kube-proxy,kube-proxy" >> ${SNAP_DATA}/credentials/known_tokens.csv
 kubelet_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
-hostname=$(hostname)
+hostname=$(hostname | tr '[:upper:]' '[:lower:]')
 echo "${kubelet_token},system:node:${hostname},kubelet-0,\"system:nodes\"" >> ${SNAP_DATA}/credentials/known_tokens.csv
 controller_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
 echo "${controller_token},system:kube-controller-manager,controller" >> ${SNAP_DATA}/credentials/known_tokens.csv
