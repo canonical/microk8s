@@ -28,6 +28,17 @@ fi
 
 export DEFAULT_INTERFACE_IP_ADDR="$(get_default_ip)"
 
+if [ -e ${SNAP_DATA}/var/lock/migrate-etcdv2.lock ]
+then
+  data_dir="$(cat $SNAP_DATA/args/etcd | grep "data-dir" | tr "=" " "| awk '{print $2}')"
+  data_dir="$(eval echo $data_dir)"
+  wal_dir="$(cat $SNAP_DATA/args/etcd | grep "wal-dir" | tr "=" " "| awk '{print $2}')"
+  wal_dir="$(eval echo $wal_dir)"
+  ETCDCTL_API=3 "${SNAP}/etcdutl" migrate --data-dir "${data_dir}" --wal-dir "${wal_dir}"
+  rm "${SNAP_DATA}/var/lock/migrate-etcdv2.lock"
+  echo "Migrated from etcdv2 to etcdv3"
+fi
+
 # This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/etcd))"
 exec "$SNAP/etcd" "${args[@]}"

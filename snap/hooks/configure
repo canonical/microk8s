@@ -71,7 +71,7 @@ fi
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
 # and make sure the respective services use them.
-# Without this patch the user would have to remove and reainstall microk8s.
+# Without this patch the user would have to remove and reinstall microk8s.
 # This patch can be removed at a later stage.
 # TODO(neoaggelos): investigate if this is needed
 if [ ! -d ${SNAP_DATA}/certs ] && grep -e "\-\-client-ca-file=\${SNAP}/certs/ca.crt" ${SNAP_DATA}/args/kube-apiserver
@@ -512,9 +512,10 @@ then
   need_api_restart=true
 fi
 
-if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
+if grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
 then
-  refresh_opt_in_config enable-v2 true etcd
+  skip_opt_in_config enable-v2 etcd
+  touch ${SNAP_DATA}/var/lock/migrate-etcdv2.lock
   snapctl restart ${SNAP_NAME}.daemon-etcd
 fi
 

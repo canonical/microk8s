@@ -5,6 +5,6 @@ mkdir -p "${INSTALL}"
 
 GO_LDFLAGS="-s -w" GO_BUILD_FLAGS="-v" ./build.sh
 
-for bin in etcd etcdctl; do
+for bin in etcd etcdctl etcdutl; do
   cp "bin/${bin}" "${INSTALL}/${bin}"
 done
