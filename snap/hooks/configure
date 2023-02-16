@@ -408,20 +408,21 @@ then
   try_copy_users_to_snap_microk8s
 fi
 
+# as only one cni bin dir can be used we will use the one in SNAP_DATA but have links to
+# the real CNI plugins we distribute in SNAP
+mkdir -p "${SNAP_DATA}/opt/cni/bin/"
+(
+  cd "${SNAP}/opt/cni/bin/"
+  MY_SNAP_DIR=$(dirname "${SNAP}")
+  for i in *; do ln -sf "${MY_SNAP_DIR}/current/opt/cni/bin/$i" "${SNAP_DATA}/opt/cni/bin/${i}"; done
+)
+
 if ! [ -e "${SNAP_DATA}/opt/cni/bin/flanneld" ]
 then
   # cover situation where cilium was installed prior to this update
   if [ -f "${SNAP_DATA}/opt/cni/bin/loopback" ] && [ -f "${SNAP}/opt/cni/bin/loopback" ]; then
     rm -f "${SNAP_DATA}/opt/cni/bin/loopback"
   fi
-  # as only one cni bin dir can be used we will use the one in SNAP_DATA but have links to
-  # the real CNI plugins we distribute in SNAP
-  mkdir -p "${SNAP_DATA}/opt/cni/bin/"
-  (
-    cd "${SNAP}/opt/cni/bin/"
-    MY_SNAP_DIR=$(dirname "${SNAP}")
-    for i in *; do ln -s "${MY_SNAP_DIR}/current/opt/cni/bin/$i" "${SNAP_DATA}/opt/cni/bin/${i}"; done
-  )
 fi
 
 if ! [ -f "${SNAP_DATA}/args/flanneld" ]
