@@ -1,4 +1,4 @@
-# MicroK8s
+<img src="docs/images/MicroK8s-logo-RGB-2022.png" width="400px;" />
 
 ![](https://img.shields.io/badge/Kubernetes-1.26-326de6.svg)
 
