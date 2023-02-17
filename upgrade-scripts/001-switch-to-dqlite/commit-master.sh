@@ -37,7 +37,6 @@ cat <<EOT > "$SNAP_DATA"/args/etcd
 --data-dir=\${SNAP_COMMON}/var/run/etcd
 --advertise-client-urls=http://127.0.0.1:12379
 --listen-client-urls=http://0.0.0.0:12379
---enable-v2=true
 EOT
 
 if ! [ -e "${SNAP_DATA}/var/kubernetes/backend/cluster.key" ]
