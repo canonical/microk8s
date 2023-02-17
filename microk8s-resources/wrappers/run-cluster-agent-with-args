@@ -14,6 +14,13 @@ export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/
 export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
 export OPENSSL_CONF="$SNAP/etc/ssl/openssl.cnf"
 
+set -a
+if [ -e "${SNAP_DATA}/args/cluster-agent-env" ]
+then
+  . "${SNAP_DATA}/args/cluster-agent-env"
+fi
+set +a
+
 # This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/cluster-agent))"
 
