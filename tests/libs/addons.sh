@@ -28,6 +28,7 @@ function setup_addons_tests() {
 function run_smoke_test() {
   local NAME=$1
   lxc exec "$NAME" -- /root/tests/smoke-test.sh
+  lxc exec "$NAME" -- script -e -c "pytest -s /root/tests/test-cluster-agent.py"
 }
 
 function run_core_addons_tests() {
