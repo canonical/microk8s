@@ -30,6 +30,8 @@ from common.cluster.utils import (
     get_token,
 )
 
+from common.utils import run_util
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
 snapdata_path = os.environ.get("SNAP_DATA")
@@ -217,12 +219,12 @@ def get_etcd_client_cert(master_ip, master_port, token):
     """
     cer_req_file = "{}/certs/server.remote.csr".format(snapdata_path)
     cmd_cert = (
-        "{snap}/usr/bin/openssl req -new -sha256 -key {snapdata}/certs/server.key -out {csr} "
+        "openssl_call req -new -sha256 -key {snapdata}/certs/server.key -out {csr} "
         "-config {snapdata}/certs/csr.conf".format(
-            snap=snap_path, snapdata=snapdata_path, csr=cer_req_file
+            snapdata=snapdata_path, csr=cer_req_file
         )
     )
-    subprocess.check_call(cmd_cert.split())
+    run_util(*cmd_cert.split())
     with open(cer_req_file) as fp:
         csr = fp.read()
         req_data = {"token": token, "request": csr}
@@ -264,21 +266,18 @@ def get_client_cert(master_ip, master_port, fname, token, username, group=None):
     cer_key_file = "{}/certs/{}.key".format(snapdata_current, fname)
     cer_file = "{}/certs/{}.crt".format(snapdata_current, fname)
     if not os.path.exists(cer_key_file):
-        cmd_gen_cert_key = "{snap}/usr/bin/openssl genrsa -out {key} 2048".format(
-            snap=snap_path, key=cer_key_file
+        cmd_gen_cert_key = "openssl_call genrsa -out {key} 2048".format(
+            key=cer_key_file
         )
-        subprocess.check_call(
-            cmd_gen_cert_key.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
+        run_util(*cmd_gen_cert_key.split())
         try_set_file_permissions(cer_key_file)
 
-    cmd_cert = "{snap}/usr/bin/openssl req -new -sha256 -key {key} -out {csr} -subj {info}".format(
-        snap=snap_path,
+    cmd_cert = "openssl_call req -new -sha256 -key {key} -out {csr} -subj {info}".format(
         key=cer_key_file,
         csr=cer_req_file,
         info=info,
     )
-    subprocess.check_call(cmd_cert.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    run_util(*cmd_cert.split())
     with open(cer_req_file) as fp:
         csr = fp.read()
         req_data = {"token": token, "request": csr}

@@ -583,34 +583,31 @@ get_ips() {
 }
 
 gen_server_cert() (
-    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
-    ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    openssl_call req -new -sha256 -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+    openssl_call x509 -req -sha256 -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 gen_proxy_client_cert() (
-    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
-    ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
-    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    openssl_call req -new -sha256 -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
+    openssl_call x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 produce_certs() {
-    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     # Generate RSA keys if not yet
     for key in serviceaccount.key ca.key server.key front-proxy-ca.key front-proxy-client.key; do
         if ! [ -f ${SNAP_DATA}/certs/$key ]; then
-            ${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/$key 2048
+            openssl_call genrsa -out ${SNAP_DATA}/certs/$key 2048
         fi
     done
 
     # Generate apiserver CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt
+        openssl_call req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt
     fi
 
     # Generate front proxy CA
     if ! [ -f ${SNAP_DATA}/certs/front-proxy-ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
+        openssl_call req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.
@@ -638,7 +635,7 @@ produce_certs() {
         gen_proxy_client_cert
         echo "1"
     elif [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ] ||
-         [ "$(${SNAP}/usr/bin/openssl < ${SNAP_DATA}/certs/front-proxy-client.crt x509 -noout -issuer)" == "issuer=CN = 127.0.0.1" ]; then
+         [ "$(openssl_call x509 -in ${SNAP_DATA}/certs/front-proxy-client.crt -noout -issuer)" == "issuer=CN = 127.0.0.1" ]; then
         gen_proxy_client_cert
         echo "1"
     else
@@ -760,7 +757,7 @@ init_cluster() {
   cp $SNAP/certs/csr-dqlite.conf.template $SNAP_DATA/var/tmp/csr-dqlite.conf
   $SNAP/bin/sed -i 's/HOSTNAME/'"${DNS}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
   $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
-  ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
+  openssl_call req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
   chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
   local group=$(get_microk8s_group)
   if getent group ${group} >/dev/null 2>&1
@@ -936,33 +933,9 @@ cluster_agent_port() {
 }
 
 server_cert_check() {
-  openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1 | cut -c1-12
+  openssl_call x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1 | cut -c1-12
 }
 
-# check if this file is run with arguments
-if [[ "$0" == "${BASH_SOURCE}" ]] &&
-   [[ ! -z "$1" ]]
-then
-  # call help
-  if echo "$*" | grep -q -- 'help'; then
-    echo "usage: $0 [function]"
-    echo ""
-    echo "Run a utility function and return the output."
-    echo ""
-    echo "available functions:"
-    declare -F | gawk '{print "- "$3}'
-    exit 0
-  fi
-
-  if declare -F "$1" > /dev/null
-  then
-    $1 ${@:2}
-    exit $?
-  else
-    echo "Function does not exist: $1" >&2
-    exit 1
-  fi
-fi
 
 exit_if_low_memory_guard() {
   if [ -e ${SNAP_DATA}/var/lock/low-memory-guard.lock ]
@@ -1009,6 +982,23 @@ fetch_as() {
   else
     CA_CERT=/snap/core20/current/etc/ssl/certs/ca-certificates.crt
     run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $1 -o $2
+  fi
+}
+
+openssl_call() {
+  set -a
+  if [ -e "${SNAP_DATA}/args/openssl-env" ]
+  then
+    . "${SNAP_DATA}/args/openssl-env"
+  fi
+  set +a
+
+  if [[ ! -v OPENSSL_EXECUTABLE ]]
+  then
+    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
+    ${SNAP}/usr/bin/openssl "$@"
+  else
+    exec "${OPENSSL_EXECUTABLE}" "$@"
   fi
 }
 
@@ -1124,3 +1114,29 @@ wait_for_default_route() {
     sleep 2
   done
 }
+
+
+# check if this file is run with arguments
+if [[ "$0" == "${BASH_SOURCE}" ]] &&
+   [[ ! -z "$1" ]]
+then
+  # call help
+  if echo "$*" | grep -q -- 'help'; then
+    echo "usage: $0 [function]"
+    echo ""
+    echo "Run a utility function and return the output."
+    echo ""
+    echo "available functions:"
+    declare -F | gawk '{print "- "$3}'
+    exit 0
+  fi
+
+  if declare -F "$1" > /dev/null
+  then
+    $1 ${@:2}
+    exit $?
+  else
+    echo "Function does not exist: $1" >&2
+    exit 1
+  fi
+fi

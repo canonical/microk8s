@@ -5,7 +5,7 @@ import subprocess
 from dateutil.parser import parse
 import datetime
 
-from common.utils import exit_if_no_root
+from common.utils import exit_if_no_root, run_util
 
 
 snapdata_path = os.environ.get("SNAP_DATA")
@@ -25,11 +25,11 @@ def check_certificate():
     """
     try:
         for file in certs.keys():
-            cmd = "{}/usr/bin/openssl x509 -enddate -noout -in {}/certs/{}".format(
-                snap_path, snapdata_path, file
+            cmd = "openssl_call x509 -enddate -noout -in {}/certs/{}".format(
+                snapdata_path, file
             )
-            cert_expire = subprocess.check_output(cmd.split())
-            cert_expire_date = cert_expire.decode().split("=")
+            cert_expire = run_util(*cmd.split())
+            cert_expire_date = cert_expire.split("=")
             date = parse(cert_expire_date[1])
             diff = date - datetime.datetime.now(datetime.timezone.utc)
             click.echo("The {} certificate will expire in {} days.".format(certs[file], diff.days))
@@ -198,19 +198,19 @@ def validate_certificates(ca_dir):
         exit(30)
 
     try:
-        cmd = "{}/usr/bin/openssl rsa -in {}/ca.key -check -noout -out /dev/null".format(
-            snap_path, ca_dir
+        cmd = "openssl_call rsa -in {}/ca.key -check -noout -out /dev/null".format(
+            ca_dir
         )
-        subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        run_util(*cmd.split())
     except subprocess.CalledProcessError as e:
         click.echo("CA private key is invalid. {}".format(e))
         exit(31)
 
     try:
-        cmd = "{}/usr/bin/openssl x509 -in {}/ca.crt -text -noout -out /dev/null".format(
-            snap_path, ca_dir
+        cmd = "openssl_call x509 -in {}/ca.crt -text -noout -out /dev/null".format(
+            ca_dir
         )
-        subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        run_util(*cmd.split())
     except subprocess.CalledProcessError as e:
         click.echo("CA certificate is invalid. {}".format(e))
         exit(32)
