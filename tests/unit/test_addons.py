@@ -328,7 +328,7 @@ def test_update_rollbacks_repo_on_validation_error(
     with create_test_repo("repo_to_update") as repo_dir:
 
         with pytest.raises(SystemExit):
-            update.callback("repo_to_update")
+            update.callback("repo_to_update", skip_check_root=True)
 
         validate_addons_repo_mock.assert_called_once_with(repo_dir)
         git_current_commit_mock.assert_called_once_with(repo_dir)
