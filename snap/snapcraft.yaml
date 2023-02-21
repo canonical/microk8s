@@ -233,6 +233,7 @@ parts:
   cluster-agent:
     after: [build-deps]
     plugin: nil
+    build-attributes: [no-patchelf]
     source: build-scripts/components/cluster-agent
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cluster-agent
 
