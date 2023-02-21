@@ -30,7 +30,6 @@ from common.cluster.utils import (
     get_token,
 )
 
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
 snapdata_path = os.environ.get("SNAP_DATA")

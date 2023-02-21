@@ -265,7 +265,6 @@ def reinit_cluster():
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-
     # We reset to the default port and address
     init_data = {"Address": "127.0.0.1:19001"}
     with open("{}/init.yaml".format(cluster_dir), "w") as f:
