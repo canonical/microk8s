@@ -11,7 +11,7 @@ import click
 import jsonschema
 import yaml
 
-from common.utils import get_current_arch, snap_common, get_group, snap
+from common.utils import get_current_arch, snap_common, get_group, snap, exit_if_no_root
 
 GIT = os.path.expandvars("$SNAP/git.wrapper")
 
@@ -229,7 +229,11 @@ def remove(name: str):
 
 @repository.command("update", help="Update a MicroK8s addons repository")
 @click.argument("name")
-def update(name: str):
+@click.option("--skip-check-root/--no-skip-check-root", is_flag=True, default=False)
+def update(name: str, skip_check_root: bool):
+    if not skip_check_root:
+        exit_if_no_root()
+
     repo_dir = snap_common() / "addons" / name
     if not repo_dir.exists():
         click.echo("Error: repository '{}' does not exist".format(name), err=True)
