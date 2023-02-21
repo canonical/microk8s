@@ -4,9 +4,9 @@ import os
 import sys
 import time
 import argparse
+import subprocess
 
 from common.cluster.utils import is_node_running_dqlite
-from common.utils import run_util
 
 try:
     from secrets import token_hex
@@ -18,6 +18,7 @@ except ImportError:
 
 
 cluster_tokens_file = os.path.expandvars("${SNAP_DATA}/credentials/cluster-tokens.txt")
+utils_sh_file = os.path.expandvars("${SNAP}/actions/common/utils.sh")
 token_with_expiry = "{}|{}\n"
 token_without_expiry = "{}\n"
 
@@ -40,6 +41,31 @@ def add_token_with_expiry(token, file, ttl):
             fp.write(token_with_expiry.format(token, expiry))
         else:
             fp.write(token_without_expiry.format(token))
+
+
+def run_util(*args, debug=False):
+    env = os.environ.copy()
+    prog = ["bash", utils_sh_file]
+    prog.extend(args)
+
+    if debug:
+        print("\033[;1;32m+ %s\033[;0;0m" % " ".join(prog))
+
+    result = subprocess.run(
+        prog,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
+    )
+
+    try:
+        result.check_returncode()
+    except subprocess.CalledProcessError:
+        print("Failed to call utility function.")
+        sys.exit(1)
+
+    return result.stdout.decode("utf-8").strip()
 
 
 def get_network_info():

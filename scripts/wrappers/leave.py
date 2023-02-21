@@ -22,8 +22,6 @@ from common.cluster.utils import (
     try_set_file_permissions,
 )
 
-from common.utils import run_util
-
 snapdata_path = os.environ.get("SNAP_DATA")
 snap_path = os.environ.get("SNAP")
 ca_cert_file = "{}/certs/ca.remote.crt".format(snapdata_path)
@@ -257,13 +255,16 @@ def reinit_cluster():
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        cmd = ("openssl_call req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes "
-            "-keyout {0}/var/kubernetes/backend/cluster.key "
-            "-out {0}/var/kubernetes/backend/cluster.crt "
-            "-subj /CN=k8s -config {0}/var/tmp/csr-dqlite.conf -extensions v3_ext").format(
-                snapdata_path
-            )
-        run_util(*cmd.split())
+        subprocess.check_call(
+            "{0}/openssl.wrapper req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes "
+            "-keyout {1}/var/kubernetes/backend/cluster.key "
+            "-out {1}/var/kubernetes/backend/cluster.crt "
+            "-subj /CN=k8s -config {1}/var/tmp/csr-dqlite.conf -extensions v3_ext".format(
+                snap_path, snapdata_path
+            ).split(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
     # We reset to the default port and address
     init_data = {"Address": "127.0.0.1:19001"}

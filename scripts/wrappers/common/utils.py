@@ -522,31 +522,3 @@ def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
             raise Exception("Attempted Path Traversal in Tar File")
 
     tar.extractall(path, members, numeric_owner=numeric_owner)
-
-
-def run_util(*args, debug=False):
-    utils_sh_file = os.path.expandvars("${SNAP}/actions/common/utils.sh")
-    env = os.environ.copy()
-    prog = ["bash", utils_sh_file]
-    prog.extend(args)
-
-    if debug:
-        print("\033[;1;32m+ %s\033[;0;0m" % " ".join(prog))
-
-    result = subprocess.run(
-        prog,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
-    )
-
-    try:
-        result.check_returncode()
-    except subprocess.CalledProcessError:
-        print("Failed to call utility function.")
-        sys.exit(1)
-
-    return result.stdout.decode("utf-8").strip()
-
-
