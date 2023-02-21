@@ -1,0 +1,5 @@
+# In a node where FIPS is enabled, ie /proc/sys/crypto/fips_enabled is set to 1
+# set the openssl execution environment:
+# export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu/:/snap/microk8s/current/lib/"
+# export OPENSSL_EXECUTABLE="/usr/bin/openssl"
+# export OPENSSL_CONF="/etc/ssl/openssl.cnf"

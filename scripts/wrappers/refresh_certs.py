@@ -25,7 +25,7 @@ def check_certificate():
     """
     try:
         for file in certs.keys():
-            cmd = "{}/usr/bin/openssl x509 -enddate -noout -in {}/certs/{}".format(
+            cmd = "{}/openssl.wrapper x509 -enddate -noout -in {}/certs/{}".format(
                 snap_path, snapdata_path, file
             )
             cert_expire = subprocess.check_output(cmd.split())
@@ -198,7 +198,7 @@ def validate_certificates(ca_dir):
         exit(30)
 
     try:
-        cmd = "{}/usr/bin/openssl rsa -in {}/ca.key -check -noout -out /dev/null".format(
+        cmd = "{}/openssl.wrapper rsa -in {}/ca.key -check -noout -out /dev/null".format(
             snap_path, ca_dir
         )
         subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -207,7 +207,7 @@ def validate_certificates(ca_dir):
         exit(31)
 
     try:
-        cmd = "{}/usr/bin/openssl x509 -in {}/ca.crt -text -noout -out /dev/null".format(
+        cmd = "{}/openssl.wrapper x509 -in {}/ca.crt -text -noout -out /dev/null".format(
             snap_path, ca_dir
         )
         subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
