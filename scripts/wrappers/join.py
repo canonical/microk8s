@@ -265,8 +265,7 @@ def get_client_cert(master_ip, master_port, fname, token, username, group=None):
     cer_file = "{}/certs/{}.crt".format(snapdata_current, fname)
     if not os.path.exists(cer_key_file):
         cmd_gen_cert_key = "{snap}/openssl.wrapper genrsa -out {key} 2048".format(
-            snap=snap_path,
-            key=cer_key_file
+            snap=snap_path, key=cer_key_file
         )
         subprocess.check_call(
             cmd_gen_cert_key.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
