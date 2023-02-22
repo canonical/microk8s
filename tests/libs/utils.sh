@@ -2,29 +2,31 @@
 
 function create_machine() {
   local NAME=$1
+  local DISTRO=$2
+  local PROXY=$3
   if ! lxc profile show microk8s
   then
     lxc profile copy default microk8s
   fi
-  cat tests/lxc/microk8s.profile | lxc profile edit microk8s
+  lxc profile edit microk8s < tests/lxc/microk8s.profile
 
-  lxc launch -p default -p microk8s $DISTRO $NAME
+  lxc launch -p default -p microk8s "$DISTRO" "$NAME"
 
   # Allow for the machine to boot and get an IP
   sleep 20
-  tar cf - ./tests | lxc exec $NAME -- tar xvf - -C /root
+  tar cf - ./tests | lxc exec "$NAME" -- tar xvf - -C /root
   DISTRO_DEPS_TMP="${DISTRO//:/_}"
   DISTRO_DEPS="${DISTRO_DEPS_TMP////-}"
-  lxc exec $NAME -- /bin/bash "/root/tests/lxc/install-deps/$DISTRO_DEPS"
-  lxc exec $NAME -- reboot
+  lxc exec "$NAME" -- /bin/bash "/root/tests/lxc/install-deps/$DISTRO_DEPS"
+  lxc exec "$NAME" -- reboot
   sleep 20
 
-  trap "lxc delete ${NAME} --force || true" EXIT
+  trap 'lxc delete '"${NAME}"' --force || true' EXIT
   if [ "$#" -ne 1 ]
   then
-    lxc exec $NAME -- /bin/bash -c "echo HTTPS_PROXY=$2 >> /etc/environment"
-    lxc exec $NAME -- /bin/bash -c "echo https_proxy=$2 >> /etc/environment"
-    lxc exec $NAME -- reboot
+    lxc exec "$NAME" -- /bin/bash -c "echo HTTPS_PROXY=$PROXY >> /etc/environment"
+    lxc exec "$NAME" -- /bin/bash -c "echo https_proxy=$PROXY >> /etc/environment"
+    lxc exec "$NAME" -- reboot
     sleep 20
   fi
 }
@@ -41,7 +43,6 @@ function setup_tests() {
 
   apt-get install python3-pip -y
   pip3 install -U pytest requests pyyaml sh
-  # apt-get install awscli -y
   apt-get install jq -y
   snap install kubectl --classic
   export ARCH=$(uname -m)

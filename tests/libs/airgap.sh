@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# test-airgap.sh is called from test-distro.sh
+source tests/libs/utils.sh
 
 airgap_wait_for_pods() {
   container="$1"
 
-  lxc exec $container -- bash -c "
+  lxc exec "$container" -- bash -c "
     while ! microk8s kubectl wait -n kube-system ds/calico-node --for=jsonpath='{.status.numberReady}'=1; do
       echo waiting for calico
       sleep 3
@@ -24,23 +24,30 @@ airgap_wait_for_pods() {
 }
 
 function setup_airgap_registry_mirror() {
-  create_machine "airgap-registry" $PROXY
+  local NAME=$1
+  local DISTRO=$2
+  local PROXY=$3
+  local TO_CHANNEL=$4
+
+  create_machine "$NAME" "$DISTRO" "$PROXY"
   if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
   then
-    lxc file push ${TO_CHANNEL} airgap-registry/tmp/microk8s_latest_amd64.snap
-    lxc exec airgap-registry -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+    lxc file push "${TO_CHANNEL}" "$NAME"/tmp/microk8s_latest_amd64.snap
+    lxc exec "$NAME" -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
   else
-    lxc exec airgap-registry -- snap install microk8s --channel=${TO_CHANNEL} --classic
+    lxc exec "$NAME" -- snap install microk8s --channel="${TO_CHANNEL}" --classic
   fi
 }
 
 function setup_airgap_registry_addons() {
-  lxc exec airgap-registry -- microk8s enable registry storage dns
+  local NAME=$1
+  lxc exec "$NAME" -- microk8s enable registry storage dns
 }
 
 function wait_airgap_registry() {
-  airgap_wait_for_pods airgap-registry
-  lxc exec airgap-registry -- bash -c '
+  local NAME=$1
+  airgap_wait_for_pods "$NAME"
+  lxc exec "$NAME" -- bash -c '
     while ! curl --silent 127.0.0.1:32000/v2/_catalog; do
       echo waiting for registry
       sleep 2
@@ -49,9 +56,10 @@ function wait_airgap_registry() {
 }
 
 function push_images_to_registry() {
-  lxc exec airgap-registry -- bash -c '
+  local NAME=$1
+  lxc exec "$NAME" -- bash -c '
     for image in $(microk8s ctr image ls -q | grep -v "sha256:"); do
-      mirror=$(echo $image | sed '"'s,\(docker.io\|k8s.gcr.io\|registry.k8s.io\|quay.io\),airgap-registry:32000,g'"')
+      mirror=$(echo $image | sed '"'s,\(docker.io\|k8s.gcr.io\|registry.k8s.io\|quay.io\),${NAME}:32000,g'"')
       sudo microk8s ctr image convert ${image} ${mirror}
       sudo microk8s ctr image push ${mirror} --plain-http
     done
@@ -59,15 +67,20 @@ function push_images_to_registry() {
 }
 
 function setup_airgapped_microk8s() {
-  create_machine "airgap-test" $PROXY
+  local NAME=$1
+  local DISTRO=$2
+  local PROXY=$3
+  local TO_CHANNEL=$4
+
+  create_machine "$NAME" "$DISTRO" "$PROXY"
   if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
   then
-    lxc file push ${TO_CHANNEL} airgap-test/tmp/microk8s.snap
+    lxc file push "${TO_CHANNEL}" "$NAME"/tmp/microk8s.snap
   else
-    lxc exec airgap-test -- snap download microk8s --channel=${TO_CHANNEL} --target-directory /tmp --basename microk8s
+    lxc exec "$NAME" -- snap download microk8s --channel="${TO_CHANNEL}" --target-directory /tmp --basename microk8s
   fi
-  lxc exec airgap-test -- bash -c "
-    snap install core20
+  lxc exec "$NAME" -- bash -c "
+    snap install core18
     snap install snapd
     echo '
   network:
@@ -79,19 +92,21 @@ function setup_airgapped_microk8s() {
   ' > /etc/netplan/70-airgap.yaml
     netplan apply
   "
-  if lxc exec airgap-test -- bash -c "ping -c1 1.1.1.1"; then
+  if lxc exec "$NAME" -- bash -c "ping -c1 1.1.1.1"; then
     echo "machine for airgap test has internet access when it should not"
     exit 1
   fi
-  lxc exec airgap-test -- snap install /tmp/microk8s.snap --dangerous --classic
+  lxc exec "$NAME" -- snap install /tmp/microk8s.snap --dangerous --classic
 }
 
 function configure_airgapped_microk8s_mirrors() {
-  lxc exec airgap-test -- bash -c '
+  local REGISTRY_NAME=$1
+  local AIRGAPPED_NAME=$2
+  lxc exec "$AIRGAPPED_NAME" -- bash -c '
     echo "
-      server = \"http://airgap-registry:32000\"
+      server = \"http://'"${REGISTRY_NAME}"':32000\"
 
-      [host.\"http://airgap-registry:32000\"]
+      [host.\"http://'"${REGISTRY_NAME}"':32000\"]
         capabilities = [\"pull\", \"resolve\"]
     " > hosts.toml
 
@@ -105,12 +120,78 @@ function configure_airgapped_microk8s_mirrors() {
 }
 
 function test_airgapped_microk8s() {
-  lxc exec airgap-test -- bash -c 'sudo microk8s enable hostpath-storage dns'
-  airgap_wait_for_pods airgap-test
-
+  local NAME=$1
+  lxc exec "$NAME" -- bash -c 'sudo microk8s enable hostpath-storage dns'
+  airgap_wait_for_pods "$NAME"
 }
 
 function post_airgap_tests() {
-  lxc rm airgap-registry --force
-  lxc rm airgap-test --force
+  local REGISTRY_NAME=$1
+  local AIRGAPPED_NAME=$2
+  lxc rm "$REGISTRY_NAME" --force
+  lxc rm "$AIRGAPPED_NAME" --force
 }
+
+TEMP=$(getopt -o "lh" \
+              --long help,lib-mode,registry-name:,node-name:,distro:,channel:,proxy: \
+              -n "$(basename "$0")" -- "$@")
+
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+eval set -- "$TEMP"
+
+REGISTRY_NAME="${REGISTRY_NAME-"registry-$RANDOM"}"
+AIRGAPPED_NAME="${AIRGAPPED_NAME-"machine-$RANDOM"}"
+DISTRO="${DISTRO-}"
+TO_CHANNEL="${TO_CHANNEL-}"
+PROXY="${PROXY-}"
+LIBRARY_MODE=false
+
+while true; do
+  case "$1" in
+    -l | --lib-mode ) LIBRARY_MODE=true; shift ;;
+    --registry-name ) REGISTRY_NAME="$2"; shift 2 ;;
+    --node-name ) AIRGAPPED_NAME="$2"; shift 2 ;;
+    --distro ) DISTRO="$2"; shift 2 ;;
+    --channel ) TO_CHANNEL="$2"; shift 2 ;;
+    --proxy ) PROXY="$2"; shift 2 ;;
+    -h | --help ) 
+      prog=$(basename -s.wrapper "$0")
+      echo "Usage: $prog [options...]"
+      echo "     --registry-name <name> Name to be used for registry LXD containers"
+      echo "         Can also be set by using REGISTRY_NAME environment variable"
+      echo "     --node-name <name> Name to be used for LXD containers"
+      echo "         Can also be set by using AIRGAPPED_NAME environment variable"
+      echo "     --distro <distro> Distro image to be used for LXD containers Eg. ubuntu:18.04"
+      echo "         Can also be set by using DISTRO environment variable"
+      echo "     --channel <channel> Channel to be tested Eg. latest/edge"
+      echo "         Can also be set by using TO_CHANNEL environment variable"
+      echo "     --proxy <url> Proxy url to be used by the nodes"
+      echo "         Can also be set by using PROXY environment variable"
+      echo " -l, --lib-mode Make the script act like a library Eg. true / false"
+      echo
+      exit ;;
+    -- ) shift; break ;;
+    * ) break ;;
+  esac
+done
+
+if [ "$LIBRARY_MODE" == "false" ];
+then
+  echo "1/7 -- Install registry mirror"
+  setup_airgap_registry_mirror "$REGISTRY_NAME" "$DISTRO" "$PROXY" "$TO_CHANNEL"
+  echo "2/7 -- Install MicroK8s addons"
+  setup_airgap_registry_addons "$REGISTRY_NAME"
+  echo "3/7 -- Wait for MicroK8s instance to come up"
+  wait_airgap_registry "$REGISTRY_NAME"
+  echo "4/7 -- Push images to registry mirror"
+  push_images_to_registry "$REGISTRY_NAME"
+  echo "5/7 -- Install MicroK8s on an airgap environment"
+  setup_airgapped_microk8s "$AIRGAPPED_NAME" "$DISTRO" "$PROXY" "$TO_CHANNEL"
+  echo "6/7 -- Configure MicroK8s registry mirrors"
+  configure_airgapped_microk8s_mirrors "$REGISTRY_NAME" "$AIRGAPPED_NAME"
+  echo "7/7 -- Wait for airgap MicroK8s to come up"
+  test_airgapped_microk8s "$AIRGAPPED_NAME"
+  echo "Cleaning up"
+  post_airgap_tests "$REGISTRY_NAME" "$AIRGAPPED_NAME"
+fi

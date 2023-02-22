@@ -1,23 +1,44 @@
 #!/usr/bin/env bash
 
 source tests/libs/utils.sh
-source tests/libs/clustering.sh
-source tests/libs/addons-upgrade.sh
-source tests/libs/upgrade-path.sh
-source tests/libs/addons.sh
 
-if echo "$*" | grep -q -- 'help'; then
-    prog=$(basename -s.wrapper "$0")
-    echo "Usage: $prog LXC-IMAGE ORIGINAL-CHANNEL UPGRADE-WITH-CHANNEL [PROXY]"
-    echo ""
-    echo "Example: $prog ubuntu:18.04 latest/beta latest/edge"
-    echo "Use Ubuntu 18.04 for running our tests."
-    echo "We test that microk8s from latest/edge (UPGRADE-WITH-CHANNEL) runs fine."
-    echo "We test that microk8s from latest/beta (ORIGINAL-CHANNEL) can be upgraded"
-    echo "to the revision that is currently on latest/edge (UPGRADE-WITH-CHANNEL)."
-    echo
-    exit
-fi
+TEMP=$(getopt -o "lh" \
+              --long help,distro:,from-channel:,to-channel:,proxy: \
+              -n "$(basename "$0")" -- "$@")
+
+if [ $? != 0 ] ; then echo "Terminating..." >&2 ; exit 1 ; fi
+
+eval set -- "$TEMP"
+
+DISTRO="${DISTRO-}"
+FROM_CHANNEL="${FROM_CHANNEL-}"
+TO_CHANNEL="${TO_CHANNEL-}"
+PROXY="${PROXY-}"
+
+while true; do
+  case "$1" in
+    --node-name ) NAME="$2"; shift 2 ;;
+    --distro ) DISTRO="$2"; shift 2 ;;
+    --from-channel ) FROM_CHANNEL="$2"; shift 2 ;;
+    --to-channel ) TO_CHANNEL="$2"; shift 2 ;;
+    --proxy ) PROXY="$2"; shift 2 ;;
+    -h | --help ) 
+      prog=$(basename -s.wrapper "$0")
+      echo "Usage: $prog [options...] <distro> <from-channel> <to-channel> <proxy>"
+      echo "     --distro <distro> Distro image to be used for LXD containers Eg. ubuntu:18.04"
+      echo "         Can also be set by using DISTRO environment variable"
+      echo "     --from-channel <channel> Channel to upgrade from to the channel under testing Eg. latest/beta"
+      echo "         Can also be set by using FROM_CHANNEL environment variable"
+      echo "     --to-channel <channel> Channel to be tested Eg. latest/edge"
+      echo "         Can also be set by using TO_CHANNEL environment variable"
+      echo "     --proxy <url> Proxy url to be used by the nodes"
+      echo "         Can also be set by using PROXY environment variable"
+      echo
+      exit ;;
+    -- ) shift; break ;;
+    * ) break ;;
+  esac
+done
 
 set -uex
 
@@ -25,23 +46,13 @@ setup_tests "$@"
 
 DISABLE_AIRGAP_TESTS="${DISABLE_AIRGAP_TESTS:-0}"
 if [ "x${DISABLE_AIRGAP_TESTS}" != "x1" ]; then
-  . tests/test-airgap.sh
+  . tests/libs/airgap.sh
 fi
 
-test_clustering
+. tests/libs/clustering.sh
 
-setup_addons_upgrade
-test_addons_upgrade
-post_addons_upgrade
+. tests/libs/addons-upgrade.sh
 
-setup_upgrade_path
-test_upgrade_path
-post_upgrade_path
+. tests/libs/upgrade-path.sh
 
-setup_test_addons
-test_smoke
-test_core_addons
-test_community_addons
-test_eksd_addons
-test_gpu_addon
-post_test_addons
+. tests/libs/addons.sh
