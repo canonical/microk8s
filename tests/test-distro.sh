@@ -2,7 +2,7 @@
 
 source tests/libs/utils.sh
 
-TEMP=$(getopt -o "lh" \
+TEMP=$(getopt -o "h" \
               --long help,distro:,from-channel:,to-channel:,proxy: \
               -n "$(basename "$0")" -- "$@")
 
@@ -17,7 +17,6 @@ PROXY="${PROXY-}"
 
 while true; do
   case "$1" in
-    --node-name ) NAME="$2"; shift 2 ;;
     --distro ) DISTRO="$2"; shift 2 ;;
     --from-channel ) FROM_CHANNEL="$2"; shift 2 ;;
     --to-channel ) TO_CHANNEL="$2"; shift 2 ;;
