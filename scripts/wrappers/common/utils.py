@@ -437,6 +437,11 @@ def xable(action: str, addon_args: list):
     :param addons: List of addons to enable. Each addon may be prefixed with `repository/`
                    to specify which addon repository it will be sourced from.
     """
+    if len(addon_args) > 1:
+        click.echo(
+            "WARNING: Chained operations of addons will be DEPRECATED in the future.\n"
+            f"         Please use 'microk8s {action} <addon>' instead."
+        )
     available_addons_info = get_available_addons(get_current_arch())
     enabled_addons_info, disabled_addons_info = get_status(available_addons_info, True)
     if action == "enable":
@@ -501,7 +506,6 @@ def get_status(available_addons, isReady):
 
 
 def is_within_directory(directory, target):
-
     abs_directory = os.path.abspath(directory)
     abs_target = os.path.abspath(target)
 
@@ -511,7 +515,6 @@ def is_within_directory(directory, target):
 
 
 def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
-
     for member in tar.getmembers():
         member_path = os.path.join(path, member.name)
         if not is_within_directory(path, member_path):
