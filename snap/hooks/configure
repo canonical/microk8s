@@ -160,6 +160,12 @@ then
   cp -r ${SNAP}/default-args/apiserver-proxy ${SNAP_DATA}/args/
 fi
 
+# (1.24 -> 1.25) migrate from traefik to apiserver-proxy
+if [ -e ${SNAP_DATA}/var/lock/no-traefik ]
+then
+  touch ${SNAP_DATA}/var/lock/no-apiserver-proxy
+fi
+
 # Upgrading to containerd
 if [ ! -e ${SNAP_DATA}/args/containerd ] ||
    grep -e "\-\-docker unix://\${SNAP_DATA}/docker.sock" ${SNAP_DATA}/args/kubelet
@@ -237,7 +243,7 @@ then
   touch ${SNAP_DATA}/credentials/known_tokens.csv
   chmod 660 ${SNAP_DATA}/credentials/known_tokens.csv
   kubelet_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
-  hostname=$(hostname)
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
   echo "${kubelet_token},system:node:${hostname},kubelet-0,\"system:nodes\"" >> ${SNAP_DATA}/credentials/known_tokens.csv
   ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
 

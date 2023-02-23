@@ -312,7 +312,7 @@ sanatise_argskube_proxy() {
   # Function to sanitize arguments for kube-proxy
 
   # userspace proxy-mode is not allowed on the 1.26+ k8s
-  # https://kubernetes.io/blog/2022/11/18/upcoming-changes-in-kubernetes-1-26/#removal-of-kube-proxy-userspace-modes 
+  # https://kubernetes.io/blog/2022/11/18/upcoming-changes-in-kubernetes-1-26/#removal-of-kube-proxy-userspace-modes
   if grep -- "--proxy-mode=userspace" $SNAP_DATA/args/kube-proxy
   then
     echo "Removing --proxy-mode=userspace flag from kube-proxy, since it breaks Calico."
@@ -594,6 +594,11 @@ gen_proxy_client_cert() (
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
+refresh_csr_conf() {
+  render_csr_conf
+  cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
+}
+
 produce_certs() {
     export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     # Generate RSA keys if not yet
@@ -789,7 +794,7 @@ function update_configs {
   $SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
   # Create the known tokens
   proxy_token=`grep kube-proxy ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
-  hostname=$(hostname)
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
   kubelet_token=`grep kubelet-0, ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
   controller_token=`grep kube-controller-manager ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`
   scheduler_token=`grep kube-scheduler ${SNAP_DATA}/credentials/known_tokens.csv | cut -d, -f1`

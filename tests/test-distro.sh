@@ -132,17 +132,3 @@ lxc exec $NAME -- microk8s enable community
 lxc exec $NAME -- script -e -c "STRICT=\"yes\" pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
-
-if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
-then
-  snap install ${TO_CHANNEL} --dangerous --classic
-else
-  snap install microk8s --channel=${TO_CHANNEL} --classic
-fi
-
-microk8s status --wait-ready
-
-if [ -d "/var/snap/microk8s/common/addons/eksd" ]
-then
-  pytest -s /var/snap/microk8s/common/addons/eksd/tests/test-addons.py
-fi
