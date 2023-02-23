@@ -81,7 +81,24 @@ do
     # Run reconcile hooks
     $SNAP/usr/bin/python3 $SNAP/scripts/run-lifecycle-hooks.py reconcile || true
 
-    # Apply configuration files from $SNAP_COMMON/etc/launcher/
+    # Side-load images from $SNAP_COMMON/etc/sideload/*.tar
+    match_sideload_tars="${SNAP_COMMON}/etc/sideload/"*.tar
+    for sideload_tar in ${match_sideload_tars}; do
+      # bash will return the regex if no files were found, in that case skip
+      if [ "${sideload_tar}" == "${match_sideload_tars}" ]; then
+        continue
+      fi
+
+      echo "Side-load ${sideload_tar} into containerd"
+      if "${SNAP}/microk8s-ctr.wrapper" image import "${sideload_tar}"; then
+        echo "Success!"
+        mv "${sideload_tar}" "${sideload_tar}.applied"
+      else
+        echo "Failed to sideload ${sideload_tar}, will retry"
+      fi
+    done
+
+    # Apply configuration files from $SNAP_COMMON/etc/launcher/*.yaml
     match_config_files="${SNAP_COMMON}/etc/launcher/"*.yaml
     for config in ${match_config_files}; do
       # bash will return the regex if no files were found, in that case skip

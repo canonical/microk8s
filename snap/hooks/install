@@ -69,6 +69,19 @@ for config_file in "$SNAP_USER_COMMON/.microk8s.yaml" "$SNAP_COMMON/.microk8s.ya
   fi
 done
 
+# Side-load images from well-known paths.
+# This is done prior to any other initialization.
+#
+# Any *.tar files that are found in these directories will be loaded into containerd after it starts.
+#
+# - $SNAP_USER_COMMON/sideload/*.tar  <-- typically /root/snap/microk8s/common/sideload/images.tar
+# - $SNAP_COMMON/sideload/*.tar       <-- typically /var/snap/microk8s/common/sideload/images.tar
+# - $SNAP/sideload/*.tar              <-- typically empty, reserved for future use-cases
+mkdir -p "${SNAP_COMMON}/etc/sideload"
+for source_dir in "${SNAP_USER_COMMON}" "${SNAP_COMMON}" "${SNAP}"; do
+  cp "${source_dir}/sideload/"*.tar "${SNAP_COMMON}/etc/sideload/" || true
+done
+
 # Produce cluster certificates
 produce_certs
 rm -rf .srl
