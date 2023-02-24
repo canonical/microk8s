@@ -316,6 +316,7 @@ apps:
     # https://forum.snapcraft.io/t/process-lifecycle-on-snap-refresh/140/37
     stop-mode: sigterm
     restart-condition: always
+    start-timeout: 5m
     install-mode: disable
     plugs:
       - k8s-journald
@@ -332,6 +333,7 @@ apps:
   daemon-kubelite:
     command: run-kubelite-with-args
     daemon: simple
+    after: [daemon-containerd]
     install-mode: disable
     plugs:
       - dot-kube
