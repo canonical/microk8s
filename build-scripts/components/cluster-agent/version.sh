@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "1.26"
+echo "main"
