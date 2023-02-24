@@ -29,6 +29,7 @@ DEFAULT_MEMORY_GB: int = 4
 DEFAULT_DISK_GB: int = 50
 DEFAULT_ASSUME: bool = False
 DEFAULT_CHANNEL: str = "1.26/stable"
+DEFAULT_IMAGE: str = "18.04"
 
 MIN_CORES: int = 2
 MIN_MEMORY_GB: int = 2
