@@ -232,7 +232,7 @@ def remove_extra_resources(ns_name):
     for rs in extra_resources:
         if rs.startswith("apiservices"):
             continue
-        cmd = [KUBECTL, "delete", "--all", rs, "-n", ns_name, "--timeout=60s"]
+        cmd = [KUBECTL, "delete", "--all", rs, "-n", ns_name, "--timeout=3s"]
         subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
