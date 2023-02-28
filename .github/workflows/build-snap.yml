@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.3.0
       - name: Install lxd
         run: |
           sudo lxd init --auto
@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.3.0
       - name: Install test dependencies
         run: |
           set -x
@@ -50,7 +50,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.1
+        uses: actions/download-artifact@v3.0.2
         with:
           name: microk8s.snap
           path: build
@@ -65,7 +65,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.3.0
       - name: Install test dependencies
         run: |
           set -x
@@ -75,7 +75,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.1
+        uses: actions/download-artifact@v3.0.2
         with:
           name: microk8s.snap
           path: build
@@ -97,7 +97,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.3.0
       - name: Install test dependencies
         run: |
           set -x
@@ -107,7 +107,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.1
+        uses: actions/download-artifact@v3.0.2
         with:
           name: microk8s.snap
           path: build
@@ -129,7 +129,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.3.0
       - name: Install test dependencies
         run: |
           set -x
@@ -139,7 +139,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.1
+        uses: actions/download-artifact@v3.0.2
         with:
           name: microk8s.snap
           path: build
