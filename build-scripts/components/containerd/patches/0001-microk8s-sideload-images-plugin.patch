@@ -1,0 +1,163 @@
+From 7666d8ec09b732ffab2a00018f26fd2417177165 Mon Sep 17 00:00:00 2001
+From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
+Date: Tue, 28 Feb 2023 16:05:33 +0200
+Subject: [PATCH] microk8s sideload images plugin
+
+---
+ cmd/containerd/builtins_microk8s.go |   6 ++
+ microk8s_plugins/sideload.go        | 131 ++++++++++++++++++++++++++++
+ 2 files changed, 137 insertions(+)
+ create mode 100644 cmd/containerd/builtins_microk8s.go
+ create mode 100644 microk8s_plugins/sideload.go
+
+diff --git a/cmd/containerd/builtins_microk8s.go b/cmd/containerd/builtins_microk8s.go
+new file mode 100644
+index 0000000..d9afc6f
+--- /dev/null
++++ b/cmd/containerd/builtins_microk8s.go
+@@ -0,0 +1,6 @@
++package main
++
++// register containerd microk8s plugins here
++import (
++	_ "github.com/containerd/containerd/microk8s_plugins"
++)
+diff --git a/microk8s_plugins/sideload.go b/microk8s_plugins/sideload.go
+new file mode 100644
+index 0000000..9a48cf5
+--- /dev/null
++++ b/microk8s_plugins/sideload.go
+@@ -0,0 +1,131 @@
++package microk8s
++
++import (
++	"fmt"
++	"os"
++	"path/filepath"
++	"time"
++
++	"github.com/containerd/containerd"
++	"github.com/containerd/containerd/log"
++	"github.com/containerd/containerd/plugin"
++)
++
++const pluginName = "sideload-images"
++
++var logger = log.L.WithField("plugin", pluginName)
++
++type Config struct {
++	// Interval configures how frequently the plugin will look for new images found
++	// in the sources. If set to zero, images are only loaded during initial start.
++	Interval *time.Duration `toml:"interval"`
++
++	// Sources is a list of paths to look for .tar images.
++	// For example, `/var/snap/microk8s/common/etc/sideload`
++	Sources []string `toml:"sources"`
++
++	// Namespace the images will be loaded into, e.g. "k8s.io"
++	Namespace string `toml:"namespace"`
++}
++
++func (c *Config) SetDefaults() {
++	if c.Namespace == "" {
++		c.Namespace = "k8s.io"
++	}
++	if len(c.Sources) == 0 {
++		snapCommon := os.Getenv("SNAP_COMMON")
++		if snapCommon == "" {
++			snapCommon = "/var/snap/microk8s/common"
++		}
++		c.Sources = []string{filepath.Join(snapCommon, "etc", "sideload")}
++	}
++	if c.Interval == nil {
++		t := 5 * time.Second
++		c.Interval = &t
++	}
++}
++
++func init() {
++	c := &Config{}
++	plugin.Register(&plugin.Registration{
++		Type:   plugin.ServicePlugin,
++		ID:     pluginName,
++		Config: c,
++		InitFn: func(ic *plugin.InitContext) (interface{}, error) {
++			config := ic.Config.(*Config)
++			config.SetDefaults()
++
++			logger.Debugf("Loaded config %#v", config)
++
++			if len(config.Sources) == 0 {
++				return nil, fmt.Errorf("no sources configured: %w", plugin.ErrSkipPlugin)
++			}
++
++			go func() {
++				// get a containerd client
++				var (
++					cl  *containerd.Client
++					err error
++				)
++				for cl == nil {
++					select {
++					case <-ic.Context.Done():
++						return
++					default:
++					}
++
++					cl, err = containerd.New(ic.Address, containerd.WithDefaultNamespace(config.Namespace), containerd.WithTimeout(2*time.Second))
++					if err != nil {
++						logger.Info("Failed to create containerd client")
++					}
++				}
++
++				for {
++				nextDir:
++					for _, dir := range c.Sources {
++						logger := logger.WithField("dir", dir)
++						logger.Debug("Looking for images")
++						files, err := filepath.Glob(filepath.Join(dir, "*.tar"))
++						if err != nil {
++							logger.WithError(err).Warn("Failed to look for images")
++							continue nextDir
++						}
++
++					nextFile:
++						for _, file := range files {
++							logger := logger.WithField("file", file)
++							r, err := os.Open(file)
++							if err != nil {
++								logger.WithError(err).Warn("Failed to open file")
++								continue nextFile
++							}
++							images, err := cl.Import(ic.Context, r)
++							if err != nil {
++								logger.WithError(err).Error("Failed to import images")
++							} else {
++								logger.Infof("Imported %d images", len(images))
++								os.Rename(file, file+".loaded")
++							}
++							if closeErr := r.Close(); closeErr != nil {
++								logger.WithError(closeErr).Error("Failed to close reader")
++							}
++						}
++					}
++
++					// retry after interval, finish if interval is zero
++					if *c.Interval == 0 {
++						logger.Info("Plugin terminating")
++						return
++					}
++					select {
++					case <-ic.Context.Done():
++						return
++					case <-time.After(*c.Interval):
++					}
++				}
++			}()
++
++			return nil, nil
++		},
++	})
++}
+--
+2.25.1
