@@ -1,3 +1,4 @@
+import fcntl
 import getpass
 import json
 import os
@@ -428,6 +429,36 @@ def parse_xable_single_arg(addon_arg: str, available_addons: list):
 
 
 def xable(action: str, addon_args: list):
+    if os.getenv("MICROK8S_ADDONS_SKIP_LOCK") == "1":
+        unprotected_xable(action, addon_args)
+    else:
+        protected_xable(action, addon_args)
+
+
+def protected_xable(action: str, addon_args: list):
+    """
+    Get an exclusive lock file and then perform enable/disable of addons.
+
+    Ensure that the lock file is always unlocked on exit.
+    """
+
+    with open(snap_common() / ".microk8s-addon-lock", "w") as f:
+        try:
+            fcntl.lockf(f, fcntl.LOCK_EX)
+
+            # NOTE(neoaggelos): We now have the lock, ensure any recursive
+            # invocations will not deadlock. One example is addons that
+            # enable other addons as requirements.
+            #
+            # See the relevant check in xable().
+            os.environ["MICROK8S_ADDONS_SKIP_LOCK"] = "1"
+
+            unprotected_xable(action, addon_args)
+        finally:
+            fcntl.lockf(f, fcntl.LOCK_UN)
+
+
+def unprotected_xable(action: str, addon_args: list):
     """Enables or disables the given addons.
 
     Collated into a single function since the logic is identical other than

@@ -18,7 +18,7 @@ def test_command_errors_if_no_arguments():
     assert "Error: Missing argument" in result.output
 
 
-@patch("enable.xable")
+@patch("disable.xable")
 def test_command_shows_addon_help_message(xable_mock):
     runner = CliRunner()
     for help_flag in ("-h", "--help"):
