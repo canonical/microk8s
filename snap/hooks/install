@@ -14,6 +14,20 @@ export LD_LIBRARY_PATH="${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/$ARCH-linux-gnu:
 export PATH="${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:$PATH:/usr/bin:/usr/local/bin"
 export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
 
+# LXD Specific Checks
+if ! is_strict && cat /proc/1/environ | grep "container=lxc" &> /dev/null
+  then
+
+  # make sure the /dev/kmsg is available, indicating a potential missing profile
+  if [ ! -c "/dev/kmsg" ]  # kmsg is a character device
+  then
+    printf -- '\e[1;31mERROR: \033[0m the lxc profile for MicroK8s might be missing. \n'
+    printf -- '\t  Refer to this help document to get MicroK8s working in with LXD: \n'
+    printf -- '\t  https://microk8s.io/docs/lxd \n'
+    exit 1
+  fi
+fi
+
 cp -r --preserve=mode ${SNAP}/default-args ${SNAP_DATA}/args
 mv ${SNAP_DATA}/args/certs.d/localhost__32000 ${SNAP_DATA}/args/certs.d/localhost:32000
 
@@ -53,6 +67,19 @@ for config_file in "$SNAP_USER_COMMON/.microk8s.yaml" "$SNAP_COMMON/.microk8s.ya
       break
     fi
   fi
+done
+
+# Side-load images from well-known paths.
+# This is done prior to any other initialization.
+#
+# Any *.tar files that are found in these directories will be loaded into containerd after it starts.
+#
+# - $SNAP_USER_COMMON/sideload/*.tar  <-- typically /root/snap/microk8s/common/sideload/images.tar
+# - $SNAP_COMMON/sideload/*.tar       <-- typically /var/snap/microk8s/common/sideload/images.tar
+# - $SNAP/sideload/*.tar              <-- typically empty, reserved for future use-cases
+mkdir -p "${SNAP_COMMON}/etc/sideload"
+for source_dir in "${SNAP_USER_COMMON}" "${SNAP_COMMON}" "${SNAP}"; do
+  cp "${source_dir}/sideload/"*.tar "${SNAP_COMMON}/etc/sideload/" || true
 done
 
 # Produce cluster certificates
