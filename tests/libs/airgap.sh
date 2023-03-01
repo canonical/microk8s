@@ -59,7 +59,7 @@ function push_images_to_registry() {
   local NAME=$1
   lxc exec "$NAME" -- bash -c '
     for image in $(microk8s ctr image ls -q | grep -v "sha256:"); do
-      mirror=$(echo $image | sed '"'s,\(docker.io\|k8s.gcr.io\|registry.k8s.io\|quay.io\),${NAME}:32000,g'"')
+      mirror=$(echo $image | sed '"'s,\(docker.io\|k8s.gcr.io\|registry.k8s.io\|quay.io\|public.ecr.aws\),${NAME}:32000,g'"')
       sudo microk8s ctr image convert ${image} ${mirror}
       sudo microk8s ctr image push ${mirror} --plain-http
     done
@@ -110,7 +110,7 @@ function configure_airgapped_microk8s_mirrors() {
         capabilities = [\"pull\", \"resolve\"]
     " > hosts.toml
 
-    for registry in registry.k8s.io k8s.gcr.io docker.io quay.io; do
+    for registry in registry.k8s.io k8s.gcr.io docker.io quay.io public.ecr.aws; do
       mkdir -p /var/snap/microk8s/current/args/certs.d/$registry
       cp hosts.toml /var/snap/microk8s/current/args/certs.d/$registry/hosts.toml
     done
