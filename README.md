@@ -80,7 +80,8 @@ sudo usermod -a -G microk8s <username>
 MicroK8s installs a barebones upstream Kubernetes. Additional services like dns and the Kubernetes dashboard can be enabled using the `microk8s enable` command.
 
 ```
-sudo microk8s enable dns dashboard
+sudo microk8s enable dns
+sudo microk8s enable dashboard
 ```
 
 Use `microk8s status` to see a list of enabled and available addons. You can find the addon manifests and/or scripts under `${SNAP}/actions/`, with `${SNAP}` pointing by default to `/snap/microk8s/current`.
