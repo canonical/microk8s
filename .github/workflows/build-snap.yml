@@ -1,9 +1,6 @@
 name: Build and test MicroK8s snap
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
       - master
@@ -171,3 +168,26 @@ jobs:
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
           sudo -E bash -c "pytest -s ./tests/test-cluster-agent.py"
+
+  test-airgap:
+    name: Test airgap installation
+    runs-on: ubuntu-20.04
+    needs: build
+
+    steps:
+      - name: Checking out repo
+        uses: actions/checkout@v3.3.0
+      - name: Fetch snap
+        uses: actions/download-artifact@v3.0.2
+        with:
+          name: microk8s.snap
+          path: build
+      - name: Initialize LXD
+        run: |
+          sudo lxd init --auto
+          sudo lxc network set lxdbr0 ipv6.address=none
+          sudo usermod --append --groups lxd $USER
+          sg lxd -c 'lxc version'
+      - name: Run airgap tests
+        run: |
+          sudo -E bash -x -c "./tests/libs/airgap.sh --distro ubuntu:20.04 --channel $PWD/build/microk8s.snap"
