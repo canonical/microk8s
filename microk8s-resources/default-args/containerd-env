@@ -32,3 +32,8 @@ ulimit -n 65536 || true
 # this get inherited to the running containers
 #
 ulimit -l 16384 || true
+
+# Set GOFIPS to use FIPS certified libs
+export GOFIPS=0
+# Point to the location of libcrypto.so
+# export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu/"
