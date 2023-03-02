@@ -36,7 +36,7 @@ while true; do
     --backend ) BACKEND="$2"; shift 2 ;;
     --lxd-profile ) LXC_PROFILE="$2"; shift 2 ;;
     --channel ) CHANNEL_TO_TEST="$2"; shift 2 ;;
-    -h | --help ) 
+    -h | --help )
       prog=$(basename -s.wrapper "$0")
       echo "Usage: $prog [options...]"
       echo "     --backend <backend> Backend to be used for clustering tests Eg. lxc"
@@ -44,7 +44,7 @@ while true; do
       echo "     --lxd-profile <path> Profile to be used for lxc backend Eg. tests/lxc/microk8s.profile"
       echo "         Can also be set by using LXC_PROFILE environment variable"
       echo "     --channel <channel> Channel to be tested Eg. latest/edge"
-      echo "         Can also be set by using CHANNEL_TO_TEST environment variable"   
+      echo "         Can also be set by using CHANNEL_TO_TEST environment variable"
       echo "     --proxy <url> Proxy url to be used by the nodes"
       echo "         Can also be set by using PROXY environment variable"
       echo " -l, --lib-mode Make the script act like a library Eg. true / false"
