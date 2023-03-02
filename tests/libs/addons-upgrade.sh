@@ -13,7 +13,7 @@ function run_addons_upgrade_tests() {
   local TO_CHANNEL=$3
   # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
   lxc exec "$NAME" -- script -e -c "UPGRADE_MICROK8S_FROM=${FROM_CHANNEL} UPGRADE_MICROK8S_TO=${TO_CHANNEL} pytest -s /root/tests/test-upgrade.py"
-} 
+}
 
 function post_addons_upgrade_tests() {
   local NAME=$1
@@ -43,7 +43,7 @@ while true; do
     --from-channel ) FROM_CHANNEL="$2"; shift 2 ;;
     --to-channel ) TO_CHANNEL="$2"; shift 2 ;;
     --proxy ) PROXY="$2"; shift 2 ;;
-    -h | --help ) 
+    -h | --help )
       prog=$(basename -s.wrapper "$0")
       echo "Usage: $prog [options...]"
       echo "     --node-name <name> Name to be used for LXD containers"

@@ -87,7 +87,7 @@ while true; do
     --distro ) DISTRO="$2"; shift 2 ;;
     --channel ) TO_CHANNEL="$2"; shift 2 ;;
     --proxy ) PROXY="$2"; shift 2 ;;
-    -h | --help ) 
+    -h | --help )
       prog=$(basename -s.wrapper "$0")
       echo "Usage: $prog [options...]"
       echo "     --node-name <name> Name to be used for LXD containers"
