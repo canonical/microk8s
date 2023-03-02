@@ -2,7 +2,7 @@
 
 source tests/libs/utils.sh
 
-airgap_wait_for_pods() {
+function airgap_wait_for_pods() {
   container="$1"
 
   lxc exec "$container" -- bash -c "
@@ -36,6 +36,7 @@ function setup_airgap_registry_mirror() {
     echo '
 ---
 version: 0.1.0
+# pre-configure DNS args to save time from unnecessary kubelet restarts
 extraKubeletArgs:
   --cluster-dns: 10.152.183.10
   --cluster-domain: cluster.local
@@ -112,6 +113,7 @@ function setup_airgapped_microk8s() {
   echo "
 ---
 version: 0.1.0
+# pre-configure DNS args to save time from unnecessary kubelet restarts
 extraKubeletArgs:
   --cluster-dns: 10.152.183.10
   --cluster-domain: cluster.local
