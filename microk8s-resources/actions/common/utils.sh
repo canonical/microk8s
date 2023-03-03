@@ -594,11 +594,6 @@ gen_proxy_client_cert() (
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
-refresh_csr_conf() {
-  render_csr_conf
-  cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
-}
-
 produce_certs() {
     export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     # Generate RSA keys if not yet
@@ -645,6 +640,56 @@ produce_certs() {
     elif [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ] ||
          [ "$(${SNAP}/usr/bin/openssl < ${SNAP_DATA}/certs/front-proxy-client.crt x509 -noout -issuer)" == "issuer=CN = 127.0.0.1" ]; then
         gen_proxy_client_cert
+        echo "1"
+    else
+        echo "0"
+    fi
+}
+
+ensure_server_ca() {
+    # ensure the server.crt is issued by ca.crt
+    # if current csr.conf is invalid, regenerate front-proxy-client certificates as well
+    
+    if ! ${SNAP}/usr/bin/openssl verify -CAfile ${SNAP_DATA}/certs/ca.crt ${SNAP_DATA}/certs/server.crt &>/dev/null
+    then
+        csr_modified="$(ensure_csr_conf_conservative)"
+        gen_server_cert
+        
+        if [[ "$csr_modified" -eq  "1" ]]
+        then
+            gen_proxy_client_cert
+        fi
+
+        echo "1"
+    else
+        echo "0"
+    fi
+}
+
+check_csr_conf() {
+    # if no argument is given, default csr.conf will be checked
+
+    csr_conf="${1:-${SNAP_DATA}/certs/csr.conf}"
+    ${SNAP}/usr/bin/openssl req -new -config $csr_conf -noout -nodes -keyout /dev/null &>/dev/null
+}
+
+refresh_csr_conf() {
+    render_csr_conf
+    cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
+}
+
+ensure_csr_conf_conservative() {
+    # ensure csr.conf is a valid csr config file; if not:
+    # copy csr.conf.rendered if valid, or render new if not
+
+    if ! check_csr_conf
+    then
+        if ! check_csr_conf ${SNAP_DATA}/certs/csr.conf.rendered
+        then
+          render_csr_conf
+        fi
+
+        cp ${SNAP_DATA}/certs/csr.conf.rendered ${SNAP_DATA}/certs/csr.conf
         echo "1"
     else
         echo "0"
