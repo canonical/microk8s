@@ -16,10 +16,6 @@ cp "$SNAP_DATA"/args/cni-network/* "$BACKUP_DIR/args/cni-network/" 2>/dev/null |
 find "$SNAP_DATA"/args/cni-network/* -not -name '*multus*' -exec rm -f {} \;
 ARCH="$($SNAP/bin/uname -m)"
 CALICO_MANIFEST="$RESOURCES/calico.yaml"
-if [ "$ARCH" == "s390x" ]
-then
-  CALICO_MANIFEST="$RESOURCES/calico.s390x.yaml"
-fi
 run_with_sudo cp "$CALICO_MANIFEST" "$SNAP_DATA/args/cni-network/cni.yaml"
 
 cp "$SNAP_DATA"/args/kube-apiserver "$BACKUP_DIR/args"
