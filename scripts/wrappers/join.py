@@ -727,9 +727,6 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
             waits -= 1
     print(" ")
 
-    with open("{}//certs/csr.conf".format(snapdata_path), "w") as f:
-        f.write("changeme")
-
     restart_all_services()
 
 
