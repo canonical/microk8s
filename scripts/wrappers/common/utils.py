@@ -12,6 +12,8 @@ import logging
 import click
 import yaml
 
+from .cluster.utils import try_set_file_permissions
+
 LOG = logging.getLogger(__name__)
 
 KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
@@ -442,7 +444,14 @@ def protected_xable(action: str, addon_args: list):
     Ensure that the lock file is always unlocked on exit.
     """
 
-    with open(snap_common() / ".microk8s-addon-lock", "w") as f:
+    lock_file_path = snap_common() / ".microk8s-addon-lock"
+    with open(lock_file_path, "w") as f:
+        # set file permissions so non-root users do not fail
+        try:
+            try_set_file_permissions(lock_file_path)
+        except OSError:
+            pass
+
         try:
             fcntl.lockf(f, fcntl.LOCK_EX)
 
