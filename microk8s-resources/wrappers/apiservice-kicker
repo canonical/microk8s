@@ -60,7 +60,8 @@ do
     if snapctl services microk8s.daemon-kubelite | grep active &> /dev/null
     then
       certs_modified="$(manage_certs)"
-      if [[ "$certs_modified" -eq "1" ]]
+      if [[ "$certs_modified" -eq "1" ]] &&
+        ! [ -e "${SNAP_DATA}/var/lock/join-in-progress" ]
       then
           echo "cert change detected. Restarting the cluster-agent"
           snapctl restart microk8s.daemon-cluster-agent
