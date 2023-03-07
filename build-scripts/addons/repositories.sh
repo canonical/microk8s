@@ -3,12 +3,13 @@
 # List of addon repositories to bundle in the snap
 # (name),(repository),(reference)
 ADDONS_REPOS="
-core,https://github.com/canonical/microk8s-core-addons,1.26
-community,https://github.com/canonical/microk8s-community-addons,1.26
+core,https://github.com/canonical/microk8s-core-addons,1.25-eksd
+community,https://github.com/canonical/microk8s-community-addons,1.25-eksd
+eksd,https://github.com/canonical/microk8s-aws-addons,1.25-eksd
 "
 
 # List of addon repositories to automatically enable
-ADDONS_REPOS_ENABLED="core"
+ADDONS_REPOS_ENABLED="core eksd"
 
 INSTALL="${1}"
 if [ -d "${INSTALL}/addons" ]; then
