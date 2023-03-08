@@ -40,6 +40,8 @@ parts:
       - pkg-config
       - rsync
       - tcl
+      - unzip
+      - wget
 
   raft:
     after: [build-deps]
@@ -53,15 +55,8 @@ parts:
       - -usr/share/doc
       - -usr/share/man
 
-  sqlite:
-    after: [build-deps]
-    source: build-scripts/components/sqlite
-    build-attributes: [no-patchelf]
-    plugin: nil
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh sqlite
-
   dqlite:
-    after: [sqlite, raft]
+    after: [raft]
     source: build-scripts/components/dqlite
     build-attributes: [no-patchelf]
     plugin: nil

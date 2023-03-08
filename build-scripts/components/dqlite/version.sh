@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "v1.11.1"
+echo "microk8s-debug"

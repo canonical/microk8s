@@ -6,12 +6,15 @@ INSTALL="${1}"
 [ ! -f ./configure ] && [ -f ./bootstrap ] && env NOCONFIGURE=1 ./bootstrap
 [ ! -f ./configure ] && autoreconf --install
 
-export SQLITE_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include"
-export SQLITE_LIBS="-L${SNAPCRAFT_STAGE}/lib -lsqlite3"
+export CFLAGS="-DSQLITE_ENABLE_DBSTAT_VTAB=1 -DSQLITE_ENABLE_NORMALIZE=1"
 export RAFT_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include"
 export RAFT_LIBS="-L${SNAPCRAFT_STAGE}/lib -lraft"
 
-./configure
+wget https://sqlite.org/2020/sqlite-amalgamation-3330000.zip
+unzip sqlite-amalgamation-3330000.zip
+cp sqlite-amalgamation-3330000/sqlite3.{c,h} .
+
+./configure --enable-debug --enable-build-sqlite
 
 mkdir -p build
 
