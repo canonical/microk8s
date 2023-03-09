@@ -30,8 +30,6 @@ from common.cluster.utils import (
     get_token,
 )
 
-from reset import reset_cert_reissue
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
 snapdata_path = os.environ.get("SNAP_DATA")
@@ -828,7 +826,6 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
         exit(1)
 
     store_remote_ca(info["ca"])
-    reset_cert_reissue()
 
     store_base_kubelet_args(info["kubelet_args"])
     update_kubelet_node_ip(info["kubelet_args"], hostname_override)
