@@ -826,7 +826,6 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
         exit(1)
 
     store_remote_ca(info["ca"])
-    store_cert("serviceaccount.key", info["service_account_key"])
 
     store_base_kubelet_args(info["kubelet_args"])
     update_kubelet_node_ip(info["kubelet_args"], hostname_override)
