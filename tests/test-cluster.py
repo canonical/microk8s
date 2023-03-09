@@ -513,7 +513,7 @@ class TestCluster(object):
 
         # Check that the worker node is Ready
         print("Checking that the worker node {} is working and Ready".format(vm.vm_name))
-        worker_node=vm.run("/snap/bin/microk8s status --wait-ready")
+        worker_node = vm.run("/snap/bin/microk8s status --wait-ready")
         print(worker_node.decode())
         assert "microk8s is running" in worker_node.decode()
 
