@@ -11,7 +11,7 @@ export SQLITE_LIBS="-L${SNAPCRAFT_STAGE}/lib -lsqlite3"
 export RAFT_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include"
 export RAFT_LIBS="-L${SNAPCRAFT_STAGE}/lib -lraft"
 
-./configure --enable-debug
+./configure
 
 mkdir -p build
 

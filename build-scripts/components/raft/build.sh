@@ -6,7 +6,7 @@ INSTALL="${1}"
 [ ! -f ./configure ] && [ -f ./bootstrap ] && env NOCONFIGURE=1 ./bootstrap
 [ ! -f ./configure ] && autoreconf --install
 
-./configure --enable-debug
+./configure
 
 mkdir -p build
 
