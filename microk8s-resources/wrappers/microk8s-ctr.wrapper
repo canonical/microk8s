@@ -10,6 +10,8 @@ source $SNAP/actions/common/utils.sh
 
 SNAPSHOTTER=$(snapshotter)
 
+exit_if_no_permissions
+
 if ! [ -e $SNAP_DATA/args/ctr ]
 then
   echo "Arguments file $SNAP_DATA/args/ctr is missing."
