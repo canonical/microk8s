@@ -437,7 +437,10 @@ class TestCluster(object):
         while attempt < 10:
             try:
                 connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
-                if "NotReady" in connected_nodes.decode() and vm.vm_name not in connected_nodes.decode():
+                if (
+                    "NotReady" in connected_nodes.decode() 
+                    and vm.vm_name not in connected_nodes.decode()
+                ):
                     time.sleep(5)
                     continue
                 print(connected_nodes.decode())
@@ -466,7 +469,10 @@ class TestCluster(object):
             try:
                 connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
                 print(connected_nodes.decode())
-                if "NotReady" in connected_nodes.decode() and vm.vm_name in connected_nodes.decode():
+                if (
+                    "NotReady" in connected_nodes.decode() 
+                    and vm.vm_name in connected_nodes.decode()
+                ):
                     time.sleep(5)
                     continue
                 print(connected_nodes.decode())
