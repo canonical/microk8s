@@ -376,10 +376,7 @@ class TestCluster(object):
         # Wait for nodes to be ready
         print("Waiting for node to register")
         connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
-        while (
-            "NotReady" in connected_nodes.decode()
-            and vm.vm_name in connected_nodes.decode()
-        ):
+        while "NotReady" in connected_nodes.decode() and vm.vm_name in connected_nodes.decode():
             time.sleep(5)
             connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
         print(connected_nodes.decode())
