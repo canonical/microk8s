@@ -473,7 +473,7 @@ class TestCluster(object):
         kubelet = vm.run("cat /var/snap/microk8s/current/credentials/kubelet.config")
         assert "127.0.0.1" in kubelet.decode()
 
-                # Leave the worker node from the cluster
+        # Leave the worker node from the cluster
         print("Leaving the worker node {} from the cluster".format(vm.vm_name))
         vm.run("/snap/bin/microk8s.leave")
         vm_master.run("/snap/bin/microk8s.remove-node {}".format(vm.vm_name))
