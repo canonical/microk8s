@@ -7,6 +7,7 @@ mkdir -p "${INSTALL}"
 ARCH="$(arch)"
 case "$ARCH" in
   x86_64) ARCH=amd64 ;;
+  aarch64) ARCH=arm64 ;;
 esac
 
 if [ ! -f go/bin/go ]; then
