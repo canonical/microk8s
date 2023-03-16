@@ -393,7 +393,7 @@ class TestCluster(object):
                     continue
             break
 
-    def test_worker_noode(self):
+    def test_worker_node(self):
         """
         Test a worker node is setup
         """
@@ -417,7 +417,10 @@ class TestCluster(object):
         while attempt < 10:
             try:
                 connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
-                if "NotReady" in connected_nodes.decode():
+                if (
+                    "NotReady" in connected_nodes.decode()
+                    and vm.vm_name in connected_nodes.decode()
+                ):
                     time.sleep(5)
                     continue
                 print(connected_nodes.decode())
@@ -434,6 +437,43 @@ class TestCluster(object):
         assert master_ip in provider.decode()
         kubelet = vm.run("cat /var/snap/microk8s/current/credentials/kubelet.config")
         assert "127.0.0.1" in kubelet.decode()
+
+        # Leave the worker node from the cluster
+        print("Leaving the worker node {} from the cluster".format(vm.vm_name))
+        vm.run("/snap/bin/microk8s.leave")
+        vm_master.run("/snap/bin/microk8s.remove-node {}".format(vm.vm_name))
+
+        # Wait for worker node to leave the cluster
+        attempt = 0
+        while attempt < 10:
+            try:
+                connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+                print(connected_nodes.decode())
+                if (
+                    "NotReady" in connected_nodes.decode()
+                    and vm.vm_name in connected_nodes.decode()
+                ):
+                    time.sleep(5)
+                    continue
+                print(connected_nodes.decode())
+                break
+            except ChildProcessError:
+                time.sleep(10)
+                attempt += 1
+                if attempt == 10:
+                    raise
+
+        # Check that the worker node is Ready
+        print("Checking that the worker node {} is working and Ready".format(vm.vm_name))
+        worker_node = vm.run("/snap/bin/microk8s status --wait-ready")
+        print(worker_node.decode())
+        assert "microk8s is running" in worker_node.decode()
+
+        # The removed node now isn't part of the cluster and will re-issue certificates.
+        # This will interfere when testing `test_no_cert_reissue_in_nodes`.
+        # Hence, we remove this machine from the VM list.
+        print("Remove machine {}".format(vm.vm_name))
+        self.VM.remove(vm)
 
     def test_no_cert_reissue_in_nodes(self):
         """
