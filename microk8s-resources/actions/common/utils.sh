@@ -649,7 +649,8 @@ produce_certs() {
 ensure_server_ca() {
     # ensure the server.crt is issued by ca.crt
     # if current csr.conf is invalid, regenerate front-proxy-client certificates as well
-    
+
+    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     if ! ${SNAP}/usr/bin/openssl verify -CAfile ${SNAP_DATA}/certs/ca.crt ${SNAP_DATA}/certs/server.crt &>/dev/null
     then
         csr_modified="$(ensure_csr_conf_conservative)"
@@ -668,6 +669,7 @@ ensure_server_ca() {
 
 check_csr_conf() {
     # if no argument is given, default csr.conf will be checked
+    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
 
     csr_conf="${1:-${SNAP_DATA}/certs/csr.conf}"
     ${SNAP}/usr/bin/openssl req -new -config $csr_conf -noout -nodes -keyout /dev/null &>/dev/null
