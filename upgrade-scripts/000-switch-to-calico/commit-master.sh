@@ -14,12 +14,7 @@ mkdir -p "$BACKUP_DIR/args/cni-network/"
 cp "$SNAP_DATA"/args/cni-network/* "$BACKUP_DIR/args/cni-network/" 2>/dev/null || true
 find "$SNAP_DATA"/args/cni-network/* -not -name '*multus*' -exec rm -f {} \;
 ARCH="$($SNAP/bin/uname -m)"
-if [ "$ARCH" == "s390x" ]
-then
-  cp "$RESOURCES/calico.s390x.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
-else
-  cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
-fi
+cp "$RESOURCES/calico.yaml" "$SNAP_DATA/args/cni-network/cni.yaml"
 
 echo "Restarting services"
 cp "$SNAP_DATA"/args/kube-apiserver "$BACKUP_DIR/args"

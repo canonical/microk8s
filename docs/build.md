@@ -91,7 +91,7 @@ snap install microk8s_*_amd64.snap --classic --dangerous
 The calico CNI manifest can be found under `upgrade-scripts/000-switch-to-calico/resources/calico.yaml`.
 Building the manifest is subject to the upstream calico project k8s installation process.
 The `calico.yaml` manifest is a slightly modified version of:
-`https://projectcalico.docs.tigera.io/archive/v3.23/manifests/calico.yaml`:
+`https://projectcalico.docs.tigera.io/archive/v3.25/manifests/calico.yaml`:
 
 - Set the calico backend from "bird" to "vxlan": `calico_backend: "vxlan"`
 - `CALICO_IPV4POOL_CIDR` was set to "10.1.0.0/16"
@@ -105,7 +105,7 @@ The `calico.yaml` manifest is a slightly modified version of:
   1. `host-local-net-dir` to `/var/snap/microk8s/current/var/lib/cni/networks`
   1. `policysync` to `/var/snap/microk8s/current/var/run/nodeagent`
 - We enabled vxlan following the instructions in [the official docs.](https://docs.projectcalico.org/getting-started/kubernetes/installation/config-options#switching-from-ip-in-ip-to-vxlan)
-- The `liveness` and `readiness` probes of `bird-live` was commented out 
+- The `liveness` and `readiness` probes of `bird-live` was commented out
 - We set the IP autodetection method to
 
   ```dtd
@@ -114,7 +114,8 @@ The `calico.yaml` manifest is a slightly modified version of:
   ```
 - In the `cni_network_config` in the calico manifest we also set:
   ```dtd
-          "nodename_file_optional": true,
+          "log_file_path": "/var/snap/microk8s/common/var/log/calico/cni/cni.log",
+          "nodename_file": "/var/snap/microk8s/current/var/lib/calico/nodename",
   ```
 - The `mount-bpffs` pod is commented out. This disables eBPF support but allows the CNI to deploy inside an LXC container.
 - The bpffs mount is commented out:
@@ -126,7 +127,6 @@ The `calico.yaml` manifest is a slightly modified version of:
   end
 
   ```dtd
-
         - name: bpffs
           hostPath:
             path: /sys/fs/bpf
