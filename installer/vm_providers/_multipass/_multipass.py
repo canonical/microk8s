@@ -56,8 +56,9 @@ class Multipass(Provider):
         )
 
     def _launch(self, specs: Dict) -> None:
-        image = "18.04"
 
+        # prepare core launch setting
+        image = specs["image"]
         cpus = "{}".format(specs["cpu"])
         mem = "{}G".format(specs["mem"])
         disk = "{}G".format(specs["disk"])

@@ -89,7 +89,7 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  install         Installs MicroK8s. Use --cpu, --mem, --disk and --channel to configure your setup.
+  install         Installs MicroK8s. Use --cpu, --mem, --disk, --channel, and --image to configure your setup.
   uninstall       Removes MicroK8s"""
     click.echo(msg)
     commands = _get_microk8s_commands()
@@ -112,6 +112,7 @@ def _show_install_help():
       --mem      RAM in GB used by MicroK8s (default={definitions.DEFAULT_MEMORY_GB}, min={definitions.MIN_MEMORY_GB})
       --disk     Max volume in GB of the dynamically expandable hard disk to be used (default={definitions.DEFAULT_DISK_GB}, min={definitions.MIN_DISK_GB})
       --channel  Kubernetes version to install (default={definitions.DEFAULT_CHANNEL})
+      --image    Ubuntu version to install (default={definitions.DEFAULT_IMAGE})
       -y, --assume-yes  Automatic yes to prompts"""  # noqa
     Echo.info(msg)
 
@@ -156,6 +157,7 @@ def install(args) -> None:
     parser.add_argument("--mem", default=definitions.DEFAULT_MEMORY_GB, type=memory)
     parser.add_argument("--disk", default=definitions.DEFAULT_DISK_GB, type=disk)
     parser.add_argument("--channel", default=definitions.DEFAULT_CHANNEL, type=str)
+    parser.add_argument("--image", default=definitions.DEFAULT_IMAGE, type=str)
     parser.add_argument(
         "-y", "--assume-yes", action="store_true", default=definitions.DEFAULT_ASSUME
     )
