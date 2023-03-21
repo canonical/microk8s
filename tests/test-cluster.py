@@ -413,6 +413,7 @@ class TestCluster(object):
 
         # Wait for nodes to be ready
         print("Waiting for node to register")
+        time.sleep(10)
         attempt = 0
         while attempt < 10:
             try:
