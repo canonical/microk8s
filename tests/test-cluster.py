@@ -451,7 +451,7 @@ class TestCluster(object):
                 print(connected_nodes.decode())
                 if (
                     "NotReady" in connected_nodes.decode()
-                    and vm.vm_name in connected_nodes.decode()
+                    or vm.vm_name not in connected_nodes.decode()
                 ):
                     time.sleep(5)
                     continue
