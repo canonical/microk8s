@@ -4,7 +4,7 @@
 !include "Sections.nsh"
 
 !define PRODUCT_NAME "MicroK8s"
-!define PRODUCT_VERSION "2.3.0"
+!define PRODUCT_VERSION "2.3.2"
 !define PRODUCT_PUBLISHER "Canonical"
 !define MUI_ICON ".\microk8s.ico"
 !define MUI_HEADERIMAGE
