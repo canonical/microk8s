@@ -192,7 +192,9 @@ skip_opt_in_local_config() {
     # argument $2 is the configuration file under $SNAP_DATA/args
     local opt="--$1"
     local config_file="$SNAP_DATA/args/$2"
-    run_with_sudo "${SNAP}/bin/sed" -i '/'"$opt"'/d' "${config_file}"
+
+    # regex is "$opt[= ]", otherwise we remove all arguments with the same prefix
+    run_with_sudo "${SNAP}/bin/sed" -i '/'"$opt[= ]"'/d' "${config_file}"
 }
 
 
