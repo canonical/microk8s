@@ -533,21 +533,22 @@ class TestUpgradeCluster(object):
                         if attempt == 10:
                             raise
 
-            track, _ = channel_to_test.split("/")
-            if track == "latest":
-                track = last_stable_str
+            track = []
+            track = channel_to_test.split("/")
+            if track[0] == "latest":
+                track[0] = last_stable_str
 
             # For eksd and stable tracks, we need a previous version on these tracks.
             # Eg, to test 1.24-eksd, we need 1.23-eksd track.
-            major = track.split(".")[0]
-            minor = track.split(".")[1].split("-")[0]
-            branch = track.split("-")[1] if len(track.split("-")) > 1 else ""
+            major = track[0].split(".")[0]
+            minor = track[0].split(".")[1].split("-")[0]
+            branch = track[0].split("-")[1] if len(track[0].split("-")) > 1 else ""
 
             if minor == "0" and major >= "1":
                 major = str(int(major) - 1)
                 minor = "9"
             else:
-                if "-" in track:
+                if "-" in track[0]:
                     minor = str(int(minor.split("-")[0]) - 1)
                 else:
                     minor = str(int(minor) - 1)
