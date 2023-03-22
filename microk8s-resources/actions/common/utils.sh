@@ -563,13 +563,11 @@ get_default_ip() {
 
 get_ips() {
     local IP_ADDR="$($SNAP/bin/hostname -I | sed 's/169\.254\.[0-9]\{1,3\}\.[0-9]\{1,3\}//g')"
-    # CNI_IPS is an associative array of IPs managed by the CNI of the machine.
-    declare -A CNI_IPS
-
     # Retrieve all IPs from CNI interfaces. These will need to be ignored.
+    CNI_IPS=""
     for CNI_INTERFACE in vxlan.calico flannel.1 cni0; do
         CNI_IP="$($SNAP/sbin/ip -o -4 addr list "$CNI_INTERFACE" 2>/dev/null | $SNAP/bin/grep -v 'inet 169.254' | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
-        [ ! -z "${CNI_IP}" ] && CNI_IPS[$CNI_IP]="1"
+        CNI_IPS="/$CNI_IP/$CNI_IPS"
     done
 
     if [[ -z "$IP_ADDR" ]]; then
@@ -578,7 +576,7 @@ get_ips() {
         local ips="";
         for ip in $IP_ADDR; do
             # Append IP address only iff not in cni IP addresses
-            [ -z "${CNI_IPS[$ip]}" ] && ips+="${ips:+ }$ip";
+            (echo "$CNI_IPS" | grep -q "/$ip/") || ips+="${ips:+ }$ip";
         done
         echo "$ips"
     fi
