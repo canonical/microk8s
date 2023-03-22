@@ -40,7 +40,7 @@ if [ ! -z "$etcd_endpoints" ]; then
   if ! "${SNAP}/etcdctl" --endpoints "${etcd_endpoints}" --cert "${cert_file}" --key "${key_file}" --cacert "${ca_file}" del "/coreos.com/network/config"; then
     echo "/coreos.com/network/config is not in etcd. Probably a first time run."
   fi
-  "${SNAP}/etcdctl" --endpoints "${etcd_endpoints}" --cert "${cert_file}" --key "${key_file}" --cacert "${ca_file}" set "/coreos.com/network/config" "$data"
+  "${SNAP}/etcdctl" --endpoints "${etcd_endpoints}" --cert "${cert_file}" --key "${key_file}" --cacert "${ca_file}" put "/coreos.com/network/config" "$data"
 fi
 
 # This is really the only way I could find to get the args passed in correctly.
