@@ -43,6 +43,13 @@ if [ ! -z "$etcd_endpoints" ]; then
   "${SNAP}/etcdctl" --endpoints "${etcd_endpoints}" --cert "${cert_file}" --key "${key_file}" --cacert "${ca_file}" put "/coreos.com/network/config" "$data"
 fi
 
+set -a
+if [ -e "${SNAP_DATA}/args/flanneld-env" ]
+then
+  . "${SNAP_DATA}/args/flanneld-env"
+fi
+set +a
+
 # This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/flanneld))"
 if ! is_strict
