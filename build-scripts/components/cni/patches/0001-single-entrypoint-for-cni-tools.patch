@@ -1,11 +1,11 @@
-From 91f16e8232437292eab8308250ca5d73ea9c4753 Mon Sep 17 00:00:00 2001
-From: Angelos Kolaitis <neoaggelos@gmail.com>
-Date: Fri, 22 Jul 2022 18:41:36 +0300
+From 3d0636d0ad86c9050da190b50bc01387d71dc80a Mon Sep 17 00:00:00 2001
+From: MicroK8s builder bot <microk8s-builder-bot@canonical.com>
+Date: Sun, 12 Feb 2023 13:34:45 +0000
 Subject: [PATCH] single entrypoint for cni tools
 
 ---
- cni.go | 56 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+ cni.go | 54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
  create mode 100644 cni.go
 
 diff --git a/cni.go b/cni.go
@@ -13,7 +13,7 @@ new file mode 100644
 index 0000000..93828f9
 --- /dev/null
 +++ b/cni.go
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,54 @@
 +package main
 +
 +import (
@@ -35,7 +35,6 @@ index 0000000..93828f9
 +	main_vlan "github.com/containernetworking/plugins/plugins/main/vlan"
 +
 +	meta_bandwidth "github.com/containernetworking/plugins/plugins/meta/bandwidth"
-+	meta_flannel "github.com/containernetworking/plugins/plugins/meta/flannel"
 +	meta_firewall "github.com/containernetworking/plugins/plugins/meta/firewall"
 +	meta_portmap "github.com/containernetworking/plugins/plugins/meta/portmap"
 +	meta_sbr "github.com/containernetworking/plugins/plugins/meta/sbr"
@@ -63,12 +62,11 @@ index 0000000..93828f9
 +	reexec.Register("ptp", main_ptp.Main)
 +	reexec.Register("vlan", main_vlan.Main)
 +	reexec.Register("bandwidth", meta_bandwidth.Main)
-+	reexec.Register("flannel", meta_flannel.Main)
 +	reexec.Register("firewall", meta_firewall.Main)
 +	reexec.Register("portmap", meta_portmap.Main)
 +	reexec.Register("sbr", meta_sbr.Main)
 +	reexec.Register("tuning", meta_tuning.Main)
 +	reexec.Register("vrf", meta_vrf.Main)
 +}
---
+-- 
 2.25.1

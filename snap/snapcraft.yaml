@@ -94,6 +94,12 @@ parts:
     source: build-scripts/components/cni
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cni
 
+  flannel-cni-plugin:
+    after: [build-deps]
+    plugin: nil
+    source: build-scripts/components/flannel-cni-plugin
+    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flannel-cni-plugin
+
   flanneld:
     after: [build-deps]
     plugin: nil

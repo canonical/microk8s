@@ -1,0 +1,11 @@
+#!/bin/bash
+
+INSTALL="${1}/opt/cni/bin"
+mkdir -p "${INSTALL}"
+
+VERSION="${2}"
+
+export CGO_ENABLED=0
+go build -o dist/flannel -ldflags "-s -w -X github.com/flannel-io/cni-plugin/version.Version=${VERSION} -extldflags -static"
+
+cp dist/flannel "${INSTALL}/flannel"

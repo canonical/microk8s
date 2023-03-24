@@ -71,7 +71,7 @@ fi
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
 # and make sure the respective services use them.
-# Without this patch the user would have to remove and reainstall microk8s.
+# Without this patch the user would have to remove and reinstall microk8s.
 # This patch can be removed at a later stage.
 # TODO(neoaggelos): investigate if this is needed
 if [ ! -d ${SNAP_DATA}/certs ] && grep -e "\-\-client-ca-file=\${SNAP}/certs/ca.crt" ${SNAP_DATA}/args/kube-apiserver
@@ -408,20 +408,21 @@ then
   try_copy_users_to_snap_microk8s
 fi
 
+# as only one cni bin dir can be used we will use the one in SNAP_DATA but have links to
+# the real CNI plugins we distribute in SNAP
+mkdir -p "${SNAP_DATA}/opt/cni/bin/"
+(
+  cd "${SNAP}/opt/cni/bin/"
+  MY_SNAP_DIR=$(dirname "${SNAP}")
+  for i in *; do ln -sf "${MY_SNAP_DIR}/current/opt/cni/bin/$i" "${SNAP_DATA}/opt/cni/bin/${i}"; done
+)
+
 if ! [ -e "${SNAP_DATA}/opt/cni/bin/flanneld" ]
 then
   # cover situation where cilium was installed prior to this update
   if [ -f "${SNAP_DATA}/opt/cni/bin/loopback" ] && [ -f "${SNAP}/opt/cni/bin/loopback" ]; then
     rm -f "${SNAP_DATA}/opt/cni/bin/loopback"
   fi
-  # as only one cni bin dir can be used we will use the one in SNAP_DATA but have links to
-  # the real CNI plugins we distribute in SNAP
-  mkdir -p "${SNAP_DATA}/opt/cni/bin/"
-  (
-    cd "${SNAP}/opt/cni/bin/"
-    MY_SNAP_DIR=$(dirname "${SNAP}")
-    for i in *; do ln -s "${MY_SNAP_DIR}/current/opt/cni/bin/$i" "${SNAP_DATA}/opt/cni/bin/${i}"; done
-  )
 fi
 
 if ! [ -f "${SNAP_DATA}/args/flanneld" ]

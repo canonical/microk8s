@@ -1,6 +1,6 @@
-From 1be61878980de11932c1efc7cf4652904dfc3515 Mon Sep 17 00:00:00 2001
+From 45ec777a0d113089453eca7fd2f7cb195555c6c9 Mon Sep 17 00:00:00 2001
 From: MicroK8s builder bot <microk8s-builder-bot@canonical.com>
-Date: Mon, 1 Aug 2022 18:31:03 +0300
+Date: Wed, 15 Feb 2023 15:52:51 +0000
 Subject: [PATCH] disable udp backend
 
 ---
@@ -8,18 +8,17 @@ Subject: [PATCH] disable udp backend
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/main.go b/main.go
-index 4fd8f7f..0b3cc1c 100644
+index 064f58d..b591458 100644
 --- a/main.go
 +++ b/main.go
-@@ -55,7 +55,7 @@ import (
- 	_ "github.com/flannel-io/flannel/backend/ipip"
- 	_ "github.com/flannel-io/flannel/backend/ipsec"
- 	_ "github.com/flannel-io/flannel/backend/tencentvpc"
--	_ "github.com/flannel-io/flannel/backend/udp"
-+	// _ "github.com/flannel-io/flannel/backend/udp"
- 	_ "github.com/flannel-io/flannel/backend/vxlan"
+@@ -50,7 +50,7 @@ import (
+ 	_ "github.com/flannel-io/flannel/pkg/backend/ipip"
+ 	_ "github.com/flannel-io/flannel/pkg/backend/ipsec"
+ 	_ "github.com/flannel-io/flannel/pkg/backend/tencentvpc"
+-	_ "github.com/flannel-io/flannel/pkg/backend/udp"
++	// _ "github.com/flannel-io/flannel/pkg/backend/udp"
+ 	_ "github.com/flannel-io/flannel/pkg/backend/vxlan"
+ 	_ "github.com/flannel-io/flannel/pkg/backend/wireguard"
  )
- 
 -- 
-2.34.1
-
+2.25.1
