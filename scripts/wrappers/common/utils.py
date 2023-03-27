@@ -146,6 +146,35 @@ def get_dqlite_info():
     return info
 
 
+def get_etcd_info():
+    kube_apiserver_args = os.path.expandvars("${SNAP_DATA}/args/kube-apiserver")
+    with open(kube_apiserver_args, "r") as f:
+        kube_apiserver_args_content = f.read()
+        etcd_endpoints = []
+        for line in kube_apiserver_args_content.split("\n"):
+            if "etcd-servers" in line:
+                # list all etcd endpointss
+                for endpoint in line.split("=")[1].split(","):
+                    ip_port = endpoint.split("//")[1]
+                    etcd_endpoints.append(ip_port)
+                break
+
+    return etcd_endpoints
+
+
+def is_external_etcd():
+    external_etcd = 0
+    kube_apiserver_args = os.path.expandvars("${SNAP_DATA}/args/kube-apiserver")
+    with open(kube_apiserver_args, "r") as f:
+        kube_apiserver_args_content = f.read()
+        for line in kube_apiserver_args_content.split("\n"):
+            # All these variables should be present for an external etcd config
+            if "external-etcd" or "etcd-cafile" or "etcd-certfile" or "etcd-keyfile" in line:
+                external_etcd += 1
+
+    return external_etcd == 4
+
+
 def is_cluster_locked():
     if (snap_data() / "var/lock/clustered.lock").exists():
         click.echo("This MicroK8s deployment is acting as a node in a cluster.")
