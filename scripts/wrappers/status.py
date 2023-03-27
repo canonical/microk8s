@@ -72,8 +72,6 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
                 for endpoint in etcd_endpoints:
                     print("{:>3}{}".format("", endpoint))
 
-
-
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
             print("{:>2}{}".format("", "enabled:"))
