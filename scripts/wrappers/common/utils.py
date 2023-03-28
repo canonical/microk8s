@@ -153,7 +153,7 @@ def get_etcd_info():
         etcd_endpoints = []
         for line in kube_apiserver_args_content.split("\n"):
             if "etcd-servers" in line:
-                server_url = get_argumets(line)
+                server_url = get_server_urls(line)
                 # list all etcd endpointss
                 for endpoint in server_url.split(","):
                     if "//" in endpoint:
@@ -164,15 +164,15 @@ def get_etcd_info():
     return etcd_endpoints
 
 
-def get_argumets(etcd_servers_arg):
+def get_server_urls(args):
     server_url = None
-    parts = etcd_servers_arg.split("=")
+    parts = args.split("=")
     if len(parts) == 2:
         # Argument has an equals sign, e.g. "--etcd-servers=http://10.0.0.1:2379"
         server_url = parts[1]
     elif len(parts) == 1:
         # Argument has a space, e.g. "--etcd-servers http://10.0.0.1:2379"
-        server_url = etcd_servers_arg.split("--etcd-servers")[1].strip()
+        server_url = args.split("--etcd-servers")[1].strip()
     return server_url
 
 
