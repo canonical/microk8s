@@ -67,9 +67,9 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
             print("{:>2}{} {}".format("", "datastore master nodes:", masters))
             print("{:>2}{} {}".format("", "datastore standby nodes:", standby))
         elif etcd_endpoints:
-                print("{:>2}{}".format("", "datastore endpoints:"))
-                for endpoint in etcd_endpoints:
-                    print("{:>3}{}".format("", endpoint))
+            print("{:>2}{}".format("", "datastore endpoints:"))
+            for endpoint in etcd_endpoints:
+                print("{:>3}{}".format("", endpoint))
 
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
