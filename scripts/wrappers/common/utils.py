@@ -153,28 +153,37 @@ def get_etcd_info():
         etcd_endpoints = []
         for line in kube_apiserver_args_content.split("\n"):
             if "etcd-servers" in line:
+                server_url = get_argumets(line)
                 # list all etcd endpointss
-                if "=" in line:
-                    for endpoint in line.split("=")[1].split(","):
-                        if "//" in endpoint:
-                            ip_port = endpoint.split("//")[1]
-                            etcd_endpoints.append(ip_port)
-                    break
+                for endpoint in server_url.split(","):
+                    if "//" in endpoint:
+                        ip_port = endpoint.split("//")[1]
+                        etcd_endpoints.append(ip_port)
+                break
 
     return etcd_endpoints
 
 
+def get_argumets(etcd_servers_arg):
+    server_url = None
+    parts = etcd_servers_arg.split("=")
+    if len(parts) == 2:
+        # Argument has an equals sign, e.g. "--etcd-servers=http://10.0.0.1:2379"
+        server_url = parts[1]
+    elif len(parts) == 1:
+        # Argument has a space, e.g. "--etcd-servers http://10.0.0.1:2379"
+        server_url = etcd_servers_arg.split("--etcd-servers")[1].strip()
+    return server_url
+
+
 def is_external_etcd():
-    external_etcd = True
     kube_apiserver_args = os.path.expandvars("${SNAP_DATA}/args/kube-apiserver")
     with open(kube_apiserver_args, "r") as f:
         kube_apiserver_args_content = f.read()
         for line in kube_apiserver_args_content.split("\n"):
             if "var/kubernetes/backend/kine.sock" in line:
-                external_etcd = False
-                break
-
-    return external_etcd
+                return False
+    return True
 
 
 def is_cluster_locked():
