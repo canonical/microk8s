@@ -154,10 +154,12 @@ def get_etcd_info():
         for line in kube_apiserver_args_content.split("\n"):
             if "etcd-servers" in line:
                 # list all etcd endpointss
-                for endpoint in line.split("=")[1].split(","):
-                    ip_port = endpoint.split("//")[1]
-                    etcd_endpoints.append(ip_port)
-                break
+                if "=" in line:
+                    for endpoint in line.split("=")[1].split(","):
+                        if "//" in endpoint:
+                            ip_port = endpoint.split("//")[1]
+                            etcd_endpoints.append(ip_port)
+                    break
 
     return etcd_endpoints
 
