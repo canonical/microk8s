@@ -39,7 +39,7 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
         etcd_endpoints = get_etcd_info()
         if not is_ha_enabled():
             print("high-availability: no")
-            if len(etcd_endpoints) > 0:
+            if etcd_endpoints:
                 print("{:>2}{}".format("", "datastore endpoints:"))
                 for endpoint in etcd_endpoints:
                     print("{:>3}{}".format("", endpoint))
@@ -67,7 +67,7 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
             print("{:>2}{} {}".format("", "datastore master nodes:", masters))
             print("{:>2}{} {}".format("", "datastore standby nodes:", standby))
         else:
-            if len(etcd_endpoints) > 0:
+            if etcd_endpoints:
                 print("{:>2}{}".format("", "datastore endpoints:"))
                 for endpoint in etcd_endpoints:
                     print("{:>3}{}".format("", endpoint))

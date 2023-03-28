@@ -163,16 +163,16 @@ def get_etcd_info():
 
 
 def is_external_etcd():
-    external_etcd = 0
+    external_etcd = True
     kube_apiserver_args = os.path.expandvars("${SNAP_DATA}/args/kube-apiserver")
     with open(kube_apiserver_args, "r") as f:
         kube_apiserver_args_content = f.read()
         for line in kube_apiserver_args_content.split("\n"):
-            # All these variables should be present for an external etcd config
-            if "external-etcd" or "etcd-cafile" or "etcd-certfile" or "etcd-keyfile" in line:
-                external_etcd += 1
+            if "var/kubernetes/backend/kine.sock" in line:
+                external_etcd = False
+                break
 
-    return external_etcd == 4
+    return external_etcd
 
 
 def is_cluster_locked():
