@@ -419,7 +419,7 @@ class TestCluster(object):
                 connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
                 if (
                     "NotReady" in connected_nodes.decode()
-                    and vm.vm_name not in connected_nodes.decode()
+                    or vm.vm_name not in connected_nodes.decode()
                 ):
                     time.sleep(5)
                     continue
