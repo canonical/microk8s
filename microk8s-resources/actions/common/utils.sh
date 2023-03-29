@@ -570,7 +570,7 @@ get_ips() {
     local IP_ADDR="$($SNAP/bin/hostname -I | sed 's/169\.254\.[0-9]\{1,3\}\.[0-9]\{1,3\}//g')"
     # Retrieve all IPs from CNI interfaces. These will need to be ignored.
     CNI_IPS=""
-    for CNI_INTERFACE in vxlan.calico flannel.1 cni0; do
+    for CNI_INTERFACE in vxlan.calico flannel.1 cni0 ovn0; do
         CNI_IP="$($SNAP/sbin/ip -o -4 addr list "$CNI_INTERFACE" 2>/dev/null | $SNAP/bin/grep -v 'inet 169.254' | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
         CNI_IPS="/$CNI_IP/$CNI_IPS"
     done
