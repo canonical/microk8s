@@ -442,7 +442,7 @@ class TestCluster(object):
                 connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
                 if (
                     "NotReady" in connected_nodes.decode()
-                    and vm.vm_name in connected_nodes.decode()
+                    or vm.vm_name not in connected_nodes.decode()
                 ):
                     time.sleep(5)
                     continue
@@ -533,7 +533,7 @@ class TestUpgradeCluster(object):
                         if attempt == 10:
                             raise
 
-            track, _ = channel_to_test.split("/")
+            track, *_ = channel_to_test.split("/")
             if track == "latest":
                 track = last_stable_str
 
