@@ -460,13 +460,9 @@ class TestCluster(object):
             try:
                 connected_nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
                 print(connected_nodes.decode())
-                if (
-                    "NotReady" in connected_nodes.decode()
-                    and vm.vm_name in connected_nodes.decode()
-                ):
+                if "NotReady" in connected_nodes.decode() or vm.vm_name in connected_nodes.decode():
                     time.sleep(5)
                     continue
-                print(connected_nodes.decode())
                 break
             except ChildProcessError:
                 time.sleep(10)
