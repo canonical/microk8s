@@ -19,7 +19,8 @@ parts:
   build-deps:
     plugin: nil
     override-build: |
-      snap install go --classic --channel 1.19/stable
+      snap install go --classic --channel 1.20/stable
+      snap refresh go --channel 1.20/stable
     build-packages:
       - autoconf
       - automake
