@@ -223,6 +223,19 @@ then
     need_kubelet_restart=true
 fi
 
+if is_ec2_instance
+then
+  INSTANCE_ID=$(curl -sS -m 5 http://169.254.169.254/latest/meta-data/instance-id || true)
+  A_ZONE=$(curl -sS -m 5 http://169.254.169.254/latest/meta-data/placement/availability-zone || true)
+  if [[ ! -z "$INSTANCE_ID" ]] && [[ ! -z "$A_ZONE" ]]
+  then
+    sed -i -n -e '/^--provider-id /!p' -e "\$a--provider-id aws:///$A_ZONE/$INSTANCE_ID" ${SNAP_DATA}/args/kubelet
+    cp -r --preserve=mode ${SNAP}/default-hooks/reconcile.d/10-provider-id-update ${SNAP_COMMON}/hooks/reconcile.d/
+    touch "${SNAP_DATA}/var/lock/providerid-needs-update"
+    need_kubelet_restart=true
+  fi
+fi
+
 # With v1.15 allow-privileged is removed from kubelet
 if grep -e "\-\-allow-privileged" ${SNAP_DATA}/args/kubelet
 then
