@@ -682,6 +682,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     """
     service("stop", "apiserver")
     service("stop", "k8s-dqlite")
+    # will allow for apiservice-kicker to generate new certificates @5s loop rate
     time.sleep(10)
     shutil.rmtree(cluster_backup_dir, ignore_errors=True)
     shutil.move(cluster_dir, cluster_backup_dir)
@@ -726,9 +727,6 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
             time.sleep(2)
             waits -= 1
     print(" ")
-
-    with open("{}//certs/csr.conf".format(snapdata_path), "w") as f:
-        f.write("changeme")
 
     restart_all_services()
 
@@ -912,6 +910,24 @@ def join_etcd(connection_parts, verify=True):
     mark_no_cert_reissue()
 
 
+def mark_join_in_progress():
+    """
+    Mark node as currently being in the process of joining a cluster.
+    """
+    lock_file = "{}/var/lock/join-in-progress".format(snapdata_path)
+    open(lock_file, "a").close()
+    os.chmod(lock_file, 0o700)
+
+
+def unmark_join_in_progress():
+    """
+    Unmark as joining cluster; join operation has finished.
+    """
+    lock_file = "{}/var/lock/join-in-progress".format(snapdata_path)
+    if os.path.exists(lock_file):
+        os.unlink(lock_file)
+
+
 @click.command(
     context_settings={"ignore_unknown_options": True, "help_option_names": ["-h", "--help"]}
 )
@@ -969,10 +985,14 @@ If you would still like to join the cluster as a control plane node, use:
         )
         sys.exit(1)
 
+    mark_join_in_progress()
+
     if is_node_running_dqlite():
         join_dqlite(connection_parts, verify, worker)
     else:
         join_etcd(connection_parts, verify)
+
+    unmark_join_in_progress()
     sys.exit(0)
 
 
