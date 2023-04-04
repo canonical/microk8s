@@ -134,7 +134,7 @@ def backup_old_cni(cni_file):
     shutil.copyfile(cni_file, backup_cni_file)
 
 
-def try_upgrade(cni_file, new_cni_file, cni_no_manage):
+def try_upgrade(cni_file, new_cni_file, cni_no_manage=None):
     """
     Perform the upgrade if possible.
 
@@ -142,7 +142,7 @@ def try_upgrade(cni_file, new_cni_file, cni_no_manage):
     """
 
     # If cni auto management is disabled by lock file do nothing
-    if os.path.exists(cni_no_manage):
+    if cni_no_manage is not None and os.path.exists(cni_no_manage):
         return False
 
     # If cni files are not in place do nothing
