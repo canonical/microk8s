@@ -42,7 +42,7 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
             if etcd_endpoints:
                 print("{:>2}{}".format("", "datastore endpoints:"))
                 for endpoint in etcd_endpoints:
-                    print("{:>3}{}".format("", endpoint))
+                    print("{:>4}{}".format("", endpoint))
         elif not is_external_etcd():
             info = get_dqlite_info()
             if ha_cluster_formed(info):
@@ -69,7 +69,7 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
         elif etcd_endpoints:
             print("{:>2}{}".format("", "datastore endpoints:"))
             for endpoint in etcd_endpoints:
-                print("{:>3}{}".format("", endpoint))
+                print("{:>4}{}".format("", endpoint))
 
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
