@@ -28,7 +28,7 @@ from common.cluster.utils import (
     mark_no_cert_reissue,
     restart_all_services,
     get_token,
-    get_cluster_cidr
+    get_cluster_cidr,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -765,12 +765,8 @@ def join_dqlite(connection_parts, verify=False, worker=False):
     cluster_cidr = get_cluster_cidr()
 
     if "cluster_cidr" in info and info["cluster_cidr"] != cluster_cidr:
-        print(
-            "Joining cluster failed. CIDR for the nodes does not match."
-        )
-        print(
-            f"Cluster CIDR: {info['cluster_cidr']} -- Node CIDR:  {cluster_cidr}"
-        )
+        print("Joining cluster failed. CIDR for the nodes does not match.")
+        print(f"Cluster CIDR: {info['cluster_cidr']} -- Node CIDR:  {cluster_cidr}")
         exit(4)
 
     if worker:
