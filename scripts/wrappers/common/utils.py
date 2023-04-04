@@ -146,6 +146,46 @@ def get_dqlite_info():
     return info
 
 
+def get_etcd_info():
+    kube_apiserver_args = os.path.expandvars("${SNAP_DATA}/args/kube-apiserver")
+    with open(kube_apiserver_args, "r") as f:
+        kube_apiserver_args_content = f.read()
+        etcd_endpoints = []
+        for line in kube_apiserver_args_content.split("\n"):
+            if "etcd-servers" in line:
+                server_url = get_server_urls(line)
+                # list all etcd endpointss
+                for endpoint in server_url.split(","):
+                    if "//" in endpoint:
+                        ip_port = endpoint.split("//")[1]
+                        etcd_endpoints.append(ip_port)
+                break
+
+    return etcd_endpoints
+
+
+def get_server_urls(args):
+    server_url = None
+    parts = args.split("=")
+    if len(parts) == 2:
+        # Argument has an equals sign, e.g. "--etcd-servers=http://10.0.0.1:2379"
+        server_url = parts[1]
+    elif len(parts) == 1:
+        # Argument has a space, e.g. "--etcd-servers http://10.0.0.1:2379"
+        server_url = args.split("--etcd-servers")[1].strip()
+    return server_url
+
+
+def is_external_etcd():
+    kube_apiserver_args = os.path.expandvars("${SNAP_DATA}/args/kube-apiserver")
+    with open(kube_apiserver_args, "r") as f:
+        kube_apiserver_args_content = f.read()
+        for line in kube_apiserver_args_content.split("\n"):
+            if "var/kubernetes/backend/kine.sock" in line:
+                return False
+    return True
+
+
 def is_cluster_locked():
     if (snap_data() / "var/lock/clustered.lock").exists():
         click.echo("This MicroK8s deployment is acting as a node in a cluster.")

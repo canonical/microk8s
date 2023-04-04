@@ -13,6 +13,8 @@ from common.utils import (
     get_current_arch,
     get_addon_by_name,
     get_status,
+    get_etcd_info,
+    is_external_etcd,
 )
 
 
@@ -34,9 +36,14 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
     console_formatter = "{:>3} {:<20} # ({}) {}"
     if isReady:
         print("microk8s is running")
+        etcd_endpoints = get_etcd_info()
         if not is_ha_enabled():
             print("high-availability: no")
-        else:
+            if etcd_endpoints:
+                print("{:>2}{}".format("", "datastore endpoints:"))
+                for endpoint in etcd_endpoints:
+                    print("{:>4}{}".format("", endpoint))
+        elif not is_external_etcd():
             info = get_dqlite_info()
             if ha_cluster_formed(info):
                 print("high-availability: yes")
@@ -59,6 +66,10 @@ def print_pretty(isReady, enabled_addons, disabled_addons):
 
             print("{:>2}{} {}".format("", "datastore master nodes:", masters))
             print("{:>2}{} {}".format("", "datastore standby nodes:", standby))
+        elif etcd_endpoints:
+            print("{:>2}{}".format("", "datastore endpoints:"))
+            for endpoint in etcd_endpoints:
+                print("{:>4}{}".format("", endpoint))
 
         print("addons:")
         if enabled_addons and len(enabled_addons) > 0:
