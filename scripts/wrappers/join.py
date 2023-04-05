@@ -772,7 +772,8 @@ def join_dqlite(connection_parts, verify=False, worker=False):
 
     if "cluster_cidr" in info and info["cluster_cidr"] != cluster_cidr:
         print(
-            "WARNING: Joining a cluster that has a different CIDR. The kube-proxy CIDR configuration will be overwritten."
+            "WARNING: Joining a cluster that has a different CIDR. "
+            "The kube-proxy CIDR configuration will be overwritten."
         )
         print(
             f"Cluster CIDR: {info['cluster_cidr']} -- Node CIDR: {cluster_cidr}(will be overwritten)"
@@ -920,7 +921,8 @@ def join_etcd(connection_parts, verify=True):
 
     if "cluster_cidr" in info and info["cluster_cidr"] != cluster_cidr:
         print(
-            "WARNING: Joining a cluster that has a different CIDR. The kube-proxy CIDR configuration will be overwritten."
+            "WARNING: Joining a cluster that has a different CIDR. "
+            "The kube-proxy CIDR configuration will be overwritten."
         )
         print(
             f"Cluster CIDR: {info['cluster_cidr']} -- Node CIDR: {cluster_cidr}(will be overwritten)"
