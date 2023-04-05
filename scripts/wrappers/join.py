@@ -445,6 +445,7 @@ def update_kubeproxy_cidr(cidr):
         set_arg("--cluster-cidr", cidr, "kube-proxy")
         service("restart", "proxy")
 
+
 def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     """
     Configure the kubelet
@@ -770,8 +771,12 @@ def join_dqlite(connection_parts, verify=False, worker=False):
     cluster_cidr = get_cluster_cidr()
 
     if "cluster_cidr" in info and info["cluster_cidr"] != cluster_cidr:
-        print("WARNING: Joining a cluster that has a different CIDR. The kube-proxy CIDR configuration will be overwritten.")
-        print(f"Cluster CIDR: {info['cluster_cidr']} -- Node CIDR: {cluster_cidr}(will be overwritten)")
+        print(
+            "WARNING: Joining a cluster that has a different CIDR. The kube-proxy CIDR configuration will be overwritten."
+        )
+        print(
+            f"Cluster CIDR: {info['cluster_cidr']} -- Node CIDR: {cluster_cidr}(will be overwritten)"
+        )
         update_kubeproxy_cidr(info["cluster_cidr"])
 
     if worker:
@@ -914,8 +919,12 @@ def join_etcd(connection_parts, verify=True):
     cluster_cidr = get_cluster_cidr()
 
     if "cluster_cidr" in info and info["cluster_cidr"] != cluster_cidr:
-        print("WARNING: Joining a cluster that has a different CIDR. The kube-proxy CIDR configuration will be overwritten.")
-        print(f"Cluster CIDR: {info['cluster_cidr']} -- Node CIDR: {cluster_cidr}(will be overwritten)")
+        print(
+            "WARNING: Joining a cluster that has a different CIDR. The kube-proxy CIDR configuration will be overwritten."
+        )
+        print(
+            f"Cluster CIDR: {info['cluster_cidr']} -- Node CIDR: {cluster_cidr}(will be overwritten)"
+        )
         update_kubeproxy_cidr(info["cluster_cidr"])
 
     store_base_kubelet_args(info["kubelet_args"])
