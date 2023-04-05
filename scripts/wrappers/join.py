@@ -26,7 +26,6 @@ from common.cluster.utils import (
     try_initialise_cni_autodetect_for_clustering,
     service,
     mark_no_cert_reissue,
-    restart_all_services,
     get_token,
 )
 
@@ -727,8 +726,6 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
             time.sleep(2)
             waits -= 1
     print(" ")
-
-    restart_all_services()
 
 
 def join_dqlite(connection_parts, verify=False, worker=False):
