@@ -48,7 +48,7 @@ fi
 
 app=containerd
 
-
+source "$SNAP/etc/configuration.sh"
 RUNTIME="runc"
 RUNTIME_TYPE="io.containerd.runc.v1"
 SNAPSHOTTER=$(snapshotter)
@@ -59,7 +59,7 @@ fi
 
 sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g;s@${SNAPSHOTTER}@'"${SNAPSHOTTER}"'@g;s@${RUNTIME}@'"${RUNTIME}"'@g' $SNAP_DATA/args/containerd-template.toml > $SNAP_DATA/args/containerd.toml
 sed -i 's@${RUNTIME_TYPE}@'"${RUNTIME_TYPE}"'@g' $SNAP_DATA/args/containerd.toml
-
+sed -i 's@${PAUSE_IMAGE}@'"${PAUSE_IMAGE}"'@g' $SNAP_DATA/args/containerd.toml
 
 run_flanneld="$(is_service_expected_to_start flanneld)"
 if [ "${run_flanneld}" == "1" ]

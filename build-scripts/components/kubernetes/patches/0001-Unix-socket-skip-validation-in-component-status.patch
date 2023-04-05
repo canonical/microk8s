@@ -1,4 +1,4 @@
-From 5914ae7825da97f69c45e23e03f0800c1f7c336f Mon Sep 17 00:00:00 2001
+From dd1db952eab13912a55207c81a2ac267909677ac Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Tue, 24 Aug 2021 11:17:19 +0300
 Subject: [PATCH] Unix socket skip validation in component status
@@ -8,10 +8,10 @@ Subject: [PATCH] Unix socket skip validation in component status
  1 file changed, 6 insertions(+)
 
 diff --git a/pkg/registry/core/rest/storage_core.go b/pkg/registry/core/rest/storage_core.go
-index 206e87e8909..b26012cbd71 100644
+index 1f915c32d4b..0bb7f1a9bf9 100644
 --- a/pkg/registry/core/rest/storage_core.go
 +++ b/pkg/registry/core/rest/storage_core.go
-@@ -401,6 +401,12 @@ func (s componentStatusStorage) serversToValidate() map[string]*componentstatus.
+@@ -350,6 +350,12 @@ func (s componentStatusStorage) serversToValidate() map[string]*componentstatus.
  			klog.Errorf("Failed to parse etcd url for validation: %v", err)
  			continue
  		}
@@ -25,5 +25,4 @@ index 206e87e8909..b26012cbd71 100644
  		var addr string
  		if strings.Contains(etcdUrl.Host, ":") {
 -- 
-2.34.1
-
+2.25.1
