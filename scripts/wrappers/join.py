@@ -700,7 +700,6 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
         yaml.dump(init_data, f)
 
     service("start", "k8s-dqlite")
-    service("start", "apiserver")
 
     waits = 10
     print("Waiting for this node to finish joining the cluster.", end=" ", flush=True)
@@ -726,6 +725,9 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
             time.sleep(2)
             waits -= 1
     print(" ")
+
+    # start kube-apiserver after dqlite comes up
+    service("start", "apiserver")
 
 
 def join_dqlite(connection_parts, verify=False, worker=False):
