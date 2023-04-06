@@ -26,7 +26,6 @@ from common.cluster.utils import (
     try_initialise_cni_autodetect_for_clustering,
     service,
     mark_no_cert_reissue,
-    restart_all_services,
     get_token,
 )
 
@@ -701,7 +700,6 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
         yaml.dump(init_data, f)
 
     service("start", "k8s-dqlite")
-    service("start", "apiserver")
 
     waits = 10
     print("Waiting for this node to finish joining the cluster.", end=" ", flush=True)
@@ -728,7 +726,8 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
             waits -= 1
     print(" ")
 
-    restart_all_services()
+    # start kube-apiserver after dqlite comes up
+    service("start", "apiserver")
 
 
 def join_dqlite(connection_parts, verify=False, worker=False):
