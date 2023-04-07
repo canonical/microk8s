@@ -32,14 +32,10 @@ function create_machine() {
 }
 
 function setup_tests() {
-  export DISTRO=$1
-  export FROM_CHANNEL=$2
-  export TO_CHANNEL=$3
-  export PROXY=""
-  if [ "$#" -ne 3 ]
-  then
-    export PROXY=$4
-  fi
+  DISTRO="${1-$DISTRO}"
+  FROM_CHANNEL="${2-$FROM_CHANNEL}"
+  TO_CHANNEL="${3-$TO_CHANNEL}"
+  PROXY="${4-$PROXY}"
 
   apt-get install python3-pip -y
   pip3 install -U pytest requests pyyaml sh
