@@ -134,12 +134,16 @@ def backup_old_cni(cni_file):
     shutil.copyfile(cni_file, backup_cni_file)
 
 
-def try_upgrade(cni_file, new_cni_file):
+def try_upgrade(cni_file, new_cni_file, cni_no_manage=None):
     """
     Perform the upgrade if possible.
 
     return: True if the CNI needs to be reloaded
     """
+
+    # If cni auto management is disabled by lock file do nothing
+    if cni_no_manage is not None and os.path.exists(cni_no_manage):
+        return False
 
     # If cni files are not in place do nothing
     if not (os.path.exists(cni_file) and os.path.exists(new_cni_file)):
@@ -182,11 +186,12 @@ def main():
     """
     cni_reapply_lock_file = os.path.expandvars("${SNAP_DATA}/var/lock/cni-loaded")
     cni_file = os.path.expandvars("${SNAP_DATA}/args/cni-network/cni.yaml")
+    cni_no_manage = os.path.expandvars("${SNAP_DATA}/var/lock/no-manage-calico")
     new_cni_file = os.path.expandvars(
         "${SNAP}/upgrade-scripts/000-switch-to-calico/resources/calico.yaml"
     )
 
-    if try_upgrade(cni_file, new_cni_file):
+    if try_upgrade(cni_file, new_cni_file, cni_no_manage):
         # we mark the CNI needs to be updated so the api service kicker will take over
         mark_apply_needed(cni_reapply_lock_file)
 

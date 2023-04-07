@@ -188,6 +188,18 @@ def get_cluster_agent_port():
     return cluster_agent_port
 
 
+def get_cluster_cidr():
+    snapdata_path = os.environ.get("SNAP_DATA")
+    filename = "{}/args/kube-proxy".format(snapdata_path)
+    with open(filename) as fp:
+        for _, line in enumerate(fp):
+            if line.startswith("--cluster-cidr"):
+                cidr_parse = line.split("=")
+                if len(cidr_parse) > 1:
+                    return cidr_parse[1].rstrip()
+    return ""
+
+
 def get_control_plane_nodes_internal_ips():
     """
     Return the internal IP of the nodes labeled running the control plane.

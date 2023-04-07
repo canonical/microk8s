@@ -18,6 +18,7 @@ class TestCNIUpgrade(object):
         self._calico_old_copy_yaml = os.path.join(dirname, "yamls/cni.yaml.copy")
         self._calico_old_copy_backup_yaml = os.path.join(dirname, "yamls/cni.yaml.copy.backup")
         self._lock_file = os.path.join(dirname, "yamls/lock_file")
+        self._cni_no_manage_file = os.path.join(dirname, "yamls/cni_no_manage")
 
     def test_no_op(self):
         """
@@ -29,6 +30,10 @@ class TestCNIUpgrade(object):
         assert res is False
         res = try_upgrade(self._invalid_yaml, self._calico_new_yaml)
         assert res is False
+        shutil.copyfile(self._invalid_yaml, self._cni_no_manage_file)
+        res = try_upgrade(self._calico_new_yaml, self._calico_new_yaml, self._cni_no_manage_file)
+        assert res is False
+        os.remove(self._cni_no_manage_file)
 
     def test_get_version(self):
         """
