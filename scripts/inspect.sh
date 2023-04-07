@@ -142,6 +142,9 @@ function store_kubernetes_info {
     sudo -E /snap/bin/microk8s kubectl get pv 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pv > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
     sudo -E /snap/bin/microk8s kubectl get pvc --all-namespaces 2>&1 | sudo tee $INSPECT_DUMP/k8s/get-pvc > /dev/null # 2>&1 redirects stderr and stdout to /dev/null if no resources found
   fi
+
+  # Collect bill of materials
+  cp $SNAP/bom.json $INSPECT_DUMP/bom.json
 }
 
 function check_storage_addon {
