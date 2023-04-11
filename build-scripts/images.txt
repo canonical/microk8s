@@ -4,6 +4,6 @@ docker.io/calico/node:v3.23.5
 docker.io/cdkbot/hostpath-provisioner:1.4.2
 docker.io/library/busybox:1.28.4
 k8s.gcr.io/ingress-nginx/controller:v1.5.1
-public.ecr.aws/eks-distro/coredns/coredns:v1.8.7-eks-1-24-8
-public.ecr.aws/eks-distro/kubernetes-sigs/metrics-server:v0.6.2-eks-1-24-8
-public.ecr.aws/eks-distro/kubernetes/pause:v1.24.9-eks-1-24-8
+public.ecr.aws/eks-distro/coredns/coredns:v1.8.7-eks-1-24-14
+public.ecr.aws/eks-distro/kubernetes-sigs/metrics-server:v0.6.3-eks-1-24-14
+public.ecr.aws/eks-distro/kubernetes/pause:v1.24.12-eks-1-24-14
