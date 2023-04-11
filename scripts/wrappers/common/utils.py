@@ -517,12 +517,6 @@ def unprotected_xable(action: str, addon_args: list):
     :param addons: List of addons to enable. Each addon may be prefixed with `repository/`
                    to specify which addon repository it will be sourced from.
     """
-    if len(addon_args) > 1:
-        click.echo(
-            "WARNING: Do not enable or disable multiple addons in one command.\n"
-            "         This form of chained operations on addons will be DEPRECATED in the future.\n"
-            f"         Please, {action} one addon at a time: 'microk8s {action} <addon>'"
-        )
     available_addons_info = get_available_addons(get_current_arch())
     enabled_addons_info, disabled_addons_info = get_status(available_addons_info, True)
     if action == "enable":
@@ -539,6 +533,12 @@ def unprotected_xable(action: str, addon_args: list):
     xabled_addons = [(addon["repository"], addon["name"]) for addon in xabled_addons_info]
 
     addons = parse_xable_addon_args(addon_args, available_addons)
+    if len(addons) > 1:
+        click.echo(
+            "WARNING: Do not enable or disable multiple addons in one command.\n"
+            "         This form of chained operations on addons will be DEPRECATED in the future.\n"
+            f"         Please, {action} one addon at a time: 'microk8s {action} <addon>'"
+        )
 
     for repo_name, addon_name, args in addons:
         if (repo_name, addon_name) not in available_addons:
