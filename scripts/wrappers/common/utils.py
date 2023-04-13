@@ -484,7 +484,7 @@ def protected_xable(action: str, addon_args: list):
     Ensure that the lock file is always unlocked on exit.
     """
 
-    lock_file_path = snap_common() / ".microk8s-addon-lock"
+    lock_file_path = snap_data() / "var/lock/.microk8s-addon-lock"
     with open(lock_file_path, "w") as f:
         # set file permissions so non-root users do not fail
         try:
