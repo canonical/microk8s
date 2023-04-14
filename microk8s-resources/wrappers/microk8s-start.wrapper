@@ -53,7 +53,7 @@ else
     if run_with_sudo test -e ${SNAP_DATA}/var/lock/stopped.lock
     then
         # Mark the api server as starting
-        run_with_sudo rm ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
+        run_with_sudo rm -f ${SNAP_DATA}/var/lock/stopped.lock &> /dev/null
     fi
 fi
 
