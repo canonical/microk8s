@@ -195,11 +195,12 @@ def is_cluster_locked():
 
 def wait_for_ready(timeout, with_ready_node=True):
     start_time = time.time()
+    end_time = start_time + timeout
 
     while True:
         if is_cluster_ready(with_ready_node=with_ready_node):
             return True
-        elif timeout and time.time() > start_time + timeout:
+        elif timeout and time.time() > end_time:
             return False
         else:
             time.sleep(2)

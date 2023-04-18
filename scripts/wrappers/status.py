@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import argparse
+import sys
 
 from common.utils import (
     exit_if_no_permission,
@@ -208,26 +209,29 @@ if __name__ == "__main__":
     yaml_short = args.yaml
 
     if wait_ready:
-        isReady = wait_for_ready(timeout)
+        is_ready = wait_for_ready(timeout)
+        if not is_ready:
+            print("Cluster is not ready after {} seconds.".format(timeout))
+            sys.exit(1)
     else:
-        isReady = is_cluster_ready()
+        is_ready = is_cluster_ready()
 
     available_addons = get_available_addons(get_current_arch())
 
     if args.addon != "all":
         available_addons = get_addon_by_name(available_addons, args.addon)
 
-    enabled, disabled = get_status(available_addons, isReady)
+    enabled, disabled = get_status(available_addons, is_ready)
 
     if args.addon != "all":
         print_addon_status(enabled)
     else:
         if args.format == "yaml":
-            print_yaml(isReady, enabled, disabled)
+            print_yaml(is_ready, enabled, disabled)
         elif args.format == "short":
-            print_short(isReady, enabled, disabled)
+            print_short(is_ready, enabled, disabled)
         else:
             if yaml_short:
-                print_short_yaml(isReady, enabled, disabled)
+                print_short_yaml(is_ready, enabled, disabled)
             else:
-                print_pretty(isReady, enabled, disabled)
+                print_pretty(is_ready, enabled, disabled)
