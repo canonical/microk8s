@@ -211,7 +211,6 @@ if __name__ == "__main__":
     if wait_ready:
         is_ready = wait_for_ready(timeout)
         if not is_ready:
-            print("Cluster is not ready after {} seconds.".format(timeout))
             sys.exit(1)
     else:
         is_ready = is_cluster_ready()
