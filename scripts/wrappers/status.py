@@ -210,8 +210,6 @@ if __name__ == "__main__":
 
     if wait_ready:
         is_ready = wait_for_ready(timeout)
-        if not is_ready:
-            sys.exit(1)
     else:
         is_ready = is_cluster_ready()
 
@@ -234,3 +232,6 @@ if __name__ == "__main__":
                 print_short_yaml(is_ready, enabled, disabled)
             else:
                 print_pretty(is_ready, enabled, disabled)
+
+    if not is_ready:
+        sys.exit(1)
