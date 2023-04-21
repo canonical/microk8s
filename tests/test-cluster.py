@@ -8,6 +8,10 @@ import requests
 import signal
 import subprocess
 from os import path
+from utils import (
+    is_strict,
+)
+
 
 # Provide a list of VMs you want to reuse. VMs should have already microk8s installed.
 # the test will attempt a refresh to the channel requested for testing
@@ -281,6 +285,10 @@ class TestCluster(object):
                 assert False
             print("Calico found in node {}".format(vm.vm_name))
 
+    @pytest.mark.skipif(
+        is_strict(),
+        reason="Skipping because calico interfaces are not removed on strict",
+    )
     def test_calico_interfaces_removed_on_snap_remove(self):
         """
         Test that calico interfaces are not present on the node
@@ -591,6 +599,10 @@ class TestUpgradeCluster(object):
                     print("Releasing machine {} in {}".format(vm.vm_name, vm.backend))
                     vm.release()
 
+    @pytest.mark.skipif(
+        is_strict() and backend == "lxc",
+        reason="Skipping test of multi-version cluster on strict and lxc",
+    )
     def test_mixed_version_join(self):
         """
         Test n versioned node joining a n-1 versioned cluster.
