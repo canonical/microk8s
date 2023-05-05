@@ -4,6 +4,8 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
+import yaml
 
 DIR = Path(__file__).absolute().parent
 
@@ -27,24 +29,9 @@ TOOLS = {
     "python-requirements": [PYTHON, "-B", "-m", "pip", "freeze"],
 }
 
-# List of components built from source
-COMPONENTS = [
-    "cluster-agent",
-    "cni",
-    "containerd",
-    "dqlite",
-    "dqlite-client",
-    "etcd",
-    "flannel-cni-plugin",
-    "flanneld",
-    "helm",
-    "k8s-dqlite",
-    "kubernetes",
-    "migrator",
-    "raft",
-    "runc",
-    "sqlite",
-]
+# Retrieve list of components we care about from the snapcraft.yaml file
+with open(DIR / ".." / "snap" / "snapcraft.yaml") as fin:
+    COMPONENTS = yaml.safe_load(fin)["parts"]["bom"]["after"]
 
 
 def _listdir(dir: Path):
@@ -79,16 +66,19 @@ if __name__ == "__main__":
     for component in COMPONENTS:
         component_dir = DIR / "components" / component
 
-        BOM["components"][component] = {
-            "repository": _read_file(component_dir / "repository"),
-            "version": _parse_output([component_dir / "version.sh"]),
-            "revision": _parse_output(
-                ["git", "rev-parse", "HEAD"],
-                cwd=BUILD_DIRECTORY / ".." / ".." / component / "build" / component,
-            ),
-            "patches": _listdir(component_dir / "patches"),
-            "strict-patches": _listdir(component_dir / "strict-patches"),
-        }
+        try:
+            BOM["components"][component] = {
+                "repository": _read_file(component_dir / "repository"),
+                "version": _parse_output([component_dir / "version.sh"]),
+                "revision": _parse_output(
+                    ["git", "rev-parse", "HEAD"],
+                    cwd=BUILD_DIRECTORY / ".." / ".." / component / "build" / component,
+                ),
+                "patches": _listdir(component_dir / "patches"),
+                "strict-patches": _listdir(component_dir / "strict-patches"),
+            }
+        except OSError as e:
+            print(f"Could not get info for {component}: {e}", file=sys.stderr)
 
     for repo in _listdir(MICROK8S_ADDONS):
         repo_dir = MICROK8S_ADDONS / repo

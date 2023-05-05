@@ -349,6 +349,8 @@ parts:
       - sqlite
     plugin: nil
     source: .
+    build-packages:
+      - python3-yaml
     override-build: |
       ./build-scripts/generate-bom.py > "${SNAPCRAFT_PART_INSTALL}/bom.json"
 
