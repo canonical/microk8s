@@ -328,6 +328,32 @@ parts:
       - -usr/share/doc
       - -usr/share/man
 
+  bom:
+    after:
+      - cluster-agent
+      - cni
+      - containerd
+      - dqlite
+      - dqlite-client
+      - etcd
+      - flannel-cni-plugin
+      - flanneld
+      - helm
+      - k8s-dqlite
+      - kubernetes
+      - microk8s-addons
+      - migrator
+      - python-runtime
+      - raft
+      - runc
+      - sqlite
+    plugin: nil
+    source: .
+    build-packages:
+      - python3-yaml
+    override-build: |
+      ./build-scripts/generate-bom.py > "${SNAPCRAFT_PART_INSTALL}/bom.json"
+
 apps:
   microk8s:
     command: microk8s.wrapper
