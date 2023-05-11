@@ -304,7 +304,6 @@ sanatise_argskubelet() {
     "pod-infra-container-image"
     "experimental-dockershim-root-directory"
     "non-masquerade-cidr"
-    "containerd"
     # Remove container-runtime flag from 1.27+
     "container-runtime"
   )
