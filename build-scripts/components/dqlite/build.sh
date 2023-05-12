@@ -10,7 +10,7 @@ export CFLAGS="-DSQLITE_ENABLE_DBSTAT_VTAB=1" # for sqlite3.c
 export RAFT_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include"
 export RAFT_LIBS="-L${SNAPCRAFT_STAGE}/lib -lraft"
 
-wget https://sqlite.org/2020/sqlite-amalgamation-3330000.zip
+curl -o sqlite-amalgamation-3330000.zip https://sqlite.org/2020/sqlite-amalgamation-3330000.zip
 unzip sqlite-amalgamation-3330000.zip
 cat >sqlite3.c <<EOF
 #pragma GCC diagnostic ignored "-Wconversion"
