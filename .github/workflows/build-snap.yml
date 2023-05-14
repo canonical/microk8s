@@ -191,3 +191,47 @@ jobs:
       - name: Run airgap tests
         run: |
           sudo -E bash -x -c "./tests/libs/airgap.sh --distro ubuntu:20.04 --channel $PWD/build/microk8s.snap"
+
+  security-scan:
+    name: Security scan
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - name: Checking out repo
+        uses: actions/checkout@v3.3.0
+      - name: Fetch snap
+        uses: actions/download-artifact@v3.0.2
+        with:
+          name: microk8s.snap
+          path: build
+      - name: Setup Trivy vulnerability scanner
+        run: |
+          mkdir -p sarifs
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.32.1/trivy_0.32.1_Linux-64bit.tar.gz
+          tar -zxvf ./trivy_0.32.1_Linux-64bit.tar.gz
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          ignore-unfixed: true
+          format: "sarif"
+          output: "trivy-microk8s-repo-scan--results.sarif"
+          severity: "CRITICAL"
+      - name: Gather Trivy repo scan results
+        run: |
+          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
+      - name: Run Trivy vulnerability scanner on images
+        run: |
+          for i in $(cat ./build-scripts/images.txt) ; do
+            name=$(echo  $i | awk -F ':|/' '{print $(NF-1)}')
+            ./trivy image $i --format sarif > sarifs/$name.sarif
+          done
+      - name: Run Trivy vulnerability scanner on the snap
+        run: |
+          cp build/microk8s.snap .
+          unsquashfs microk8s.snap
+          ./trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: "sarifs"
