@@ -221,7 +221,7 @@ def exit_if_stopped():
     stoppedLockFile = os.path.expandvars("${SNAP_DATA}/var/lock/stopped.lock")
     if os.path.isfile(stoppedLockFile):
         print("microk8s is not running, try microk8s start")
-        exit(0)
+        exit(1)
 
 
 def exit_if_no_permission():
