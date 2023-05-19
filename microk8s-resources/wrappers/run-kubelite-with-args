@@ -81,10 +81,14 @@ else
 fi
 
 ## Kubelet configuration
-pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
+pod_cidr="$(cat $SNAP_DATA/args/kube-proxy | grep "cluster-cidr" | tr "=" " "| gawk '{print $2}')"
 if [ -z "$pod_cidr" ]
 then
-  pod_cidr="$(jq .Network $SNAP_DATA/args/flannel-network-mgr-config | tr -d '\"')"
+  pod_cidr="$(cat $SNAP_DATA/args/kubelet | grep "pod-cidr" | tr "=" " "| gawk '{print $2}')"
+  if [ -z "$pod_cidr" ]
+  then
+    pod_cidr="$(jq .Network $SNAP_DATA/args/flannel-network-mgr-config | tr -d '\"')"
+  fi
 fi
 if ! [ -z "$pod_cidr" ]
 then
