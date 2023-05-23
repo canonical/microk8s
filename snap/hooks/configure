@@ -137,7 +137,7 @@ fi
 # to gather some metrics. We add it back here.
 if ! grep -e "\-\-containerd" "${SNAP_DATA}/args/kubelet"
 then
-  refresh_opt_in_config containerd \${SNAP_COMMON}/run/containerd.sock kubelet
+  refresh_opt_in_local_config containerd \${SNAP_COMMON}/run/containerd.sock kubelet
   need_api_restart=true
 fi
 
