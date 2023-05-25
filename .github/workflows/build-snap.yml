@@ -2,7 +2,6 @@ name: Build and test MicroK8s snap
 
 on:
   - pull_request
-  - push
 
 jobs:
   build:
