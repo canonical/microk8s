@@ -91,9 +91,16 @@ function setup_airgapped_microk8s() {
   else
     lxc exec "$NAME" -- snap download microk8s --channel="${TO_CHANNEL}" --target-directory /tmp --basename microk8s
   fi
+  while ! lxc exec "$NAME" -- bash -c "snap install snapd"; do
+    echo retry install snapd
+    sleep 1
+  done
+  while ! lxc exec "$NAME" -- bash -c "snap install core20"; do
+    echo retry install core20
+    sleep 1
+  done
+
   lxc exec "$NAME" -- bash -c "
-    snap install core20
-    snap install snapd
     echo '
   network:
     version: 2
