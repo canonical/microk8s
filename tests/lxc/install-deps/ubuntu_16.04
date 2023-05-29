@@ -2,6 +2,7 @@
 
 export $(grep -v '^#' /etc/environment | xargs)
 
+export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install python3-pip docker.io -y
 pip3 install importlib-metadata==2.1.0 pytest requests pyyaml sh
