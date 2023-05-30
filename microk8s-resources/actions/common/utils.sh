@@ -598,6 +598,75 @@ gen_proxy_client_cert() (
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
+create_user_kubeconfigs() {
+  export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
+  for user in client kubelet scheduler controller proxy; do
+    if ! [ -f ${SNAP_DATA}/certs/$key ]; then
+      ${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/${user}.key 2048
+    fi
+  done
+
+  # client/admin cert
+  subject="/CN=admin/O=system:masters"
+  ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/client.key -out ${SNAP_DATA}/certs/client.csr -subj ${subject}
+
+  # kubelet cert
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  subject="/CN=system:node:${hostname}/O=system:nodes"
+  ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/kubelet.key -out ${SNAP_DATA}/certs/kubelet.csr -subj ${subject}
+
+  # kube-proxy cert
+  subject="/CN=system:kube-proxy"
+  ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/proxy.key -out ${SNAP_DATA}/certs/proxy.csr -subj ${subject}
+
+  # kube-scheduler cert
+  subject="/CN=system:kube-scheduler"
+  ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/scheduler.key -out ${SNAP_DATA}/certs/scheduler.csr -subj ${subject}
+
+  # kube-controller-manager cert
+  subject="/CN=system:kube-controller-manager"
+  ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/controller.key -out ${SNAP_DATA}/certs/controller.csr -subj ${subject}
+
+  for user in client kubelet scheduler controller proxy; do
+    if ! [ -f ${SNAP_DATA}/certs/$key ]; then
+      ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/${user}.csr -CA ${SNAP_DATA}/certs/${user}.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/${user}.crt -days 3650
+    fi
+  done
+
+  mkdir -p ${SNAP_DATA}/credentials
+  create_x509_cert "client.config" "admin" ${SNAP_DATA}/certs/client.crt ${SNAP_DATA}/certs/client.key
+  create_x509_cert "controller.config" "system:kube-controller-manager" ${SNAP_DATA}/certs/controller.crt ${SNAP_DATA}/certs/controller.key
+  create_x509_cert "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key
+  create_x509_cert "scheduler.config" "system:kube-scheduler" ${SNAP_DATA}/certs/scheduler.crt ${SNAP_DATA}/certs/scheduler.key
+  create_x509_cert "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key
+}
+
+create_x509_cert() {
+  # Create a kubeconfig file with x509 auth
+  # $1: the name of the config file
+  # $2: the user to use al login
+  # $3: path to certificate file
+  # $4: path to certificate key file
+
+  kubeconfig=$1
+  user=$2
+  cert=$3
+  key=$4
+
+  ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
+  cert_data=$(cat ${cert} | ${SNAP}/usr/bin/base64 -w 0)
+  key_data=$(cat ${key} | ${SNAP}/usr/bin/base64 -w 0)
+  config_file=${SNAP_DATA}/credentials/${kubeconfig}
+
+  cp ${SNAP}/client-x509.config.template ${config_file}
+  $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${config_file}
+  $SNAP/bin/sed -i 's/NAME/'"${user}"'/g' ${config_file}
+  $SNAP/bin/sed -i 's/PATHTOCERT/'"${cert_data}"'/g' ${config_file}
+  $SNAP/bin/sed -i 's/PATHTOKEYCERT/'"${key_data}"'/g' ${config_file}
+  $SNAP/bin/sed -i 's/client-certificate/client-certificate-data/g' ${config_file}
+  $SNAP/bin/sed -i 's/client-key/client-data/g' ${config_file}
+}
+
 produce_certs() {
     export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     # Generate RSA keys if not yet

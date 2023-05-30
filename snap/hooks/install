@@ -87,60 +87,7 @@ done
 produce_certs
 rm -rf .srl
 
-mkdir -p ${SNAP_DATA}/credentials
-ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
-
-# Create the known tokens
-admin_token=$(openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
-echo "${admin_token},admin,admin,\"system:masters\"" > ${SNAP_DATA}/credentials/known_tokens.csv
-proxy_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
-echo "${proxy_token},system:kube-proxy,kube-proxy" >> ${SNAP_DATA}/credentials/known_tokens.csv
-kubelet_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
-hostname=$(hostname | tr '[:upper:]' '[:lower:]')
-echo "${kubelet_token},system:node:${hostname},kubelet-0,\"system:nodes\"" >> ${SNAP_DATA}/credentials/known_tokens.csv
-controller_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
-echo "${controller_token},system:kube-controller-manager,controller" >> ${SNAP_DATA}/credentials/known_tokens.csv
-scheduler_token=$(${SNAP}/usr/bin/openssl rand -base64 32 | ${SNAP}/usr/bin/base64)
-echo "${scheduler_token},system:kube-scheduler,scheduler" >> ${SNAP_DATA}/credentials/known_tokens.csv
-
-# Create the client kubeconfig
-cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/NAME/admin/g' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/client.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${admin_token}"'/g' ${SNAP_DATA}/credentials/client.config
-
-# Create the client kubeconfig for the controller
-cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/controller.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/controller.config
-$SNAP/bin/sed -i 's/NAME/controller/g' ${SNAP_DATA}/credentials/controller.config
-$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/controller.config
-$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/controller.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${controller_token}"'/g' ${SNAP_DATA}/credentials/controller.config
-
-# Create the client kubeconfig for the scheduler
-cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/scheduler.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/scheduler.config
-$SNAP/bin/sed -i 's/NAME/scheduler/g' ${SNAP_DATA}/credentials/scheduler.config
-$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/scheduler.config
-$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/scheduler.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${scheduler_token}"'/g' ${SNAP_DATA}/credentials/scheduler.config
-
-# Create the proxy and kubelet kubeconfig
-cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/kubelet.config
-$SNAP/bin/sed -i 's/NAME/kubelet/g' ${SNAP_DATA}/credentials/kubelet.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/kubelet.config
-$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/kubelet.config
-$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/kubelet.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${kubelet_token}"'/g' ${SNAP_DATA}/credentials/kubelet.config
-
-cp ${SNAP}/client.config.template ${SNAP_DATA}/credentials/proxy.config
-$SNAP/bin/sed -i 's/NAME/kubeproxy/g' ${SNAP_DATA}/credentials/proxy.config
-$SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${SNAP_DATA}/credentials/proxy.config
-$SNAP/bin/sed -i '/username/d' ${SNAP_DATA}/credentials/proxy.config
-$SNAP/bin/sed -i 's/AUTHTYPE/token/g' ${SNAP_DATA}/credentials/proxy.config
-$SNAP/bin/sed -i 's/PASSWORD/'"${proxy_token}"'/g' ${SNAP_DATA}/credentials/proxy.config
+create_user_kubeconfigs
 
 # Install default-hooks
 cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
