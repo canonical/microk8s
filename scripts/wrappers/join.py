@@ -865,10 +865,25 @@ def join_dqlite_master_node(info, master_ip, token):
     :param master_ip: the IP of the master node we contacted to connect to the cluster
     :param token: the token to pass to the master in order to authenticate with it
     """
+
+    # The cluster we want to join may be in either token-auth based or x509-auth based.
+    # The way to identify the cluster type is to look for the "admin_token" in the info
+    # we got back from the cluster we try to join
+    # In the case of token-auth we need to:
+    # - create the known_tokens.csv file with the admin token in
+    # - turn on token-auth on kube-apiserver
+    # - create the token based admin kubeconfig
+    # - recreate the kubelet, proxy, scheduler, controller kubeconfigs for the new ca
+    # - restart kubelite
+    # In the case of x509-auth we need to:
+    # - recreate the admin/client, kubelet, proxy, scheduler, controller kubeconfigs for the new ca
+    # - restart kubelite
+
     hostname_override = info["hostname_override"]
     store_cert("ca.crt", info["ca"])
     store_cert("ca.key", info["ca_key"])
     store_cert("serviceaccount.key", info["service_account_key"])
+
     # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
     for component in [
         ("kube-proxy", "kubeproxy", "proxy.config"),
@@ -887,10 +902,12 @@ def join_dqlite_master_node(info, master_ip, token):
         )
     if "admin_token" in info:
         replace_admin_token(info["admin_token"])
+
+    create_admin_kubeconfig(info["ca"], info["admin_token"])
+
     if "api_authz_mode" in info:
         update_apiserver(info["api_authz_mode"])
 
-    create_admin_kubeconfig(info["ca"], info["admin_token"])
     store_base_kubelet_args(info["kubelet_args"])
     update_kubelet_node_ip(info["kubelet_args"], hostname_override)
     update_kubelet_hostname_override(info["kubelet_args"])

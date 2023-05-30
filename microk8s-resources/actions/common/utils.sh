@@ -601,7 +601,7 @@ gen_proxy_client_cert() (
 create_user_kubeconfigs() {
   export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
   for user in client kubelet scheduler controller proxy; do
-    if ! [ -f ${SNAP_DATA}/certs/$key ]; then
+    if ! [ -f ${SNAP_DATA}/certs/${user} ]; then
       ${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/${user}.key 2048
     fi
   done
@@ -628,9 +628,7 @@ create_user_kubeconfigs() {
   ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/controller.key -out ${SNAP_DATA}/certs/controller.csr -subj ${subject}
 
   for user in client kubelet scheduler controller proxy; do
-    if ! [ -f ${SNAP_DATA}/certs/$key ]; then
-      ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/${user}.csr -CA ${SNAP_DATA}/certs/${user}.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/${user}.crt -days 3650
-    fi
+    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/${user}.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/${user}.crt -days 3650
   done
 
   mkdir -p ${SNAP_DATA}/credentials
@@ -664,7 +662,7 @@ create_x509_cert() {
   $SNAP/bin/sed -i 's/PATHTOCERT/'"${cert_data}"'/g' ${config_file}
   $SNAP/bin/sed -i 's/PATHTOKEYCERT/'"${key_data}"'/g' ${config_file}
   $SNAP/bin/sed -i 's/client-certificate/client-certificate-data/g' ${config_file}
-  $SNAP/bin/sed -i 's/client-key/client-data/g' ${config_file}
+  $SNAP/bin/sed -i 's/client-key/client-key-data/g' ${config_file}
 }
 
 produce_certs() {
