@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 export $(grep -v '^#' /etc/environment | xargs)
+export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
 apt-get install python3-pip docker.io -y

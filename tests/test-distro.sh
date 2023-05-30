@@ -53,6 +53,7 @@ then
   PROXY=$4
 fi
 
+export DEBIAN_FRONTEND=noninteractive
 # Test airgap installation.
 # DISABLE_AIRGAP_TESTS=1 can be set to disable them.
 DISABLE_AIRGAP_TESTS="${DISABLE_AIRGAP_TESTS:-0}"
