@@ -1,4 +1,6 @@
+import base64
 import os
+import re
 import json
 import shutil
 import subprocess
@@ -409,3 +411,189 @@ def get_token(name, tokens_file="known_tokens.csv"):
                 parts = line.split(",")
                 return parts[0].rstrip()
     return None
+
+
+def get_locally_signed_client_cert(fname, username, group=None):
+    """
+    Get a cert signed by the local CA.
+
+    :param fname: file name prefix for the certificate
+    :param username: the username of the cert's owner
+    :param group: the group the owner belongs to
+    """
+    snapdata_path = os.environ.get("SNAP_DATA")
+    snap_path = os.environ.get("SNAP")
+    subject = "/CN={}".format(username)
+    if group:
+        subject = "{}/O={}".format(subject, group)
+
+    # the filenames must survive snap refreshes, so replace revision number with current
+    snapdata_current = os.path.abspath(os.path.join(snapdata_path, "..", "current"))
+
+    cer_req_file = "{}/certs/{}.csr".format(snapdata_current, fname)
+    cer_key_file = "{}/certs/{}.key".format(snapdata_current, fname)
+    cer_file = "{}/certs/{}.crt".format(snapdata_current, fname)
+    ca_key_file = "{}/certs/ca.key".format(snapdata_current)
+    ca_file = "{}/certs/ca.crt".format(snapdata_current)
+    if not os.path.exists(cer_key_file):
+        cmd_gen_cert_key = "{snap}/usr/bin/openssl genrsa -out {key} 2048".format(
+            snap=snap_path, key=cer_key_file
+        )
+        subprocess.check_call(
+            cmd_gen_cert_key.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        try_set_file_permissions(cer_key_file)
+
+    cmd_cert = "{snap}/usr/bin/openssl req -new -sha256 -key {key} -out {csr} -subj {subject}".format(
+        snap=snap_path,
+        key=cer_key_file,
+        csr=cer_req_file,
+        subject=subject,
+    )
+    subprocess.check_call(cmd_cert.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    cmd = "{snap}/usr/bin/openssl x509 -req -in {csr} -CA {cacert} -CAkey {cakey} -CAcreateserial -out {cert} -days 3650".format(
+        snap=snap_path,
+        csr=cer_req_file,
+        cacert=ca_file,
+        cakey=ca_key_file,
+        cert=cer_file,
+    )
+    subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try_set_file_permissions(cer_file)
+
+    return {
+        "certificate_location": cer_file,
+        "certificate_key_location": cer_key_file,
+    }
+
+
+def get_arg(key, file):
+    """
+    Get an argument from a file
+
+    :param key: argument name
+    :param file: the arguments file
+    :return: value
+    """
+    snapdata_path = os.environ.get("SNAP_DATA")
+
+    filename = "{}/args/{}".format(snapdata_path, file)
+    with open(filename, "r+") as fp:
+        for _, line in enumerate(fp):
+            if line.startswith(key):
+                parts = re.split(r' |=', line)
+                return parts[-1]
+    return None
+
+
+def set_arg(key, value, file):
+    """
+    Set an argument to a file
+
+    :param key: argument name
+    :param value: value
+    :param file: the arguments file
+    """
+    snapdata_path = os.environ.get("SNAP_DATA")
+
+    filename = "{}/args/{}".format(snapdata_path, file)
+    filename_remote = "{}/args/{}.remote".format(snapdata_path, file)
+    done = False
+    with open(filename_remote, "w+") as back_fp:
+        with open(filename, "r+") as fp:
+            for _, line in enumerate(fp):
+                if line.startswith(key):
+                    done = True
+                    if value is not None:
+                        back_fp.write("{}={}\n".format(key, value))
+                else:
+                    back_fp.write("{}".format(line))
+        if not done and value is not None:
+            back_fp.write("{}={}\n".format(key, value))
+
+    shutil.copyfile(filename, "{}.backup".format(filename))
+    try_set_file_permissions("{}.backup".format(filename))
+    shutil.copyfile(filename_remote, filename)
+    try_set_file_permissions(filename)
+    os.remove(filename_remote)
+
+
+def create_x509_kubeconfig(ca, master_ip, api_port, filename, user, path_to_cert, path_to_cert_key, embed=False):
+    """
+    Create a kubeconfig file. The file in stored under credentials named after the user
+
+    :param ca: the ca
+    :param master_ip: the master node IP
+    :param api_port: the API server port
+    :param filename: the name of the config file
+    :param user: the user to use al login
+    :param path_to_cert: path to certificate file
+    :param path_to_cert_key: path to certificate key file
+    :param embed: place the base64 encoding of certs in kubeconfig instead of linking to them
+    """
+    snapdata_path = os.environ.get("SNAP_DATA")
+    snap_path = os.environ.get("SNAP")
+    config_template = "{}/{}".format(snap_path, "client-x509.config.template")
+    config = "{}/credentials/{}".format(snapdata_path, filename)
+    shutil.copyfile(config, "{}.backup".format(config))
+    try_set_file_permissions("{}.backup".format(config))
+    ca_line = ca_one_line(ca)
+    with open(config_template, "r") as tfp:
+        with open(config, "w+") as fp:
+            config_txt = tfp.read()
+            config_txt = config_txt.replace("CADATA", ca_line)
+            config_txt = config_txt.replace("NAME", user)
+            if embed:
+                with open(path_to_cert, "r") as caf:
+                    cert = caf.read()
+                    cert_line = base64.b64encode(cert.encode("utf-8")).decode("utf-8")
+                with open(path_to_cert_key, "r") as caf:
+                    cert = caf.read()
+                    key_line = base64.b64encode(cert.encode("utf-8")).decode("utf-8")
+                config_txt = config_txt.replace("PATHTOCERT", cert_line)
+                config_txt = config_txt.replace("PATHTOKEYCERT", key_line)
+                config_txt = config_txt.replace("client-certificate", "client-certificate-data",)
+                config_txt = config_txt.replace("client-key", "client-key-data")
+            else:
+                config_txt = config_txt.replace("PATHTOCERT", path_to_cert)
+                config_txt = config_txt.replace("PATHTOKEYCERT", path_to_cert_key)
+            config_txt = config_txt.replace("127.0.0.1", master_ip)
+            config_txt = config_txt.replace("16443", api_port)
+            fp.write(config_txt)
+        try_set_file_permissions(config)
+
+
+def is_token_auth_enabled():
+    """
+    Return True if token auth is enabled
+    """
+    if get_arg("--token-auth-file", "kube-apiserver"):
+        return True
+    else:
+        return False
+
+
+def enable_token_auth(token):
+    """
+    Turn on token auth and inject the admin token
+
+    :param token: the admin token
+    """
+    snapdata_path = os.environ.get("SNAP_DATA")
+
+    file = "{}/credentials/known_tokens.csv".format(snapdata_path)
+    with open(file, "w") as fp:
+        fp.write(f"{token},admin,admin,\"system:masters\"\n")
+
+    try_set_file_permissions(file)
+    set_arg("--token-auth-file", "${SNAP_DATA}/credentials/known_tokens.csv", "kube-apiserver")
+
+
+def ca_one_line(ca):
+    """
+    The CA in one line
+    :param ca: the ca
+    :return: one line
+    """
+    return base64.b64encode(ca.encode("utf-8")).decode("utf-8")

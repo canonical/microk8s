@@ -20,6 +20,11 @@ from common.cluster.utils import (
     is_node_dqlite_worker,
     get_token,
     try_set_file_permissions,
+    get_arg,
+    set_arg,
+    create_x509_kubeconfig,
+    is_token_auth_enabled,
+    get_locally_signed_client_cert,
 )
 
 snapdata_path = os.environ.get("SNAP_DATA")
@@ -53,10 +58,6 @@ def reset_current_dqlite_worker_installation():
             "{}/args/{}".format(snapdata_path, config_file),
         )
 
-    for user in ["proxy", "kubelet"]:
-        config = "{}/credentials/{}.config".format(snapdata_path, user)
-        shutil.copyfile("{}.backup".format(config), config)
-
     unmark_no_cert_reissue()
     unmark_worker_node()
     restart_all_services()
@@ -67,31 +68,37 @@ def rebuild_client_config():
     """
     Recreate the client config
     """
-    token = get_token("admin")
-    if not token:
-        print("Error, could not locate admin token. Resetting the node failed.")
-        exit(2)
+    if is_token_auth_enabled():
+        set_arg('--token-auth-file', None, 'kube-apiserver')
 
-    config_template = "{}/{}".format(snap_path, "client.config.template")
-    config = "{}/credentials/client.config".format(snapdata_path)
-    shutil.copyfile(config, "{}.backup".format(config))
-    try_set_file_permissions("{}.backup".format(config))
-    cert_file = "{}/certs/{}".format(snapdata_path, "ca.crt")
+    cert_file = "{}/certs/ca.crt".format(snapdata_path)
     with open(cert_file) as fp:
         ca = fp.read()
-    ca_line = base64.b64encode(ca.encode("utf-8")).decode("utf-8")
-    with open(config_template, "r") as tfp:
-        with open(config, "w+") as fp:
-            for _, config_txt in enumerate(tfp):
-                if config_txt.strip().startswith("username:"):
-                    continue
-                else:
-                    config_txt = config_txt.replace("CADATA", ca_line)
-                    config_txt = config_txt.replace("NAME", "admin")
-                    config_txt = config_txt.replace("AUTHTYPE", "token")
-                    config_txt = config_txt.replace("PASSWORD", token)
-                    fp.write(config_txt)
-        try_set_file_permissions(config)
+
+    apiserver_port = get_arg("--secure-port", "kube-apiserver")
+    if not apiserver_port:
+        apiserver_port = 6443
+
+    hostname = socket.gethostname().lower()
+    components = [
+        {"username": "admin", "group":"system:masters", "filename": "client"},
+        {"username": "system:kube-controller-manager", "group": None, "filename": "controller"},
+        {"username": "system:kube-proxy", "group": None, "filename": "proxy"},
+        {"username": "system:kube-scheduler", "group": None, "filename": "scheduler"},
+        {"username": f"system:node:{hostname}", "group": "system:nodes", "filename": "kubelet"},
+    ]
+    for c in components:
+        cert = get_locally_signed_client_cert(c["filename"], c["username"], c["group"])
+        create_x509_kubeconfig(
+            ca,
+            "127.0.0.1",
+            apiserver_port,
+            filename=f"{c['filename']}.config",
+            user=c["username"],
+            path_to_cert=cert["certificate_location"],
+            path_to_cert_key=cert["certificate_key_location"],
+            embed=True
+        )
 
 
 def disable_apiserver_proxy():
@@ -187,6 +194,7 @@ def reset_current_dqlite_installation():
 
     print("Generating new cluster certificates.", flush=True)
     reinit_cluster()
+    rebuild_client_config()
 
     service("start", "k8s-dqlite")
     service("start", "apiserver")
