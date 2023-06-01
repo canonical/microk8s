@@ -18,7 +18,7 @@ from common.cluster.utils import (
     unmark_no_cert_reissue,
     restart_all_services,
     is_node_dqlite_worker,
-    rebuild_client_config,
+    rebuild_client_configs,
 )
 
 snapdata_path = os.environ.get("SNAP_DATA")
@@ -41,7 +41,7 @@ def reset_current_dqlite_worker_installation():
 
     service("stop", "apiserver")
     service("stop", "k8s-dqlite")
-    rebuild_client_config()
+    rebuild_client_configs()
 
     print("Generating new cluster certificates.", flush=True)
     reinit_cluster()
@@ -151,7 +151,7 @@ def reset_current_dqlite_installation():
 
     print("Generating new cluster certificates.", flush=True)
     reinit_cluster()
-    rebuild_client_config()
+    rebuild_client_configs()
 
     service("start", "k8s-dqlite")
     service("start", "apiserver")

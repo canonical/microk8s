@@ -599,7 +599,7 @@ def ca_one_line(ca):
     return base64.b64encode(ca.encode("utf-8")).decode("utf-8")
 
 
-def rebuild_client_config():
+def rebuild_client_configs():
     """
     Recreate all the client configs
     """
