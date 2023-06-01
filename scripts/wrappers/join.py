@@ -35,6 +35,7 @@ from common.cluster.utils import (
     is_token_auth_enabled,
     enable_token_auth,
     ca_one_line,
+    rebuild_client_config,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -871,6 +872,10 @@ def join_dqlite_master_node(info, master_ip, token):
                 create_kubeconfig(
                     component_token, info["ca"], "127.0.0.1", apiserver_port, component[2], component[1]
                 )
+    else:
+        # We are joining a x509-auth based cluster
+        rebuild_client_config()
+
 
     if "api_authz_mode" in info:
         update_apiserver(info["api_authz_mode"])

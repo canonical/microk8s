@@ -597,3 +597,42 @@ def ca_one_line(ca):
     :return: one line
     """
     return base64.b64encode(ca.encode("utf-8")).decode("utf-8")
+
+
+def rebuild_client_config():
+    """
+    Recreate all the client configs
+    """
+    if is_token_auth_enabled():
+        set_arg('--token-auth-file', None, 'kube-apiserver')
+
+    snapdata_path = os.environ.get("SNAP_DATA")
+    cert_file = "{}/certs/ca.crt".format(snapdata_path)
+    with open(cert_file) as fp:
+        ca = fp.read()
+
+    apiserver_port = get_arg("--secure-port", "kube-apiserver")
+    if not apiserver_port:
+        apiserver_port = 6443
+
+    hostname = socket.gethostname().lower()
+    components = [
+        {"username": "admin", "group":"system:masters", "filename": "client"},
+        {"username": "system:kube-controller-manager", "group": None, "filename": "controller"},
+        {"username": "system:kube-proxy", "group": None, "filename": "proxy"},
+        {"username": "system:kube-scheduler", "group": None, "filename": "scheduler"},
+        {"username": f"system:node:{hostname}", "group": "system:nodes", "filename": "kubelet"},
+    ]
+    for c in components:
+        cert = get_locally_signed_client_cert(c["filename"], c["username"], c["group"])
+        create_x509_kubeconfig(
+            ca,
+            "127.0.0.1",
+            apiserver_port,
+            filename=f"{c['filename']}.config",
+            user=c["username"],
+            path_to_cert=cert["certificate_location"],
+            path_to_cert_key=cert["certificate_key_location"],
+            embed=True
+        )
+

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "main"
+echo "MK-1179/x509-auth"
