@@ -208,7 +208,7 @@ jobs:
         run: |
           mkdir -p sarifs
           wget https://github.com/aquasecurity/trivy/releases/download/v0.42.0/trivy_0.42.0_Linux-64bit.tar.gz
-          tar -zxvf ./trivy_0.32.1_Linux-64bit.tar.gz
+          tar -zxvf ./trivy_0.42.0_Linux-64bit.tar.gz
       - name: Run Trivy vulnerability scanner in repo mode
         uses: aquasecurity/trivy-action@master
         with:
