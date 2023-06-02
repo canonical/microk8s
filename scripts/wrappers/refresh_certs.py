@@ -11,7 +11,7 @@ from common.utils import (
 
 from common.cluster.utils import (
     is_token_auth_enabled,
-    rebuild_client_configs,
+    rebuild_x509_auth_client_configs,
 )
 
 snapdata_path = os.environ.get("SNAP_DATA")
@@ -95,7 +95,7 @@ def update_configs():
         )
         p.communicate()
     else:
-        rebuild_client_configs()
+        rebuild_x509_auth_client_configs()
         restart("kubelite")
         restart("cluster-agent")
 

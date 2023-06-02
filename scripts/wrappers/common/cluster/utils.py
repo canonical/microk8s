@@ -1,18 +1,18 @@
 import base64
-import os
-import re
+import datetime
 import json
+import os
+import random
+import re
 import shutil
+import socket
+import string
 import subprocess
 import time
-import string
-import random
-import datetime
 from pathlib import Path
-from subprocess import check_output, CalledProcessError
+from subprocess import CalledProcessError, check_output
 
 import yaml
-import socket
 
 
 def snap() -> Path:
@@ -444,20 +444,22 @@ def get_locally_signed_client_cert(fname, username, group=None):
         )
         try_set_file_permissions(cer_key_file)
 
-    cmd_cert = "{snap}/usr/bin/openssl req -new -sha256 -key {key} -out {csr} -subj {subject}".format(
-        snap=snap_path,
-        key=cer_key_file,
-        csr=cer_req_file,
-        subject=subject,
+    cmd_cert = (
+        "{snap}/usr/bin/openssl req -new -sha256 -key {key} -out {csr} -subj {subject}".format(
+            snap=snap_path,
+            key=cer_key_file,
+            csr=cer_req_file,
+            subject=subject,
+        )
     )
     subprocess.check_call(cmd_cert.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    
-    cmd = "{snap}/usr/bin/openssl x509 -req -in {csr} -CA {cacert} -CAkey {cakey} -CAcreateserial -out {cert} -days 3650".format(
+
+    cmd = "{snap}/usr/bin/openssl x509 -req -in {csr} -CA {ca} -CAkey {k} -CAcreateserial -out {crt} -days 3650".format(
         snap=snap_path,
         csr=cer_req_file,
-        cacert=ca_file,
-        cakey=ca_key_file,
-        cert=cer_file,
+        ca=ca_file,
+        k=ca_key_file,
+        crt=cer_file,
     )
     subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try_set_file_permissions(cer_file)
@@ -482,7 +484,7 @@ def get_arg(key, file):
     with open(filename, "r+") as fp:
         for _, line in enumerate(fp):
             if line.startswith(key):
-                parts = re.split(r' |=', line)
+                parts = re.split(r" |=", line)
                 return parts[-1]
     return None
 
@@ -519,7 +521,9 @@ def set_arg(key, value, file):
     os.remove(filename_remote)
 
 
-def create_x509_kubeconfig(ca, master_ip, api_port, filename, user, path_to_cert, path_to_cert_key, embed=False):
+def create_x509_kubeconfig(
+    ca, master_ip, api_port, filename, user, path_to_cert, path_to_cert_key, embed=False
+):
     """
     Create a kubeconfig file. The file in stored under credentials named after the user
 
@@ -545,15 +549,18 @@ def create_x509_kubeconfig(ca, master_ip, api_port, filename, user, path_to_cert
             config_txt = config_txt.replace("CADATA", ca_line)
             config_txt = config_txt.replace("NAME", user)
             if embed:
-                with open(path_to_cert, "r") as caf:
-                    cert = caf.read()
+                with open(path_to_cert, "r") as f:
+                    cert = f.read()
                     cert_line = base64.b64encode(cert.encode("utf-8")).decode("utf-8")
-                with open(path_to_cert_key, "r") as caf:
-                    cert = caf.read()
+                with open(path_to_cert_key, "r") as f:
+                    cert = f.read()
                     key_line = base64.b64encode(cert.encode("utf-8")).decode("utf-8")
                 config_txt = config_txt.replace("PATHTOCERT", cert_line)
                 config_txt = config_txt.replace("PATHTOKEYCERT", key_line)
-                config_txt = config_txt.replace("client-certificate", "client-certificate-data",)
+                config_txt = config_txt.replace(
+                    "client-certificate",
+                    "client-certificate-data",
+                )
                 config_txt = config_txt.replace("client-key", "client-key-data")
             else:
                 config_txt = config_txt.replace("PATHTOCERT", path_to_cert)
@@ -584,7 +591,7 @@ def enable_token_auth(token):
 
     file = "{}/credentials/known_tokens.csv".format(snapdata_path)
     with open(file, "w") as fp:
-        fp.write(f"{token},admin,admin,\"system:masters\"\n")
+        fp.write(f'{token},admin,admin,"system:masters"\n')
 
     try_set_file_permissions(file)
     set_arg("--token-auth-file", "${SNAP_DATA}/credentials/known_tokens.csv", "kube-apiserver")
@@ -599,12 +606,12 @@ def ca_one_line(ca):
     return base64.b64encode(ca.encode("utf-8")).decode("utf-8")
 
 
-def rebuild_client_configs():
+def rebuild_x509_auth_client_configs():
     """
     Recreate all the client configs
     """
     if is_token_auth_enabled():
-        set_arg('--token-auth-file', None, 'kube-apiserver')
+        set_arg("--token-auth-file", None, "kube-apiserver")
 
     snapdata_path = os.environ.get("SNAP_DATA")
     cert_file = "{}/certs/ca.crt".format(snapdata_path)
@@ -613,11 +620,11 @@ def rebuild_client_configs():
 
     apiserver_port = get_arg("--secure-port", "kube-apiserver")
     if not apiserver_port:
-        apiserver_port = 6443
+        apiserver_port = "6443"
 
     hostname = socket.gethostname().lower()
     components = [
-        {"username": "admin", "group":"system:masters", "filename": "client"},
+        {"username": "admin", "group": "system:masters", "filename": "client"},
         {"username": "system:kube-controller-manager", "group": None, "filename": "controller"},
         {"username": "system:kube-proxy", "group": None, "filename": "proxy"},
         {"username": "system:kube-scheduler", "group": None, "filename": "scheduler"},
@@ -633,6 +640,5 @@ def rebuild_client_configs():
             user=c["username"],
             path_to_cert=cert["certificate_location"],
             path_to_cert_key=cert["certificate_key_location"],
-            embed=True
+            embed=True,
         )
-
