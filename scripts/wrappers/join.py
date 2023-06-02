@@ -16,17 +16,25 @@ import click
 import requests
 import urllib3
 import yaml
-from common.cluster.utils import (ca_one_line, create_x509_kubeconfig,
-                                  enable_token_auth, get_arg,
-                                  get_cluster_agent_port, get_cluster_cidr,
-                                  get_locally_signed_client_cert, get_token,
-                                  is_low_memory_guard_enabled,
-                                  is_node_running_dqlite,
-                                  is_token_auth_enabled, mark_no_cert_reissue,
-                                  rebuild_x509_auth_client_configs, service,
-                                  set_arg,
-                                  try_initialise_cni_autodetect_for_clustering,
-                                  try_set_file_permissions)
+from common.cluster.utils import (
+    ca_one_line,
+    create_x509_kubeconfig,
+    enable_token_auth,
+    get_arg,
+    get_cluster_agent_port,
+    get_cluster_cidr,
+    get_locally_signed_client_cert,
+    get_token,
+    is_low_memory_guard_enabled,
+    is_node_running_dqlite,
+    is_token_auth_enabled,
+    mark_no_cert_reissue,
+    rebuild_x509_auth_client_configs,
+    service,
+    set_arg,
+    try_initialise_cni_autodetect_for_clustering,
+    try_set_file_permissions,
+)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 CLUSTER_API = "cluster/api/v1.0"
