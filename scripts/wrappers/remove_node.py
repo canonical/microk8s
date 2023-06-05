@@ -8,6 +8,8 @@ import sys
 import click
 import netifaces
 
+from ipaddress import ip_address, IPv4Address
+
 from common.cluster.utils import (
     try_set_file_permissions,
     is_node_running_dqlite,
@@ -56,7 +58,6 @@ def remove_dqlite_node(node, force=False):
             exit(1)
 
     except subprocess.CalledProcessError:
-        print("Node {} does not exist in Kubernetes.".format(node))
         if force:
             print("Attempting to remove {} from dqlite.".format(node))
             # Make sure we do not have the node in dqlite.
@@ -66,7 +67,9 @@ def remove_dqlite_node(node, force=False):
                 if ep.startswith("{}:".format(node)):
                     print("Removing node entry found in dqlite.")
                     delete_dqlite_node([ep], my_ep)
-        exit(1)
+        else:
+            print("Node {} does not exist in Kubernetes.".format(node))
+            exit(1)
 
     remove_node(node)
 
@@ -208,6 +211,11 @@ def reset(node, force):
     Remove a node from the cluster
     """
     if is_node_running_dqlite():
+        if type(ip_address(node)) is IPv4Address:
+            print(
+                "Node name should be a hostname, not an IP address."
+                "The node will be removed from dqlite, but not from the kubernetes cluster."
+            )
         remove_dqlite_node(node, force)
     else:
         remove_node(node)
