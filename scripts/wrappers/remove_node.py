@@ -15,8 +15,8 @@ from common.cluster.utils import (
     is_node_running_dqlite,
 )
 
-snapdata_path = os.environ.get("SNAP_DATA")
 snap_path = os.environ.get("SNAP")
+snapdata_path = os.environ.get("SNAP_DATA")
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 
 cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
@@ -24,6 +24,22 @@ cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
 
 def remove_dqlite_node(node, force=False):
     try:
+        # If node is an IP address, find the node name.
+        if type(ip_address(node)) is IPv4Address:
+            node_info = subprocess.check_output(
+                "{}/microk8s-kubectl.wrapper get no -o json".format(snap_path).split()
+            )
+            info = json.loads(node_info.decode())
+            found = False
+            for n in info["items"]:
+                if found:
+                    break
+                for a in n["status"]["addresses"]:
+                    if a["type"] == "InternalIP" and a["address"] == node:
+                        node = n["metadata"]["name"]
+                        found = True
+                        break
+
         # Make sure this node exists
         node_info = subprocess.check_output(
             "{}/microk8s-kubectl.wrapper get no {} -o json".format(snap_path, node).split()
@@ -58,6 +74,7 @@ def remove_dqlite_node(node, force=False):
             exit(1)
 
     except subprocess.CalledProcessError:
+        print("Node {} does not exist in Kubernetes.".format(node))
         if force:
             print("Attempting to remove {} from dqlite.".format(node))
             # Make sure we do not have the node in dqlite.
@@ -67,9 +84,7 @@ def remove_dqlite_node(node, force=False):
                 if ep.startswith("{}:".format(node)):
                     print("Removing node entry found in dqlite.")
                     delete_dqlite_node([ep], my_ep)
-        else:
-            print("Node {} does not exist in Kubernetes.".format(node))
-            exit(1)
+        exit(1)
 
     remove_node(node)
 
@@ -211,11 +226,6 @@ def reset(node, force):
     Remove a node from the cluster
     """
     if is_node_running_dqlite():
-        if type(ip_address(node)) is IPv4Address:
-            print(
-                "Node name should be a hostname, not an IP address."
-                "The node will be removed from dqlite, but not from the kubernetes cluster."
-            )
         remove_dqlite_node(node, force)
     else:
         remove_node(node)
