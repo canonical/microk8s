@@ -8,13 +8,15 @@ import sys
 import click
 import netifaces
 
+from ipaddress import ip_address, IPv4Address
+
 from common.cluster.utils import (
     try_set_file_permissions,
     is_node_running_dqlite,
 )
 
-snapdata_path = os.environ.get("SNAP_DATA")
 snap_path = os.environ.get("SNAP")
+snapdata_path = os.environ.get("SNAP_DATA")
 callback_tokens_file = "{}/credentials/callback-tokens.txt".format(snapdata_path)
 
 cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
@@ -22,6 +24,22 @@ cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
 
 def remove_dqlite_node(node, force=False):
     try:
+        # If node is an IP address, find the node name.
+        if type(ip_address(node)) is IPv4Address:
+            node_info = subprocess.check_output(
+                "{}/microk8s-kubectl.wrapper get no -o json".format(snap_path).split()
+            )
+            info = json.loads(node_info.decode())
+            found = False
+            for n in info["items"]:
+                if found:
+                    break
+                for a in n["status"]["addresses"]:
+                    if a["type"] == "InternalIP" and a["address"] == node:
+                        node = n["metadata"]["name"]
+                        found = True
+                        break
+
         # Make sure this node exists
         node_info = subprocess.check_output(
             "{}/microk8s-kubectl.wrapper get no {} -o json".format(snap_path, node).split()
