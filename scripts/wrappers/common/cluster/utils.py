@@ -15,11 +15,29 @@ from subprocess import CalledProcessError, check_output
 import yaml
 
 
+def is_strict():
+    snap_yaml = snap() / "meta/snap.yaml"
+    with open(snap_yaml) as f:
+        snap_meta = yaml.safe_load(f)
+    return snap_meta["confinement"] == "strict"
+
+
+def get_group():
+    return "snap_microk8s" if is_strict() else "microk8s"
+
+
 def snap() -> Path:
     try:
         return Path(os.environ["SNAP"])
     except KeyError:
         return Path("/snap/microk8s/current")
+
+
+def snap_data() -> Path:
+    try:
+        return Path(os.environ["SNAP_DATA"])
+    except KeyError:
+        return Path("/var/snap/microk8s/current")
 
 
 def try_set_file_permissions(file):
@@ -28,10 +46,16 @@ def try_set_file_permissions(file):
 
     :param file: full path and filename
     """
+    mode = 0o660
+    group = get_group()
 
-    os.chmod(file, 0o660)
+    if os.path.exists(snap_data() / "var" / "lock" / "cis-hardening"):
+        group = "root"
+        mode = 0o600
+
+    os.chmod(file, mode)
     try:
-        shutil.chown(file, group="microk8s")
+        shutil.chown(file, group=group)
     except LookupError:
         # not setting the group means only the current user can access the file
         pass

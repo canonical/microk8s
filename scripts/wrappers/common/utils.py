@@ -12,22 +12,14 @@ import logging
 import click
 import yaml
 
-from .cluster.utils import try_set_file_permissions
+from common.cluster.utils import (
+    try_set_file_permissions,
+    is_strict,
+)
 
 LOG = logging.getLogger(__name__)
 
 KUBECTL = os.path.expandvars("$SNAP/microk8s-kubectl.wrapper")
-
-
-def get_group():
-    return "snap_microk8s" if is_strict() else "microk8s"
-
-
-def is_strict():
-    snap_yaml = snap() / "meta/snap.yaml"
-    with open(snap_yaml) as f:
-        snap_meta = yaml.safe_load(f)
-    return snap_meta["confinement"] == "strict"
 
 
 def get_current_arch():
@@ -227,8 +219,8 @@ def exit_if_stopped():
 def exit_if_no_permission():
     user = getpass.getuser()
     # test if we can access the default kubeconfig
-    clientConfigFile = os.path.expandvars("${SNAP_DATA}/credentials/client.config")
-    if not os.access(clientConfigFile, os.R_OK):
+    client_config_file = os.path.expandvars("${SNAP_DATA}/credentials/client.config")
+    if not os.access(client_config_file, os.R_OK):
         print("Insufficient permissions to access MicroK8s.")
         print(
             "You can either try again with sudo or add the user {} to the 'microk8s' group:".format(
