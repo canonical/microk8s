@@ -280,7 +280,6 @@ parts:
       cp -r default-args "${SNAPCRAFT_PART_INSTALL}/default-args"
       cp -r default-hooks "${SNAPCRAFT_PART_INSTALL}/default-hooks"
       cp -r certs "${SNAPCRAFT_PART_INSTALL}/certs"
-      cp -r certs-beta "${SNAPCRAFT_PART_INSTALL}/certs-beta"
 
       cp containerd-profile "${SNAPCRAFT_PART_INSTALL}/containerd-profile"
 
