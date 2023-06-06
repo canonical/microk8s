@@ -22,6 +22,7 @@ function create_machine() {
   cat tests/lxc/microk8s.profile | lxc profile edit microk8s
 
   lxc launch -p default -p microk8s $DISTRO $NAME
+  lxc config device override $NAME root size=50GB
 
   # Allow for the machine to boot and get an IP
   sleep 20
@@ -80,6 +81,7 @@ chmod +x /usr/bin/aws-iam-authenticator
 export LXC_PROFILE="tests/lxc/microk8s.profile"
 export BACKEND="lxc"
 export CHANNEL_TO_TEST=${TO_CHANNEL}
+export STRICT="yes"
 TRY_ATTEMPT=0
 while ! (timeout 3600 pytest -s tests/test-cluster.py) &&
       ! [ ${TRY_ATTEMPT} -eq 3 ]
@@ -120,33 +122,14 @@ if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
 then
   lxc file push ${TO_CHANNEL} $NAME/tmp/microk8s_latest_amd64.snap
   lxc exec $NAME -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+  lxc exec $NAME -- bash -c '/root/tests/connect-all-interfaces.sh'
 else
-  lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL} --classic
+  lxc exec $NAME -- snap install microk8s --channel=${TO_CHANNEL}
 fi
 lxc exec $NAME -- /root/tests/smoke-test.sh
 # use 'script' for required tty: https://github.com/lxc/lxd/issues/1724#issuecomment-194416774
-lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
+lxc exec $NAME -- script -e -c "STRICT=\"yes\" pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py"
 lxc exec $NAME -- microk8s enable community
-lxc exec $NAME -- script -e -c "pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
+lxc exec $NAME -- script -e -c "STRICT=\"yes\" pytest -s /var/snap/microk8s/common/addons/community/tests/test-addons.py"
 lxc exec $NAME -- microk8s reset
 lxc delete $NAME --force
-
-if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
-then
-  snap install ${TO_CHANNEL} --dangerous --classic
-else
-  snap install microk8s --channel=${TO_CHANNEL} --classic
-fi
-
-microk8s status --wait-ready
-
-if [ -d "/var/snap/microk8s/common/addons/eksd" ]
-then
-  pytest -s /var/snap/microk8s/common/addons/eksd/tests/test-addons.py
-fi
-
-if [ -f "/var/snap/microk8s/common/addons/core/tests/test-addons.py" ] &&
-   grep test_gpu /var/snap/microk8s/common/addons/core/tests/test-addons.py -q
-then
-  timeout 3600 pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py -k test_gpu
-fi

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -eux
+
+rm -rf $SNAP_COMMON/etc/launcher

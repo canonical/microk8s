@@ -6,6 +6,7 @@ import os
 import signal
 import subprocess
 from os import path
+from utils import snap_interfaces, get_arch
 
 # Provide a list of VMs you want to reuse. VMs should have already microk8s installed.
 # the test will attempt a refresh to the channel requested for testing
@@ -24,7 +25,7 @@ class VM:
     """
 
     def __init__(self, backend=None, attach_vm=None):
-        """Detect the available backends and instantiate a VM.
+        """Detect the available backends and instantiate a VM
 
         If `attach_vm` is provided we just make sure the right MicroK8s is deployed.
         :param backend: either multipass of lxc
@@ -79,7 +80,7 @@ class VM:
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
-                cmd = "snap install microk8s --classic --channel {}".format(channel_or_snap)
+                cmd = "snap install microk8s --channel {}".format(channel_or_snap)
                 time.sleep(20)
                 print("About to run {}".format(cmd))
                 output = ""
@@ -109,8 +110,12 @@ class VM:
             channel_or_snap, self.vm_name
         ).split()
         subprocess.check_output(cmd)
-        cmd = ["snap install /var/tmp/microk8s.snap --classic --dangerous"]
+        cmd = ["snap install /var/tmp/microk8s.snap --dangerous"]
         subprocess.check_output(cmd_prefix + cmd)
+        time.sleep(20)
+        for i in snap_interfaces:
+            cmd = "snap connect microk8s:{}".format(i)
+            subprocess.check_output(cmd_prefix + [cmd])
         time.sleep(20)
 
     def _setup_multipass(self, channel_or_snap):
@@ -123,7 +128,7 @@ class VM:
             else:
                 subprocess.check_call(
                     "/snap/bin/multipass exec {}  -- sudo "
-                    "snap install microk8s --classic --channel {}".format(
+                    "snap install microk8s --channel {}".format(
                         self.vm_name, channel_or_snap
                     ).split()
                 )
@@ -147,8 +152,14 @@ class VM:
         )
         subprocess.check_call(
             "/snap/bin/multipass exec {}  -- sudo "
-            "snap install /var/tmp/microk8s.snap --classic --dangerous".format(self.vm_name).split()
+            "snap install /var/tmp/microk8s.snap --dangerous".format(self.vm_name).split()
         )
+        for i in snap_interfaces:
+            subprocess.check_call(
+                "/snap/bin/multipass exec {}  -- sudo "
+                "snap connect microk8s:{}".format(self.vm_name, i).split()
+            )
+        time.sleep(20)
 
     def run(self, cmd):
         """
@@ -278,6 +289,10 @@ class TestCluster(object):
                 assert False
             print("Calico found in node {}".format(vm.vm_name))
 
+    @pytest.mark.skipif(
+        os.environ.get("STRICT") == "yes",
+        reason="Skipping test_calico_interfaces_removed_on_snap_remove tests in strict",
+    )
     def test_calico_interfaces_removed_on_snap_remove(self):
         """
         Test that calico interfaces are not present on the node
@@ -418,7 +433,7 @@ class TestCluster(object):
         Test a worker node is setup
         """
         print("Setting up a worker node")
-        vm = VM()
+        vm = VM(backend)
         vm.setup(channel_to_test)
         self.VM.append(vm)
 
@@ -472,7 +487,6 @@ class TestCluster(object):
                 if "NotReady" in connected_nodes.decode() or vm.vm_name in connected_nodes.decode():
                     time.sleep(5)
                     continue
-                print(connected_nodes.decode())
                 break
             except ChildProcessError:
                 time.sleep(10)
@@ -500,3 +514,30 @@ class TestCluster(object):
         for vm in self.VM:
             lock_files = vm.run("ls /var/snap/microk8s/current/var/lock/")
             assert "no-cert-reissue" in lock_files.decode()
+
+    @pytest.mark.skipif(
+        get_arch() != "amd64", reason="Launch configuration test is only available in AMD64"
+    )
+    def test_launch_configuration(self):
+        """
+        Test launch configurations by installing the demo snap and connecting the content interface
+        """
+        vm = self.VM[0]
+        vm.run("snap install content-demo-microk8s --channel=latest/edge")
+        vm.run("snap connect microk8s:configuration content-demo-microk8s:configuration")
+        print("Waiting for node to register")
+        attempt = 0
+        while attempt < 50:
+            try:
+                pods = vm.run("/snap/bin/microk8s.kubectl get po -A")
+                if "coredns" not in pods.decode():
+                    time.sleep(10)
+                    continue
+                print(pods.decode())
+                break
+            except ChildProcessError:
+                time.sleep(10)
+                attempt += 1
+                if attempt == 50:
+                    raise
+        vm.run("snap disconnect microk8s:configuration content-demo-microk8s:configuration")
