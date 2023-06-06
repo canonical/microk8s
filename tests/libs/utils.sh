@@ -37,6 +37,7 @@ function setup_tests() {
   TO_CHANNEL="${3-$TO_CHANNEL}"
   PROXY="${4-$PROXY}"
 
+  export DEBIAN_FRONTEND=noninteractive
   apt-get install python3-pip -y
   pip3 install -U pytest requests pyyaml sh
   apt-get install jq -y

@@ -207,8 +207,9 @@ jobs:
       - name: Setup Trivy vulnerability scanner
         run: |
           mkdir -p sarifs
-          wget https://github.com/aquasecurity/trivy/releases/download/v0.42.0/trivy_0.42.0_Linux-64bit.tar.gz
-          tar -zxvf ./trivy_0.42.0_Linux-64bit.tar.gz
+          VER=$(curl --silent -qI https://github.com/aquasecurity/trivy/releases/latest | awk -F '/' '/^location/ {print  substr($NF, 1, length($NF)-1)}');
+          wget https://github.com/aquasecurity/trivy/releases/download/${VER}/trivy_${VER#v}_Linux-64bit.tar.gz
+          tar -zxvf ./trivy_${VER#v}_Linux-64bit.tar.gz
       - name: Run Trivy vulnerability scanner in repo mode
         uses: aquasecurity/trivy-action@master
         with:
