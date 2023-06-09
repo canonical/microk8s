@@ -49,8 +49,19 @@ addons:
 
   if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
   then
-    lxc file push "${TO_CHANNEL}" "$NAME"/tmp/microk8s_latest_amd64.snap
-    lxc exec "$NAME" -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+    lxc file push "${TO_CHANNEL}" "$NAME"/var/tmp/microk8s_latest_amd64.snap
+    while ! lxc exec "$NAME" -- bash -c "snap install snapd"; do
+      echo retry install snapd
+      sleep 1
+    done
+    while ! lxc exec "$NAME" -- bash -c "snap install core20"; do
+      echo retry install core20
+      sleep 1
+    done
+    while ! lxc exec "$NAME" -- bash -c "snap install /var/tmp/microk8s_latest_amd64.snap --dangerous --classic"; do
+      echo retry snap install
+      sleep 1
+    done
     lxc exec "$NAME" -- bash -c '/snap/microk8s/current/connect-all-interfaces.sh'
   else
     lxc exec "$NAME" -- snap install microk8s --channel="${TO_CHANNEL}" --classic
@@ -88,13 +99,20 @@ function setup_airgapped_microk8s() {
   create_machine "$NAME" "$DISTRO" "$PROXY"
   if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
   then
-    lxc file push "${TO_CHANNEL}" "$NAME"/tmp/microk8s.snap
+    lxc file push "${TO_CHANNEL}" "$NAME"/var/tmp/microk8s.snap
   else
-    lxc exec "$NAME" -- snap download microk8s --channel="${TO_CHANNEL}" --target-directory /tmp --basename microk8s
+    lxc exec "$NAME" -- snap download microk8s --channel="${TO_CHANNEL}" --target-directory /var/tmp --basename microk8s
   fi
+  while ! lxc exec "$NAME" -- bash -c "snap install snapd"; do
+    echo retry install snapd
+    sleep 1
+  done
+  while ! lxc exec "$NAME" -- bash -c "snap install core20"; do
+    echo retry install core20
+    sleep 1
+  done
+
   lxc exec "$NAME" -- bash -c "
-    snap install core20
-    snap install snapd
     echo '
   network:
     version: 2
@@ -140,7 +158,7 @@ addons:
   - name: registry
   " > /root/snap/microk8s/common/.microk8s.yaml
 
-  while ! snap install /tmp/microk8s.snap --dangerous --classic; do
+  while ! snap install /var/tmp/microk8s.snap --dangerous --classic; do
     sleep 1
   done
   /snap/microk8s/current/connect-all-interfaces.sh

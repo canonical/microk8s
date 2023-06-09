@@ -2,6 +2,7 @@
 
 export $(grep -v '^#' /etc/environment | xargs)
 
+export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install python3-pip docker.io -y
 # In Ubuntu 18.04 for arm64 on LXC, "pip3 install -U pyyaml" breaks netplan
