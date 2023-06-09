@@ -53,6 +53,7 @@ if [ "$#" -ne 3 ]
 then
   PROXY=$4
 fi
+export DEBIAN_FRONTEND=noninteractive
 
 # Test airgap installation.
 # DISABLE_AIRGAP_TESTS=1 can be set to disable them.
