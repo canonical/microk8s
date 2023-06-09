@@ -26,11 +26,11 @@ cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
 def remove_dqlite_node(node, force=False):
     try:
         # If node is an IP address, find the node name.
-        is_node_ip = False
+        is_node_ip = True
         try:
-            is_node_ip = True if ip_address(node) is IPv4Address else False
+            ip_address(node)
         except ValueError:
-            pass
+            is_node_ip = False
 
         if is_node_ip:
             node_info = subprocess.check_output(
