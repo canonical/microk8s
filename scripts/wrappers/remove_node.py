@@ -8,7 +8,7 @@ import sys
 import click
 import netifaces
 
-from ipaddress import ip_address, IPv4Address
+from ipaddress import ip_address
 
 from common.cluster.utils import (
     try_set_file_permissions,
