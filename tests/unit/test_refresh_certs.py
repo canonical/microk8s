@@ -19,11 +19,13 @@ class TestRefreshCerts(object):
         # We stop and start microk8s
         assert mock_check_call.call_count == 2
 
+    @patch("common.cluster.utils.get_arg")
     @patch("subprocess.Popen")
     @patch("subprocess.check_call")
-    def test_reproduce_all_root_ca_certs(self, mock_check_call, mock_subproc_popen):
+    def test_reproduce_all_root_ca_certs(self, mock_check_call, mock_subproc_popen, mock_get_arg):
         process_mock = Mock()
         mock_subproc_popen.return_value = process_mock
+        mock_get_arg.return_value = "known_tokens.csv"
 
         reproduce_all_root_ca_certs()
 

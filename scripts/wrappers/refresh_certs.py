@@ -5,8 +5,14 @@ import subprocess
 from dateutil.parser import parse
 import datetime
 
-from common.utils import exit_if_no_root
+from common.utils import (
+    exit_if_no_root,
+)
 
+from common.cluster.utils import (
+    is_token_auth_enabled,
+    rebuild_x509_auth_client_configs,
+)
 
 snapdata_path = os.environ.get("SNAP_DATA")
 snap_path = os.environ.get("SNAP")
@@ -83,10 +89,15 @@ def update_configs():
     """
     Update all kubeconfig files used by the client and the services
     """
-    p = subprocess.Popen(
-        ["bash", "-c", ". {}/actions/common/utils.sh; update_configs".format(snap_path)]
-    )
-    p.communicate()
+    if is_token_auth_enabled():
+        p = subprocess.Popen(
+            ["bash", "-c", ". {}/actions/common/utils.sh; update_configs".format(snap_path)]
+        )
+        p.communicate()
+    else:
+        rebuild_x509_auth_client_configs()
+        restart("kubelite")
+        restart("cluster-agent")
 
 
 def take_backup():

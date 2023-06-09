@@ -13,6 +13,7 @@ from ipaddress import ip_address, IPv4Address
 from common.cluster.utils import (
     try_set_file_permissions,
     is_node_running_dqlite,
+    is_token_auth_enabled,
 )
 
 snap_path = os.environ.get("SNAP")
@@ -101,7 +102,8 @@ def remove_node(node):
         print("Node {} does not exist.".format(node))
         exit(1)
 
-    remove_kubelet_token(node)
+    if is_token_auth_enabled():
+        remove_kubelet_token(node)
     remove_callback_token(node)
     subprocess.check_call(
         "{}/microk8s-kubectl.wrapper delete no {}".format(snap_path, node).split(),

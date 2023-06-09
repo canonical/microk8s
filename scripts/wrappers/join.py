@@ -1,33 +1,39 @@
 #!/usr/bin/python3
-import base64
-import random
-import string
-import subprocess
-import os
-import ssl
-import sys
-import time
 import hashlib
 import http
+import json
+import os
+import random
+import shutil
+import socket
+import ssl
+import string
+import subprocess
+import sys
+import time
 
 import click
 import requests
-import socket
-import shutil
 import urllib3
 import yaml
-import json
-
 from common.cluster.utils import (
-    is_low_memory_guard_enabled,
-    try_set_file_permissions,
-    is_node_running_dqlite,
+    ca_one_line,
+    create_x509_kubeconfig,
+    enable_token_auth,
+    get_arg,
     get_cluster_agent_port,
-    try_initialise_cni_autodetect_for_clustering,
-    service,
-    mark_no_cert_reissue,
-    get_token,
     get_cluster_cidr,
+    get_locally_signed_client_cert,
+    get_token,
+    is_low_memory_guard_enabled,
+    is_node_running_dqlite,
+    is_token_auth_enabled,
+    mark_no_cert_reissue,
+    rebuild_x509_auth_client_configs,
+    service,
+    set_arg,
+    try_initialise_cni_autodetect_for_clustering,
+    try_set_file_permissions,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -177,36 +183,6 @@ def get_connection_info(
         exit(4)
 
 
-def set_arg(key, value, file):
-    """
-    Set an argument to a file
-
-    :param key: argument name
-    :param value: value
-    :param file: the arguments file
-    """
-    filename = "{}/args/{}".format(snapdata_path, file)
-    filename_remote = "{}/args/{}.remote".format(snapdata_path, file)
-    done = False
-    with open(filename_remote, "w+") as back_fp:
-        with open(filename, "r+") as fp:
-            for _, line in enumerate(fp):
-                if line.startswith(key):
-                    done = True
-                    if value is not None:
-                        back_fp.write("{}={}\n".format(key, value))
-                else:
-                    back_fp.write("{}".format(line))
-        if not done and value is not None:
-            back_fp.write("{}={}\n".format(key, value))
-
-    shutil.copyfile(filename, "{}.backup".format(filename))
-    try_set_file_permissions("{}.backup".format(filename))
-    shutil.copyfile(filename_remote, filename)
-    try_set_file_permissions(filename)
-    os.remove(filename_remote)
-
-
 def get_etcd_client_cert(master_ip, master_port, token):
     """
     Get a signed cert to access etcd
@@ -326,15 +302,6 @@ def update_flannel(etcd, master_ip, master_port, token):
     service("restart", "flanneld")
 
 
-def ca_one_line(ca):
-    """
-    The CA in one line
-    :param ca: the ca
-    :return: one line
-    """
-    return base64.b64encode(ca.encode("utf-8")).decode("utf-8")
-
-
 def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
     """
     Create a kubeconfig file. The file in stored under credentials named after the user
@@ -358,37 +325,6 @@ def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
             config_txt = config_txt.replace("CADATA", ca_line)
             config_txt = config_txt.replace("NAME", user)
             config_txt = config_txt.replace("TOKEN", token)
-            config_txt = config_txt.replace("127.0.0.1", master_ip)
-            config_txt = config_txt.replace("16443", api_port)
-            fp.write(config_txt)
-        try_set_file_permissions(config)
-
-
-def create_x509_kubeconfig(ca, master_ip, api_port, filename, user, path_to_cert, path_to_cert_key):
-    """
-    Create a kubeconfig file. The file in stored under credentials named after the user
-
-    :param ca: the ca
-    :param master_ip: the master node IP
-    :param api_port: the API server port
-    :param filename: the name of the config file
-    :param user: the user to use al login
-    :param path_to_cert: path to certificate file
-    :param path_to_cert_key: path to certificate key file
-    """
-    snap_path = os.environ.get("SNAP")
-    config_template = "{}/{}".format(snap_path, "client-x509.config.template")
-    config = "{}/credentials/{}".format(snapdata_path, filename)
-    shutil.copyfile(config, "{}.backup".format(config))
-    try_set_file_permissions("{}.backup".format(config))
-    ca_line = ca_one_line(ca)
-    with open(config_template, "r") as tfp:
-        with open(config, "w+") as fp:
-            config_txt = tfp.read()
-            config_txt = config_txt.replace("CADATA", ca_line)
-            config_txt = config_txt.replace("NAME", user)
-            config_txt = config_txt.replace("PATHTOCERT", path_to_cert)
-            config_txt = config_txt.replace("PATHTOKEYCERT", path_to_cert_key)
             config_txt = config_txt.replace("127.0.0.1", master_ip)
             config_txt = config_txt.replace("16443", api_port)
             fp.write(config_txt)
@@ -782,7 +718,7 @@ def join_dqlite(connection_parts, verify=False, worker=False):
     if worker:
         join_dqlite_worker_node(info, master_ip, master_port, token)
     else:
-        join_dqlite_master_node(info, master_ip, token)
+        join_dqlite_master_node(info, master_ip)
 
 
 def update_apiserver_proxy(master_ip, api_port):
@@ -807,6 +743,57 @@ def update_apiserver_proxy(master_ip, api_port):
 
     try_set_file_permissions(traefik_providers_out)
     service("restart", "apiserver-proxy")
+
+
+def rebuild_token_based_auth_configs(info):
+    # We need to make sure token-auth is enabled in this node too.
+    apiserver_port = get_arg("--secure-port", "kube-apiserver")
+    if not apiserver_port:
+        apiserver_port = "6443"
+
+    if not is_token_auth_enabled():
+        enable_token_auth(info["admin_token"])
+        create_admin_kubeconfig(info["ca"], info["admin_token"])
+        hostname = socket.gethostname().lower()
+        components = [
+            {"username": "system:kube-controller-manager", "group": None, "filename": "controller"},
+            {"username": "system:kube-proxy", "group": None, "filename": "proxy"},
+            {"username": "system:kube-scheduler", "group": None, "filename": "scheduler"},
+            {"username": f"system:node:{hostname}", "group": "system:nodes", "filename": "kubelet"},
+        ]
+        for c in components:
+            cert = get_locally_signed_client_cert(c["filename"], c["username"], c["group"])
+            create_x509_kubeconfig(
+                info["ca"],
+                "127.0.0.1",
+                apiserver_port,
+                filename=f"{c['filename']}.config",
+                user=c["username"],
+                path_to_cert=cert["certificate_location"],
+                path_to_cert_key=cert["certificate_key_location"],
+                embed=True,
+            )
+    else:
+        replace_admin_token(info["admin_token"])
+        create_admin_kubeconfig(info["ca"], info["admin_token"])
+
+        # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
+        for component in [
+            ("kube-proxy", "kubeproxy", "proxy.config"),
+            ("kubelet", "kubelet", "kubelet.config"),
+            ("kube-controller-manager", "controller", "controller.config"),
+            ("kube-scheduler", "scheduler", "scheduler.config"),
+        ]:
+            component_token = get_token(component[0])
+            if not component_token:
+                print(
+                    "Error, could not locate {} token. Joining cluster failed.".format(component[0])
+                )
+                exit(3)
+            # We assume the API listens on all nodes on the same port
+            create_kubeconfig(
+                component_token, info["ca"], "127.0.0.1", apiserver_port, component[2], component[1]
+            )
 
 
 def print_worker_usage():
@@ -857,40 +844,42 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     print_worker_usage()
 
 
-def join_dqlite_master_node(info, master_ip, token):
+def join_dqlite_master_node(info, master_ip):
     """
     Join this node to a cluster running dqlite.
 
     :param info: dictionary with the connection information
     :param master_ip: the IP of the master node we contacted to connect to the cluster
-    :param token: the token to pass to the master in order to authenticate with it
     """
+
+    # The cluster we want to join may be either token-auth based or x509-auth based.
+    # The way to identify the cluster type is to look for the "admin_token" in the info
+    # we got back from the cluster we try to join.
+    # In the case of token-auth we need to:
+    # - create the known_tokens.csv file (if it does not exist) with the admin token
+    # - turn on token-auth on kube-apiserver
+    # - create the token based admin kubeconfig
+    # - recreate the kubelet, proxy, scheduler, controller kubeconfigs for the new ca
+    # - restart kubelite
+    # In the case of x509-auth we need to:
+    # - recreate the admin/client, kubelet, proxy, scheduler, controller kubeconfigs for the new ca
+    # - restart kubelite
+
     hostname_override = info["hostname_override"]
     store_cert("ca.crt", info["ca"])
     store_cert("ca.key", info["ca_key"])
     store_cert("serviceaccount.key", info["service_account_key"])
-    # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
-    for component in [
-        ("kube-proxy", "kubeproxy", "proxy.config"),
-        ("kubelet", "kubelet", "kubelet.config"),
-        ("kube-controller-manager", "controller", "controller.config"),
-        ("kube-scheduler", "scheduler", "scheduler.config"),
-    ]:
-        component_token = get_token(component[0])
-        if not component_token:
-            print("Error, could not locate {} token. Joining cluster failed.".format(component[0]))
-            exit(3)
-        assert token is not None
-        # TODO make this configurable
-        create_kubeconfig(
-            component_token, info["ca"], "127.0.0.1", "16443", component[2], component[1]
-        )
+
     if "admin_token" in info:
-        replace_admin_token(info["admin_token"])
+        # We try to join a cluster where token-auth is in place.
+        rebuild_token_based_auth_configs(info)
+    else:
+        # We are joining a x509-auth based cluster
+        rebuild_x509_auth_client_configs()
+
     if "api_authz_mode" in info:
         update_apiserver(info["api_authz_mode"])
 
-    create_admin_kubeconfig(info["ca"], info["admin_token"])
     store_base_kubelet_args(info["kubelet_args"])
     update_kubelet_node_ip(info["kubelet_args"], hostname_override)
     update_kubelet_hostname_override(info["kubelet_args"])

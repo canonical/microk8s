@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import base64
 import json
 import os
 import shutil
@@ -18,8 +17,7 @@ from common.cluster.utils import (
     unmark_no_cert_reissue,
     restart_all_services,
     is_node_dqlite_worker,
-    get_token,
-    try_set_file_permissions,
+    rebuild_x509_auth_client_configs,
 )
 
 snapdata_path = os.environ.get("SNAP_DATA")
@@ -42,7 +40,7 @@ def reset_current_dqlite_worker_installation():
 
     service("stop", "apiserver")
     service("stop", "k8s-dqlite")
-    rebuild_client_config()
+    rebuild_x509_auth_client_configs()
 
     print("Generating new cluster certificates.", flush=True)
     reinit_cluster()
@@ -53,45 +51,10 @@ def reset_current_dqlite_worker_installation():
             "{}/args/{}".format(snapdata_path, config_file),
         )
 
-    for user in ["proxy", "kubelet"]:
-        config = "{}/credentials/{}.config".format(snapdata_path, user)
-        shutil.copyfile("{}.backup".format(config), config)
-
     unmark_no_cert_reissue()
     unmark_worker_node()
     restart_all_services()
     apply_cni()
-
-
-def rebuild_client_config():
-    """
-    Recreate the client config
-    """
-    token = get_token("admin")
-    if not token:
-        print("Error, could not locate admin token. Resetting the node failed.")
-        exit(2)
-
-    config_template = "{}/{}".format(snap_path, "client.config.template")
-    config = "{}/credentials/client.config".format(snapdata_path)
-    shutil.copyfile(config, "{}.backup".format(config))
-    try_set_file_permissions("{}.backup".format(config))
-    cert_file = "{}/certs/{}".format(snapdata_path, "ca.crt")
-    with open(cert_file) as fp:
-        ca = fp.read()
-    ca_line = base64.b64encode(ca.encode("utf-8")).decode("utf-8")
-    with open(config_template, "r") as tfp:
-        with open(config, "w+") as fp:
-            for _, config_txt in enumerate(tfp):
-                if config_txt.strip().startswith("username:"):
-                    continue
-                else:
-                    config_txt = config_txt.replace("CADATA", ca_line)
-                    config_txt = config_txt.replace("NAME", "admin")
-                    config_txt = config_txt.replace("AUTHTYPE", "token")
-                    config_txt = config_txt.replace("PASSWORD", token)
-                    fp.write(config_txt)
-        try_set_file_permissions(config)
 
 
 def disable_apiserver_proxy():
@@ -187,6 +150,7 @@ def reset_current_dqlite_installation():
 
     print("Generating new cluster certificates.", flush=True)
     reinit_cluster()
+    rebuild_x509_auth_client_configs()
 
     service("start", "k8s-dqlite")
     service("start", "apiserver")
