@@ -9,6 +9,16 @@ get_microk8s_group() {
   fi
 }
 
+get_microk8s_or_cis_group() {
+  if [ -e $SNAP_DATA/var/lock/cis-hardening ]
+  then
+    echo "root"
+  else
+    get_microk8s_group
+  fi
+}
+
+
 exit_if_no_permissions() {
   # test if we can access the default kubeconfig
   if [ ! -r $SNAP_DATA/credentials/client.config ]; then

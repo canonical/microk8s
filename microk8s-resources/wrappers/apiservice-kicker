@@ -23,7 +23,7 @@ then
 	exit 0
 fi
 
-group=$(get_microk8s_group)
+group=$(get_microk8s_or_cis_group)
 restart_attempt=0
 installed_registry_help=0
 
@@ -38,6 +38,7 @@ do
     # every 5 seconds
     sleep 5
     if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ] &&
+      [ ! -e "${SNAP_DATA}/var/lock/cis-hardening" ] &&
       getent group ${group} >/dev/null 2>&1
     then
       chmod -R ug+rwX ${SNAP_DATA}/var/kubernetes/backend || true

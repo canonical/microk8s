@@ -11,7 +11,8 @@ import click
 import jsonschema
 import yaml
 
-from common.utils import get_current_arch, snap_common, get_group, snap, exit_if_no_root
+from common.utils import get_current_arch, snap_common, snap, exit_if_no_root
+from common.cluster.utils import get_group
 
 GIT = os.path.expandvars("$SNAP/git.wrapper")
 

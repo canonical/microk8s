@@ -63,7 +63,7 @@ def test_join_dqlite_master_node(
             snapcommon,
             snapdata,
             dqlite,
-            snap,
+            snap / "meta",
             args / "cni-network",
             snapdata / "var" / "lock",
             certs,
@@ -83,6 +83,8 @@ def test_join_dqlite_master_node(
             with open(certs / f"{cert}.key", "w") as ca:
                 ca.write(f"{cert}_key_data")
 
+        with open(snap / "meta" / "snap.yaml", "w") as f:
+            f.write("confinement: classic")
         with open(certs / "serviceaccount.key", "w") as f:
             f.write("service_account_key_data")
         with open(args / "kube-apiserver", "w") as f:

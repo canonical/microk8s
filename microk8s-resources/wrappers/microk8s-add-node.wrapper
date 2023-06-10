@@ -51,7 +51,7 @@ if [ ! -f "$SNAP_DATA/credentials/cluster-tokens.txt" ]; then
   touch $SNAP_DATA/credentials/cluster-tokens.txt
 fi
 
-group=$(get_microk8s_group)
+group=$(get_microk8s_or_cis_group)
 
 if getent group ${group} >/dev/null 2>&1
 then

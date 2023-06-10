@@ -268,7 +268,7 @@ do
   chmod -R o-rwX ${dir}
 done
 
-group=$(get_microk8s_group)
+group=$(get_microk8s_or_cis_group)
 
 # Try to create the snap_microk8s group. Do not fail the installation if something goes wrong
 if ! getent group ${group} >/dev/null 2>&1
