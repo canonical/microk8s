@@ -8,7 +8,7 @@ import sys
 import click
 import netifaces
 
-from ipaddress import ip_address, IPv4Address
+from ipaddress import ip_address
 
 from common.cluster.utils import (
     try_set_file_permissions,
@@ -26,7 +26,13 @@ cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
 def remove_dqlite_node(node, force=False):
     try:
         # If node is an IP address, find the node name.
-        if type(ip_address(node)) is IPv4Address:
+        is_node_ip = True
+        try:
+            ip_address(node)
+        except ValueError:
+            is_node_ip = False
+
+        if is_node_ip:
             node_info = subprocess.check_output(
                 "{}/microk8s-kubectl.wrapper get no -o json".format(snap_path).split()
             )

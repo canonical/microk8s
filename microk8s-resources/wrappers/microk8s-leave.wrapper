@@ -16,8 +16,9 @@ exit_if_stopped
 exit_if_not_root
 exit_if_no_permissions
 
-if ! [ -e ${SNAP_DATA}/var/lock/clustered.lock ] &&
-   ! [ -e ${SNAP_DATA}/args/k8s-dqlite ]
+if ! [ -e ${SNAP_DATA}/var/lock/no-cert-reissue ] ||
+   [[ ! -e ${SNAP_DATA}/var/lock/clustered.lock &&
+      ! -e ${SNAP_DATA}/args/k8s-dqlite ]]
 then
   echo "This MicroK8s deployment is not acting as a node in a cluster."
   exit 1
