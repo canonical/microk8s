@@ -437,7 +437,7 @@ def get_token(name, tokens_file="known_tokens.csv"):
     return None
 
 
-def get_locally_signed_client_cert(fname, username, group=None):
+def get_locally_signed_client_cert(fname, username, group=None, extfile=None):
     """
     Get a cert signed by the local CA.
 
@@ -485,6 +485,9 @@ def get_locally_signed_client_cert(fname, username, group=None):
         k=ca_key_file,
         crt=cer_file,
     )
+    if extfile:
+        cmd_cert = cmd_cert + " -extfile {}".format(extfile)
+
     subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try_set_file_permissions(cer_file)
 
@@ -647,15 +650,19 @@ def rebuild_x509_auth_client_configs():
         apiserver_port = "6443"
 
     hostname = socket.gethostname().lower()
+    csr_conf_file = "{}/certs/kubelet.csr.conf".format(snapdata_path)
+    with open(csr_conf_file, 'w') as fp:
+        fp.write("subjectAltName=DNS:{}\n".format(hostname))
+
     components = [
-        {"username": "admin", "group": "system:masters", "filename": "client"},
-        {"username": "system:kube-controller-manager", "group": None, "filename": "controller"},
-        {"username": "system:kube-proxy", "group": None, "filename": "proxy"},
-        {"username": "system:kube-scheduler", "group": None, "filename": "scheduler"},
-        {"username": f"system:node:{hostname}", "group": "system:nodes", "filename": "kubelet"},
+        {"username": "admin", "group": "system:masters", "filename": "client", "extfile": None},
+        {"username": "system:kube-controller-manager", "group": None, "filename": "controller", "extfile": None},
+        {"username": "system:kube-proxy", "group": None, "filename": "proxy", "extfile": None},
+        {"username": "system:kube-scheduler", "group": None, "filename": "scheduler", "extfile": None},
+        {"username": f"system:node:{hostname}", "group": "system:nodes", "filename": "kubelet", "extfile": csr_conf_file},
     ]
     for c in components:
-        cert = get_locally_signed_client_cert(c["filename"], c["username"], c["group"])
+        cert = get_locally_signed_client_cert(c["filename"], c["username"], c["group"], c["extfile"])
         create_x509_kubeconfig(
             ca,
             "127.0.0.1",
