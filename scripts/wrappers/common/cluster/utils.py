@@ -651,18 +651,35 @@ def rebuild_x509_auth_client_configs():
 
     hostname = socket.gethostname().lower()
     csr_file = "{}/certs/kubelet.csr.conf".format(snapdata_path)
-    with open(csr_file, 'w') as fp:
+    with open(csr_file, "w") as fp:
         fp.write("subjectAltName=DNS:{}\n".format(hostname))
 
     components = [
         {"username": "admin", "group": "system:masters", "filename": "client", "extfile": None},
-        {"username": "system:kube-controller-manager", "group": None, "filename": "controller", "extfile": None},
+        {
+            "username": "system:kube-controller-manager",
+            "group": None,
+            "filename": "controller",
+            "extfile": None,
+        },
         {"username": "system:kube-proxy", "group": None, "filename": "proxy", "extfile": None},
-        {"username": "system:kube-scheduler", "group": None, "filename": "scheduler", "extfile": None},
-        {"username": f"system:node:{hostname}", "group": "system:nodes", "filename": "kubelet", "extfile": csr_file},
+        {
+            "username": "system:kube-scheduler",
+            "group": None,
+            "filename": "scheduler",
+            "extfile": None,
+        },
+        {
+            "username": f"system:node:{hostname}",
+            "group": "system:nodes",
+            "filename": "kubelet",
+            "extfile": csr_file,
+        },
     ]
     for c in components:
-        cert = get_locally_signed_client_cert(c["filename"], c["username"], c["group"], c["extfile"])
+        cert = get_locally_signed_client_cert(
+            c["filename"], c["username"], c["group"], c["extfile"]
+        )
         create_x509_kubeconfig(
             ca,
             "127.0.0.1",
