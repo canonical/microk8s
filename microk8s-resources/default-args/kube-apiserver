@@ -25,3 +25,5 @@
 --proxy-client-cert-file=${SNAP_DATA}/certs/front-proxy-client.crt
 --proxy-client-key-file=${SNAP_DATA}/certs/front-proxy-client.key
 #~Enable the aggregation layer
+--enable-admission-plugins=EventRateLimit
+--admission-control-config-file=${SNAP_DATA}/args/admission-control-config-file.yaml
