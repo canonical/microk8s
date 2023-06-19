@@ -276,9 +276,21 @@ then
   groupadd ${group} || true
 fi
 
-if getent group ${group} >/dev/null 2>&1
+if getent group ${group} >/dev/null 2>&1 && ! [ -e "${SNAP_DATA}/var/lock/cis-hardening" ]
 then
   chgrp ${group} -R ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ ${SNAP_COMMON}/hooks || true
+fi
+
+if [ -e "${SNAP_DATA}/var/lock/cis-hardening" ]
+then
+  chmod -R g-wr ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ ${SNAP_COMMON}/hooks || true
+  chmod -R o-wr ${SNAP_COMMON}/plugins ${SNAP_COMMON}/addons ${SNAP_DATA}/credentials/ ${SNAP_DATA}/certs/ ${SNAP_DATA}/args/ ${SNAP_DATA}/var/lock/ ${SNAP_DATA}/var/kubernetes/backend/ ${SNAP_DATA}/tmp/ ${SNAP_COMMON}/hooks || true
+
+  if ! is_strict && [ -e /etc/systemd/system/snap.microk8s.daemon-kubelite.service ]
+  then
+    chmod -R g-wr /etc/systemd/system/snap.microk8s.daemon-kubelite.service
+    chmod -R o-wr /etc/systemd/system/snap.microk8s.daemon-kubelite.service
+  fi
 fi
 
 if ! is_strict
