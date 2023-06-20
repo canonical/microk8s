@@ -204,6 +204,12 @@ then
   cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
 fi
 
+# Install the kube-apiserver to kubelet roles hook
+if ! [ -e "${SNAP_COMMON}/hooks/reconcile.d/20-apiserver-to-kubelet" ]
+then
+  cp -r --preserve=mode ${SNAP}/default-hooks/reconcile.d/20-apiserver-to-kubelet ${SNAP_COMMON}/hooks/reconcile.d/20-apiserver-to-kubelet
+fi
+
 # Make sure the server certificate includes the IP we are using
 if [ "$(produce_certs)" == "1" ]
 then

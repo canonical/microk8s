@@ -623,6 +623,7 @@ create_user_kubeconfigs() {
   # kubelet cert
   hostname=$(hostname | tr '[:upper:]' '[:lower:]')
   subject="/CN=system:node:${hostname}/O=system:nodes"
+  echo "subjectAltName=DNS:$hostname" > ${SNAP_DATA}/certs/kubelet.csr.conf
   ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/kubelet.key -out ${SNAP_DATA}/certs/kubelet.csr -subj ${subject}
 
   # kube-proxy cert
@@ -637,9 +638,11 @@ create_user_kubeconfigs() {
   subject="/CN=system:kube-controller-manager"
   ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/controller.key -out ${SNAP_DATA}/certs/controller.csr -subj ${subject}
 
-  for user in client kubelet scheduler controller proxy; do
+  for user in client scheduler controller proxy; do
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/${user}.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/${user}.crt -days 3650
   done
+
+  ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/kubelet.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/kubelet.crt -days 3650 -extfile ${SNAP_DATA}/certs/kubelet.csr.conf
 
   mkdir -p ${SNAP_DATA}/credentials
   create_x509_cert "client.config" "admin" ${SNAP_DATA}/certs/client.crt ${SNAP_DATA}/certs/client.key
