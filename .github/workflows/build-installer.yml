@@ -46,7 +46,7 @@ jobs:
       - name: Download kubectl
         uses: carlosperate/download-file-action@v2.0.0
         with:
-          file-url: https://storage.googleapis.com/kubernetes-release/release/v1.26.3/bin/windows/amd64/kubectl.exe
+          file-url: https://storage.googleapis.com/kubernetes-release/release/v1.27.3/bin/windows/amd64/kubectl.exe
           file-name: kubectl.exe
           location: ${{ github.workspace }}/installer/windows
       - name: Create installer
