@@ -46,6 +46,9 @@ mkdir ${SNAP_DATA}/certs
 # Allow the ability to add external IPs to the csr, by moving the csr.conf.template to SNAP_DATA
 cp ${SNAP}/certs/csr.conf.template ${SNAP_DATA}/certs/csr.conf.template
 
+# Create the credentials directory
+mkdir -p ${SNAP_DATA}/credentials
+
 # Copy initial configuration from well-known paths.
 # This is done prior to any other initialization.
 #
@@ -87,7 +90,6 @@ done
 produce_certs
 rm -rf .srl
 
-mkdir -p ${SNAP_DATA}/credentials
 ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
 
 # Create the known tokens
