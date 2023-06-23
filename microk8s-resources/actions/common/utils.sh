@@ -644,7 +644,6 @@ create_user_kubeconfigs() {
 
   ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/kubelet.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/kubelet.crt -days 3650 -extfile ${SNAP_DATA}/certs/kubelet.csr.conf
 
-  mkdir -p ${SNAP_DATA}/credentials
   create_x509_cert "client.config" "admin" ${SNAP_DATA}/certs/client.crt ${SNAP_DATA}/certs/client.key
   create_x509_cert "controller.config" "system:kube-controller-manager" ${SNAP_DATA}/certs/controller.crt ${SNAP_DATA}/certs/controller.key
   create_x509_cert "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key
@@ -739,7 +738,7 @@ ensure_server_ca() {
     then
         csr_modified="$(ensure_csr_conf_conservative)"
         gen_server_cert
-        
+
         if [[ "$csr_modified" -eq  "1" ]]
         then
             gen_proxy_client_cert
