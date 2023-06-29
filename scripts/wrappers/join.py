@@ -408,7 +408,13 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
     set_arg(
         "--node-labels",
-        "microk8s.io/cluster=true,node.kubernetes.io/microk8s-worker=microk8s-worker",
+        ",".join(
+            [
+                "microk8s.io/cluster=true",
+                "node.kubernetes.io/microk8s-worker=microk8s-worker",
+                "model.juju.is/disable-webhook=true",
+            ]
+        ),
         "kubelet",
     )
 
