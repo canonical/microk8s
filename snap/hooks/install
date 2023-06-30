@@ -124,7 +124,7 @@ mkdir -p "${BACKUP_DIR}"
 mkdir -p "${BACKUP_DIR}/args/cni-network/"
 cp "${SNAP_DATA}"/args/cni-network/* "${BACKUP_DIR}/args/cni-network/" 2>/dev/null || true
 rm -rf "${SNAP_DATA}"/args/cni-network/*
-cp "${RESOURCES}/calico.yaml" "${SNAP_DATA}/args/cni-network/cni.yaml"
+${SNAP}/scripts/generate-cni.sh
 mkdir -p "$SNAP_DATA/opt/cni/bin/"
 cp -R "$SNAP"/opt/cni/bin/* "$SNAP_DATA"/opt/cni/bin/
 

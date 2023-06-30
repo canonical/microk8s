@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "main"
+echo "MK-1221/add-network-config"
