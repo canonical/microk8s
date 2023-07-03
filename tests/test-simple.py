@@ -2,7 +2,6 @@ import subprocess
 import time
 import requests
 import os.path
-import pytest
 
 
 class TestSimple(object):
@@ -81,7 +80,7 @@ class TestSimple(object):
         else:
             # Wait for ingress to be ready
             time.sleep(3)
-            response = requests.get(f"http://127.0.0.1:80")
+            response = requests.get("http://127.0.0.1:80")
 
         subprocess.run(
             ["microk8s", "kubectl", "delete", "-f", "tests/templates/simple-deploy.yaml"],
@@ -90,7 +89,6 @@ class TestSimple(object):
 
         # Verify the HTTP status code is 200
         assert response.status_code == 200
-
 
     def test_microk8s_services_running(self):
         # Define the services to check for control plane and worker nodes
