@@ -4,7 +4,6 @@
 --anonymous-auth=false
 --root-dir=${SNAP_COMMON}/var/lib/kubelet
 --fail-swap-on=false
---feature-gates=DevicePlugins=true
 --eviction-hard="memory.available<100Mi,nodefs.available<1Gi,imagefs.available<1Gi"
 --container-runtime-endpoint=${SNAP_COMMON}/run/containerd.sock
 --containerd=${SNAP_COMMON}/run/containerd.sock
