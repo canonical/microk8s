@@ -262,3 +262,11 @@ def is_strict():
     if "STRICT" in os.environ and os.environ["STRICT"] == "yes":
         return True
     return False
+
+
+def is_ipv6_configured():
+    try:
+        output = check_output(["ip", "-6", "address"])
+        return b"inet6" in output
+    except CalledProcessError:
+        return False

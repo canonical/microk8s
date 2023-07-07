@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginxdualstack
+spec:
+  selector:
+    matchLabels:
+      run: nginxdualstack
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: nginxdualstack
+    spec:
+      containers:
+      - name: nginxdualstack
+        image: rocks.canonical.com/cdk/diverdane/nginxdualstack:1.0.0
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx6
+  labels:
+    run: nginxdualstack
+spec:
+  type: NodePort
+  ipFamilies:
+  - IPv6
+  ipFamilyPolicy: RequireDualStack
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    run: nginxdualstack
