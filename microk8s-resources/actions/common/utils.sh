@@ -319,6 +319,9 @@ sanatise_argskubelet() {
   )
 
   remove_args "kubelet" "${args[@]}"
+
+  # Remove 'DevicePlugins=true' from feature-gates from 1.28+
+  sed -i 's,DevicePlugins=true,,' "$SNAP_DATA/args/kubelet"
 }
 
 
