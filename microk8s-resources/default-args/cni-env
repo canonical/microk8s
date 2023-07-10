@@ -1,0 +1,15 @@
+# Choose CNI to deploy. Only 'calico' is supported at the moment
+CNI=calico
+
+# IPv4 configuration
+IPv4_SUPPORT=true
+IPv4_CLUSTER_CIDR=10.1.0.0/16
+IPv4_SERVICE_CIDR=10.152.183.0/24
+
+# IPv6 configuration
+IPv6_SUPPORT=false
+# IPv6_CLUSTER_CIDR=fd01::/64
+# IPv6_SERVICE_CIDR=fd98::/108
+
+# Calico-specific configuration settings
+# CALICO_VETH_MTU=1450
