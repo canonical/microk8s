@@ -1,12 +1,12 @@
-From 7666d8ec09b732ffab2a00018f26fd2417177165 Mon Sep 17 00:00:00 2001
+From d703811ab64963a6d52e6ac98b6a33b26b13e020 Mon Sep 17 00:00:00 2001
 From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
-Date: Tue, 28 Feb 2023 16:05:33 +0200
+Date: Mon, 10 Jul 2023 12:15:34 +0300
 Subject: [PATCH] microk8s sideload images plugin
 
 ---
  cmd/containerd/builtins_microk8s.go |   6 ++
- microk8s_plugins/sideload.go        | 131 ++++++++++++++++++++++++++++
- 2 files changed, 137 insertions(+)
+ microk8s_plugins/sideload.go        | 132 ++++++++++++++++++++++++++++
+ 2 files changed, 138 insertions(+)
  create mode 100644 cmd/containerd/builtins_microk8s.go
  create mode 100644 microk8s_plugins/sideload.go
 
@@ -24,10 +24,10 @@ index 0000000..d9afc6f
 +)
 diff --git a/microk8s_plugins/sideload.go b/microk8s_plugins/sideload.go
 new file mode 100644
-index 0000000..9a48cf5
+index 0000000..3ac632e
 --- /dev/null
 +++ b/microk8s_plugins/sideload.go
-@@ -0,0 +1,131 @@
+@@ -0,0 +1,132 @@
 +package microk8s
 +
 +import (
@@ -38,6 +38,7 @@ index 0000000..9a48cf5
 +
 +	"github.com/containerd/containerd"
 +	"github.com/containerd/containerd/log"
++	"github.com/containerd/containerd/platforms"
 +	"github.com/containerd/containerd/plugin"
 +)
 +
@@ -129,7 +130,7 @@ index 0000000..9a48cf5
 +								logger.WithError(err).Warn("Failed to open file")
 +								continue nextFile
 +							}
-+							images, err := cl.Import(ic.Context, r)
++							images, err := cl.Import(ic.Context, r, containerd.WithImportPlatform(platforms.Default()))
 +							if err != nil {
 +								logger.WithError(err).Error("Failed to import images")
 +							} else {
@@ -160,4 +161,4 @@ index 0000000..9a48cf5
 +	})
 +}
 --
-2.25.1
+2.34.1
