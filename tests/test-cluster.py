@@ -27,6 +27,7 @@ profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
 
 TEMPLATES = Path(__file__).absolute().parent / "templates"
 
+
 class VM:
     """
     This class abstracts the backend we are using. It could be either multipass or lxc.
@@ -94,11 +95,11 @@ class VM:
                 cmd = ["mkdir -p /root/snap/microk8s/common/"]
                 subprocess.check_output(cmd_prefix + cmd)
 
-                file_path = '/microk8s.yaml'
+                file_path = "/microk8s.yaml"
 
                 print("Writing launch configurations to {}".format(file_path))
                 print(launch_configs)
-                with open(file_path, 'w') as file:
+                with open(file_path, "w") as file:
                     file.write(launch_configs)
 
                 # Copy the file to the VM
@@ -579,7 +580,7 @@ extraSANs:
                 attempt += 1
                 if attempt == 10:
                     raise
-        
+
         # Wait for CNI pods
         print("Waiting for cni")
         while True:
@@ -595,9 +596,7 @@ extraSANs:
 
         # Deploy the test deployment and service
         manifest = TEMPLATES / "dual-stack.yaml"
-        cmd = "lxc file push {} {}/dual-stack.yaml".format(
-                manifest, vm.vm_name
-            ).split()
+        cmd = "lxc file push {} {}/dual-stack.yaml".format(manifest, vm.vm_name).split()
         subprocess.check_output(cmd)
         vm.run("/snap/bin/microk8s.kubectl apply -f /dual-stack.yaml")
 
@@ -613,11 +612,15 @@ extraSANs:
                 print(pods.decode())
                 break
             time.sleep(5)
-        
+
         # ping the service attached with the deployment
-        ipv6_endpoint=vm.run("/snap/bin/microk8s.kubectl get service nginx6 -o jsonpath='{.spec.clusterIP}' --output='jsonpath=['{.spec.clusterIP}']'").decode()
+        ep = (
+            "/snap/bin/microk8s.kubectl get service nginx6 "
+            "-o jsonpath='{.spec.clusterIP}' --output='jsonpath=['{.spec.clusterIP}']'"
+        )
+        ipv6_endpoint = vm.run(ep).decode()
         print("Pinging endpoint: http://{}/".format(ipv6_endpoint))
-        url = f'http://{ipv6_endpoint}/'
+        url = f"http://{ipv6_endpoint}/"
         attempt = 10
         while attempt >= 0:
             try:
