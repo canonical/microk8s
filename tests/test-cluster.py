@@ -87,28 +87,7 @@ class VM:
                 ).split()
             )
             time.sleep(20)
-
-            # Set launch configurations before installing microk8s
-            if launch_configs is not None:
-                print("Setting launch configurations")
-                cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
-                cmd = ["mkdir -p /root/snap/microk8s/common/"]
-                subprocess.check_output(cmd_prefix + cmd)
-
-                file_path = "/microk8s.yaml"
-
-                print("Writing launch configurations to {}".format(file_path))
-                print(launch_configs)
-                with open(file_path, "w") as file:
-                    file.write(launch_configs)
-
-                # Copy the file to the VM
-                cmd = "lxc file push {} {}/root/snap/microk8s/common/.microk8s.yaml".format(
-                    file_path, self.vm_name
-                ).split()
-                subprocess.check_output(cmd)
-                os.remove(file_path)
-
+            self._load_launch_configuration_lxc(launch_configs)
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
@@ -126,12 +105,32 @@ class VM:
                         attempt += 1
                 print(output.decode())
         else:
+            self._load_launch_configuration_lxc(launch_configs)
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
                 cmd = "/snap/bin/lxc exec {}  -- ".format(self.vm_name).split()
                 cmd.append("sudo snap refresh microk8s --channel {}".format(channel_or_snap))
                 subprocess.check_call(cmd)
+
+    def _load_launch_configuration_lxc(self, launch_configs):
+            # Set launch configurations before installing microk8s
+            if launch_configs is not None:
+                print("Setting launch configurations")
+                cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
+                cmd = ["mkdir -p /root/snap/microk8s/common/"]
+                subprocess.check_output(cmd_prefix + cmd)
+                file_path = "/microk8s.yaml"
+                print(launch_configs)
+                with open(file_path, "w") as file:
+                    file.write(launch_configs)
+
+                # Copy the file to the VM
+                cmd = "lxc file push {} {}/root/snap/microk8s/common/.microk8s.yaml".format(
+                    file_path, self.vm_name
+                ).split()
+                subprocess.check_output(cmd)
+                os.remove(file_path)
 
     def _transfer_install_local_snap_lxc(self, channel_or_snap):
         print("Installing snap from {}".format(channel_or_snap))
@@ -146,7 +145,7 @@ class VM:
         subprocess.check_output(cmd_prefix + cmd)
         time.sleep(20)
 
-    def _setup_multipass(self, channel_or_snap):
+    def _setup_multipass(self, channel_or_snap, launch_configs=None):
         if not self.attached:
             subprocess.check_call(
                 "/snap/bin/multipass launch 18.04 -n {} -m 2G".format(self.vm_name).split()
@@ -170,6 +169,27 @@ class VM:
                         self.vm_name, channel_or_snap
                     ).split()
                 )
+
+    def _load_launch_configuration_multipass(self, launch_configs):
+            # Set launch configurations before installing microk8s
+            if launch_configs is not None:
+                print("Setting launch configurations")
+                subprocess.check_call(
+                    "/snap/bin/multipass exec {}  -- sudo "
+                    "mkdir -p /root/snap/microk8s/common/".format(self.vm_name).split()
+                )
+                file_path = "/microk8s.yaml"
+                print(launch_configs)
+                with open(file_path, "w") as file:
+                    file.write(launch_configs)
+
+                # Copy the file to the VM
+                subprocess.check_call(
+                    "/snap/bin/multipass transfer {} {}:/root/snap/microk8s/common/.microk8s.yaml".format(
+                        file_path, self.vm_name
+                    ).split()
+                )
+                os.remove(file_path)
 
     def _transfer_install_local_snap_multipass(self, channel_or_snap):
         print("Installing snap from {}".format(channel_or_snap))
@@ -560,7 +580,7 @@ extraCNIEnv:
 extraSANs:
   - 10.153.183.1"""
 
-        vm = VM(backend="lxc")
+        vm = VM(backend)
         vm.setup(channel_to_test, launch_config)
         print("Waiting for machine {}".format(vm.vm_name))
 
