@@ -24,6 +24,17 @@ reuse_vms = None
 channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/stable")
 backend = os.environ.get("BACKEND", None)
 profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
+launch_config = """---
+version: 0.1.0
+extraCNIEnv:
+  IPv4_SUPPORT: true
+  IPv4_CLUSTER_CIDR: 10.3.0.0/16
+  IPv4_SERVICE_CIDR: 10.153.183.0/24
+  IPv6_SUPPORT: true
+  IPv6_CLUSTER_CIDR: fd02::/64
+  IPv6_SERVICE_CIDR: fd99::/108
+extraSANs:
+  - 10.153.183.1"""
 
 TEMPLATES = Path(__file__).absolute().parent / "templates"
 
@@ -259,14 +270,14 @@ class TestCluster(object):
                 for i in range(0, size):
                     print("Creating machine {}".format(i))
                     vm = VM(backend)
-                    vm.setup(channel_to_test)
+                    vm.setup(channel_to_test, launch_config)
                     print("Waiting for machine {}".format(i))
                     vm.run("/snap/bin/microk8s.status --wait-ready --timeout 120")
                     self.VM.append(vm)
             else:
                 for vm_name in reuse_vms:
                     vm = VM(backend, vm_name)
-                    vm.setup(channel_to_test)
+                    vm.setup(channel_to_test, launch_config)
                     self.VM.append(vm)
 
             # Form cluster
@@ -558,28 +569,58 @@ class TestCluster(object):
             lock_files = vm.run("ls /var/snap/microk8s/current/var/lock/")
             assert "no-cert-reissue" in lock_files.decode()
 
+    def test_dual_stack_cluster(self):
+        vm = self.VM[0]
+        # Deploy the test deployment and service
+        manifest = TEMPLATES / "dual-stack.yaml"
+        cmd = "lxc file push {} {}/dual-stack.yaml".format(manifest, vm.vm_name).split()
+        subprocess.check_output(cmd)
+        vm.run("/snap/bin/microk8s.kubectl apply -f /dual-stack.yaml")
+
+        # Wait for the deployment to become ready
+        print("Waiting for nginx deployment")
+        while True:
+            ready_pods = 0
+            pods = vm.run("/snap/bin/microk8s.kubectl get po -o wide")
+            for line in pods.decode().splitlines():
+                if "nginxdualstack" in line and "Running" in line:
+                    ready_pods = 1
+            if ready_pods == 1:
+                print(pods.decode())
+                break
+            time.sleep(5)
+
+        # ping the service attached with the deployment
+        ep = (
+            "/snap/bin/microk8s.kubectl get service nginx6 "
+            "-o jsonpath='{.spec.clusterIP}' --output='jsonpath=['{.spec.clusterIP}']'"
+        )
+        ipv6_endpoint = vm.run(ep).decode()
+        print("Pinging endpoint: http://{}/".format(ipv6_endpoint))
+        url = f"http://{ipv6_endpoint}/"
+        attempt = 10
+        while attempt >= 0:
+            try:
+                resp = vm.run("curl {}".format(url))
+                if "Kubernetes IPv6 nginx" in resp.decode():
+                    print(resp)
+                    break
+            except subprocess.CalledProcessError as e:
+                print("Error occurred during the request:", str(e))
+                raise
+            attempt -= 1
+            time.sleep(2)
+
 
 class TestDualStack(object):
     @pytest.mark.skipif(
         not is_ipv6_configured and backend == "multipass",
         reason="Skipping test of dual-stack cluster on non dual stack clusters and multipass",
     )
-    def test_dual_stack(self):
+    def test_dual_stack_upgrades(self):
         """
         Test a cluster with dual stack enabled
         """
-        launch_config = """---
-version: 0.1.0
-extraCNIEnv:
-  IPv4_SUPPORT: true
-  IPv4_CLUSTER_CIDR: 10.3.0.0/16
-  IPv4_SERVICE_CIDR: 10.153.183.0/24
-  IPv6_SUPPORT: true
-  IPv6_CLUSTER_CIDR: fd02::/64
-  IPv6_SERVICE_CIDR: fd99::/108
-extraSANs:
-  - 10.153.183.1"""
-
         vm = VM(backend)
         vm.setup(channel_to_test, launch_config)
         print("Waiting for machine {}".format(vm.vm_name))
@@ -613,6 +654,22 @@ extraSANs:
             if ready_pods == 2:
                 print(pods.decode())
                 break
+
+        # Refreshing to a new revision
+        if channel_to_test.endswith(".snap"):
+            print("Installing snap from {}".format(channel_to_test))
+            cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(vm.vm_name).split()
+            cmd = ["rm -rf /var/tmp/microk8s.snap"]
+            subprocess.check_output(cmd_prefix + cmd)
+            cmd = "lxc file push {} {}/var/tmp/microk8s.snap".format(
+                channel_to_test, vm.vm_name
+            ).split()
+            subprocess.check_output(cmd)
+            cmd = "sudo snap install /var/tmp/microk8s.snap --classic --dangerous"
+            vm.run(cmd)
+            time.sleep(20)
+        else:
+            cmd = "sudo snap refresh microk8s --channel={}".format(channel_to_test)
 
         # Deploy the test deployment and service
         manifest = TEMPLATES / "dual-stack.yaml"
