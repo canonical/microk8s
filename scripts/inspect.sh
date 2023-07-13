@@ -369,7 +369,9 @@ Refer to https://microk8s.io/docs for instructions on air-gap deployments.\n\n
     AIO_NR=$(sysctl -n fs.aio-nr)
     if [ "$AIO_NR" -ge "$AIO_MAX_NR" ]; then
       printf -- "\033[0;33mWARNING: \033[0m Available asyncio requests are exhausted. This might lead to dqlite being unresponsive. \n"
-      printf -- "\t  Increase the limit with: 'sudo sysctl fs.aio-max-nr=3145728' and reboot k8s-dqlite service. \n"
+      printf -- "\t  Increase the limit and restart the k8s-dqlite service with: \n"
+      printf -- "\t  \t sudo sysctl fs.aio.max-nr=3145728\n"
+      printf -- "\t  \t sudo snap restart microk8s.daemon-k8s-dqlite\n"
     fi
   fi
 }
