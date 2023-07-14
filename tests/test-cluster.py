@@ -29,7 +29,7 @@ version: 0.1.0
 extraCNIEnv:
   IPv4_SUPPORT: true
   IPv4_CLUSTER_CIDR: 10.3.0.0/16
-  IPv4_SERVICE_CIDR: 10.153.183.0/24
+  IPv4_SERVICE_CIDR: 10.152.183.0/24
   IPv6_SUPPORT: true
   IPv6_CLUSTER_CIDR: fd02::/64
   IPv6_SERVICE_CIDR: fd99::/108
@@ -98,7 +98,9 @@ class VM:
                 ).split()
             )
             time.sleep(20)
-            self._load_launch_configuration_lxc(launch_configs)
+            if is_ipv6_configured:
+                self._load_launch_configuration_lxc(launch_configs)
+
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
@@ -116,7 +118,9 @@ class VM:
                         attempt += 1
                 print(output.decode())
         else:
-            self._load_launch_configuration_lxc(launch_configs)
+            if is_ipv6_configured:
+                self._load_launch_configuration_lxc(launch_configs)
+
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
@@ -569,6 +573,11 @@ class TestCluster(object):
             lock_files = vm.run("ls /var/snap/microk8s/current/var/lock/")
             assert "no-cert-reissue" in lock_files.decode()
 
+    @pytest.mark.skipif(
+        # If the host system does not have IPv6 support or is not configured for IPv6, it won't be able to create VMs with IPv6 connectivity.
+        backend != "lxc" or not is_ipv6_configured,
+        reason="Skipping dual stack tests on VMs which are not lxc based and not dual-stack enabled",
+    )
     def test_dual_stack_cluster(self):
         vm = self.VM[0]
         # Deploy the test deployment and service
@@ -614,10 +623,10 @@ class TestCluster(object):
 
 class TestDualStack(object):
     @pytest.mark.skipif(
-        not is_ipv6_configured and backend == "multipass",
-        reason="Skipping test of dual-stack cluster on non dual stack clusters and multipass",
+        backend != "lxc" or not is_ipv6_configured,
+        reason="Skipping dual stack tests on VMs which are not lxc based and not dual-stack enabled",
     )
-    def test_dual_stack_upgrades(self):
+    def test_dual_stack(self):
         """
         Test a cluster with dual stack enabled
         """
@@ -654,22 +663,6 @@ class TestDualStack(object):
             if ready_pods == 2:
                 print(pods.decode())
                 break
-
-        # Refreshing to a new revision
-        if channel_to_test.endswith(".snap"):
-            print("Installing snap from {}".format(channel_to_test))
-            cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(vm.vm_name).split()
-            cmd = ["rm -rf /var/tmp/microk8s.snap"]
-            subprocess.check_output(cmd_prefix + cmd)
-            cmd = "lxc file push {} {}/var/tmp/microk8s.snap".format(
-                channel_to_test, vm.vm_name
-            ).split()
-            subprocess.check_output(cmd)
-            cmd = "sudo snap install /var/tmp/microk8s.snap --classic --dangerous"
-            vm.run(cmd)
-            time.sleep(20)
-        else:
-            cmd = "sudo snap refresh microk8s --channel={}".format(channel_to_test)
 
         # Deploy the test deployment and service
         manifest = TEMPLATES / "dual-stack.yaml"

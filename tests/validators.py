@@ -209,3 +209,30 @@ def validate_metallb_config(ip_ranges="192.168.0.105"):
     )
     for ip_range in ip_ranges.split(","):
         assert ip_range in out
+
+
+def validate_dual_stack():
+    # Deploy the test deployment and service
+    manifest = TEMPLATES / "dual-stack.yaml"
+    kubectl("apply -f {}".format(manifest))
+
+    wait_for_pod_state("", "default", "running", label="run=nginxdualstack")
+
+    ipv6_endpoint = kubectl("get service nginx6 -o jsonpath={.spec.clusterIP} --output=jsonpath=[{.spec.clusterIP}]")
+    print("Pinging endpoint: http://{}/".format(ipv6_endpoint))
+    url = f"http://{ipv6_endpoint}/"
+    attempt = 10
+    service_ok = False
+    while attempt >= 0:
+        try:
+            resp = requests.get(url)
+            if "Kubernetes IPv6 nginx" in str(resp.content):
+                print(resp.content)
+                service_ok = True
+                break
+        except requests.RequestException:
+            time.sleep(5)
+            attempt -= 1
+
+    assert service_ok == True
+    kubectl("delete -f {}".format(manifest))
