@@ -29,7 +29,7 @@ version: 0.1.0
 extraCNIEnv:
   IPv4_SUPPORT: true
   IPv4_CLUSTER_CIDR: 10.3.0.0/16
-  IPv4_SERVICE_CIDR: 10.152.183.0/24
+  IPv4_SERVICE_CIDR: 10.153.183.0/24
   IPv6_SUPPORT: true
   IPv6_CLUSTER_CIDR: fd02::/64
   IPv6_SERVICE_CIDR: fd99::/108
@@ -98,8 +98,8 @@ class VM:
                 ).split()
             )
             time.sleep(20)
-            if is_ipv6_configured:
-                self._load_launch_configuration_lxc(launch_configs)
+
+            self._load_launch_configuration_lxc(launch_configs)
 
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
@@ -118,8 +118,7 @@ class VM:
                         attempt += 1
                 print(output.decode())
         else:
-            if is_ipv6_configured:
-                self._load_launch_configuration_lxc(launch_configs)
+            self._load_launch_configuration_lxc(launch_configs)
 
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
@@ -135,7 +134,7 @@ class VM:
             cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
             cmd = ["mkdir -p /root/snap/microk8s/common/"]
             subprocess.check_output(cmd_prefix + cmd)
-            file_path = "/microk8s.yaml"
+            file_path = "microk8s.yaml"
             print(launch_configs)
             with open(file_path, "w") as file:
                 file.write(launch_configs)
@@ -148,23 +147,28 @@ class VM:
             os.remove(file_path)
 
     def _transfer_install_local_snap_lxc(self, channel_or_snap):
-        print("Installing snap from {}".format(channel_or_snap))
-        cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
-        cmd = ["rm -rf /var/tmp/microk8s.snap"]
-        subprocess.check_output(cmd_prefix + cmd)
-        cmd = "lxc file push {} {}/var/tmp/microk8s.snap".format(
-            channel_or_snap, self.vm_name
-        ).split()
-        subprocess.check_output(cmd)
-        cmd = ["snap install /var/tmp/microk8s.snap --classic --dangerous"]
-        subprocess.check_output(cmd_prefix + cmd)
-        time.sleep(20)
+        try:
+            print("Installing snap from {}".format(channel_or_snap))
+            cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
+            cmd = ["rm -rf /var/tmp/microk8s.snap"]
+            subprocess.check_output(cmd_prefix + cmd)
+            cmd = "lxc file push {} {}/var/tmp/microk8s.snap".format(
+                channel_or_snap, self.vm_name
+            ).split()
+            subprocess.check_output(cmd)
+            cmd = ["snap install /var/tmp/microk8s.snap --dangerous --classic"]
+            subprocess.check_output(cmd_prefix + cmd)
+            time.sleep(20)
+        except subprocess.CalledProcessError as e:
+            print(e.output.decode())
+            raise
 
     def _setup_multipass(self, channel_or_snap, launch_configs=None):
         if not self.attached:
             subprocess.check_call(
                 "/snap/bin/multipass launch 18.04 -n {} -m 2G".format(self.vm_name).split()
             )
+            self._load_launch_configuration_multipass(launch_configs)
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_multipass(channel_or_snap)
             else:
@@ -175,6 +179,7 @@ class VM:
                     ).split()
                 )
         else:
+            self._load_launch_configuration_multipass(launch_configs)
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_multipass(channel_or_snap)
             else:
@@ -193,7 +198,7 @@ class VM:
                 "/snap/bin/multipass exec {}  -- sudo "
                 "mkdir -p /root/snap/microk8s/common/".format(self.vm_name).split()
             )
-            file_path = "/microk8s.yaml"
+            file_path = "microk8s.yaml"
             print(launch_configs)
             with open(file_path, "w") as file:
                 file.write(launch_configs)
@@ -215,7 +220,7 @@ class VM:
         )
         subprocess.check_call(
             "/snap/bin/multipass exec {}  -- sudo "
-            "snap install /var/tmp/microk8s.snap --classic --dangerous".format(self.vm_name).split()
+            "\"".format(self.vm_name).split()
         )
 
     def run(self, cmd):
@@ -246,6 +251,24 @@ class VM:
         else:
             raise Exception("Not implemented for backend {}".format(self.backend))
 
+    def transfer_file(self, file_path, remote_path):
+        """
+        Transfer a file to the VM.
+        """
+        print("Transferring {} to {}".format(file_path, remote_path))
+        if self.backend == "multipass":
+            subprocess.check_call(
+                "/snap/bin/multipass transfer {} {}:{} ".format(
+                    file_path, self.vm_name, remote_path
+                ).split()
+            )
+        elif self.backend == "lxc":
+            subprocess.check_call(
+                "/snap/bin/lxc file push {} {}{}".format(
+                    file_path, self.vm_name, remote_path
+                ).split()
+            )
+
     def release(self):
         """
         Release a VM.
@@ -274,7 +297,10 @@ class TestCluster(object):
                 for i in range(0, size):
                     print("Creating machine {}".format(i))
                     vm = VM(backend)
-                    vm.setup(channel_to_test, launch_config)
+                    if is_ipv6_configured:
+                        vm.setup(channel_to_test, launch_config)
+                    else:
+                        vm.setup(channel_to_test)
                     print("Waiting for machine {}".format(i))
                     vm.run("/snap/bin/microk8s.status --wait-ready --timeout 120")
                     self.VM.append(vm)
@@ -575,16 +601,17 @@ class TestCluster(object):
 
     @pytest.mark.skipif(
         # If the host system does not have IPv6 support or is not configured for IPv6, it won't be able to create VMs with IPv6 connectivity.
-        backend != "lxc" or not is_ipv6_configured,
+        not is_ipv6_configured,
         reason="Skipping dual stack tests on VMs which are not lxc based and not dual-stack enabled",
     )
     def test_dual_stack_cluster(self):
         vm = self.VM[0]
         # Deploy the test deployment and service
         manifest = TEMPLATES / "dual-stack.yaml"
-        cmd = "lxc file push {} {}/dual-stack.yaml".format(manifest, vm.vm_name).split()
-        subprocess.check_output(cmd)
-        vm.run("/snap/bin/microk8s.kubectl apply -f /dual-stack.yaml")
+        remote_path = "/tmp/dual-stack.yaml"
+        vm.transfer_file(manifest, remote_path)
+        vm.run("ls -al {}".format(remote_path))
+        vm.run("/snap/bin/microk8s.kubectl apply -f {}".format(remote_path))
 
         # Wait for the deployment to become ready
         print("Waiting for nginx deployment")
@@ -619,95 +646,6 @@ class TestCluster(object):
                 raise
             attempt -= 1
             time.sleep(2)
-
-
-class TestDualStack(object):
-    @pytest.mark.skipif(
-        backend != "lxc" or not is_ipv6_configured,
-        reason="Skipping dual stack tests on VMs which are not lxc based and not dual-stack enabled",
-    )
-    def test_dual_stack(self):
-        """
-        Test a cluster with dual stack enabled
-        """
-        vm = VM(backend)
-        vm.setup(channel_to_test, launch_config)
-        print("Waiting for machine {}".format(vm.vm_name))
-
-        # Wait for the node to be ready
-        attempt = 0
-        while attempt < 10:
-            try:
-                status = vm.run("/snap/bin/microk8s.status")
-                print(status)
-                if "microk8s is running" not in status.decode():
-                    time.sleep(5)
-                    continue
-                print(status.decode())
-                break
-            except ChildProcessError:
-                time.sleep(10)
-                attempt += 1
-                if attempt == 10:
-                    raise
-
-        # Wait for CNI pods
-        print("Waiting for cni")
-        while True:
-            ready_pods = 0
-            time.sleep(15)
-            pods = vm.run("/snap/bin/microk8s.kubectl get po -n kube-system -o wide")
-            for line in pods.decode().splitlines():
-                if "calico" in line and "Running" in line:
-                    ready_pods += 1
-            if ready_pods == 2:
-                print(pods.decode())
-                break
-
-        # Deploy the test deployment and service
-        manifest = TEMPLATES / "dual-stack.yaml"
-        cmd = "lxc file push {} {}/dual-stack.yaml".format(manifest, vm.vm_name).split()
-        subprocess.check_output(cmd)
-        vm.run("/snap/bin/microk8s.kubectl apply -f /dual-stack.yaml")
-
-        # Wait for the deployment to become ready
-        print("Waiting for nginx deployment")
-        while True:
-            ready_pods = 0
-            pods = vm.run("/snap/bin/microk8s.kubectl get po -o wide")
-            for line in pods.decode().splitlines():
-                if "nginxdualstack" in line and "Running" in line:
-                    ready_pods = 1
-            if ready_pods == 1:
-                print(pods.decode())
-                break
-            time.sleep(5)
-
-        # ping the service attached with the deployment
-        ep = (
-            "/snap/bin/microk8s.kubectl get service nginx6 "
-            "-o jsonpath='{.spec.clusterIP}' --output='jsonpath=['{.spec.clusterIP}']'"
-        )
-        ipv6_endpoint = vm.run(ep).decode()
-        print("Pinging endpoint: http://{}/".format(ipv6_endpoint))
-        url = f"http://{ipv6_endpoint}/"
-        attempt = 10
-        while attempt >= 0:
-            try:
-                resp = vm.run("curl {}".format(url))
-                if "Kubernetes IPv6 nginx" in resp.decode():
-                    print(resp)
-                    break
-            except subprocess.CalledProcessError as e:
-                print("Error occurred during the request:", str(e))
-                raise
-            attempt -= 1
-            time.sleep(2)
-
-        print("Cleanup up cluster")
-        if not reuse_vms:
-            print("Releasing machine {} in {}".format(vm.vm_name, vm.backend))
-            vm.release()
 
 
 class TestUpgradeCluster(object):
