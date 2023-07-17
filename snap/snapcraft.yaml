@@ -435,8 +435,6 @@ apps:
   helm3:
     command: microk8s-helm3.wrapper
     completer: helm3.bash
-  cilium:
-    command: microk8s-cilium.wrapper
   dbctl:
     command: microk8s-dbctl.wrapper
   version:
