@@ -205,6 +205,8 @@ parts:
       - net-tools
       - openssl
       - procps
+      - python3-rados
+      - python3-rbd
       - sed
       - socat
       - squashfs-tools
