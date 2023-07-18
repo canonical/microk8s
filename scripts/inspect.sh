@@ -117,6 +117,11 @@ function store_sys {
     # Store the current linux distro.
     printf -- '  Copy current linux distribution to the final report tarball\n'
     lsb_release -a &> $INSPECT_DUMP/sys/lsb_release
+    # Store the aio request limits and current number
+    # Returns sysctl: permission denied on key 'fs.aio-max-nr' on strict
+    printf -- '  Copy asnycio usage and limits to the final report tarball\n'
+    sysctl fs.aio-max-nr &> $INSPECT_DUMP/sys/aio-max-nr
+    sysctl fs.aio-nr &> $INSPECT_DUMP/sys/aio-nr
   fi
 }
 
@@ -356,6 +361,18 @@ function suggest_fixes {
 \033[0;33mWARNING: \033[0m No default route exists. MicroK8s might not work properly.
 Refer to https://microk8s.io/docs for instructions on air-gap deployments.\n\n
 "
+  fi
+
+  if ! is_strict
+  then
+    AIO_MAX_NR=$(sysctl -n fs.aio-max-nr)
+    AIO_NR=$(sysctl -n fs.aio-nr)
+    if [ "$AIO_NR" -ge "$AIO_MAX_NR" ]; then
+      printf -- "\033[0;33mWARNING: \033[0m Available asyncio requests are exhausted. This might lead to dqlite being unresponsive. \n"
+      printf -- "\t  Increase the limit and restart the k8s-dqlite service with: \n"
+      printf -- "\t  \t sudo sysctl fs.aio.max-nr=3145728\n"
+      printf -- "\t  \t sudo snap restart microk8s.daemon-k8s-dqlite\n"
+    fi
   fi
 }
 
