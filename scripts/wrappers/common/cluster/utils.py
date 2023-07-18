@@ -486,7 +486,7 @@ def get_locally_signed_client_cert(fname, username, group=None, extfile=None):
         crt=cer_file,
     )
     if extfile:
-        cmd_cert = cmd_cert + " -extfile {}".format(extfile)
+        cmd = cmd + " -extfile {}".format(extfile)
 
     subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try_set_file_permissions(cer_file)
