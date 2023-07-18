@@ -12,11 +12,6 @@ export LANG="${LANG:-C.UTF-8}"
 
 source $SNAP/actions/common/utils.sh
 
-if [ -e  "$SNAP_DATA/args/cni-network/cni.yaml.disabled" ] && [ -e "$SNAP_DATA/args/cni-network/05-cilium-cni.conf" ] ; then
-  echo "WARNING: Cilium is enabled and is not suitable for multi node clusters."
-  exit 1
-fi
-
 if [ -d "$SNAP_COMMON/default-storage" ]
 then
   echo "WARNING: Hostpath storage is enabled and is not suitable for multi node clusters."

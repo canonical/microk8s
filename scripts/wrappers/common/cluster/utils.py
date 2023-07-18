@@ -306,6 +306,15 @@ def cni_is_patched():
             return False
 
 
+def cni_yaml_exists():
+    """
+    Detect if the cni.yaml manifest exists.
+    :return: True if calico cni.yaml exists.
+    """
+    yaml = "{}/args/cni-network/cni.yaml".format(os.environ.get("SNAP_DATA"))
+    return os.path.exists(yaml)
+
+
 def patch_cni(ip):
     """
     Patch the cni.yaml manifest with the proper hint on where the rest of the nodes are
@@ -332,7 +341,7 @@ def try_initialise_cni_autodetect_for_clustering(ip, apply_cni=True):
     :param ip: The IP another k8s node has.
     :param apply_cni: Should we apply the the manifest
     """
-    if cni_is_patched():
+    if not cni_yaml_exists() or cni_is_patched():
         return True
 
     patch_cni(ip)
