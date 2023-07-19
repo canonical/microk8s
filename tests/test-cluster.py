@@ -29,12 +29,12 @@ version: 0.1.0
 extraCNIEnv:
   IPv4_SUPPORT: true
   IPv4_CLUSTER_CIDR: 10.3.0.0/16
-  IPv4_SERVICE_CIDR: 10.153.183.0/24
+  IPv4_SERVICE_CIDR: 10.152.183.0/24
   IPv6_SUPPORT: true
   IPv6_CLUSTER_CIDR: fd02::/64
   IPv6_SERVICE_CIDR: fd99::/108
 extraSANs:
-  - 10.153.183.1"""
+  - 10.152.183.1"""
 
 TEMPLATES = Path(__file__).absolute().parent / "templates"
 
