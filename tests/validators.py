@@ -234,5 +234,5 @@ def validate_dual_stack():
             time.sleep(5)
             attempt -= 1
 
-    assert service_ok == True
+    assert service_ok
     kubectl("delete -f {}".format(manifest))

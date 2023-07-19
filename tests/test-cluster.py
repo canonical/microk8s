@@ -600,7 +600,8 @@ class TestCluster(object):
             assert "no-cert-reissue" in lock_files.decode()
 
     @pytest.mark.skipif(
-        # If the host system does not have IPv6 support or is not configured for IPv6, it won't be able to create VMs with IPv6 connectivity.
+        # If the host system does not have IPv6 support or is not configured for IPv6,
+        # it won't be able to create VMs with IPv6 connectivity.
         not is_ipv6_configured,
         reason="Skipping dual stack tests on VMs which are not lxc based and not dual-stack enabled",
     )

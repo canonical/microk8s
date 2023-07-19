@@ -45,7 +45,7 @@ version: 0.1.0
 extraCNIEnv:
   IPv4_SUPPORT: true
   IPv4_CLUSTER_CIDR: 10.3.0.0/16
-  IPv4_SERVICE_CIDR: 10.153.183.0/24
+  IPv4_SERVICE_CIDR: 10.152.183.0/24
   IPv6_SUPPORT: true
   IPv6_CLUSTER_CIDR: fd02::/64
   IPv6_SERVICE_CIDR: fd99::/108
@@ -57,7 +57,7 @@ extraSANs:
 
             file_path = os.path.join(lc_config_dir, ".microk8s.yaml")
             with open(file_path, "w") as file:
-                file.write(launch_config)                    
+                file.write(launch_config)
 
         cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from)
         run_until_success(cmd)
