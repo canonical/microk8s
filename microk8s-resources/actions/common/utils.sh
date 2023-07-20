@@ -600,19 +600,16 @@ get_ips() {
 }
 
 gen_server_cert() (
-    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 gen_proxy_client_cert() (
-    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 create_user_kubeconfigs() {
-  export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
   for user in client kubelet scheduler controller proxy; do
     if ! [ -f ${SNAP_DATA}/certs/${user} ]; then
       ${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/${user}.key 2048
@@ -681,7 +678,6 @@ create_x509_cert() {
 }
 
 produce_certs() {
-    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     # Generate RSA keys if not yet
     for key in serviceaccount.key ca.key server.key front-proxy-ca.key front-proxy-client.key; do
         if ! [ -f ${SNAP_DATA}/certs/$key ]; then
@@ -736,7 +732,6 @@ ensure_server_ca() {
     # ensure the server.crt is issued by ca.crt
     # if current csr.conf is invalid, regenerate front-proxy-client certificates as well
 
-    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
     if ! ${SNAP}/usr/bin/openssl verify -CAfile ${SNAP_DATA}/certs/ca.crt ${SNAP_DATA}/certs/server.crt &>/dev/null
     then
         csr_modified="$(ensure_csr_conf_conservative)"
@@ -755,8 +750,6 @@ ensure_server_ca() {
 
 check_csr_conf() {
     # if no argument is given, default csr.conf will be checked
-    export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
-
     csr_conf="${1:-${SNAP_DATA}/certs/csr.conf}"
     ${SNAP}/usr/bin/openssl req -new -config $csr_conf -noout -nodes -keyout /dev/null &>/dev/null
 }
