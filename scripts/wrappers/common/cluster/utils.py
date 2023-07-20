@@ -35,7 +35,7 @@ def snap() -> Path:
 
 def snap_data() -> Path:
     try:
-        return Path(os.environ["SNAP_DATA"])
+        return (Path(os.environ["SNAP_DATA"]) / "..").absolute() / "current"
     except KeyError:
         return Path("/var/snap/microk8s/current")
 
@@ -446,66 +446,6 @@ def get_token(name, tokens_file="known_tokens.csv"):
     return None
 
 
-def get_locally_signed_client_cert(fname, username, group=None, extfile=None):
-    """
-    Get a cert signed by the local CA.
-
-    :param fname: file name prefix for the certificate
-    :param username: the username of the cert's owner
-    :param group: the group the owner belongs to
-    """
-    snapdata_path = os.environ.get("SNAP_DATA")
-    snap_path = os.environ.get("SNAP")
-    subject = "/CN={}".format(username)
-    if group:
-        subject = "{}/O={}".format(subject, group)
-
-    # the filenames must survive snap refreshes, so replace revision number with current
-    snapdata_current = os.path.abspath(os.path.join(snapdata_path, "..", "current"))
-
-    cer_req_file = "{}/certs/{}.csr".format(snapdata_current, fname)
-    cer_key_file = "{}/certs/{}.key".format(snapdata_current, fname)
-    cer_file = "{}/certs/{}.crt".format(snapdata_current, fname)
-    ca_key_file = "{}/certs/ca.key".format(snapdata_current)
-    ca_file = "{}/certs/ca.crt".format(snapdata_current)
-    if not os.path.exists(cer_key_file):
-        cmd_gen_cert_key = "{snap}/usr/bin/openssl genrsa -out {key} 2048".format(
-            snap=snap_path, key=cer_key_file
-        )
-        subprocess.check_call(
-            cmd_gen_cert_key.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        try_set_file_permissions(cer_key_file)
-
-    cmd_cert = (
-        "{snap}/usr/bin/openssl req -new -sha256 -key {key} -out {csr} -subj {subject}".format(
-            snap=snap_path,
-            key=cer_key_file,
-            csr=cer_req_file,
-            subject=subject,
-        )
-    )
-    subprocess.check_call(cmd_cert.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    cmd = "{snap}/usr/bin/openssl x509 -req -in {csr} -CA {ca} -CAkey {k} -CAcreateserial -out {crt} -days 3650".format(
-        snap=snap_path,
-        csr=cer_req_file,
-        ca=ca_file,
-        k=ca_key_file,
-        crt=cer_file,
-    )
-    if extfile:
-        cmd = cmd + " -extfile {}".format(extfile)
-
-    subprocess.check_call(cmd.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    try_set_file_permissions(cer_file)
-
-    return {
-        "certificate_location": cer_file,
-        "certificate_key_location": cer_key_file,
-    }
-
-
 def get_arg(key, file):
     """
     Get an argument from a file
@@ -557,56 +497,6 @@ def set_arg(key, value, file):
     os.remove(filename_remote)
 
 
-def create_x509_kubeconfig(
-    ca, master_ip, api_port, filename, user, path_to_cert, path_to_cert_key, embed=False
-):
-    """
-    Create a kubeconfig file. The file in stored under credentials named after the user
-
-    :param ca: the ca
-    :param master_ip: the master node IP
-    :param api_port: the API server port
-    :param filename: the name of the config file
-    :param user: the user to use al login
-    :param path_to_cert: path to certificate file
-    :param path_to_cert_key: path to certificate key file
-    :param embed: place the base64 encoding of certs in kubeconfig instead of linking to them
-    """
-    snapdata_path = os.environ.get("SNAP_DATA")
-    snap_path = os.environ.get("SNAP")
-    config_template = "{}/{}".format(snap_path, "client-x509.config.template")
-    config = "{}/credentials/{}".format(snapdata_path, filename)
-    shutil.copyfile(config, "{}.backup".format(config))
-    try_set_file_permissions("{}.backup".format(config))
-    ca_line = ca_one_line(ca)
-    with open(config_template, "r") as tfp:
-        with open(config, "w+") as fp:
-            config_txt = tfp.read()
-            config_txt = config_txt.replace("CADATA", ca_line)
-            config_txt = config_txt.replace("NAME", user)
-            if embed:
-                with open(path_to_cert, "r") as f:
-                    cert = f.read()
-                    cert_line = base64.b64encode(cert.encode("utf-8")).decode("utf-8")
-                with open(path_to_cert_key, "r") as f:
-                    cert = f.read()
-                    key_line = base64.b64encode(cert.encode("utf-8")).decode("utf-8")
-                config_txt = config_txt.replace("PATHTOCERT", cert_line)
-                config_txt = config_txt.replace("PATHTOKEYCERT", key_line)
-                config_txt = config_txt.replace(
-                    "client-certificate",
-                    "client-certificate-data",
-                )
-                config_txt = config_txt.replace("client-key", "client-key-data")
-            else:
-                config_txt = config_txt.replace("PATHTOCERT", path_to_cert)
-                config_txt = config_txt.replace("PATHTOKEYCERT", path_to_cert_key)
-            config_txt = config_txt.replace("127.0.0.1", master_ip)
-            config_txt = config_txt.replace("16443", api_port)
-            fp.write(config_txt)
-        try_set_file_permissions(config)
-
-
 def is_token_auth_enabled():
     """
     Return True if token auth is enabled
@@ -649,53 +539,8 @@ def rebuild_x509_auth_client_configs():
     if is_token_auth_enabled():
         set_arg("--token-auth-file", None, "kube-apiserver")
 
-    snapdata_path = os.environ.get("SNAP_DATA")
-    cert_file = "{}/certs/ca.crt".format(snapdata_path)
-    with open(cert_file) as fp:
-        ca = fp.read()
-
-    apiserver_port = get_arg("--secure-port", "kube-apiserver")
-    if not apiserver_port:
-        apiserver_port = "6443"
-
-    hostname = socket.gethostname().lower()
-    csr_file = "{}/certs/kubelet.csr.conf".format(snapdata_path)
-    with open(csr_file, "w") as fp:
-        fp.write("subjectAltName=DNS:{}\n".format(hostname))
-
-    components = [
-        {"username": "admin", "group": "system:masters", "filename": "client", "extfile": None},
-        {
-            "username": "system:kube-controller-manager",
-            "group": None,
-            "filename": "controller",
-            "extfile": None,
-        },
-        {"username": "system:kube-proxy", "group": None, "filename": "proxy", "extfile": None},
-        {
-            "username": "system:kube-scheduler",
-            "group": None,
-            "filename": "scheduler",
-            "extfile": None,
-        },
-        {
-            "username": f"system:node:{hostname}",
-            "group": "system:nodes",
-            "filename": "kubelet",
-            "extfile": csr_file,
-        },
-    ]
-    for c in components:
-        cert = get_locally_signed_client_cert(
-            c["filename"], c["username"], c["group"], c["extfile"]
-        )
-        create_x509_kubeconfig(
-            ca,
-            "127.0.0.1",
-            apiserver_port,
-            filename=f"{c['filename']}.config",
-            user=c["username"],
-            path_to_cert=cert["certificate_location"],
-            path_to_cert_key=cert["certificate_key_location"],
-            embed=True,
-        )
+    subprocess.check_call(
+        [f"{snap()}/actions/common/utils.sh", "create_user_certs_and_configs"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )

@@ -18,12 +18,9 @@ import urllib3
 import yaml
 from common.cluster.utils import (
     ca_one_line,
-    create_x509_kubeconfig,
     enable_token_auth,
-    get_arg,
     get_cluster_agent_port,
     get_cluster_cidr,
-    get_locally_signed_client_cert,
     get_token,
     is_low_memory_guard_enabled,
     is_node_running_dqlite,
@@ -34,6 +31,8 @@ from common.cluster.utils import (
     set_arg,
     try_initialise_cni_autodetect_for_clustering,
     try_set_file_permissions,
+    snap,
+    snap_data,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -217,71 +216,50 @@ def get_etcd_client_cert(master_ip, master_port, token):
         try_set_file_permissions(server_cert_file)
 
 
-def get_client_cert(master_ip, master_port, fname, token, username, group=None):
+def get_client_cert(master_ip, master_port, fname: str, token: str, subject: str, with_sans: bool):
     """
-    Get a signed cert.
+    Get a signed cert signed by a remote cluster-agent.
     See https://kubernetes.io/docs/reference/access-authn-authz/authentication/#x509-client-certs
 
     :param master_ip: master ip
     :param master_port: master port
     :param fname: file name prefix for the certificate
     :param token: token to contact the master with
-    :param username: the username of the cert's owner
-    :param group: the group the owner belongs to
+    :param subject: the subject of the certificate
+    :param with_sans: whether to include hostname and node IPs as subject alternate names
     """
-    info = "/CN={}".format(username)
-    if group:
-        info = "{}/O={}".format(info, group)
 
-    # the filenames must survive snap refreshes, so replace revision number with current
-    snapdata_current = os.path.abspath(os.path.join(snapdata_path, "..", "current"))
-
-    cer_req_file = "{}/certs/{}.csr".format(snapdata_current, fname)
-    cer_key_file = "{}/certs/{}.key".format(snapdata_current, fname)
-    cer_file = "{}/certs/{}.crt".format(snapdata_current, fname)
-    if not os.path.exists(cer_key_file):
-        cmd_gen_cert_key = "{snap}/usr/bin/openssl genrsa -out {key} 2048".format(
-            snap=snap_path, key=cer_key_file
-        )
-        subprocess.check_call(
-            cmd_gen_cert_key.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        try_set_file_permissions(cer_key_file)
-
-    cmd_cert = "{snap}/usr/bin/openssl req -new -sha256 -key {key} -out {csr} -subj {info}".format(
-        snap=snap_path,
-        key=cer_key_file,
-        csr=cer_req_file,
-        info=info,
+    cert_crt = (snap_data() / "certs" / fname).with_suffix(".crt")
+    cert_key = (snap_data() / "certs" / fname).with_suffix(".key")
+    # generate csr
+    script = "generate-csr-with-sans.sh" if with_sans else "generate-csr.sh"
+    p = subprocess.run(
+        [f"{snap()}/scripts/certs/{script}", subject, cert_key],
+        check=True,
+        capture_output=True,
+        stderr=subprocess.DEVNULL,
     )
-    subprocess.check_call(cmd_cert.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    with open(cer_req_file) as fp:
-        csr = fp.read()
-        req_data = {"token": token, "request": csr}
-        # TODO: enable ssl verification
-        signed = requests.post(
-            "https://{}:{}/{}/sign-cert".format(master_ip, master_port, CLUSTER_API),
-            json=req_data,
-            verify=False,
-        )
-        if signed.status_code != 200:
-            error = "Failed to sign {} certificate ({}).".format(fname, signed.status_code)
-            try:
-                if "error" in signed.json():
-                    error = "{} {}".format(error, format(signed.json()["error"]))
-            except ValueError:
-                print("Make sure the cluster you connect to supports joining worker nodes.")
-            print(error)
-            exit(1)
-        info = signed.json()
-        with open(cer_file, "w") as cert_fp:
-            cert_fp.write(info["certificate"])
-        try_set_file_permissions(cer_file)
+    csr = p.stdout.decode()
 
-        return {
-            "certificate_location": cer_file,
-            "certificate_key_location": cer_key_file,
-        }
+    req_data = {"token": token, "request": csr}
+    # TODO: enable ssl verification
+    signed = requests.post(
+        "https://{}:{}/{}/sign-cert".format(master_ip, master_port, CLUSTER_API),
+        json=req_data,
+        verify=False,
+    )
+    if signed.status_code != 200:
+        error = "Failed to sign {} certificate ({}).".format(fname, signed.status_code)
+        try:
+            if "error" in signed.json():
+                error = "{} {}".format(error, format(signed.json()["error"]))
+        except ValueError:
+            print("Make sure the cluster you connect to supports joining worker nodes.")
+        print(error)
+        exit(1)
+    info = signed.json()
+    cert_crt.write_text(info["certificate"])
+    try_set_file_permissions(cert_crt)
 
 
 def update_flannel(etcd, master_ip, master_port, token):
@@ -348,7 +326,7 @@ def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
     service("restart", "proxy")
 
 
-def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, hostname_override):
+def update_cert_auth_kubeproxy(token, master_ip, master_port, hostname_override):
     """
     Configure the kube-proxy
 
@@ -359,17 +337,7 @@ def update_cert_auth_kubeproxy(token, ca, master_ip, master_port, hostname_overr
     :param hostname_override: the hostname override in case the hostname is not resolvable
     """
     proxy_token = "{}-proxy".format(token)
-    traefik_port = get_traefik_port()
-    cert = get_client_cert(master_ip, master_port, "kube-proxy", proxy_token, "system:kube-proxy")
-    create_x509_kubeconfig(
-        ca,
-        "127.0.0.1",
-        traefik_port,
-        "proxy.config",
-        "kubeproxy",
-        cert["certificate_location"],
-        cert["certificate_key_location"],
-    )
+    get_client_cert(master_ip, master_port, "proxy", proxy_token, "/CN=system:kube-proxy", False)
     set_arg("--master", None, "kube-proxy")
     if hostname_override:
         set_arg("--hostname-override", hostname_override, "kube-proxy")
@@ -381,7 +349,7 @@ def update_kubeproxy_cidr(cidr):
         service("restart", "proxy")
 
 
-def update_cert_auth_kubelet(token, ca, master_ip, master_port):
+def update_cert_auth_kubelet(token, master_ip, master_port):
     """
     Configure the kubelet
 
@@ -391,20 +359,8 @@ def update_cert_auth_kubelet(token, ca, master_ip, master_port):
     :param master_port: the master node port where the cluster agent listens
     """
     kubelet_token = "{}-kubelet".format(token)
-    traefik_port = get_traefik_port()
-    kubelet_user = "system:node:{}".format(socket.gethostname().lower())
-    cert = get_client_cert(
-        master_ip, master_port, "kubelet", kubelet_token, kubelet_user, "system:nodes"
-    )
-    create_x509_kubeconfig(
-        ca,
-        "127.0.0.1",
-        traefik_port,
-        "kubelet.config",
-        "kubelet",
-        cert["certificate_location"],
-        cert["certificate_key_location"],
-    )
+    subject = f"/CN=system:node:{socket.gethostname().lower()}/O=system:nodes"
+    get_client_cert(master_ip, master_port, "kubelet", kubelet_token, subject, True)
     set_arg("--client-ca-file", "${SNAP_DATA}/certs/ca.remote.crt", "kubelet")
     set_arg(
         "--node-labels",
@@ -432,13 +388,17 @@ def update_kubelet(token, ca, master_ip, api_port):
     service("restart", "kubelet")
 
 
-def update_apiserver(api_authz_mode):
+def update_apiserver(api_authz_mode, apiserver_port):
     """
     Configure the API server
 
     :param api_authz_mode: the authorization mode to be used
+    :param apiserver_port: the apiserver port
     """
-    set_arg("--authorization-mode", api_authz_mode, "kube-apiserver")
+    if api_authz_mode:
+        set_arg("--authorization-mode", api_authz_mode, "kube-apiserver")
+    if apiserver_port:
+        set_arg("--secure-port", apiserver_port, "kube-apiserver")
     service("restart", "apiserver")
 
 
@@ -747,53 +707,16 @@ def update_apiserver_proxy(master_ip, api_port):
 
 def rebuild_token_based_auth_configs(info):
     # We need to make sure token-auth is enabled in this node too.
-    apiserver_port = get_arg("--secure-port", "kube-apiserver")
-    if not apiserver_port:
-        apiserver_port = "6443"
-
     if not is_token_auth_enabled():
         enable_token_auth(info["admin_token"])
-        create_admin_kubeconfig(info["ca"], info["admin_token"])
-        hostname = socket.gethostname().lower()
-        components = [
-            {"username": "system:kube-controller-manager", "group": None, "filename": "controller"},
-            {"username": "system:kube-proxy", "group": None, "filename": "proxy"},
-            {"username": "system:kube-scheduler", "group": None, "filename": "scheduler"},
-            {"username": f"system:node:{hostname}", "group": "system:nodes", "filename": "kubelet"},
-        ]
-        for c in components:
-            cert = get_locally_signed_client_cert(c["filename"], c["username"], c["group"])
-            create_x509_kubeconfig(
-                info["ca"],
-                "127.0.0.1",
-                apiserver_port,
-                filename=f"{c['filename']}.config",
-                user=c["username"],
-                path_to_cert=cert["certificate_location"],
-                path_to_cert_key=cert["certificate_key_location"],
-                embed=True,
-            )
     else:
         replace_admin_token(info["admin_token"])
-        create_admin_kubeconfig(info["ca"], info["admin_token"])
 
-        # triplets of [username in known_tokens.csv, username in kubeconfig, kubeconfig filename name]
-        for component in [
-            ("kube-proxy", "kubeproxy", "proxy.config"),
-            ("kubelet", "kubelet", "kubelet.config"),
-            ("kube-controller-manager", "controller", "controller.config"),
-            ("kube-scheduler", "scheduler", "scheduler.config"),
-        ]:
-            component_token = get_token(component[0])
-            if not component_token:
-                print(
-                    "Error, could not locate {} token. Joining cluster failed.".format(component[0])
-                )
-                exit(3)
-            # We assume the API listens on all nodes on the same port
-            create_kubeconfig(
-                component_token, info["ca"], "127.0.0.1", apiserver_port, component[2], component[1]
-            )
+    subprocess.check_call(
+        [f"{snap_path}/actions/common/utils.sh", "create_user_certs_and_configs"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def print_worker_usage():
@@ -831,11 +754,17 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
 
     store_remote_ca(info["ca"])
 
+    update_apiserver(info.get("api_authz_mode"), info.get("apiport"))
     store_base_kubelet_args(info["kubelet_args"])
     update_kubelet_node_ip(info["kubelet_args"], hostname_override)
     update_kubelet_hostname_override(info["kubelet_args"])
-    update_cert_auth_kubeproxy(token, info["ca"], master_ip, master_port, hostname_override)
-    update_cert_auth_kubelet(token, info["ca"], master_ip, master_port)
+    update_cert_auth_kubeproxy(token, master_ip, master_port, hostname_override)
+    update_cert_auth_kubelet(token, master_ip, master_port)
+    subprocess.check_call(
+        [f"{snap()}/actions/common/utils.sh", "create_worker_kubeconfigs"],
+        stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+    )
 
     store_callback_token(info["callback_token"])
     update_apiserver_proxy(master_ip, info["apiport"])
@@ -877,9 +806,7 @@ def join_dqlite_master_node(info, master_ip):
         # We are joining a x509-auth based cluster
         rebuild_x509_auth_client_configs()
 
-    if "api_authz_mode" in info:
-        update_apiserver(info["api_authz_mode"])
-
+    update_apiserver(info.get("api_authz_mode"), info.get("apiport"))
     store_base_kubelet_args(info["kubelet_args"])
     update_kubelet_node_ip(info["kubelet_args"], hostname_override)
     update_kubelet_hostname_override(info["kubelet_args"])
