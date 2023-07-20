@@ -1173,7 +1173,7 @@ generate_csr_with_sans() {
   "${OPENSSL}" req -new -sha256 -subj "$1" -key "$2" -addext "subjectAltName = $subjectAltName"
 }
 
-generate_sans() {
+generate_csr() {
   ########################################################################
   # Description:
   #   Generate CSR for component certificates. The CSR PEM is written to stdout. Arguments are:
@@ -1181,7 +1181,7 @@ generate_sans() {
   #   2. The path to write the private key, e.g. "$SNAP_DATA/certs/scheduler.key"
   #
   # Example usage:
-  #   generate_sans /CN=system:kube-scheduler $SNAP_DATA/certs/scheduler.key > $SNAP_DATA/certs/scheduler.csr
+  #   generate_csr /CN=system:kube-scheduler $SNAP_DATA/certs/scheduler.key > $SNAP_DATA/certs/scheduler.csr
   ########################################################################
 
   OPENSSL=openssl
