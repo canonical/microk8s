@@ -609,72 +609,63 @@ gen_proxy_client_cert() (
     ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
-create_user_kubeconfigs() {
-  for user in client kubelet scheduler controller proxy; do
-    if ! [ -f ${SNAP_DATA}/certs/${user} ]; then
-      ${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/${user}.key 2048
-    fi
-  done
-
-  # client/admin cert
-  subject="/CN=admin/O=system:masters"
-  ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/client.key -out ${SNAP_DATA}/certs/client.csr -subj ${subject}
-
-  # kubelet cert
-  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
-  subject="/CN=system:node:${hostname}/O=system:nodes"
-  echo "subjectAltName=DNS:$hostname" > ${SNAP_DATA}/certs/kubelet.csr.conf
-  ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/kubelet.key -out ${SNAP_DATA}/certs/kubelet.csr -subj ${subject}
-
-  # kube-proxy cert
-  subject="/CN=system:kube-proxy"
-  ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/proxy.key -out ${SNAP_DATA}/certs/proxy.csr -subj ${subject}
-
-  # kube-scheduler cert
-  subject="/CN=system:kube-scheduler"
-  ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/scheduler.key -out ${SNAP_DATA}/certs/scheduler.csr -subj ${subject}
-
-  # kube-controller-manager cert
-  subject="/CN=system:kube-controller-manager"
-  ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/controller.key -out ${SNAP_DATA}/certs/controller.csr -subj ${subject}
-
-  for user in client scheduler controller proxy; do
-    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/${user}.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/${user}.crt -days 3650
-  done
-
-  ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/kubelet.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/kubelet.crt -days 3650 -extfile ${SNAP_DATA}/certs/kubelet.csr.conf
-
-  create_x509_cert "client.config" "admin" ${SNAP_DATA}/certs/client.crt ${SNAP_DATA}/certs/client.key
-  create_x509_cert "controller.config" "system:kube-controller-manager" ${SNAP_DATA}/certs/controller.crt ${SNAP_DATA}/certs/controller.key
-  create_x509_cert "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key
-  create_x509_cert "scheduler.config" "system:kube-scheduler" ${SNAP_DATA}/certs/scheduler.crt ${SNAP_DATA}/certs/scheduler.key
-  create_x509_cert "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key
+create_user_certs_and_configs() {
+  create_user_certificates
+  create_user_kubeconfigs
 }
 
-create_x509_cert() {
+create_user_certificates() {
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  generate_csr_with_sans "/CN=system:node:$hostname/O=system:nodes" "${SNAP_DATA}/certs/kubelet.key" | sign_certificate > "${SNAP_DATA}/certs/kubelet.crt"
+  generate_csr /CN=admin/O=system:masters "${SNAP_DATA}/certs/client.key" | sign_certificate > "${SNAP_DATA}/certs/client.crt"
+  generate_csr /CN=system:kube-proxy "${SNAP_DATA}/certs/proxy.key" | sign_certificate > "${SNAP_DATA}/certs/proxy.crt"
+  generate_csr /CN=system:kube-scheduler "${SNAP_DATA}/certs/scheduler.key" | sign_certificate > "${SNAP_DATA}/certs/scheduler.crt"
+  generate_csr /CN=system:kube-controller-manager "${SNAP_DATA}/certs/controller.key" | sign_certificate > "${SNAP_DATA}/certs/controller.crt"
+}
+
+create_user_kubeconfigs() {
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  create_kubeconfig_x509 "client.config" "admin" ${SNAP_DATA}/certs/client.crt ${SNAP_DATA}/certs/client.key ${SNAP_DATA}/certs/ca.crt
+  create_kubeconfig_x509 "controller.config" "system:kube-controller-manager" ${SNAP_DATA}/certs/controller.crt ${SNAP_DATA}/certs/controller.key ${SNAP_DATA}/certs/ca.crt
+  create_kubeconfig_x509 "scheduler.config" "system:kube-scheduler" ${SNAP_DATA}/certs/scheduler.crt ${SNAP_DATA}/certs/scheduler.key ${SNAP_DATA}/certs/ca.crt
+  create_kubeconfig_x509 "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key ${SNAP_DATA}/certs/ca.crt
+  create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.crt
+}
+
+create_worker_kubeconfigs() {
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  create_kubeconfig_x509 "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key ${SNAP_DATA}/certs/ca.remote.crt
+  create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.remote.crt
+}
+
+create_kubeconfig_x509() {
   # Create a kubeconfig file with x509 auth
   # $1: the name of the config file
   # $2: the user to use al login
   # $3: path to certificate file
   # $4: path to certificate key file
+  # $5: path to ca file
 
   kubeconfig=$1
   user=$2
   cert=$3
   key=$4
+  ca=$5
 
-  ca_data=$(cat ${SNAP_DATA}/certs/ca.crt | ${SNAP}/usr/bin/base64 -w 0)
+  ca_data=$(cat ${ca} | ${SNAP}/usr/bin/base64 -w 0)
   cert_data=$(cat ${cert} | ${SNAP}/usr/bin/base64 -w 0)
   key_data=$(cat ${key} | ${SNAP}/usr/bin/base64 -w 0)
   config_file=${SNAP_DATA}/credentials/${kubeconfig}
+  apiserver_port="$(cat $SNAP_DATA/args/kube-apiserver | grep -- "--secure-port" | tr "=" " " | gawk '{print $2}')"
 
   cp ${SNAP}/client-x509.config.template ${config_file}
-  $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' ${config_file}
-  $SNAP/bin/sed -i 's/NAME/'"${user}"'/g' ${config_file}
-  $SNAP/bin/sed -i 's/PATHTOCERT/'"${cert_data}"'/g' ${config_file}
-  $SNAP/bin/sed -i 's/PATHTOKEYCERT/'"${key_data}"'/g' ${config_file}
-  $SNAP/bin/sed -i 's/client-certificate/client-certificate-data/g' ${config_file}
-  $SNAP/bin/sed -i 's/client-key/client-key-data/g' ${config_file}
+  sed -i 's/CADATA/'"${ca_data}"'/g' ${config_file}
+  sed -i 's/NAME/'"${user}"'/g' ${config_file}
+  sed -i 's/PATHTOCERT/'"${cert_data}"'/g' ${config_file}
+  sed -i 's/PATHTOKEYCERT/'"${key_data}"'/g' ${config_file}
+  sed -i 's/client-certificate/client-certificate-data/g' ${config_file}
+  sed -i 's/client-key/client-key-data/g' ${config_file}
+  sed -i 's/16443/'"${apiserver_port}"'/g' ${config_file}
 }
 
 produce_certs() {
@@ -1068,6 +1059,87 @@ cluster_agent_port() {
 
 server_cert_check() {
   openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1 | cut -c1-12
+}
+
+########################################################################
+# Description:
+#   Generate CSR for component certificates, including hostname and node IP addresses
+#   as SubjectAlternateNames. The CSR PEM is printed to stdout. Arguments are:
+#   1. The certificate subject, e.g. "/CN=system:node:$hostname/O=system:nodes"
+#   2. The path to write the private key, e.g. "$SNAP_DATA/certs/kubelet.key"
+#
+# Notes:
+#   - Subject is /CN=system:node:$hostname/O=system:nodes
+#   - Node hostname and IP addresses are added as Subject Alternate Names
+#
+# Example usage:
+#   generate_csr_with_sans /CN=system:node:$hostname/O=system:nodes $SNAP_DATA/certs/kubelet.key > $SNAP_DATA/certs/kubelet.csr
+########################################################################
+generate_csr_with_sans() {
+  # Add DNS name and IP addresses as subjectAltName
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  subjectAltName="DNS:$hostname"
+  for ip in $(get_ips); do
+    subjectAltName="$subjectAltName, IP:$ip"
+  done
+
+  # generate key if it does not exist
+  if [ ! -f "$2" ]; then
+    openssl genrsa -out "$2" 2048
+    chown 0:0 "$2" || true
+    chmod 0600 "$2" || true
+  fi
+
+  # generate csr
+  openssl req -new -sha256 -subj "$1" -key "$2" -addext "subjectAltName = $subjectAltName"
+}
+
+########################################################################
+# Description:
+#   Generate CSR for component certificates. The CSR PEM is written to stdout. Arguments are:
+#   1. The certificate subject, e.g. "/CN=system:kube-scheduler"
+#   2. The path to write the private key, e.g. "$SNAP_DATA/certs/scheduler.key"
+#
+# Example usage:
+#   generate_csr /CN=system:kube-scheduler $SNAP_DATA/certs/scheduler.key > $SNAP_DATA/certs/scheduler.csr
+########################################################################
+generate_csr() {
+  # generate key if it does not exist
+  if [ ! -f "$2" ]; then
+    openssl genrsa -out "$2" 2048
+    chown 0:0 "$2" || true
+    chmod 0600 "$2" || true
+  fi
+
+  # generate csr
+  openssl req -new -sha256 -subj "$1" -key "$2"
+}
+
+########################################################################
+# Description:
+#   Sign a certificate signing request (CSR) using the MicroK8s cluster CA.
+#   The CSR is read through stdin, and the signed certificate is printed to stdout.
+#
+# Notes:
+#   - Read from stdin and write to stdout, so no temporary files are required.
+#   - Any SubjectAlternateNames that are included in the CSR are added to the certificate.
+#
+# Example usage:
+#   cat component.csr | sign_certificate > component.crt
+########################################################################
+sign_certificate() {
+  # We need to use the request more than once, so read it into a variable
+  csr="$(cat)"
+
+  # Parse SANs from the CSR and add them to the certificate extensions (if any)
+  extensions=""
+  alt_names="$(echo "$csr" | openssl req -text | grep "X509v3 Subject Alternative Name:" -A1 | tail -n 1 | sed 's,IP Address:,IP:,g')"
+  if test "x$alt_names" != "x"; then
+    extensions="subjectAltName = $alt_names"
+  fi
+
+  # Sign certificate and print to stdout
+  echo "$csr" | openssl x509 -req -sha256 -CA "${SNAP_DATA}/certs/ca.crt" -CAkey "${SNAP_DATA}/certs/ca.key" -CAcreateserial -days 3650 -extfile <(echo "${extensions}")
 }
 
 # check if this file is run with arguments

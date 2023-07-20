@@ -89,7 +89,7 @@ done
 produce_certs
 rm -rf .srl
 
-create_user_kubeconfigs
+create_user_certs_and_configs
 
 # Install default-hooks
 cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
