@@ -53,6 +53,28 @@ then
   fi
 fi
 
+if ! is_strict
+then
+  # set sysctl parameters 
+  if ! grep -q '^fs.aio-max-nr=' /etc/sysctl.d/10-microk8s.conf
+  then 
+      echo "fs.aio-max-nr=1048576" >> /etc/sysctl.d/10-microk8s.conf
+  fi
+
+  if ! grep -q '^fs.inotify.max_user_instances=' /etc/sysctl.d/10-microk8s.conf
+  then 
+      echo "fs.inotify.max_user_instances=1024" >> /etc/sysctl.d/10-microk8s.conf
+  fi
+
+  if ! grep -q '^fs.inotify.max_user_watches=' /etc/sysctl.d/10-microk8s.conf
+  then 
+      echo "fs.inotify.max_user_watches=1048576" >> /etc/sysctl.d/10-microk8s.conf
+  fi
+
+  # reload sysctl parameters to take effect
+  sysctl --system
+fi
+
 # If the addons directory is missing from SNAP_COMMON, then we are upgrading from an older MicroK8s version.
 if [ ! -d "${SNAP_COMMON}/addons" ]
 then
