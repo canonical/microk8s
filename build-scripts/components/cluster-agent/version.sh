@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "main"
+echo "MK-1275/fix-ipv6-add-node"
