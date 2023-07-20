@@ -616,11 +616,11 @@ create_user_certs_and_configs() {
 
 create_user_certificates() {
   hostname=$(hostname | tr '[:upper:]' '[:lower:]')
-  "${SNAP}/scripts/certs/generate-csr-with-sans.sh" "/CN=system:node:$hostname/O=system:nodes" "${SNAP_DATA}/certs/kubelet.key" | "${SNAP}/scripts/certs/sign-certificate.sh" > "${SNAP_DATA}/certs/kubelet.crt"
-  "${SNAP}/scripts/certs/generate-csr.sh" /CN=admin/O=system:masters "${SNAP_DATA}/certs/client.key" | "${SNAP}/scripts/certs/sign-certificate.sh" > "${SNAP_DATA}/certs/client.crt"
-  "${SNAP}/scripts/certs/generate-csr.sh" /CN=system:kube-proxy "${SNAP_DATA}/certs/proxy.key" | "${SNAP}/scripts/certs/sign-certificate.sh" > "${SNAP_DATA}/certs/proxy.crt"
-  "${SNAP}/scripts/certs/generate-csr.sh" /CN=system:kube-scheduler "${SNAP_DATA}/certs/scheduler.key" | "${SNAP}/scripts/certs/sign-certificate.sh" > "${SNAP_DATA}/certs/scheduler.crt"
-  "${SNAP}/scripts/certs/generate-csr.sh" /CN=system:kube-controller-manager "${SNAP_DATA}/certs/controller.key" | "${SNAP}/scripts/certs/sign-certificate.sh" > "${SNAP_DATA}/certs/controller.crt"
+  generate_csr_with_sans "/CN=system:node:$hostname/O=system:nodes" "${SNAP_DATA}/certs/kubelet.key" | sign_certificate > "${SNAP_DATA}/certs/kubelet.crt"
+  generate_csr /CN=admin/O=system:masters "${SNAP_DATA}/certs/client.key" | sign_certificate > "${SNAP_DATA}/certs/client.crt"
+  generate_csr /CN=system:kube-proxy "${SNAP_DATA}/certs/proxy.key" | sign_certificate > "${SNAP_DATA}/certs/proxy.crt"
+  generate_csr /CN=system:kube-scheduler "${SNAP_DATA}/certs/scheduler.key" | sign_certificate > "${SNAP_DATA}/certs/scheduler.crt"
+  generate_csr /CN=system:kube-controller-manager "${SNAP_DATA}/certs/controller.key" | sign_certificate > "${SNAP_DATA}/certs/controller.crt"
 }
 
 create_user_kubeconfigs() {
@@ -1132,6 +1132,99 @@ fetch_as() {
     CA_CERT=/snap/core20/current/etc/ssl/certs/ca-certificates.crt
     run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $1 -o $2
   fi
+}
+
+generate_csr_with_sans() {
+  ########################################################################
+  # Description:
+  #   Generate CSR for component certificates, including hostname and node IP addresses
+  #   as SubjectAlternateNames. The CSR PEM is printed to stdout. Arguments are:
+  #   1. The certificate subject, e.g. "/CN=system:node:$hostname/O=system:nodes"
+  #   2. The path to write the private key, e.g. "$SNAP_DATA/certs/kubelet.key"
+  #
+  # Notes:
+  #   - Subject is /CN=system:node:$hostname/O=system:nodes
+  #   - Node hostname and IP addresses are added as Subject Alternate Names
+  #
+  # Example usage:
+  #   generate_csr_with_sans /CN=system:node:$hostname/O=system:nodes $SNAP_DATA/certs/kubelet.key > $SNAP_DATA/certs/kubelet.csr
+  ########################################################################
+
+  OPENSSL=openssl
+
+  # "get_ips"
+  . $SNAP/actions/common/utils.sh
+
+  # Add DNS name and IP addresses as subjectAltName
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  subjectAltName="DNS:$hostname"
+  for ip in $(get_ips); do
+    subjectAltName="$subjectAltName, IP:$ip"
+  done
+
+  # generate key if it does not exist
+  if [ ! -f "$2" ]; then
+    "${OPENSSL}" genrsa 2048 -out "$2"
+    chown 0:0 "$2" || true
+    chmod 0600 "$2" || true
+  fi
+
+  # generate csr
+  "${OPENSSL}" req -new -sha256 -subj "$1" -key "$2" -addext "subjectAltName = $subjectAltName"
+}
+
+generate_sans() {
+  ########################################################################
+  # Description:
+  #   Generate CSR for component certificates. The CSR PEM is written to stdout. Arguments are:
+  #   1. The certificate subject, e.g. "/CN=system:kube-scheduler"
+  #   2. The path to write the private key, e.g. "$SNAP_DATA/certs/scheduler.key"
+  #
+  # Example usage:
+  #   generate_sans /CN=system:kube-scheduler $SNAP_DATA/certs/scheduler.key > $SNAP_DATA/certs/scheduler.csr
+  ########################################################################
+
+  OPENSSL=openssl
+
+  # generate key if it does not exist
+  if [ ! -f "$2" ]; then
+    "${OPENSSL}" genrsa 2048 -out "$2"
+    chown 0:0 "$2" || true
+    chmod 0600 "$2" || true
+  fi
+
+  # generate csr
+  "${OPENSSL}" req -new -sha256 -subj "$1" -key "$2"
+}
+
+sign_certificate() {
+  ########################################################################
+  # Description:
+  #   Sign a certificate signing request (CSR) using the MicroK8s cluster CA.
+  #   The CSR is read through stdin, and the signed certificate is printed to stdout.
+  #
+  # Notes:
+  #   - Read from stdin and write to stdout, so no temporary files are required.
+  #   - Any SubjectAlternateNames that are included in the CSR are added to the certificate.
+  #
+  # Example usage:
+  #   cat component.csr | sign_certificate > component.crt
+  ########################################################################
+
+  OPENSSL=openssl
+
+  # We need to use the request more than once, so read it into a variable
+  csr="$(cat)"
+
+  # Parse SANs from the CSR and add them to the certificate extensions (if any)
+  extensions=""
+  alt_names="$(echo "$csr" | "${OPENSSL}" req -text | grep "X509v3 Subject Alternative Name:" -A1 | tail -n 1 | sed 's,IP Address:,IP:,g')"
+  if test "x$alt_names" != "x"; then
+    extensions="subjectAltName = $alt_names"
+  fi
+
+  # Sign certificate and print to stdout
+  echo "$csr" | "${OPENSSL}" x509 -req -sha256 -CA "${SNAP_DATA}/certs/ca.crt" -CAkey "${SNAP_DATA}/certs/ca.key" -CAcreateserial -days 3650 -extfile <(echo "${extensions}")
 }
 
 ############################# Strict functions ######################################
