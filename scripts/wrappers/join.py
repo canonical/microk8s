@@ -232,12 +232,11 @@ def get_client_cert(master_ip, master_port, fname: str, token: str, subject: str
     cert_crt = (snap_data() / "certs" / fname).with_suffix(".crt")
     cert_key = (snap_data() / "certs" / fname).with_suffix(".key")
     # generate csr
-    script = "generate-csr-with-sans.sh" if with_sans else "generate-csr.sh"
+    script = "generate_csr_with_sans" if with_sans else "generate_csr"
     p = subprocess.run(
-        [f"{snap()}/scripts/certs/{script}", subject, cert_key],
+        [f"{snap()}/actions/common/utils.sh", script, subject, cert_key],
         check=True,
         capture_output=True,
-        stderr=subprocess.DEVNULL,
     )
     csr = p.stdout.decode()
 
