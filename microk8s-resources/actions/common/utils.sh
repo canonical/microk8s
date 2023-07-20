@@ -600,13 +600,13 @@ get_ips() {
 }
 
 gen_server_cert() (
-    ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
-    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    "${SNAP}"/openssl.wrapper req -new -sha256 -key ${SNAP_DATA}/certs/server.key -out ${SNAP_DATA}/certs/server.csr -config ${SNAP_DATA}/certs/csr.conf
+    "${SNAP}"/openssl.wrapper x509 -req -sha256 -in ${SNAP_DATA}/certs/server.csr -CA ${SNAP_DATA}/certs/ca.crt -CAkey ${SNAP_DATA}/certs/ca.key -CAcreateserial -out ${SNAP_DATA}/certs/server.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 gen_proxy_client_cert() (
-    ${SNAP}/usr/bin/openssl req -new -sha256 -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
-    ${SNAP}/usr/bin/openssl x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
+    "${SNAP}"/openssl.wrapper req -new -sha256 -key ${SNAP_DATA}/certs/front-proxy-client.key -out ${SNAP_DATA}/certs/front-proxy-client.csr -config <(sed '/^prompt = no/d' ${SNAP_DATA}/certs/csr.conf) -subj "/CN=front-proxy-client"
+    "${SNAP}"/openssl.wrapper x509 -req -sha256 -in ${SNAP_DATA}/certs/front-proxy-client.csr -CA ${SNAP_DATA}/certs/front-proxy-ca.crt -CAkey ${SNAP_DATA}/certs/front-proxy-ca.key -CAcreateserial -out ${SNAP_DATA}/certs/front-proxy-client.crt -days 365 -extensions v3_ext -extfile ${SNAP_DATA}/certs/csr.conf
 )
 
 create_user_certs_and_configs() {
@@ -685,18 +685,18 @@ produce_certs() {
     # Generate RSA keys if not yet
     for key in serviceaccount.key ca.key server.key front-proxy-ca.key front-proxy-client.key; do
         if ! [ -f ${SNAP_DATA}/certs/$key ]; then
-            ${SNAP}/usr/bin/openssl genrsa -out ${SNAP_DATA}/certs/$key 2048
+            "${SNAP}"/openssl.wrapper genrsa -out ${SNAP_DATA}/certs/$key 2048
         fi
     done
 
     # Generate apiserver CA
     if ! [ -f ${SNAP_DATA}/certs/ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt
+        "${SNAP}"/openssl.wrapper req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/ca.key -subj "/CN=10.152.183.1" -out ${SNAP_DATA}/certs/ca.crt
     fi
 
     # Generate front proxy CA
     if ! [ -f ${SNAP_DATA}/certs/front-proxy-ca.crt ]; then
-        ${SNAP}/usr/bin/openssl req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
+        "${SNAP}"/openssl.wrapper req -x509 -new -sha256 -nodes -days 3650 -key ${SNAP_DATA}/certs/front-proxy-ca.key -subj "/CN=front-proxy-ca" -out ${SNAP_DATA}/certs/front-proxy-ca.crt
     fi
 
     # Produce certificates based on the rendered csr.conf.rendered.
@@ -724,7 +724,7 @@ produce_certs() {
         gen_proxy_client_cert
         echo "1"
     elif [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ] ||
-         [ "$(${SNAP}/usr/bin/openssl < ${SNAP_DATA}/certs/front-proxy-client.crt x509 -noout -issuer)" == "issuer=CN = 127.0.0.1" ]; then
+         [ "$(${SNAP}/openssl.wrapper < ${SNAP_DATA}/certs/front-proxy-client.crt x509 -noout -issuer)" == "issuer=CN = 127.0.0.1" ]; then
         gen_proxy_client_cert
         echo "1"
     else
@@ -736,7 +736,6 @@ ensure_server_ca() {
     # ensure the server.crt is issued by ca.crt
     # if current csr.conf is invalid, regenerate front-proxy-client certificates as well
 
-    if ! ${SNAP}/usr/bin/openssl verify -CAfile ${SNAP_DATA}/certs/ca.crt ${SNAP_DATA}/certs/server.crt &>/dev/null
     then
         csr_modified="$(ensure_csr_conf_conservative)"
         gen_server_cert
@@ -755,7 +754,7 @@ ensure_server_ca() {
 check_csr_conf() {
     # if no argument is given, default csr.conf will be checked
     csr_conf="${1:-${SNAP_DATA}/certs/csr.conf}"
-    ${SNAP}/usr/bin/openssl req -new -config $csr_conf -noout -nodes -keyout /dev/null &>/dev/null
+    "${SNAP}"/openssl.wrapper req -new -config $csr_conf -noout -nodes -keyout /dev/null &>/dev/null
 }
 
 refresh_csr_conf() {
@@ -895,7 +894,7 @@ init_cluster() {
   cp $SNAP/certs/csr-dqlite.conf.template $SNAP_DATA/var/tmp/csr-dqlite.conf
   $SNAP/bin/sed -i 's/HOSTNAME/'"${DNS}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
   $SNAP/bin/sed -i 's/HOSTIP/'"${IP}"'/g' $SNAP_DATA/var/tmp/csr-dqlite.conf
-  ${SNAP}/usr/bin/openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
+  "${SNAP}"/openssl.wrapper req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout ${SNAP_DATA}/var/kubernetes/backend/cluster.key -out ${SNAP_DATA}/var/kubernetes/backend/cluster.crt -subj "/CN=k8s" -config $SNAP_DATA/var/tmp/csr-dqlite.conf -extensions v3_ext
   chmod -R o-rwX ${SNAP_DATA}/var/kubernetes/backend/
   local group=$(get_microk8s_group)
   if getent group ${group} >/dev/null 2>&1
@@ -1071,7 +1070,7 @@ cluster_agent_port() {
 }
 
 server_cert_check() {
-  openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1 | cut -c1-12
+  "${SNAP}"/openssl.wrapper x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1 | cut -c1-12
 }
 
 generate_csr_with_sans() {
@@ -1152,30 +1151,6 @@ sign_certificate() {
   echo "$csr" | openssl x509 -req -sha256 -CA "${SNAP_DATA}/certs/ca.crt" -CAkey "${SNAP_DATA}/certs/ca.key" -CAcreateserial -days 3650 -extfile <(echo "${extensions}")
 }
 
-# check if this file is run with arguments
-if [[ "$0" == "${BASH_SOURCE}" ]] &&
-   [[ ! -z "$1" ]]
-then
-  # call help
-  if echo "$*" | grep -q -- 'help'; then
-    echo "usage: $0 [function]"
-    echo ""
-    echo "Run a utility function and return the output."
-    echo ""
-    echo "available functions:"
-    declare -F | gawk '{print "- "$3}'
-    exit 0
-  fi
-
-  if declare -F "$1" > /dev/null
-  then
-    $1 ${@:2}
-    exit $?
-  else
-    echo "Function does not exist: $1" >&2
-    exit 1
-  fi
-fi
 
 exit_if_low_memory_guard() {
   if [ -e ${SNAP_DATA}/var/lock/low-memory-guard.lock ]
@@ -1384,4 +1359,29 @@ increase_sysctl_parameter() {
         run_with_sudo sysctl --system
     fi
   fi
+
+# check if this file is run with arguments
+if [[ "$0" == "${BASH_SOURCE}" ]] &&
+   [[ ! -z "$1" ]]
+then
+  # call help
+  if echo "$*" | grep -q -- 'help'; then
+    echo "usage: $0 [function]"
+    echo ""
+    echo "Run a utility function and return the output."
+    echo ""
+    echo "available functions:"
+    declare -F | gawk '{print "- "$3}'
+    exit 0
+  fi
+
+  if declare -F "$1" > /dev/null
+  then
+    $1 ${@:2}
+    exit $?
+  else
+    echo "Function does not exist: $1" >&2
+    exit 1
+  fi
+fi
 }

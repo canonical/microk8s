@@ -6,6 +6,7 @@ mkdir -p "${INSTALL}"
 export CGO_LDFLAGS_ALLOW="-Wl,-z,now"
 export CGO_CFLAGS="-I${SNAPCRAFT_STAGE}/usr/include/"
 export CGO_LDFLAGS="-L${SNAPCRAFT_STAGE}/lib"
+export GOEXPERIMENT=opensslcrypto
 go build -ldflags "-s -w" -tags libsqlite3 ./cmd/dqlite
 
 cp dqlite "${INSTALL}/dqlite"
