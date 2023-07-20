@@ -1164,7 +1164,7 @@ generate_csr_with_sans() {
 
   # generate key if it does not exist
   if [ ! -f "$2" ]; then
-    "${OPENSSL}" genrsa 2048 -out "$2"
+    "${OPENSSL}" genrsa -out "$2" 2048
     chown 0:0 "$2" || true
     chmod 0600 "$2" || true
   fi
@@ -1188,7 +1188,7 @@ generate_sans() {
 
   # generate key if it does not exist
   if [ ! -f "$2" ]; then
-    "${OPENSSL}" genrsa 2048 -out "$2"
+    "${OPENSSL}" genrsa -out "$2" 2048
     chown 0:0 "$2" || true
     chmod 0600 "$2" || true
   fi
