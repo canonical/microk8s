@@ -28,3 +28,4 @@
 --enable-admission-plugins=EventRateLimit
 --admission-control-config-file=${SNAP_DATA}/args/admission-control-config-file.yaml
 --kubelet-certificate-authority=${SNAP_DATA}/certs/ca.crt
+--kubelet-preferred-address-types=InternalIP,Hostname,InternalDNS,ExternalDNS,ExternalIP
