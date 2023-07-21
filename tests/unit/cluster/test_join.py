@@ -136,15 +136,11 @@ def test_join_dqlite_master_node(
     mock_subprocess_check_call.assert_any_call("snapctl start microk8s.daemon-k8s-dqlite".split())
 
     # Assert we created admin kubeconfig from certificate
-    cmd = f"{snap / 'usr/bin/openssl'} req -new -sha256 -key {snapdatacurrnet / 'certs' / 'client.key'} \
-        -out {snapdatacurrnet / 'certs' / 'client.csr'} \
-        -subj /CN=admin/O=system:masters"
-    mock_subprocess_check_call.assert_any_call(cmd.split(), stdout=-3, stderr=-3)
-    with open(credentials / "client.config", "r") as f:
-        content = f.read()
-        assert "x509" in content
-        assert "token" not in content
-        assert "admin" in content
+    mock_subprocess_check_call.assert_any_call(
+        [f"{snap}/actions/common/utils.sh", "create_user_certs_and_configs"], stdout=-3, stderr=-3
+    )
+
+    mock_subprocess_check_call.reset_mock()
 
     # Check joining with tokens based
     create_dir_layout(tokens=True)
@@ -152,9 +148,6 @@ def test_join_dqlite_master_node(
     info["admin_token"] = "some-token"
     join.join_dqlite_master_node(info, "123.123.123.123")
 
-    # Assert we created admin kubeconfig from certificate
-    with open(credentials / "client.config", "r") as f:
-        content = f.read()
-        assert "token" in content
-        assert "x509" not in content
-        assert "admin" in content
+    mock_subprocess_check_call.assert_any_call(
+        [f"{snap}/actions/common/utils.sh", "create_user_certs_and_configs"], stdout=-3, stderr=-3
+    )
