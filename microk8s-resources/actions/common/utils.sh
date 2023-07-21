@@ -1061,21 +1061,20 @@ server_cert_check() {
   openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1 | cut -c1-12
 }
 
-########################################################################
-# Description:
-#   Generate CSR for component certificates, including hostname and node IP addresses
-#   as SubjectAlternateNames. The CSR PEM is printed to stdout. Arguments are:
-#   1. The certificate subject, e.g. "/CN=system:node:$hostname/O=system:nodes"
-#   2. The path to write the private key, e.g. "$SNAP_DATA/certs/kubelet.key"
-#
-# Notes:
-#   - Subject is /CN=system:node:$hostname/O=system:nodes
-#   - Node hostname and IP addresses are added as Subject Alternate Names
-#
-# Example usage:
-#   generate_csr_with_sans /CN=system:node:$hostname/O=system:nodes $SNAP_DATA/certs/kubelet.key > $SNAP_DATA/certs/kubelet.csr
-########################################################################
 generate_csr_with_sans() {
+  # Description:
+  #   Generate CSR for component certificates, including hostname and node IP addresses
+  #   as SubjectAlternateNames. The CSR PEM is printed to stdout. Arguments are:
+  #   1. The certificate subject, e.g. "/CN=system:node:$hostname/O=system:nodes"
+  #   2. The path to write the private key, e.g. "$SNAP_DATA/certs/kubelet.key"
+  #
+  # Notes:
+  #   - Subject is /CN=system:node:$hostname/O=system:nodes
+  #   - Node hostname and IP addresses are added as Subject Alternate Names
+  #
+  # Example usage:
+  #   generate_csr_with_sans /CN=system:node:$hostname/O=system:nodes $SNAP_DATA/certs/kubelet.key > $SNAP_DATA/certs/kubelet.csr
+
   # Add DNS name and IP addresses as subjectAltName
   hostname=$(hostname | tr '[:upper:]' '[:lower:]')
   subjectAltName="DNS:$hostname"
@@ -1094,16 +1093,15 @@ generate_csr_with_sans() {
   openssl req -new -sha256 -subj "$1" -key "$2" -addext "subjectAltName = $subjectAltName"
 }
 
-########################################################################
-# Description:
-#   Generate CSR for component certificates. The CSR PEM is written to stdout. Arguments are:
-#   1. The certificate subject, e.g. "/CN=system:kube-scheduler"
-#   2. The path to write the private key, e.g. "$SNAP_DATA/certs/scheduler.key"
-#
-# Example usage:
-#   generate_csr /CN=system:kube-scheduler $SNAP_DATA/certs/scheduler.key > $SNAP_DATA/certs/scheduler.csr
-########################################################################
 generate_csr() {
+  # Description:
+  #   Generate CSR for component certificates. The CSR PEM is written to stdout. Arguments are:
+  #   1. The certificate subject, e.g. "/CN=system:kube-scheduler"
+  #   2. The path to write the private key, e.g. "$SNAP_DATA/certs/scheduler.key"
+  #
+  # Example usage:
+  #   generate_csr /CN=system:kube-scheduler $SNAP_DATA/certs/scheduler.key > $SNAP_DATA/certs/scheduler.csr
+
   # generate key if it does not exist
   if [ ! -f "$2" ]; then
     openssl genrsa -out "$2" 2048
@@ -1115,20 +1113,19 @@ generate_csr() {
   openssl req -new -sha256 -subj "$1" -key "$2"
 }
 
-########################################################################
-# Description:
-#   Sign a certificate signing request (CSR) using the MicroK8s cluster CA.
-#   The CSR is read through stdin, and the signed certificate is printed to stdout.
-#
-# Notes:
-#   - Read from stdin and write to stdout, so no temporary files are required.
-#   - Any SubjectAlternateNames that are included in the CSR are added to the certificate.
-#
-# Example usage:
-#   cat component.csr | sign_certificate > component.crt
-########################################################################
 sign_certificate() {
-  # We need to use the request more than once, so read it into a variable
+  # Description:
+  #   Sign a certificate signing request (CSR) using the MicroK8s cluster CA.
+  #   The CSR is read through stdin, and the signed certificate is printed to stdout.
+  #
+  # Notes:
+  #   - Read from stdin and write to stdout, so no temporary files are required.
+  #   - Any SubjectAlternateNames that are included in the CSR are added to the certificate.
+  #
+  # Example usage:
+  #   cat component.csr | sign_certificate > component.crt
+
+  # We need to use the request more than once, use this trick to grab stdin and save it in '$csr'
   csr="$(cat)"
 
   # Parse SANs from the CSR and add them to the certificate extensions (if any)
