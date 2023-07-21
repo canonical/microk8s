@@ -632,10 +632,20 @@ create_user_kubeconfigs() {
   create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.crt
 }
 
-create_worker_kubeconfigs() {
+create_worker_kubeconfigs_local_apiserver() {
   hostname=$(hostname | tr '[:upper:]' '[:lower:]')
   create_kubeconfig_x509 "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key ${SNAP_DATA}/certs/ca.remote.crt
   create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.remote.crt
+}
+
+create_worker_kubeconfigs_remote_apiserver() {
+  Create worker configs for an API server that is provided
+  # $1: API server IP
+  # $2: API server port
+  
+  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  create_kubeconfig_x509 "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key ${SNAP_DATA}/certs/ca.remote.crt $1 $2
+  create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.remote.crt $1 $2
 }
 
 create_kubeconfig_x509() {
@@ -645,12 +655,17 @@ create_kubeconfig_x509() {
   # $3: path to certificate file
   # $4: path to certificate key file
   # $5: path to ca file
+  # $6: (optional) API server IP, optional defaults to 127.0.0.1
+  # $7: (optional) API server port, optional defaults to the port of the current node
 
   kubeconfig=$1
   user=$2
   cert=$3
   key=$4
   ca=$5
+  apiserver=${6:-"127.0.0.1"}
+  apiserver_port="$(cat $SNAP_DATA/args/kube-apiserver | grep -- "--secure-port" | tr "=" " " | gawk '{print $2}')"
+  port=${7:-${apiserver_port}}
 
   ca_data=$(cat ${ca} | ${SNAP}/usr/bin/base64 -w 0)
   cert_data=$(cat ${cert} | ${SNAP}/usr/bin/base64 -w 0)
@@ -665,7 +680,8 @@ create_kubeconfig_x509() {
   sed -i 's/PATHTOKEYCERT/'"${key_data}"'/g' ${config_file}
   sed -i 's/client-certificate/client-certificate-data/g' ${config_file}
   sed -i 's/client-key/client-key-data/g' ${config_file}
-  sed -i 's/16443/'"${apiserver_port}"'/g' ${config_file}
+  sed -i 's/127.0.0.1/'"${apiserver}"'/g' ${config_file}
+  sed -i 's/16443/'"${port}"'/g' ${config_file}
 }
 
 produce_certs() {

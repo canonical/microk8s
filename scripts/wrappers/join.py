@@ -760,7 +760,7 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     update_cert_auth_kubeproxy(token, master_ip, master_port, hostname_override)
     update_cert_auth_kubelet(token, master_ip, master_port)
     subprocess.check_call(
-        [f"{snap()}/actions/common/utils.sh", "create_worker_kubeconfigs"],
+        [f"{snap()}/actions/common/utils.sh", "create_worker_kubeconfigs_local_apiserver"],
         stderr=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
     )
@@ -830,6 +830,10 @@ def join_etcd(connection_parts, verify=True):
     callback_token = generate_callback_token()
     info = get_connection_info(master_ip, master_port, token, callback_token=callback_token)
 
+    if "api_authn_mode" in info and info["api_authn_mode"] not in ["Token", "Cert"]:
+        print("Error: The control plane node we are joining uses an unknown authentication mode.")
+        exit(7)
+
     # Get the cluster_cidr from kube-proxy args
     cluster_cidr = get_cluster_cidr()
 
@@ -852,8 +856,26 @@ def join_etcd(connection_parts, verify=True):
 
     store_remote_ca(info["ca"])
     update_flannel(info["etcd"], master_ip, master_port, token)
-    update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override)
-    update_kubelet(info["kubelet"], info["ca"], master_ip, info["apiport"])
+
+    if "api_authn_mode" not in info or info["api_authn_mode"] == "Token":
+        update_kubeproxy(
+            info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override
+        )
+        update_kubelet(info["kubelet"], info["ca"], master_ip, info["apiport"])
+    elif info["api_authn_mode"] == "Cert":
+        update_cert_auth_kubeproxy(info["kubeproxy"], master_ip, master_port, hostname_override)
+        update_cert_auth_kubelet(info["kubelet"], master_ip, master_port)
+        subprocess.check_call(
+            [
+                f"{snap()}/actions/common/utils.sh",
+                "create_worker_kubeconfigs_remote_apiserver",
+                master_ip,
+                info["apiport"],
+            ],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
+
     mark_worker_node()
     mark_no_cert_reissue()
 
