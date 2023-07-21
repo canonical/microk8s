@@ -12,7 +12,6 @@ fi
 ARCH="$(${SNAP}/bin/uname -m)"
 export LD_LIBRARY_PATH="${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/$ARCH-linux-gnu:${SNAP}/usr/lib/$ARCH-linux-gnu"
 export PATH="${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:$PATH:/usr/bin:/usr/local/bin"
-export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
 
 # LXD Specific Checks
 if ! is_strict && cat /proc/1/environ | grep "container=lxc" &> /dev/null
@@ -90,7 +89,7 @@ done
 produce_certs
 rm -rf .srl
 
-create_user_kubeconfigs
+create_user_certs_and_configs
 
 # Install default-hooks
 cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
