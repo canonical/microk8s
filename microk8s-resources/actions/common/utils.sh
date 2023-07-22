@@ -632,20 +632,15 @@ create_user_kubeconfigs() {
   create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.crt
 }
 
-create_worker_kubeconfigs_local_apiserver() {
-  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
-  create_kubeconfig_x509 "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key ${SNAP_DATA}/certs/ca.remote.crt
-  create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.remote.crt
-}
+create_worker_kubeconfigs() {
+  # $1: (Optional) API server IP
+  # $2: (Optional) API server port
+  apiserver="${1}"
+  port="${2}"
 
-create_worker_kubeconfigs_remote_apiserver() {
-  Create worker configs for an API server that is provided
-  # $1: API server IP
-  # $2: API server port
-  
   hostname=$(hostname | tr '[:upper:]' '[:lower:]')
-  create_kubeconfig_x509 "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key ${SNAP_DATA}/certs/ca.remote.crt $1 $2
-  create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.remote.crt $1 $2
+  create_kubeconfig_x509 "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key ${SNAP_DATA}/certs/ca.remote.crt "${apiserver}" "${port}"
+  create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.remote.crt "${apiserver}" "${port}"
 }
 
 create_kubeconfig_x509() {
@@ -663,25 +658,26 @@ create_kubeconfig_x509() {
   cert=$3
   key=$4
   ca=$5
-  apiserver=${6:-"127.0.0.1"}
+
+  # optional arguments
+  apiserver="${6:-"127.0.0.1"}"
   apiserver_port="$(cat $SNAP_DATA/args/kube-apiserver | grep -- "--secure-port" | tr "=" " " | gawk '{print $2}')"
-  port=${7:-${apiserver_port}}
+  port="${7:-${apiserver_port}}"
 
   ca_data=$(cat ${ca} | ${SNAP}/usr/bin/base64 -w 0)
   cert_data=$(cat ${cert} | ${SNAP}/usr/bin/base64 -w 0)
   key_data=$(cat ${key} | ${SNAP}/usr/bin/base64 -w 0)
-  config_file=${SNAP_DATA}/credentials/${kubeconfig}
-  apiserver_port="$(cat $SNAP_DATA/args/kube-apiserver | grep -- "--secure-port" | tr "=" " " | gawk '{print $2}')"
+  config_file="${SNAP_DATA}/credentials/${kubeconfig}"
 
-  cp ${SNAP}/client-x509.config.template ${config_file}
-  sed -i 's/CADATA/'"${ca_data}"'/g' ${config_file}
-  sed -i 's/NAME/'"${user}"'/g' ${config_file}
-  sed -i 's/PATHTOCERT/'"${cert_data}"'/g' ${config_file}
-  sed -i 's/PATHTOKEYCERT/'"${key_data}"'/g' ${config_file}
-  sed -i 's/client-certificate/client-certificate-data/g' ${config_file}
-  sed -i 's/client-key/client-key-data/g' ${config_file}
-  sed -i 's/127.0.0.1/'"${apiserver}"'/g' ${config_file}
-  sed -i 's/16443/'"${port}"'/g' ${config_file}
+  cp "${SNAP}/client-x509.config.template" "${config_file}"
+  sed -i 's/CADATA/'"${ca_data}"'/g' "${config_file}"
+  sed -i 's/NAME/'"${user}"'/g' "${config_file}"
+  sed -i 's/PATHTOCERT/'"${cert_data}"'/g' "${config_file}"
+  sed -i 's/PATHTOKEYCERT/'"${key_data}"'/g' "${config_file}"
+  sed -i 's/client-certificate/client-certificate-data/g' "${config_file}"
+  sed -i 's/client-key/client-key-data/g' "${config_file}"
+  sed -i 's/127.0.0.1/'"${apiserver}"'/g' "${config_file}"
+  sed -i 's/16443/'"${port}"'/g' "${config_file}"
 }
 
 produce_certs() {

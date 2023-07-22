@@ -760,7 +760,7 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     update_cert_auth_kubeproxy(token, master_ip, master_port, hostname_override)
     update_cert_auth_kubelet(token, master_ip, master_port)
     subprocess.check_call(
-        [f"{snap()}/actions/common/utils.sh", "create_worker_kubeconfigs_local_apiserver"],
+        [f"{snap()}/actions/common/utils.sh", "create_worker_kubeconfigs"],
         stderr=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
     )
