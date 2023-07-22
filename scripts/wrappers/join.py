@@ -170,6 +170,7 @@ def get_connection_info(
                 "hostname": socket.gethostname().lower(),
                 "port": cluster_agent_port,
                 "callback": callback_token,
+                "can_handle_x509_auth": True,
             }
             return join_request(
                 conn, CLUSTER_API, req_data, master_ip, verify_peer=False, fingerprint=None
@@ -830,8 +831,11 @@ def join_etcd(connection_parts, verify=True):
     callback_token = generate_callback_token()
     info = get_connection_info(master_ip, master_port, token, callback_token=callback_token)
 
-    if "api_authn_mode" in info and info["api_authn_mode"] not in ["Token", "Cert"]:
-        print("Error: The control plane node we are joining uses an unknown authentication mode.")
+    # check api authn mode from response. default is fallback to Token
+    api_authn_mode = info.get("api_authn_mode", "Token")
+    if api_authn_mode not in ["Cert", "Token"]:
+        print("Error: Unknown API auth mode '{api_authn_mode}' received from control plane node.")
+        print("Please update this MicroK8s node to the latest version before joining.")
         exit(7)
 
     # Get the cluster_cidr from kube-proxy args
@@ -857,24 +861,26 @@ def join_etcd(connection_parts, verify=True):
     store_remote_ca(info["ca"])
     update_flannel(info["etcd"], master_ip, master_port, token)
 
-    if "api_authn_mode" not in info or info["api_authn_mode"] == "Token":
+    if api_authn_mode == "Token":
         update_kubeproxy(
             info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override
         )
         update_kubelet(info["kubelet"], info["ca"], master_ip, info["apiport"])
-    elif info["api_authn_mode"] == "Cert":
+    elif api_authn_mode == "Cert":
         update_cert_auth_kubeproxy(info["kubeproxy"], master_ip, master_port, hostname_override)
         update_cert_auth_kubelet(info["kubelet"], master_ip, master_port)
         subprocess.check_call(
             [
                 f"{snap()}/actions/common/utils.sh",
-                "create_worker_kubeconfigs_remote_apiserver",
+                "create_worker_kubeconfigs",
                 master_ip,
                 info["apiport"],
             ],
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
         )
+    else:
+        assert False, "this should never happen"
 
     mark_worker_node()
     mark_no_cert_reissue()
