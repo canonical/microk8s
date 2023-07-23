@@ -621,6 +621,7 @@ create_user_certificates() {
   generate_csr /CN=system:kube-proxy "${SNAP_DATA}/certs/proxy.key" | sign_certificate > "${SNAP_DATA}/certs/proxy.crt"
   generate_csr /CN=system:kube-scheduler "${SNAP_DATA}/certs/scheduler.key" | sign_certificate > "${SNAP_DATA}/certs/scheduler.crt"
   generate_csr /CN=system:kube-controller-manager "${SNAP_DATA}/certs/controller.key" | sign_certificate > "${SNAP_DATA}/certs/controller.crt"
+  generate_csr /CN=kube-apiserver-kubelet-client/O=system:masters "${SNAP_DATA}/certs/apiserver-kubelet-client.key" | sign_certificate > "${SNAP_DATA}/certs/apiserver-kubelet-client.crt"
 }
 
 create_user_kubeconfigs() {
