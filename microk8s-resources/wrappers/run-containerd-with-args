@@ -79,6 +79,11 @@ then
   mark_boot_time "${SNAP_COMMON}/run/containerd"
 fi
 
+if [ -e ${SNAP_DATA}/args/fips-env ]
+then
+  source ${SNAP_DATA}/args/fips-env
+fi
+
 # This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/$app))"
 set -a
