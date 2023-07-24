@@ -136,7 +136,7 @@ def test_join_dqlite_master_node(
     mock_subprocess_check_call.assert_any_call("snapctl start microk8s.daemon-k8s-dqlite".split())
 
     # Assert we created admin kubeconfig from certificate
-    cmd = f"{snap / 'usr/bin/openssl'} req -new -sha256 -key {snapdatacurrnet / 'certs' / 'client.key'} \
+    cmd = f"{snap / 'openssl.wrapper'} req -new -sha256 -key {snapdatacurrnet / 'certs' / 'client.key'} \
         [f"{snap}/actions/common/utils.sh", "create_user_certs_and_configs"], stdout=-3, stderr=-3
     )
 

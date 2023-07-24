@@ -1096,13 +1096,13 @@ generate_csr_with_sans() {
 
   # generate key if it does not exist
   if [ ! -f "$2" ]; then
-    openssl genrsa -out "$2" 2048
+    "${SNAP}"/openssl.wrapper genrsa -out "$2" 2048
     chown 0:0 "$2" || true
     chmod 0600 "$2" || true
   fi
 
   # generate csr
-  openssl req -new -sha256 -subj "$1" -key "$2" -addext "subjectAltName = $subjectAltName"
+  "${SNAP}"/openssl.wrapper req -new -sha256 -subj "$1" -key "$2" -addext "subjectAltName = $subjectAltName"
 }
 
 generate_csr() {
@@ -1116,13 +1116,13 @@ generate_csr() {
 
   # generate key if it does not exist
   if [ ! -f "$2" ]; then
-    openssl genrsa -out "$2" 2048
+    "${SNAP}"/openssl.wrapper genrsa -out "$2" 2048
     chown 0:0 "$2" || true
     chmod 0600 "$2" || true
   fi
 
   # generate csr
-  openssl req -new -sha256 -subj "$1" -key "$2"
+  "${SNAP}"/openssl.wrapper req -new -sha256 -subj "$1" -key "$2"
 }
 
 sign_certificate() {
@@ -1142,13 +1142,13 @@ sign_certificate() {
 
   # Parse SANs from the CSR and add them to the certificate extensions (if any)
   extensions=""
-  alt_names="$(echo "$csr" | openssl req -text | grep "X509v3 Subject Alternative Name:" -A1 | tail -n 1 | sed 's,IP Address:,IP:,g')"
+  alt_names="$(echo "$csr" | "${SNAP}"/openssl.wrapper req -text | grep "X509v3 Subject Alternative Name:" -A1 | tail -n 1 | sed 's,IP Address:,IP:,g')"
   if test "x$alt_names" != "x"; then
     extensions="subjectAltName = $alt_names"
   fi
 
   # Sign certificate and print to stdout
-  echo "$csr" | openssl x509 -req -sha256 -CA "${SNAP_DATA}/certs/ca.crt" -CAkey "${SNAP_DATA}/certs/ca.key" -CAcreateserial -days 3650 -extfile <(echo "${extensions}")
+  echo "$csr" | "${SNAP}"/openssl.wrapper x509 -req -sha256 -CA "${SNAP_DATA}/certs/ca.crt" -CAkey "${SNAP_DATA}/certs/ca.key" -CAcreateserial -days 3650 -extfile <(echo "${extensions}")
 }
 
 
