@@ -1358,3 +1358,30 @@ is_ec2_instance() {
   fi
   return 1
 }
+
+increase_sysctl_parameter() {
+  declare -a conf_locs=("/etc/sysctl.d/" "/run/sysctl.d/" "/usr/local/lib/sysctl.d/" "/usr/lib/sysctl.d/" "/lib/sysctl.d/" "/etc/sysctl.conf")
+
+  local param_key=$1
+  local new_val=$2
+
+  val_max="0"
+
+  if ! is_strict; then
+    for loc in "${conf_locs[@]}"
+    do
+      if run_with_sudo grep -qr "^$param_key=" $loc; then
+        run_with_sudo grep -r "^$param_key=" $loc | sed 's/^.*=//' | while read -r val ; do
+          if [ "$val" -ge "$val_max" ]; then
+            val_max=$val;
+          fi
+        done
+      fi
+    done
+
+    if [ "$val_max" -lt "$new_val" ]; then
+        echo "$param_key=$new_val" | run_with_sudo tee -a /etc/sysctl.d/10-microk8s.conf
+        run_with_sudo sysctl --system
+    fi
+  fi
+}
