@@ -12,6 +12,11 @@ SNAPSHOTTER=$(snapshotter)
 
 exit_if_no_permissions
 
+if [ -e ${SNAP_DATA}/args/fips-env ]
+then
+  source ${SNAP_DATA}/args/fips-env
+fi
+
 if ! [ -e $SNAP_DATA/args/ctr ]
 then
   echo "Arguments file $SNAP_DATA/args/ctr is missing."
