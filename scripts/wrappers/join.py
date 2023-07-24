@@ -11,6 +11,7 @@ import string
 import subprocess
 import sys
 import time
+import ipaddress
 
 import click
 import requests
@@ -639,7 +640,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
         port = data["Address"].rsplit(":")[-1]
 
     # If host is an IPv6 address, wrap it in square brackets
-    if host.count(":") > 0:
+    if ipaddress.ip_interface(host).version == 6:
         host = "[{}]".format(host)
 
     init_data = {"Cluster": voters, "Address": "{}:{}".format(host, port)}
