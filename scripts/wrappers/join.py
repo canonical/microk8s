@@ -640,8 +640,12 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
         port = data["Address"].rsplit(":")[-1]
 
     # If host is an IPv6 address, wrap it in square brackets
-    if ipaddress.ip_interface(host).version == 6:
-        host = "[{}]".format(host)
+    try:
+        ip = ipaddress.ip_address(host)
+        if ip.version == 6:
+            host = "[{}]".format(host)
+    except ValueError:
+        pass
 
     init_data = {"Cluster": voters, "Address": "{}:{}".format(host, port)}
     with open("{}/init.yaml".format(cluster_dir), "w") as f:
