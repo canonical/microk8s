@@ -735,7 +735,7 @@ produce_certs() {
 ensure_server_ca() {
     # ensure the server.crt is issued by ca.crt
     # if current csr.conf is invalid, regenerate front-proxy-client certificates as well
-
+    if ! ${SNAP}/openssl.wrapper verify -CAfile ${SNAP_DATA}/certs/ca.crt ${SNAP_DATA}/certs/server.crt &>/dev/null
     then
         csr_modified="$(ensure_csr_conf_conservative)"
         gen_server_cert
