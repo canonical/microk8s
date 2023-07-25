@@ -641,8 +641,7 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
 
     # If host is an IPv6 address, wrap it in square brackets
     try:
-        ip = ipaddress.ip_address(host)
-        if ip.version == 6:
+        if ipaddress.ip_address(host).version == 6:
             host = "[{}]".format(host)
     except ValueError:
         pass
