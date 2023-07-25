@@ -29,6 +29,17 @@ fi
 # We add some delay so that systemd really retries the restarts
 sleep 6
 
+if [ ! -e "${SNAP_DATA}/var/lock/skip-aio-tune.lock" ]
+then
+  increase_sysctl_parameter "fs.aio-max-nr" "1048576"
+fi
+
+if [ ! -e "${SNAP_DATA}/var/lock/skip-inotify-tune.lock" ]
+then
+  increase_sysctl_parameter "fs.inotify.max_user_instances" "1024"
+  increase_sysctl_parameter "fs.inotify.max_user_watches" "1048576"
+fi
+
 set -a
 if [ -e "${SNAP_DATA}/args/${app}-env" ]
 then

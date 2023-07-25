@@ -37,6 +37,13 @@ snapctl stop ${SNAP_NAME}.daemon-containerd 2>&1 || true
 # because the mount points are busy
 sleep 10
 
+if ! is_strict
+then
+  # remove custom sysctl parameters
+  rm -f /etc/sysctl.d/10-microk8s.conf
+  sysctl --system
+fi
+
 # Clean the container location so we do not snapshot it.
 rm -rf ${SNAP_COMMON}/var/lib/containerd/* || true
 rm -rf ${SNAP_COMMON}/run/containerd/* || true
