@@ -9,8 +9,8 @@ REVISION=$(git rev-parse HEAD)
 sed -i "s,^VERSION.*$,VERSION=${VERSION}," Makefile
 sed -i "s,^REVISION.*$,REVISION=${REVISION}," Makefile
 
-export SHIM_CGO_ENABLED=1
-export GOEXPERIMENT=opensslcrypto
+export STATIC=1
+
 for bin in ctr containerd containerd-shim containerd-shim-runc-v1 containerd-shim-runc-v2; do
   make "bin/${bin}"
   cp "bin/${bin}" "${INSTALL}/${bin}"
