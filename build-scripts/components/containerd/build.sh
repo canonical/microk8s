@@ -10,7 +10,6 @@ sed -i "s,^VERSION.*$,VERSION=${VERSION}," Makefile
 sed -i "s,^REVISION.*$,REVISION=${REVISION}," Makefile
 
 export STATIC=1
-
 for bin in ctr containerd containerd-shim containerd-shim-runc-v1 containerd-shim-runc-v2; do
   make "bin/${bin}"
   cp "bin/${bin}" "${INSTALL}/${bin}"
