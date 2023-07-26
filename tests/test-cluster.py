@@ -219,8 +219,7 @@ class VM:
             ).split()
         )
         subprocess.check_call(
-            "/snap/bin/multipass exec {}  -- sudo "
-            "\"".format(self.vm_name).split()
+            "/snap/bin/multipass exec {}  -- sudo " '"'.format(self.vm_name).split()
         )
 
     def run(self, cmd):

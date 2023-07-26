@@ -218,7 +218,12 @@ def validate_dual_stack():
 
     wait_for_pod_state("", "default", "running", label="run=nginxdualstack")
 
-    ipv6_endpoint = kubectl("get endpoints nginx6 -o jsonpath={.subsets[0].addresses[0].ip} --output=jsonpath=[{.subsets[0].addresses[0].ip}]")
+    ipv6_endpoint = kubectl(
+        "get endpoints nginx6 "
+        "-o jsonpath={.subsets[0].addresses[0].ip} "
+        "--output=jsonpath=[{.subsets[0].addresses[0].ip}]"
+    )
+
     print("Pinging endpoint: http://{}/".format(ipv6_endpoint))
     url = f"http://{ipv6_endpoint}/"
     attempt = 10
