@@ -18,7 +18,7 @@ spec:
         app: microbot
     spec:
       containers:
-        - image: cdkbot/microbot-$ARCH
+        - image: cdkbot/microbot-amd64
           imagePullPolicy: ""
           name: microbot
           ports:

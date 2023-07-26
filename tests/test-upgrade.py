@@ -19,6 +19,7 @@ from utils import (
     run_until_success,
     is_container,
     is_ipv6_configured,
+    kubectl,
 )
 
 upgrade_from = os.environ.get("UPGRADE_MICROK8S_FROM", "beta")
@@ -62,6 +63,9 @@ extraSANs:
         cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from)
         run_until_success(cmd)
         wait_for_installation()
+
+        if is_ipv6_configured:
+            kubectl("set env daemonset/calico-node -n kube-system IP=10.3.0.0/16 IP6=fd02::/64")
 
         # Run through the validators and
         # select those that were valid for the original snap
