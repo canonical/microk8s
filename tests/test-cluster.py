@@ -99,7 +99,6 @@ class VM:
             )
             time.sleep(20)
             self._load_launch_configuration_lxc(launch_configs)
-
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
@@ -118,7 +117,6 @@ class VM:
                 print(output.decode())
         else:
             self._load_launch_configuration_lxc(launch_configs)
-
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
