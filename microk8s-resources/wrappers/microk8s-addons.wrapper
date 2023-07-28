@@ -14,4 +14,4 @@ export LANG="${LANG:-C.UTF-8}"
 
 exit_if_no_permissions
 
-LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/addons.py $@
+LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/addons.py "${@}"
