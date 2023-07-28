@@ -34,7 +34,7 @@ extraCNIEnv:
   IPv6_CLUSTER_CIDR: fd02::/64
   IPv6_SERVICE_CIDR: fd99::/108
 extraSANs:
-  - 10.152.183.1"""
+  - 10.153.183.1"""
 
 TEMPLATES = Path(__file__).absolute().parent / "templates"
 
