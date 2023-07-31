@@ -24,6 +24,7 @@ reuse_vms = None
 channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/stable")
 backend = os.environ.get("BACKEND", None)
 profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
+snap_data = os.environ.get("SNAP_DATA", "/var/snap/microk8s/current")
 launch_config = """---
 version: 0.1.0
 extraCNIEnv:
@@ -605,7 +606,7 @@ class TestCluster(object):
         vm = self.VM[0]
         # Deploy the test deployment and service
         manifest = TEMPLATES / "dual-stack.yaml"
-        remote_path = "/tmp/dual-stack.yaml"
+        remote_path = "{}/tmp/dual-stack.yaml".format(snap_data)
         vm.transfer_file(manifest, remote_path)
         vm.run("ls -al {}".format(remote_path))
         vm.run("/snap/bin/microk8s.kubectl apply -f {}".format(remote_path))
