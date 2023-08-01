@@ -35,6 +35,9 @@ function handle_calico {
 
     sed -i '/Enable or Disable VXLAN on the default IPv6 IP pool./a \            - name: CALICO_IPV6POOL_CIDR' "$CNI_YAML"
     sed -i '/CALICO_IPV6POOL_CIDR/a \              value: '"${IPv6_CLUSTER_CIDR}" "$CNI_YAML"
+
+    sed -i '/Enable or Disable VXLAN on the default IPv6 IP pool./a \            - name: IP6_AUTODETECTION_METHOD' "$CNI_YAML"
+    sed -i '/IP6_AUTODETECTION_METHOD/a \              value: "first-found"' "$CNI_YAML"
   fi
 
   # Other configuration

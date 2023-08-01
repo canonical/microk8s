@@ -11,6 +11,7 @@ import string
 import subprocess
 import sys
 import time
+import ipaddress
 
 import click
 import requests
@@ -596,7 +597,14 @@ def update_dqlite(cluster_cert, cluster_key, voters, host):
     with open("{}/info.yaml".format(cluster_backup_dir)) as f:
         data = yaml.safe_load(f)
     if "Address" in data:
-        port = data["Address"].split(":")[1]
+        port = data["Address"].rsplit(":")[-1]
+
+    # If host is an IPv6 address, wrap it in square brackets
+    try:
+        if ipaddress.ip_address(host).version == 6:
+            host = "[{}]".format(host)
+    except ValueError:
+        pass
 
     init_data = {"Cluster": voters, "Address": "{}:{}".format(host, port)}
     with open("{}/init.yaml".format(cluster_dir), "w") as f:
@@ -640,7 +648,7 @@ def join_dqlite(connection_parts, verify=False, worker=False):
     :param connection_parts: connection string parts
     """
     token = connection_parts[1]
-    master_ep = connection_parts[0].split(":")
+    master_ep = connection_parts[0].rsplit(":", 1)
     master_ip = master_ep[0]
     master_port = master_ep[1]
     fingerprint = None
@@ -825,7 +833,7 @@ def join_etcd(connection_parts, verify=True):
     :param connection_parts: connection string parts
     """
     token = connection_parts[1]
-    master_ep = connection_parts[0].split(":")
+    master_ep = connection_parts[0].rsplit(":", 1)
     master_ip = master_ep[0]
     master_port = master_ep[1]
     callback_token = generate_callback_token()
