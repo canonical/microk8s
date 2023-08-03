@@ -1,0 +1,431 @@
+From d0ae18d074db5ff361f363073f32b2f30c7a3686 Mon Sep 17 00:00:00 2001
+From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
+Date: Wed, 3 Mar 2021 18:19:37 +0200
+Subject: [PATCH] Kubelite integration
+
+---
+ cmd/kube-apiserver/app/server.go    |  9 +++-
+ cmd/kube-scheduler/app/server.go    |  6 ++-
+ cmd/kubelet/app/server.go           | 13 +++--
+ cmd/kubelite/app/daemons/daemon.go  | 84 +++++++++++++++++++++++++++++
+ cmd/kubelite/app/options/options.go | 79 +++++++++++++++++++++++++++
+ cmd/kubelite/app/server.go          | 79 +++++++++++++++++++++++++++
+ cmd/kubelite/kubelite.go            | 28 ++++++++++
+ pkg/volume/csi/csi_plugin.go        | 10 ++--
+ 8 files changed, 297 insertions(+), 11 deletions(-)
+ create mode 100644 cmd/kubelite/app/daemons/daemon.go
+ create mode 100644 cmd/kubelite/app/options/options.go
+ create mode 100644 cmd/kubelite/app/server.go
+ create mode 100644 cmd/kubelite/kubelite.go
+
+diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
+index fc36d044dbe..cffb7c35a3c 100644
+--- a/cmd/kube-apiserver/app/server.go
++++ b/cmd/kube-apiserver/app/server.go
+@@ -89,7 +89,7 @@ func init() {
+ }
+
+ // NewAPIServerCommand creates a *cobra.Command object with default parameters
+-func NewAPIServerCommand() *cobra.Command {
++func NewAPIServerCommand(stopCh... <- chan struct{}) *cobra.Command {
+ 	s := options.NewServerRunOptions()
+ 	cmd := &cobra.Command{
+ 		Use: "kube-apiserver",
+@@ -129,7 +129,12 @@ cluster's shared state through which all other components interact.`,
+ 			}
+ 			// add feature enablement metrics
+ 			utilfeature.DefaultMutableFeatureGate.AddMetrics()
+-			return Run(completedOptions, genericapiserver.SetupSignalHandler())
++
++			if len(stopCh) != 0 {
++				return Run(completedOptions, stopCh[0])
++			} else {
++				return Run(completedOptions, genericapiserver.SetupSignalHandler())
++			}
+ 		},
+ 		Args: func(cmd *cobra.Command, args []string) error {
+ 			for _, arg := range args {
+diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
+index 8d01f3b7670..44ac7f69328 100644
+--- a/cmd/kube-scheduler/app/server.go
++++ b/cmd/kube-scheduler/app/server.go
+@@ -132,7 +132,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
+ 	ctx, cancel := context.WithCancel(context.Background())
+ 	defer cancel()
+ 	go func() {
+-		stopCh := server.SetupSignalHandler()
++                c := cmd.Context()
++                if c == nil {
++                        c = server.SetupSignalContext()
++                }
++                stopCh := c.Done()
+ 		<-stopCh
+ 		cancel()
+ 	}()
+diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
+index 9444f136866..8ca88f64d04 100644
+--- a/cmd/kubelet/app/server.go
++++ b/cmd/kubelet/app/server.go
+@@ -120,7 +120,7 @@ const (
+ )
+
+ // NewKubeletCommand creates a *cobra.Command object with default parameters
+-func NewKubeletCommand() *cobra.Command {
++func NewKubeletCommand(ctx ...context.Context) *cobra.Command {
+ 	cleanFlagSet := pflag.NewFlagSet(componentKubelet, pflag.ContinueOnError)
+ 	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
+ 	kubeletFlags := options.NewKubeletFlags()
+@@ -250,6 +250,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+ 			if err := checkPermissions(); err != nil {
+ 				klog.ErrorS(err, "kubelet running with insufficient permissions")
+ 			}
++			runctx := context.Background()
++			if len(ctx) == 0 {
++				runctx = genericapiserver.SetupSignalContext()
++			} else {
++				runctx = ctx[0]
++			}
+
+ 			// make the kubelet's config safe for logging
+ 			config := kubeletServer.KubeletConfiguration.DeepCopy()
+@@ -259,12 +265,9 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+ 			// log the kubelet's config for inspection
+ 			klog.V(5).InfoS("KubeletConfiguration", "configuration", config)
+
+-			// set up signal context for kubelet shutdown
+-			ctx := genericapiserver.SetupSignalContext()
+-
+ 			utilfeature.DefaultMutableFeatureGate.AddMetrics()
+ 			// run the kubelet
+-			return Run(ctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate)
++			return Run(runctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate)
+ 		},
+ 	}
+
+diff --git a/cmd/kubelite/app/daemons/daemon.go b/cmd/kubelite/app/daemons/daemon.go
+new file mode 100644
+index 00000000000..dbef03cf07e
+--- /dev/null
++++ b/cmd/kubelite/app/daemons/daemon.go
+@@ -0,0 +1,84 @@
++package daemon
++
++import (
++	"context"
++	"k8s.io/client-go/kubernetes"
++	"k8s.io/client-go/tools/clientcmd"
++	"k8s.io/klog/v2"
++	genericcontrollermanager "k8s.io/controller-manager/app"
++	apiserver "k8s.io/kubernetes/cmd/kube-apiserver/app"
++	controller "k8s.io/kubernetes/cmd/kube-controller-manager/app"
++	proxy "k8s.io/kubernetes/cmd/kube-proxy/app"
++	scheduler "k8s.io/kubernetes/cmd/kube-scheduler/app"
++	kubelet "k8s.io/kubernetes/cmd/kubelet/app"
++
++	"time"
++)
++
++func StartControllerManager(args []string, ctx context.Context) {
++	command := controller.NewControllerManagerCommand()
++	command.SetArgs(args)
++
++	klog.Info("Starting Controller Manager")
++	if err := command.ExecuteContext(ctx); err != nil {
++		klog.Fatalf("Controller Manager exited %v", err)
++	}
++	klog.Info("Stopping Controller Manager")
++}
++
++func StartScheduler(args []string, ctx context.Context) {
++	command := scheduler.NewSchedulerCommand()
++	command.SetArgs(args)
++
++	klog.Info("Starting Scheduler")
++	if err := command.ExecuteContext(ctx); err != nil {
++		klog.Fatalf("Scheduler exited %v", err)
++	}
++	klog.Info("Stopping Scheduler")
++}
++
++func StartProxy(args []string) {
++	command := proxy.NewProxyCommand()
++	command.SetArgs(args)
++
++	klog.Info("Starting Proxy")
++	if err := command.Execute(); err != nil {
++		klog.Fatalf("Proxy exited %v", err)
++	}
++	klog.Info("Stopping Proxy")
++}
++
++func StartKubelet(args []string, ctx context.Context) {
++	command := kubelet.NewKubeletCommand(ctx)
++	command.SetArgs(args)
++
++	klog.Info("Starting Kubelet")
++	if err := command.Execute(); err != nil {
++		klog.Fatalf("Kubelet exited %v", err)
++	}
++	klog.Info("Stopping Kubelet")
++}
++
++func StartAPIServer(args []string, ctx <-chan struct{}) {
++	command := apiserver.NewAPIServerCommand(ctx)
++	command.SetArgs(args)
++	klog.Info("Starting API Server")
++	if err := command.Execute(); err != nil {
++		klog.Fatalf("API Server exited %v", err)
++	}
++	klog.Info("Stopping API Server")
++}
++
++func WaitForAPIServer(kubeconfigpath string, timeout time.Duration) {
++	klog.Info("Waiting for the API server")
++	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigpath)
++	if err != nil {
++		klog.Fatalf("could not find the cluster's kubeconfig file %v", err)
++	}
++	// create the client
++	client, err := kubernetes.NewForConfig(config)
++	if err != nil {
++		klog.Fatalf("could not create client to the cluster %v", err)
++	}
++	genericcontrollermanager.WaitForAPIServer(client, timeout)
++}
+\ No newline at end of file
+diff --git a/cmd/kubelite/app/options/options.go b/cmd/kubelite/app/options/options.go
+new file mode 100644
+index 00000000000..80f1d8b09fc
+--- /dev/null
++++ b/cmd/kubelite/app/options/options.go
+@@ -0,0 +1,79 @@
++/*
++Copyright 2018 The Kubernetes Authors.
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++
++package options
++
++import (
++	"bufio"
++	"k8s.io/klog/v2"
++	"os"
++	"strings"
++)
++
++// Options has all the params needed to run a Kubelite
++type Options struct {
++	SchedulerArgsFile         string
++	ControllerManagerArgsFile string
++	ProxyArgsFile             string
++	KubeletArgsFile           string
++	APIServerArgsFile         string
++	KubeconfigFile    		  string
++	StartControlPlane		  bool
++}
++
++func NewOptions() (*Options){
++	o := Options{
++		"/var/snap/microk8s/current/args/kube-scheduler",
++		"/var/snap/microk8s/current/args/kube-controller-manager",
++		"/var/snap/microk8s/current/args/kube-proxy",
++		"/var/snap/microk8s/current/args/kubelet",
++		"/var/snap/microk8s/current/args/kube-apiserver",
++		"/var/snap/microk8s/current/credentials/client.config",
++		true,
++	}
++	return &o
++}
++
++func ReadArgsFromFile(filename string) []string {
++	var args []string
++	file, err := os.Open(filename)
++	if err != nil {
++		klog.Fatalf("Failed to open arguments file %v", err)
++	}
++	defer file.Close()
++
++	scanner := bufio.NewScanner(file)
++	for scanner.Scan() {
++		line := scanner.Text()
++		line = strings.TrimSpace(line)
++		// ignore lines with # and empty lines
++		if len(line) <= 0 || strings.HasPrefix(line, "#") {
++			continue
++		}
++		// remove " and '
++		for _, r := range "\"'" {
++			line = strings.ReplaceAll(line, string(r), "")
++		}
++		for _, part := range strings.Split(line, " ") {
++
++			args = append(args, os.ExpandEnv(part))
++		}
++	}
++	if err := scanner.Err(); err != nil {
++		klog.Fatalf("Failed to read arguments file %v", err)
++	}
++	return args
++}
+diff --git a/cmd/kubelite/app/server.go b/cmd/kubelite/app/server.go
+new file mode 100644
+index 00000000000..e7452a09e3e
+--- /dev/null
++++ b/cmd/kubelite/app/server.go
+@@ -0,0 +1,79 @@
++/*
++Copyright © 2020 NAME HERE <EMAIL ADDRESS>
++
++Licensed under the Apache License, Version 2.0 (the "License");
++you may not use this file except in compliance with the License.
++You may obtain a copy of the License at
++
++    http://www.apache.org/licenses/LICENSE-2.0
++
++Unless required by applicable law or agreed to in writing, software
++distributed under the License is distributed on an "AS IS" BASIS,
++WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++See the License for the specific language governing permissions and
++limitations under the License.
++*/
++package app
++
++import (
++	"fmt"
++	"github.com/spf13/cobra"
++	genericapiserver "k8s.io/apiserver/pkg/server"
++	daemon "k8s.io/kubernetes/cmd/kubelite/app/daemons"
++	"k8s.io/kubernetes/cmd/kubelite/app/options"
++	"os"
++	"time"
++)
++
++var opts = options.NewOptions()
++
++// liteCmd represents the base command when called without any subcommands
++var liteCmd = &cobra.Command{
++	Use:   "kubelite",
++	Short: "Single server kubernetes",
++	Long: `A single server that spawns all other kubernetes servers as threads`,
++	// Uncomment the following line if your bare application
++	// has an action associated with it:
++	Run: func(cmd *cobra.Command, args []string) {
++		ctx := genericapiserver.SetupSignalContext()
++
++		if opts.StartControlPlane {
++			apiserverArgs := options.ReadArgsFromFile(opts.APIServerArgsFile)
++			go daemon.StartAPIServer(apiserverArgs, ctx.Done())
++			daemon.WaitForAPIServer(opts.KubeconfigFile, 360 * time.Second)
++
++			controllerArgs := options.ReadArgsFromFile(opts.ControllerManagerArgsFile)
++			go daemon.StartControllerManager(controllerArgs, ctx)
++
++			schedulerArgs := options.ReadArgsFromFile(opts.SchedulerArgsFile)
++			go daemon.StartScheduler(schedulerArgs, ctx)
++		}
++
++		proxyArgs := options.ReadArgsFromFile(opts.ProxyArgsFile)
++		go daemon.StartProxy(proxyArgs)
++
++		kubeletArgs := options.ReadArgsFromFile(opts.KubeletArgsFile)
++		daemon.StartKubelet(kubeletArgs, ctx)
++	},
++}
++
++// Execute adds all child commands to the root command and sets flags appropriately.
++// This is called by main.main(). It only needs to happen once to the liteCmd.
++func Execute() {
++	if err := liteCmd.Execute(); err != nil {
++		fmt.Println(err)
++		os.Exit(1)
++	}
++}
++
++func init() {
++	cobra.OnInitialize()
++
++	liteCmd.Flags().StringVar(&opts.SchedulerArgsFile, "scheduler-args-file", opts.SchedulerArgsFile, "file with the arguments for the scheduler")
++	liteCmd.Flags().StringVar(&opts.ControllerManagerArgsFile, "controller-manager-args-file", opts.ControllerManagerArgsFile, "file with the arguments for the controller manager")
++	liteCmd.Flags().StringVar(&opts.ProxyArgsFile, "proxy-args-file", opts.ProxyArgsFile , "file with the arguments for kube-proxy")
++	liteCmd.Flags().StringVar(&opts.KubeletArgsFile, "kubelet-args-file", opts.KubeletArgsFile, "file with the arguments for kubelet")
++	liteCmd.Flags().StringVar(&opts.APIServerArgsFile, "apiserver-args-file", opts.APIServerArgsFile, "file with the arguments for the API server")
++	liteCmd.Flags().StringVar(&opts.KubeconfigFile , "kubeconfig-file", opts.KubeconfigFile, "the kubeconfig file to use to healthcheck the API server")
++	liteCmd.Flags().BoolVar(&opts.StartControlPlane, "start-control-plane", opts.StartControlPlane, "start the control plane (API server, scheduler and controller manager)")
++}
+diff --git a/cmd/kubelite/kubelite.go b/cmd/kubelite/kubelite.go
+new file mode 100644
+index 00000000000..667b24f68e6
+--- /dev/null
++++ b/cmd/kubelite/kubelite.go
+@@ -0,0 +1,28 @@
++package main
++
++import (
++	"github.com/spf13/pflag"
++	cliflag "k8s.io/component-base/cli/flag"
++	"math/rand"
++	"time"
++
++	"k8s.io/component-base/logs"
++	_ "k8s.io/component-base/metrics/prometheus/clientgo" // load all the prometheus client-go plugin
++	_ "k8s.io/component-base/metrics/prometheus/version"  // for version metric registration
++	"k8s.io/kubernetes/cmd/kubelite/app"
++)
++
++func main() {
++	println("Starting kubelite")
++	rand.Seed(time.Now().UnixNano())
++	// TODO: once we switch everything over to Cobra commands, we can go back to calling
++	// utilflag.InitFlags() (by removing its pflag.Parse() call). For now, we have to set the
++	// normalize func and add the go flag set by hand.
++	pflag.CommandLine.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
++	// utilflag.InitFlags()
++	logs.InitLogs()
++	defer logs.FlushLogs()
++
++	app.Execute()
++	println("Stopping kubelite")
++}
+diff --git a/pkg/volume/csi/csi_plugin.go b/pkg/volume/csi/csi_plugin.go
+index ce7a543c94f..a8094f878d6 100644
+--- a/pkg/volume/csi/csi_plugin.go
++++ b/pkg/volume/csi/csi_plugin.go
+@@ -240,18 +240,22 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
+ 	}
+
+ 	// Initializing the label management channels
+-	nim = nodeinfomanager.NewNodeInfoManager(host.GetNodeName(), host, migratedPlugins)
++	localNim := nodeinfomanager.NewNodeInfoManager(host.GetNodeName(), host, migratedPlugins)
+
+ 	// This function prevents Kubelet from posting Ready status until CSINode
+ 	// is both installed and initialized
+-	if err := initializeCSINode(host); err != nil {
++	if err := initializeCSINode(host, localNim); err != nil {
+ 		return errors.New(log("failed to initialize CSINode: %v", err))
+ 	}
+
++	if _, ok := host.(volume.KubeletVolumeHost); ok {
++		nim = localNim
++	}
++
+ 	return nil
+ }
+
+-func initializeCSINode(host volume.VolumeHost) error {
++func initializeCSINode(host volume.VolumeHost, nim nodeinfomanager.Interface) error {
+ 	kvh, ok := host.(volume.KubeletVolumeHost)
+ 	if !ok {
+ 		klog.V(4).Info("Cast from VolumeHost to KubeletVolumeHost failed. Skipping CSINode initialization, not running on kubelet")
+--
+2.34.1
