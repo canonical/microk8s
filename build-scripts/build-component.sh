@@ -7,14 +7,6 @@ DIR=`realpath $(dirname "${0}")`
 BUILD_DIRECTORY="${SNAPCRAFT_PART_BUILD:-${DIR}/.build}"
 INSTALL_DIRECTORY="${SNAPCRAFT_PART_INSTALL:-${DIR}/.install}"
 
-STRICT="${STRICT:-false}"
-if [ "x${STRICT}" == "xfalse" ]; then
-  PROJECT_DIR="${SNAPCRAFT_PROJECT_DIR:-${DIR}/..}"
-  if cat "${PROJECT_DIR}/snap/snapcraft.yaml" | grep "confinement:" | grep strict > /dev/null; then
-    STRICT="true"
-  fi
-fi
-
 mkdir -p "${BUILD_DIRECTORY}" "${INSTALL_DIRECTORY}"
 
 COMPONENT_NAME="${1}"
@@ -46,23 +38,8 @@ if [ -e "${COMPONENT_DIRECTORY}/pre-patch.sh" ]; then
   bash -xe "${COMPONENT_DIRECTORY}/pre-patch.sh"
 fi
 
-if echo "${GIT_TAG}" | grep -e rc -e alpha -e beta; then
-  if [ -d "${COMPONENT_DIRECTORY}/pre-patches" ]; then
-    for patch in "${COMPONENT_DIRECTORY}"/pre-patches/*; do
-      git am < "${patch}"
-    done
-  fi
-else
-  if [ -d "${COMPONENT_DIRECTORY}/patches" ]; then
-    for patch in "${COMPONENT_DIRECTORY}"/patches/*; do
-      git am < "${patch}"
-    done
-  fi
-fi
-if [ "x${STRICT}" == "xtrue" ] && [ -d "${COMPONENT_DIRECTORY}/strict-patches" ]; then
-    for patch in "${COMPONENT_DIRECTORY}"/strict-patches/*; do
-      git am < "${patch}"
-    done
-fi
+for patch in $(python3 "${DIR}/print-patches-for.py" "${COMPONENT_NAME}" "${GIT_TAG}"); do
+  git am "${patch}"
+done
 
 bash -xe "${COMPONENT_DIRECTORY}/build.sh" "${INSTALL_DIRECTORY}" "${GIT_TAG}"
