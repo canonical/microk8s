@@ -52,7 +52,7 @@ extraCNIEnv:
   IPv6_SERVICE_CIDR: fd99::/108
 extraSANs:
   - 10.153.183.1"""
-            lc_config_dir = "/root/snap/microk8s/common/"
+            lc_config_dir = "/var/snap/microk8s/common/"
             if not os.path.exists(lc_config_dir):
                 os.makedirs(lc_config_dir)
 
