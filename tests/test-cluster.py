@@ -25,7 +25,16 @@ channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/stable")
 backend = os.environ.get("BACKEND", None)
 profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
 snap_data = os.environ.get("SNAP_DATA", "/var/snap/microk8s/current")
-launch_config = """---
+
+TEMPLATES = Path(__file__).absolute().parent / "templates"
+
+
+class VM:
+    """
+    This class abstracts the backend we are using. It could be either multipass or lxc.
+    """
+
+    launch_config = """---
 version: 0.1.0
 extraCNIEnv:
   IPv4_SUPPORT: true
@@ -36,14 +45,6 @@ extraCNIEnv:
   IPv6_SERVICE_CIDR: fd99::/108
 extraSANs:
   - 10.153.183.1"""
-
-TEMPLATES = Path(__file__).absolute().parent / "templates"
-
-
-class VM:
-    """
-    This class abstracts the backend we are using. It could be either multipass or lxc.
-    """
 
     def __init__(self, backend=None, attach_vm=None):
         """Detect the available backends and instantiate a VM.
@@ -60,7 +61,7 @@ class VM:
             self.attached = True
             self.vm_name = attach_vm
 
-    def setup(self, channel_or_snap, launch_configs=None):
+    def setup(self, channel_or_snap):
         """
         Setup the VM with the right snap.
 
@@ -69,16 +70,16 @@ class VM:
         if (path.exists("/snap/bin/multipass") and not self.backend) or self.backend == "multipass":
             print("Creating mulitpass VM")
             self.backend = "multipass"
-            self._setup_multipass(channel_or_snap, launch_configs)
+            self._setup_multipass(channel_or_snap)
 
         elif (path.exists("/snap/bin/lxc") and not self.backend) or self.backend == "lxc":
             print("Creating lxc VM")
             self.backend = "lxc"
-            self._setup_lxc(channel_or_snap, launch_configs)
+            self._setup_lxc(channel_or_snap)
         else:
             raise Exception("Need to install multipass or lxc")
 
-    def _setup_lxc(self, channel_or_snap, launch_configs=None):
+    def _setup_lxc(self, channel_or_snap):
         if not self.attached:
             profiles = subprocess.check_output("/snap/bin/lxc profile list".split())
             if "microk8s" not in profiles.decode():
@@ -99,7 +100,9 @@ class VM:
                 ).split()
             )
             time.sleep(20)
-            self._load_launch_configuration_lxc(launch_configs)
+            if is_ipv6_configured():
+                self._load_launch_configuration_lxc()
+
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
@@ -117,7 +120,9 @@ class VM:
                         attempt += 1
                 print(output.decode())
         else:
-            self._load_launch_configuration_lxc(launch_configs)
+            if is_ipv6_configured():
+                self._load_launch_configuration_lxc()
+
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_lxc(channel_or_snap)
             else:
@@ -125,24 +130,23 @@ class VM:
                 cmd.append("sudo snap refresh microk8s --channel {}".format(channel_or_snap))
                 subprocess.check_call(cmd)
 
-    def _load_launch_configuration_lxc(self, launch_configs):
+    def _load_launch_configuration_lxc(self):
         # Set launch configurations before installing microk8s
-        if launch_configs is not None:
-            print("Setting launch configurations")
-            cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
-            cmd = ["mkdir -p /root/snap/microk8s/common/"]
-            subprocess.check_output(cmd_prefix + cmd)
-            file_path = "microk8s.yaml"
-            print(launch_configs)
-            with open(file_path, "w") as file:
-                file.write(launch_configs)
+        print("Setting launch configurations")
+        cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
+        cmd = ["mkdir -p /root/snap/microk8s/common/"]
+        subprocess.check_output(cmd_prefix + cmd)
+        file_path = "microk8s.yaml"
+        print(self.launch_config)
+        with open(file_path, "w") as file:
+            file.write(self.launch_config)
 
-            # Copy the file to the VM
-            cmd = "lxc file push {} {}/root/snap/microk8s/common/.microk8s.yaml".format(
-                file_path, self.vm_name
-            ).split()
-            subprocess.check_output(cmd)
-            os.remove(file_path)
+        # Copy the file to the VM
+        cmd = "lxc file push {} {}/root/snap/microk8s/common/.microk8s.yaml".format(
+            file_path, self.vm_name
+        ).split()
+        subprocess.check_output(cmd)
+        os.remove(file_path)
 
     def _transfer_install_local_snap_lxc(self, channel_or_snap):
         try:
@@ -161,12 +165,14 @@ class VM:
             print(e.output.decode())
             raise
 
-    def _setup_multipass(self, channel_or_snap, launch_configs=None):
+    def _setup_multipass(self, channel_or_snap):
         if not self.attached:
             subprocess.check_call(
                 "/snap/bin/multipass launch 18.04 -n {} -m 2G".format(self.vm_name).split()
             )
-            self._load_launch_configuration_multipass(launch_configs)
+            if is_ipv6_configured():
+                self._load_launch_configuration_multipass()
+
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_multipass(channel_or_snap)
             else:
@@ -177,7 +183,8 @@ class VM:
                     ).split()
                 )
         else:
-            self._load_launch_configuration_multipass(launch_configs)
+            if is_ipv6_configured():
+                self._load_launch_configuration_multipass()
             if channel_or_snap.startswith("/"):
                 self._transfer_install_local_snap_multipass(channel_or_snap)
             else:
@@ -188,26 +195,25 @@ class VM:
                     ).split()
                 )
 
-    def _load_launch_configuration_multipass(self, launch_configs):
+    def _load_launch_configuration_multipass(self):
         # Set launch configurations before installing microk8s
-        if launch_configs is not None:
-            print("Setting launch configurations")
-            subprocess.check_call(
-                "/snap/bin/multipass exec {}  -- sudo "
-                "mkdir -p /root/snap/microk8s/common/".format(self.vm_name).split()
-            )
-            file_path = "microk8s.yaml"
-            print(launch_configs)
-            with open(file_path, "w") as file:
-                file.write(launch_configs)
+        print("Setting launch configurations")
+        subprocess.check_call(
+            "/snap/bin/multipass exec {}  -- sudo "
+            "mkdir -p /root/snap/microk8s/common/".format(self.vm_name).split()
+        )
+        file_path = "microk8s.yaml"
+        print(self.launch_config)
+        with open(file_path, "w") as file:
+            file.write(self.launch_config)
 
-            # Copy the file to the VM
-            subprocess.check_call(
-                "/snap/bin/multipass transfer {} {}:/root/snap/microk8s/common/.microk8s.yaml".format(
-                    file_path, self.vm_name
-                ).split()
-            )
-            os.remove(file_path)
+        # Copy the file to the VM
+        subprocess.check_call(
+            "/snap/bin/multipass transfer {} {}:/root/snap/microk8s/common/.microk8s.yaml".format(
+                file_path, self.vm_name
+            ).split()
+        )
+        os.remove(file_path)
 
     def _transfer_install_local_snap_multipass(self, channel_or_snap):
         print("Installing snap from {}".format(channel_or_snap))
@@ -295,7 +301,7 @@ class TestCluster(object):
                     print("Creating machine {}".format(i))
                     vm = VM(backend)
                     if is_ipv6_configured:
-                        vm.setup(channel_to_test, launch_config)
+                        vm.setup(channel_to_test)
                     else:
                         vm.setup(channel_to_test)
                     print("Waiting for machine {}".format(i))
@@ -304,7 +310,7 @@ class TestCluster(object):
             else:
                 for vm_name in reuse_vms:
                     vm = VM(backend, vm_name)
-                    vm.setup(channel_to_test, launch_config)
+                    vm.setup(channel_to_test)
                     self.VM.append(vm)
 
             # Form cluster
