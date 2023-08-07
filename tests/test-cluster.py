@@ -300,10 +300,7 @@ class TestCluster(object):
                 for i in range(0, size):
                     print("Creating machine {}".format(i))
                     vm = VM(backend)
-                    if is_ipv6_configured:
-                        vm.setup(channel_to_test)
-                    else:
-                        vm.setup(channel_to_test)
+                    vm.setup(channel_to_test)
                     print("Waiting for machine {}".format(i))
                     vm.run("/snap/bin/microk8s.status --wait-ready --timeout 120")
                     self.VM.append(vm)
@@ -592,6 +589,7 @@ class TestCluster(object):
         # Hence, we remove this machine from the VM list.
         print("Remove machine {}".format(vm.vm_name))
         self.VM.remove(vm)
+        vm.release()
 
     def test_no_cert_reissue_in_nodes(self):
         """
