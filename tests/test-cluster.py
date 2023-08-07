@@ -134,7 +134,7 @@ extraSANs:
         # Set launch configurations before installing microk8s
         print("Setting launch configurations")
         cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
-        cmd = ["mkdir -p /root/snap/microk8s/common/"]
+        cmd = ["mkdir -p /var/snap/microk8s/common/"]
         subprocess.check_output(cmd_prefix + cmd)
         file_path = "microk8s.yaml"
         print(self.launch_config)
@@ -142,7 +142,7 @@ extraSANs:
             file.write(self.launch_config)
 
         # Copy the file to the VM
-        cmd = "lxc file push {} {}/root/snap/microk8s/common/.microk8s.yaml".format(
+        cmd = "lxc file push {} {}/var/snap/microk8s/common/.microk8s.yaml".format(
             file_path, self.vm_name
         ).split()
         subprocess.check_output(cmd)
@@ -200,7 +200,7 @@ extraSANs:
         print("Setting launch configurations")
         subprocess.check_call(
             "/snap/bin/multipass exec {}  -- sudo "
-            "mkdir -p /root/snap/microk8s/common/".format(self.vm_name).split()
+            "mkdir -p /var/snap/microk8s/common/".format(self.vm_name).split()
         )
         file_path = "microk8s.yaml"
         print(self.launch_config)
@@ -209,7 +209,7 @@ extraSANs:
 
         # Copy the file to the VM
         subprocess.check_call(
-            "/snap/bin/multipass transfer {} {}:/root/snap/microk8s/common/.microk8s.yaml".format(
+            "/snap/bin/multipass transfer {} {}:/var/snap/microk8s/common/.microk8s.yaml".format(
                 file_path, self.vm_name
             ).split()
         )
