@@ -9,6 +9,7 @@ from validators import (
     validate_forward,
     validate_metrics_server,
     validate_metallb_config,
+    validate_dual_stack,
 )
 from subprocess import check_call, CalledProcessError
 from utils import (
@@ -17,6 +18,8 @@ from utils import (
     wait_for_installation,
     run_until_success,
     is_container,
+    is_ipv6_configured,
+    kubectl,
 )
 
 upgrade_from = os.environ.get("UPGRADE_MICROK8S_FROM", "beta")
@@ -36,10 +39,33 @@ class TestUpgrade(object):
 
         """
         print("Testing upgrade from {} to {}".format(upgrade_from, upgrade_to))
+        if is_ipv6_configured:
+            print("IPv6 is configured, will test dual stack")
+            launch_config = """---
+version: 0.1.0
+extraCNIEnv:
+  IPv4_SUPPORT: true
+  IPv4_CLUSTER_CIDR: 10.3.0.0/16
+  IPv4_SERVICE_CIDR: 10.153.183.0/24
+  IPv6_SUPPORT: true
+  IPv6_CLUSTER_CIDR: fd02::/64
+  IPv6_SERVICE_CIDR: fd99::/108
+extraSANs:
+  - 10.153.183.1"""
+            lc_config_dir = "/var/snap/microk8s/common/"
+            if not os.path.exists(lc_config_dir):
+                os.makedirs(lc_config_dir)
+
+            file_path = os.path.join(lc_config_dir, ".microk8s.yaml")
+            with open(file_path, "w") as file:
+                file.write(launch_config)
 
         cmd = "sudo snap install microk8s --classic --channel={}".format(upgrade_from)
         run_until_success(cmd)
         wait_for_installation()
+
+        if is_ipv6_configured:
+            kubectl("set env daemonset/calico-node -n kube-system IP=10.3.0.0/16 IP6=fd02::/64")
 
         # Run through the validators and
         # select those that were valid for the original snap
@@ -105,6 +131,13 @@ class TestUpgrade(object):
                 test_matrix["metallb"] = validate_metallb_config
             except CalledProcessError:
                 print("Will not test the metallb addon")
+
+        if is_ipv6_configured:
+            try:
+                validate_dual_stack()
+                test_matrix["dual_stack"] = validate_dual_stack
+            except CalledProcessError:
+                print("Will not test the dual stack configuration")
 
         # Refresh the snap to the target
         if upgrade_to.endswith(".snap"):
