@@ -23,6 +23,7 @@ fi
 
 sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g' $SNAP_DATA/args/traefik/traefik-template.yaml > $SNAP_DATA/args/traefik/traefik.yaml
 
+set -a
 if [ -e ${SNAP_DATA}/args/fips-env ]
 then
   . ${SNAP_DATA}/args/fips-env
