@@ -89,6 +89,7 @@ parts:
 
   etcd:
     after: [build-deps]
+    build-attributes: [no-patchelf]
     plugin: nil
     source: build-scripts/components/etcd
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh etcd
