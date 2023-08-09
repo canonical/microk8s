@@ -1359,6 +1359,7 @@ increase_sysctl_parameter() {
         run_with_sudo sysctl --system
     fi
   fi
+}
 
 # check if this file is run with arguments
 if [[ "$0" == "${BASH_SOURCE}" ]] &&
