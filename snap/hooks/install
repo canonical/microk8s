@@ -30,7 +30,9 @@ fi
 cp -r --preserve=mode ${SNAP}/default-args ${SNAP_DATA}/args
 if [ -e ${SNAP_DATA}/args/fips-env ]
 then
-  source ${SNAP_DATA}/args/fips-env
+  set -a
+  . ${SNAP_DATA}/args/fips-env
+  set +a
 fi
 
 mv ${SNAP_DATA}/args/certs.d/localhost__32000 ${SNAP_DATA}/args/certs.d/localhost:32000
