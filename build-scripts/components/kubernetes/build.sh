@@ -3,9 +3,10 @@
 INSTALL="${1}"
 
 export KUBE_GIT_VERSION_FILE="${PWD}/.version.sh"
+export GOEXPERIMENT=opensslcrypto
 
 for app in kubectl kubelite; do
-  make WHAT="cmd/${app}" KUBE_STATIC_OVERRIDES=kubelite
+  make WHAT="cmd/${app}" KUBE_CGO_OVERRIDES=kubelite KUBE_STATIC_OVERRIDES=kubelite
   cp _output/bin/"${app}" "${INSTALL}/${app}"
 done
 

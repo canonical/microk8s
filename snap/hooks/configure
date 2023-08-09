@@ -135,6 +135,13 @@ then
   skip_opt_in_config kubeconfig kubectl
 fi
 
+# copy fips-env
+if [ ! -e ${SNAP_DATA}/args/fips-env ]
+then
+  echo "Making sure we have fips environment file"
+  cp ${SNAP}/default-args/fips-env ${SNAP_DATA}/args/fips-env
+fi
+
 # copy kubectl
 if [ ! -e ${SNAP_DATA}/args/kubectl ]
 then

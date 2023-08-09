@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -a
+if [ -e "${SNAP_DATA}/args/fips-env" ]
+then
+  . "${SNAP_DATA}/args/fips-env"
+fi
+set +a
+
+if [[ ! -v OPENSSL_EXECUTABLE ]]
+then
+  export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
+  ${SNAP}/usr/bin/openssl "$@"
+else
+  exec "${OPENSSL_EXECUTABLE}" "$@"
+fi

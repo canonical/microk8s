@@ -1,0 +1,10 @@
+# In a node where FIPS is enabled, ie /proc/sys/crypto/fips_enabled is set to 1
+# set the openssl execution environment:
+# OPENSSL_EXECUTABLE="/usr/bin/openssl"
+# OPENSSL_CONF="/etc/ssl/openssl.cnf"
+
+# Set GOFIPS to use FIPS certified libs. If not set GOFIPS is implicetely selected.
+GOFIPS=0
+# Point to the location of libcrypto.so
+# LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu/:/snap/microk8s/current/lib/"
+# IN_SNAP_LD_LIBRARY_PATH=${LD_LIBRARY_PATH}

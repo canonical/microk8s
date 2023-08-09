@@ -225,5 +225,12 @@ then
   echo "1" > /proc/sys/net/bridge/bridge-nf-call-iptables
 fi
 
+if [ -e ${SNAP_DATA}/args/fips-env ]
+then
+  set -a
+  . ${SNAP_DATA}/args/fips-env
+  set +a
+fi
+
 declare -a args="($(cat $SNAP_DATA/args/$app))"
 exec "$SNAP/$app" "${args[@]}"
