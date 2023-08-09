@@ -227,7 +227,9 @@ fi
 
 if [ -e ${SNAP_DATA}/args/fips-env ]
 then
-  source ${SNAP_DATA}/args/fips-env
+  set -a
+  . ${SNAP_DATA}/args/fips-env
+  set +a
 fi
 
 declare -a args="($(cat $SNAP_DATA/args/$app))"
