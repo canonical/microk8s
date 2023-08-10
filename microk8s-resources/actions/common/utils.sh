@@ -615,7 +615,7 @@ create_user_certs_and_configs() {
 }
 
 create_user_certificates() {
-  hostname=$($SNAP/bin/hostname | $SNAP/bin/tr '[:upper:]' '[:lower:]')
+  hostname=$($SNAP/bin/hostname | $SNAP/usr/bin/tr '[:upper:]' '[:lower:]')
   generate_csr_with_sans "/CN=system:node:$hostname/O=system:nodes" "${SNAP_DATA}/certs/kubelet.key" | sign_certificate > "${SNAP_DATA}/certs/kubelet.crt"
   generate_csr /CN=admin/O=system:masters "${SNAP_DATA}/certs/client.key" | sign_certificate > "${SNAP_DATA}/certs/client.crt"
   generate_csr /CN=system:kube-proxy "${SNAP_DATA}/certs/proxy.key" | sign_certificate > "${SNAP_DATA}/certs/proxy.crt"
@@ -625,7 +625,7 @@ create_user_certificates() {
 }
 
 create_user_kubeconfigs() {
-  hostname=$($SNAP/bin/hostname | $SNAP/bin/tr '[:upper:]' '[:lower:]')
+  hostname=$($SNAP/bin/hostname | $SNAP/usr/bin/tr '[:upper:]' '[:lower:]')
   create_kubeconfig_x509 "client.config" "admin" ${SNAP_DATA}/certs/client.crt ${SNAP_DATA}/certs/client.key ${SNAP_DATA}/certs/ca.crt
   create_kubeconfig_x509 "controller.config" "system:kube-controller-manager" ${SNAP_DATA}/certs/controller.crt ${SNAP_DATA}/certs/controller.key ${SNAP_DATA}/certs/ca.crt
   create_kubeconfig_x509 "scheduler.config" "system:kube-scheduler" ${SNAP_DATA}/certs/scheduler.crt ${SNAP_DATA}/certs/scheduler.key ${SNAP_DATA}/certs/ca.crt
@@ -639,7 +639,7 @@ create_worker_kubeconfigs() {
   apiserver="${1}"
   port="${2}"
 
-  hostname=$($SNAP/bin/hostname | $SNAP/bin/tr '[:upper:]' '[:lower:]')
+  hostname=$($SNAP/bin/hostname | $SNAP/usr/bin/tr '[:upper:]' '[:lower:]')
   create_kubeconfig_x509 "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key ${SNAP_DATA}/certs/ca.remote.crt "${apiserver}" "${port}"
   create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.remote.crt "${apiserver}" "${port}"
 }
@@ -662,7 +662,7 @@ create_kubeconfig_x509() {
 
   # optional arguments
   apiserver="${6:-"127.0.0.1"}"
-  apiserver_port="$(cat $SNAP_DATA/args/kube-apiserver | $SNAP/bin/grep -- "--secure-port" | $SNAP/bin/tr "=" " " | $SNAP/usr/bin/gawk '{print $2}')"
+  apiserver_port="$(cat $SNAP_DATA/args/kube-apiserver | $SNAP/bin/grep -- "--secure-port" | $SNAP/usr/bin/tr "=" " " | $SNAP/usr/bin/gawk '{print $2}')"
   port="${7:-${apiserver_port}}"
 
   ca_data=$(cat ${ca} | ${SNAP}/usr/bin/base64 -w 0)
