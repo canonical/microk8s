@@ -579,7 +579,7 @@ get_default_ip() {
 }
 
 get_ips() {
-    local IP_ADDR="$($SNAP/bin/hostname -I | sed 's/169\.254\.[0-9]\{1,3\}\.[0-9]\{1,3\}//g')"
+    local IP_ADDR="$($SNAP/bin/hostname -I | $SNAP/bin/sed 's/169\.254\.[0-9]\{1,3\}\.[0-9]\{1,3\}//g')"
     # Retrieve all IPs from CNI interfaces. These will need to be ignored.
     CNI_IPS=""
     for CNI_INTERFACE in vxlan.calico flannel.1 cni0 ovn0; do
@@ -593,7 +593,7 @@ get_ips() {
         local ips="";
         for ip in $IP_ADDR; do
             # Append IP address only iff not in cni IP addresses
-            (echo "$CNI_IPS" | grep -q "/$ip/") || ips+="${ips:+ }$ip";
+            (echo "$CNI_IPS" | $SNAP/bin/grep -q "/$ip/") || ips+="${ips:+ }$ip";
         done
         echo "$ips"
     fi
@@ -615,7 +615,7 @@ create_user_certs_and_configs() {
 }
 
 create_user_certificates() {
-  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  hostname=$($SNAP/bin/hostname | $SNAP/bin/tr '[:upper:]' '[:lower:]')
   generate_csr_with_sans "/CN=system:node:$hostname/O=system:nodes" "${SNAP_DATA}/certs/kubelet.key" | sign_certificate > "${SNAP_DATA}/certs/kubelet.crt"
   generate_csr /CN=admin/O=system:masters "${SNAP_DATA}/certs/client.key" | sign_certificate > "${SNAP_DATA}/certs/client.crt"
   generate_csr /CN=system:kube-proxy "${SNAP_DATA}/certs/proxy.key" | sign_certificate > "${SNAP_DATA}/certs/proxy.crt"
@@ -625,7 +625,7 @@ create_user_certificates() {
 }
 
 create_user_kubeconfigs() {
-  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  hostname=$($SNAP/bin/hostname | $SNAP/bin/tr '[:upper:]' '[:lower:]')
   create_kubeconfig_x509 "client.config" "admin" ${SNAP_DATA}/certs/client.crt ${SNAP_DATA}/certs/client.key ${SNAP_DATA}/certs/ca.crt
   create_kubeconfig_x509 "controller.config" "system:kube-controller-manager" ${SNAP_DATA}/certs/controller.crt ${SNAP_DATA}/certs/controller.key ${SNAP_DATA}/certs/ca.crt
   create_kubeconfig_x509 "scheduler.config" "system:kube-scheduler" ${SNAP_DATA}/certs/scheduler.crt ${SNAP_DATA}/certs/scheduler.key ${SNAP_DATA}/certs/ca.crt
@@ -639,7 +639,7 @@ create_worker_kubeconfigs() {
   apiserver="${1}"
   port="${2}"
 
-  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  hostname=$($SNAP/bin/hostname | $SNAP/bin/tr '[:upper:]' '[:lower:]')
   create_kubeconfig_x509 "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key ${SNAP_DATA}/certs/ca.remote.crt "${apiserver}" "${port}"
   create_kubeconfig_x509 "kubelet.config" "system:node:${hostname}" ${SNAP_DATA}/certs/kubelet.crt ${SNAP_DATA}/certs/kubelet.key ${SNAP_DATA}/certs/ca.remote.crt "${apiserver}" "${port}"
 }
@@ -662,7 +662,7 @@ create_kubeconfig_x509() {
 
   # optional arguments
   apiserver="${6:-"127.0.0.1"}"
-  apiserver_port="$(cat $SNAP_DATA/args/kube-apiserver | grep -- "--secure-port" | tr "=" " " | gawk '{print $2}')"
+  apiserver_port="$(cat $SNAP_DATA/args/kube-apiserver | $SNAP/bin/grep -- "--secure-port" | $SNAP/bin/tr "=" " " | $SNAP/usr/bin/gawk '{print $2}')"
   port="${7:-${apiserver_port}}"
 
   ca_data=$(cat ${ca} | ${SNAP}/usr/bin/base64 -w 0)
@@ -671,14 +671,14 @@ create_kubeconfig_x509() {
   config_file="${SNAP_DATA}/credentials/${kubeconfig}"
 
   cp "${SNAP}/client-x509.config.template" "${config_file}"
-  sed -i 's/CADATA/'"${ca_data}"'/g' "${config_file}"
-  sed -i 's/NAME/'"${user}"'/g' "${config_file}"
-  sed -i 's/PATHTOCERT/'"${cert_data}"'/g' "${config_file}"
-  sed -i 's/PATHTOKEYCERT/'"${key_data}"'/g' "${config_file}"
-  sed -i 's/client-certificate/client-certificate-data/g' "${config_file}"
-  sed -i 's/client-key/client-key-data/g' "${config_file}"
-  sed -i 's/127.0.0.1/'"${apiserver}"'/g' "${config_file}"
-  sed -i 's/16443/'"${port}"'/g' "${config_file}"
+  $SNAP/bin/sed -i 's/CADATA/'"${ca_data}"'/g' "${config_file}"
+  $SNAP/bin/sed -i 's/NAME/'"${user}"'/g' "${config_file}"
+  $SNAP/bin/sed -i 's/PATHTOCERT/'"${cert_data}"'/g' "${config_file}"
+  $SNAP/bin/sed -i 's/PATHTOKEYCERT/'"${key_data}"'/g' "${config_file}"
+  $SNAP/bin/sed -i 's/client-certificate/client-certificate-data/g' "${config_file}"
+  $SNAP/bin/sed -i 's/client-key/client-key-data/g' "${config_file}"
+  $SNAP/bin/sed -i 's/127.0.0.1/'"${apiserver}"'/g' "${config_file}"
+  $SNAP/bin/sed -i 's/16443/'"${port}"'/g' "${config_file}"
 }
 
 produce_certs() {
@@ -1089,7 +1089,7 @@ generate_csr_with_sans() {
   #   generate_csr_with_sans /CN=system:node:$hostname/O=system:nodes $SNAP_DATA/certs/kubelet.key > $SNAP_DATA/certs/kubelet.csr
 
   # Add DNS name and IP addresses as subjectAltName
-  hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+  hostname=$($SNAP/bin/hostname | $SNAP/usr/bin/tr '[:upper:]' '[:lower:]')
   subjectAltName="DNS:$hostname"
   for ip in $(get_ips); do
     subjectAltName="$subjectAltName, IP:$ip"
