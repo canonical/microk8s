@@ -22,8 +22,8 @@ parts:
   build-deps:
     plugin: nil
     override-build: |
-      snap install go --classic --channel 1.20-fips/stable
-      snap refresh go --channel 1.20-fips/stable
+      snap install go --classic --channel 1.20/stable
+      snap refresh go --channel 1.20/stable
     build-packages:
       - autoconf
       - automake
@@ -82,7 +82,6 @@ parts:
 
   k8s-dqlite:
     after: [dqlite]
-    build-attributes: [no-patchelf]
     source: build-scripts/components/k8s-dqlite
     plugin: nil
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
@@ -115,7 +114,6 @@ parts:
 
   kubernetes:
     after: [build-deps]
-    build-attributes: [no-patchelf]
     plugin: nil
     source: build-scripts/components/kubernetes
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
@@ -246,7 +244,6 @@ parts:
 
   cluster-agent:
     after: [build-deps]
-    build-attributes: [no-patchelf]
     plugin: nil
     source: build-scripts/components/cluster-agent
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cluster-agent
