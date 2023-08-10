@@ -122,6 +122,10 @@ function store_sys {
     printf -- '  Copy asnycio usage and limits to the final report tarball\n'
     sysctl fs.aio-max-nr &> $INSPECT_DUMP/sys/aio-max-nr
     sysctl fs.aio-nr &> $INSPECT_DUMP/sys/aio-nr
+    # Store the max inotify parameters
+    printf -- '  Copy inotify max_user_instances and max_user_watches to the final report tarball\n'
+    sysctl fs.inotify.max_user_instances &> $INSPECT_DUMP/sys/inotify_max_user_instances
+    sysctl fs.inotify.max_user_watches &> $INSPECT_DUMP/sys/inotify_max_user_watches
   fi
 }
 
@@ -370,8 +374,25 @@ Refer to https://microk8s.io/docs for instructions on air-gap deployments.\n\n
     if [ "$AIO_NR" -ge "$AIO_MAX_NR" ]; then
       printf -- "\033[0;33mWARNING: \033[0m Available asyncio requests are exhausted. This might lead to dqlite being unresponsive. \n"
       printf -- "\t  Increase the limit and restart the k8s-dqlite service with: \n"
-      printf -- "\t  \t sudo sysctl fs.aio.max-nr=3145728\n"
+      printf -- "\t  \t echo fs.aio.max-nr=1048576 | sudo tee -a /etc/sysctl.conf\n"
+      printf -- "\t  \t sudo sysctl --system\n"
       printf -- "\t  \t sudo snap restart microk8s.daemon-k8s-dqlite\n"
+    fi
+
+    MAX_USER_INSTANCES=$(sysctl -n fs.inotify.max_user_instances)
+    if [ "$MAX_USER_INSTANCES" -lt 1024 ]; then
+      printf -- "\033[0;33mWARNING: \033[0m Maximum number of inotify user instances is less than the recommended value of 1024. \n"
+      printf -- "\t  Increase the limit with: \n"
+      printf -- "\t  \t echo fs.inotify.max_user_instances=1024 | sudo tee -a /etc/sysctl.conf\n"
+      printf -- "\t  \t sudo sysctl --system\n"
+    fi
+
+    MAX_USER_WATCHES=$(sysctl -n fs.inotify.max_user_watches)
+    if [ "$MAX_USER_WATCHES" -lt 1048576  ]; then
+      printf -- "\033[0;33mWARNING: \033[0m Maximum number of inotify user watches is less than the recommended value of 1048576. \n"
+      printf -- "\t  Increase the limit with: \n"
+      printf -- "\t  \t echo fs.inotify.max_user_watches=1048576 | sudo tee -a /etc/sysctl.conf\n"
+      printf -- "\t  \t sudo sysctl --system\n"
     fi
   fi
 }
