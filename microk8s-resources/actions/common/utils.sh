@@ -1071,7 +1071,7 @@ cluster_agent_port() {
 }
 
 server_cert_check() {
-  openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | sha256sum | cut -d' ' -f1 | cut -c1-12
+  ${SNAP}/usr/bin/openssl x509 -in "$SNAP_DATA"/certs/server.crt -outform der | ${SNAP}/usr/bin/sha256sum | cut -d' ' -f1 | cut -c1-12
 }
 
 generate_csr_with_sans() {
@@ -1097,13 +1097,13 @@ generate_csr_with_sans() {
 
   # generate key if it does not exist
   if [ ! -f "$2" ]; then
-    openssl genrsa -out "$2" 2048
+    ${SNAP}/usr/bin/openssl genrsa -out "$2" 2048
     chown 0:0 "$2" || true
     chmod 0600 "$2" || true
   fi
 
   # generate csr
-  openssl req -new -sha256 -subj "$1" -key "$2" -addext "subjectAltName = $subjectAltName"
+  ${SNAP}/usr/bin/openssl req -new -sha256 -subj "$1" -key "$2" -addext "subjectAltName = $subjectAltName"
 }
 
 generate_csr() {
@@ -1117,13 +1117,13 @@ generate_csr() {
 
   # generate key if it does not exist
   if [ ! -f "$2" ]; then
-    openssl genrsa -out "$2" 2048
+    ${SNAP}/usr/bin/openssl genrsa -out "$2" 2048
     chown 0:0 "$2" || true
     chmod 0600 "$2" || true
   fi
 
   # generate csr
-  openssl req -new -sha256 -subj "$1" -key "$2"
+  ${SNAP}/usr/bin/openssl req -new -sha256 -subj "$1" -key "$2"
 }
 
 sign_certificate() {
@@ -1143,13 +1143,13 @@ sign_certificate() {
 
   # Parse SANs from the CSR and add them to the certificate extensions (if any)
   extensions=""
-  alt_names="$(echo "$csr" | openssl req -text | grep "X509v3 Subject Alternative Name:" -A1 | tail -n 1 | sed 's,IP Address:,IP:,g')"
+  alt_names="$(echo "$csr" | ${SNAP}/usr/bin/openssl req -text | $SNAP/bin/grep "X509v3 Subject Alternative Name:" -A1 | $SNAP/usr/bin/tail -n 1 | $SNAP/bin/sed 's,IP Address:,IP:,g')"
   if test "x$alt_names" != "x"; then
     extensions="subjectAltName = $alt_names"
   fi
 
   # Sign certificate and print to stdout
-  echo "$csr" | openssl x509 -req -sha256 -CA "${SNAP_DATA}/certs/ca.crt" -CAkey "${SNAP_DATA}/certs/ca.key" -CAcreateserial -days 3650 -extfile <(echo "${extensions}")
+  echo "$csr" | ${SNAP}/usr/bin/openssl x509 -req -sha256 -CA "${SNAP_DATA}/certs/ca.crt" -CAkey "${SNAP_DATA}/certs/ca.key" -CAcreateserial -days 3650 -extfile <(echo "${extensions}")
 }
 
 # check if this file is run with arguments
