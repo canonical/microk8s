@@ -4,8 +4,7 @@ set -eux
 
 source $SNAP/actions/common/utils.sh
 
-export LC_ALL="${LC_ALL:-C.UTF-8}"
-export LANG="${LANG:-C.UTF-8}"
+use_snap_env
 
 # Make sure either the install hook has run or we are refreshing an already existing snap as indicated
 # by the existence of certificates.
@@ -16,9 +15,6 @@ fi
 
 if is_strict
 then
-  ARCH="$($SNAP/bin/uname -m)"
-  export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-
   echo "Checking snap interfaces..."
 
   check_snap_interfaces # Check for interfaces but do not start until this script has run.

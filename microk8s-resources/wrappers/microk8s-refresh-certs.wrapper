@@ -1,15 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eu
 
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-ARCH="$($SNAP/bin/uname -m)"
-export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-export PYTHONNOUSERSITE=false
-export LC_ALL="${LC_ALL:-C.UTF-8}"
-export LANG="${LANG:-C.UTF-8}"
-
 source $SNAP/actions/common/utils.sh
+
+use_snap_env
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then
@@ -20,4 +15,4 @@ fi
 
 exit_if_not_root
 
-LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/refresh_certs.py "${@}"
+${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/refresh_certs.py "${@}"

@@ -1,8 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
 source $SNAP/actions/common/utils.sh
+
+use_snap_env
 
 function help() {
     echo "Available subcommands are:"

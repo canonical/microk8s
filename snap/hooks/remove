@@ -3,7 +3,7 @@ set -eu
 
 source $SNAP/actions/common/utils.sh
 
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH:/usr/bin:/usr/local/bin"
+use_snap_env
 
 snapctl stop ${SNAP_NAME}.daemon-kubelite 2>&1 || true
 

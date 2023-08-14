@@ -1,4 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+. $SNAP/actions/common/utils.sh
+
+use_snap_env
 
 # Run post-refresh hooks
 $SNAP/usr/bin/python3 $SNAP/scripts/run-lifecycle-hooks.py post-refresh || true

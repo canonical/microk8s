@@ -89,35 +89,13 @@ remove_vxlan_interfaces() {
 }
 
 run_with_sudo() {
-  # As we call the sudo binary of the host we have to make sure we do not change the LD_LIBRARY_PATH used
-  if (is_strict)
-  then
-    if [ "$1" == "preserve_env" ]
-    then
-      shift
-    fi
+  if [ "$1" == "preserve_env" ]; then
+    shift
+  fi
+  if (is_strict); then
     "$@"
   else
-    if [ -n "${LD_LIBRARY_PATH-}" ]
-    then
-      GLOBAL_LD_LIBRARY_PATH="$LD_LIBRARY_PATH"
-      local LD_LIBRARY_PATH=""
-      if [ "$1" == "preserve_env" ]
-      then
-        shift
-        sudo -E LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
-      else
-        sudo LD_LIBRARY_PATH="$GLOBAL_LD_LIBRARY_PATH" "$@"
-      fi
-    else
-      if [ "$1" == "preserve_env" ]
-      then
-        shift
-        sudo -E "$@"
-      else
-        sudo "$@"
-      fi
-    fi
+    LD_LIBRARY_PATH="" sudo -E PATH="${PATH}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}" PYTHONPATH="${PYTHONPATH:-}" "$@"
   fi
 }
 
@@ -1385,3 +1363,56 @@ increase_sysctl_parameter() {
     fi
   fi
 }
+
+use_snap_env() {
+  # Configure snap paths for PATH LD_LIBRARY_PATH
+  export PATH="$SNAP/bin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/usr/sbin:$PATH"
+  export LD_LIBRARY_PATH="$SNAP_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/ceph:${LD_LIBRARY_PATH:-}"
+  export OPENSSL_CONF="$SNAP/etc/ssl/openssl.cnf"
+
+  # Python configuration
+  export PYTHONPATH="$SNAP/usr/lib/python3.8:$SNAP/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages"
+  export PYTHONNOUSERSITE=false
+
+  # NOTE(neoaggelos/2023-08-14):
+  # we cannot list system locales from snap. instead, we attempt
+  # well-known locales for Ubuntu/Debian/CentOS and check whether
+  # they are available on the system.
+  # if they are, set them for the current shell.
+  for locale in C.UTF-8 en_US.UTF-8 en_US.utf8; do
+    if [ -z "$(export LC_ALL=$locale 2>&1)" ]; then
+      export LC_ALL="${LC_ALL:-$locale}"
+      export LANG="${LC_ALL:-$locale}"
+      break
+    fi
+  done
+
+  # Configure XDG_RUNTIME_DIR
+  export XDG_RUNTIME_DIR="${SNAP_COMMON}/run"
+  mkdir -p "${XDG_RUNTIME_DIR}"
+}
+
+# check if this file is run with arguments
+if [[ "$0" == "${BASH_SOURCE}" ]] &&
+   [[ ! -z "$1" ]]
+then
+  # call help
+  if echo "$*" | grep -q -- 'help'; then
+    echo "usage: $0 [function]"
+    echo ""
+    echo "Run a utility function and return the output."
+    echo ""
+    echo "available functions:"
+    declare -F | gawk '{print "- "$3}'
+    exit 0
+  fi
+
+  if declare -F "$1" > /dev/null
+  then
+    $1 ${@:2}
+    exit $?
+  else
+    echo "Function does not exist: $1" >&2
+    exit 1
+  fi
+fi

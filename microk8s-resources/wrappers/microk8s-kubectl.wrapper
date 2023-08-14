@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eu
 
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
 source $SNAP/actions/common/utils.sh
+
+use_snap_env
 
 if [ -e ${SNAP_DATA}/var/lock/clustered.lock ]
 then

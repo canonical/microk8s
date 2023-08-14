@@ -1,17 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -ex
 
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
-export LC_ALL="${LC_ALL:-C.UTF-8}"
-export LANG="${LANG:-C.UTF-8}"
-export XDG_RUNTIME_DIR="${SNAP_COMMON}/run"
-mkdir -p "${XDG_RUNTIME_DIR}"
-
 source $SNAP/actions/common/utils.sh
+
+use_snap_env
 
 app=kubelite
 
@@ -68,8 +61,8 @@ then
 fi
 
 # Sanatize arguments
-if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
-then 
+if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ]
+then
   echo "Skipping argument sanitisation."
 else
   echo "Sanitise arguments."
