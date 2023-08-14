@@ -199,10 +199,14 @@ extraSANs:
         # Set launch configurations before installing microk8s
         print("Setting launch configurations")
         subprocess.check_call(
-            "/snap/bin/multipass exec {}  -- sudo mkdir -p /var/snap/microk8s/common/".format(self.vm_name).split()
+            "/snap/bin/multipass exec {}  -- sudo mkdir -p /var/snap/microk8s/common/".format(
+                self.vm_name
+            ).split()
         )
         subprocess.check_call(
-            "/snap/bin/multipass exec {}  -- sudo chmod 777 /var/snap/microk8s/common/".format(self.vm_name).split()
+            "/snap/bin/multipass exec {}  -- sudo chmod 777 /var/snap/microk8s/common/".format(
+                self.vm_name
+            ).split()
         )
 
         file_path = "microk8s.yaml"
