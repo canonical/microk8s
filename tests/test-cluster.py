@@ -133,9 +133,7 @@ extraSANs:
     def _load_launch_configuration_lxc(self):
         # Set launch configurations before installing microk8s
         print("Setting launch configurations")
-        cmd_prefix = "/snap/bin/lxc exec {}  -- script -e -c".format(self.vm_name).split()
-        cmd = ["mkdir -p /var/snap/microk8s/common/"]
-        subprocess.check_output(cmd_prefix + cmd)
+        self.run("mkdir -p /var/snap/microk8s/common/")
         file_path = "microk8s.yaml"
         print(self.launch_config)
         with open(file_path, "w") as file:
@@ -198,10 +196,8 @@ extraSANs:
     def _load_launch_configuration_multipass(self):
         # Set launch configurations before installing microk8s
         print("Setting launch configurations")
-        subprocess.check_call(
-            "/snap/bin/multipass exec {}  -- sudo "
-            "mkdir -p /var/snap/microk8s/common/".format(self.vm_name).split()
-        )
+        self.run("mkdir -p /var/snap/microk8s/common/")
+        self.run("chmod 777 /var/snap/microk8s/common/")
         file_path = "microk8s.yaml"
         print(self.launch_config)
         with open(file_path, "w") as file:
@@ -223,7 +219,8 @@ extraSANs:
             ).split()
         )
         subprocess.check_call(
-            "/snap/bin/multipass exec {}  -- sudo " '"'.format(self.vm_name).split()
+            "/snap/bin/multipass exec {}  -- sudo "
+            "snap install /var/tmp/microk8s.snap --classic --dangerous".format(self.vm_name).split()
         )
 
     def run(self, cmd):
