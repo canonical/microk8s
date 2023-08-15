@@ -1,0 +1,24 @@
+From 55f4864d816c8e7ca0ebb39571dc88dbdf05eff2 Mon Sep 17 00:00:00 2001
+From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
+Date: Thu, 27 Jul 2023 18:08:00 +0300
+Subject: [PATCH] Set log reapply handling to ignore unchanged
+
+---
+ staging/src/k8s.io/component-base/logs/api/v1/options.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/staging/src/k8s.io/component-base/logs/api/v1/options.go b/staging/src/k8s.io/component-base/logs/api/v1/options.go
+index 2db9b1f5382..e0824dcdc4e 100644
+--- a/staging/src/k8s.io/component-base/logs/api/v1/options.go
++++ b/staging/src/k8s.io/component-base/logs/api/v1/options.go
+@@ -64,7 +64,7 @@ func NewLoggingConfiguration() *LoggingConfiguration {
+ // are no goroutines which might call logging functions. The default for ValidateAndApply
+ // and ValidateAndApplyWithOptions is to return an error when called more than once.
+ // Binaries and unit tests can override that behavior.
+-var ReapplyHandling = ReapplyHandlingError
++var ReapplyHandling = ReapplyHandlingIgnoreUnchanged
+
+ type ReapplyHandlingType int
+
+--
+2.34.1

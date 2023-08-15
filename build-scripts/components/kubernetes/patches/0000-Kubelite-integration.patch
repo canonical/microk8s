@@ -1,4 +1,4 @@
-From d0ae18d074db5ff361f363073f32b2f30c7a3686 Mon Sep 17 00:00:00 2001
+From 3162aa9df25819b60a3c0a3b044394639d55280c Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
@@ -19,19 +19,19 @@ Subject: [PATCH] Kubelite integration
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index fc36d044dbe..cffb7c35a3c 100644
+index b021bac2574..8d5a1bad8ed 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
-@@ -89,7 +89,7 @@ func init() {
+@@ -76,7 +76,7 @@ func init() {
  }
- 
+
  // NewAPIServerCommand creates a *cobra.Command object with default parameters
 -func NewAPIServerCommand() *cobra.Command {
 +func NewAPIServerCommand(stopCh... <- chan struct{}) *cobra.Command {
  	s := options.NewServerRunOptions()
  	cmd := &cobra.Command{
  		Use: "kube-apiserver",
-@@ -129,7 +129,12 @@ cluster's shared state through which all other components interact.`,
+@@ -116,7 +116,12 @@ cluster's shared state through which all other components interact.`,
  			}
  			// add feature enablement metrics
  			utilfeature.DefaultMutableFeatureGate.AddMetrics()
@@ -46,7 +46,7 @@ index fc36d044dbe..cffb7c35a3c 100644
  		Args: func(cmd *cobra.Command, args []string) error {
  			for _, arg := range args {
 diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
-index 8d01f3b7670..44ac7f69328 100644
+index c48b09a420d..b7f273b02ac 100644
 --- a/cmd/kube-scheduler/app/server.go
 +++ b/cmd/kube-scheduler/app/server.go
 @@ -132,7 +132,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
@@ -63,19 +63,19 @@ index 8d01f3b7670..44ac7f69328 100644
  		cancel()
  	}()
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 9444f136866..8ca88f64d04 100644
+index 742524e325f..561cbf68868 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
-@@ -120,7 +120,7 @@ const (
+@@ -122,7 +122,7 @@ const (
  )
- 
+
  // NewKubeletCommand creates a *cobra.Command object with default parameters
 -func NewKubeletCommand() *cobra.Command {
 +func NewKubeletCommand(ctx ...context.Context) *cobra.Command {
  	cleanFlagSet := pflag.NewFlagSet(componentKubelet, pflag.ContinueOnError)
  	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
  	kubeletFlags := options.NewKubeletFlags()
-@@ -250,6 +250,12 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -249,6 +249,12 @@ is checked every 20 seconds (also configurable with a flag).`,
  			if err := checkPermissions(); err != nil {
  				klog.ErrorS(err, "kubelet running with insufficient permissions")
  			}
@@ -85,13 +85,13 @@ index 9444f136866..8ca88f64d04 100644
 +			} else {
 +				runctx = ctx[0]
 +			}
- 
+
  			// make the kubelet's config safe for logging
  			config := kubeletServer.KubeletConfiguration.DeepCopy()
-@@ -259,12 +265,9 @@ HTTP server: The kubelet can also listen for HTTP and respond to a simple API
+@@ -258,12 +264,9 @@ is checked every 20 seconds (also configurable with a flag).`,
  			// log the kubelet's config for inspection
- 			klog.V(5).InfoS("KubeletConfiguration", "configuration", config)
- 
+ 			klog.V(5).InfoS("KubeletConfiguration", "configuration", klog.Format(config))
+
 -			// set up signal context for kubelet shutdown
 -			ctx := genericapiserver.SetupSignalContext()
 -
@@ -101,7 +101,7 @@ index 9444f136866..8ca88f64d04 100644
 +			return Run(runctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate)
  		},
  	}
- 
+
 diff --git a/cmd/kubelite/app/daemons/daemon.go b/cmd/kubelite/app/daemons/daemon.go
 new file mode 100644
 index 00000000000..dbef03cf07e
@@ -398,35 +398,34 @@ index 00000000000..667b24f68e6
 +	println("Stopping kubelite")
 +}
 diff --git a/pkg/volume/csi/csi_plugin.go b/pkg/volume/csi/csi_plugin.go
-index ce7a543c94f..a8094f878d6 100644
+index 2556517276e..0b5ef45d083 100644
 --- a/pkg/volume/csi/csi_plugin.go
 +++ b/pkg/volume/csi/csi_plugin.go
-@@ -240,18 +240,22 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
+@@ -243,18 +243,22 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
  	}
- 
+
  	// Initializing the label management channels
 -	nim = nodeinfomanager.NewNodeInfoManager(host.GetNodeName(), host, migratedPlugins)
 +	localNim := nodeinfomanager.NewNodeInfoManager(host.GetNodeName(), host, migratedPlugins)
- 
+
  	// This function prevents Kubelet from posting Ready status until CSINode
  	// is both installed and initialized
 -	if err := initializeCSINode(host); err != nil {
 +	if err := initializeCSINode(host, localNim); err != nil {
  		return errors.New(log("failed to initialize CSINode: %v", err))
  	}
- 
+
 +	if _, ok := host.(volume.KubeletVolumeHost); ok {
 +		nim = localNim
 +	}
 +
  	return nil
  }
- 
+
 -func initializeCSINode(host volume.VolumeHost) error {
 +func initializeCSINode(host volume.VolumeHost, nim nodeinfomanager.Interface) error {
  	kvh, ok := host.(volume.KubeletVolumeHost)
  	if !ok {
  		klog.V(4).Info("Cast from VolumeHost to KubeletVolumeHost failed. Skipping CSINode initialization, not running on kubelet")
--- 
+--
 2.34.1
-
