@@ -10,6 +10,19 @@ need_kubelet_restart=false
 need_controller_restart=false
 need_scheduler_restart=false
 
+# Try to symlink /var/lib/kubelet so that most kubelet device plugins work out of the box.
+if ! [ -e /var/lib/kubelet ] && ln -s $SNAP_COMMON/var/lib/kubelet /var/lib/kubelet; then
+  echo "/var/lib/kubelet linked to $SNAP_COMMON"
+fi
+
+# Try to symlink /var/lib/calico so that the Calico CNI plugin picks up the mtu configuration.
+if ! [ -e /var/lib/calico ]; then
+  SNAP_DATA_CURRENT=`echo "${SNAP_DATA}" | sed -e "s,${SNAP_REVISION},current,"`
+  if ln -s $SNAP_DATA_CURRENT/var/lib/calico /var/lib/calico; then
+    echo "/var/lib/calico linked to $SNAP_DATA_CURRENT/var/lib/calico"
+  fi
+fi
+
 # This is a one-off patch. It will allow us to refresh the beta snap without breaking the user's deployment.
 # We make sure the certificates used by the deployment from beta do not change. We copy them to SNAP_DATA
 # and make sure the respective services use them.
