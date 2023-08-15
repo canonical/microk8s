@@ -390,7 +390,7 @@ class TestCluster(object):
                 for line in pods.decode().splitlines():
                     if "calico" in line and "Running" in line:
                         ready = True
-            except:
+            except ChildProcessError:
                 print("Waiting for k8s pods to come up")
             time.sleep(5)
         assert ready
