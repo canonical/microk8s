@@ -383,12 +383,17 @@ class TestCluster(object):
         print("Waiting for machine {}".format(vm.vm_name))
         vm.run("/snap/bin/microk8s.status --wait-ready --timeout 240")
         timeout = time.time() + 240
-        while time.time() <= timeout:
-            pods = vm.run("/snap/bin/microk8s.kubectl get po -n kube-system -o wide")
-            for line in pods.decode().splitlines():
-                if "calico" in line and "Running" in line:
-                    break
+        ready = False
+        while time.time() <= timeout and not ready:
+            try:
+                pods = vm.run("/snap/bin/microk8s.kubectl get po -n kube-system -o wide")
+                for line in pods.decode().splitlines():
+                    if "calico" in line and "Running" in line:
+                        ready = True
+            except:
+                print("Waiting for k8s pods to come up")
             time.sleep(5)
+        assert ready
         vm.run("snap remove --purge microk8s")
         interfaces = vm.run("/sbin/ip a")
         assert "cali" not in interfaces.decode()
