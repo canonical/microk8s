@@ -162,6 +162,7 @@ def get_connection_info(
                 "hostname": socket.gethostname().lower(),
                 "port": cluster_agent_port,
                 "worker": worker,
+                "can_handle_x509_auth": True,
             }
 
             return join_request(conn, CLUSTER_API_V2, req_data, master_ip, verify_peer, fingerprint)
