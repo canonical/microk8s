@@ -18,14 +18,17 @@ export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
 cp -r --preserve=mode ${SNAP}/default-args ${SNAP_DATA}/args
 mv ${SNAP_DATA}/args/certs.d/localhost__32000 ${SNAP_DATA}/args/certs.d/localhost:32000
 
-# Sym link the host's /var/lib/kubelet to the Snap's.  This will be fixed with layouts when
-# this Snap is strictly confined.  Warn if there's already a directory.
-if ! [ -e /var/lib/kubelet ] &&
-   ln -s $SNAP_COMMON/var/lib/kubelet /var/lib/kubelet
-then
-  echo "\`/var/lib/kubelet\` linked to $SNAP_COMMON"
-else
-  echo "\`/var/lib/kubelet\` already exists.  Will not be linking to $SNAP_COMMON"
+# Try to symlink /var/lib/kubelet so that most kubelet device plugins work out of the box.
+if ! [ -e /var/lib/kubelet ] && ln -s $SNAP_COMMON/var/lib/kubelet /var/lib/kubelet; then
+  echo "/var/lib/kubelet linked to $SNAP_COMMON"
+fi
+
+# Try to symlink /var/lib/calico so that the Calico CNI plugin picks up the mtu configuration.
+if ! [ -e /var/lib/calico ]; then
+  SNAP_DATA_CURRENT=`echo "${SNAP_DATA}" | sed -e "s,${SNAP_REVISION},current,"`
+  if ln -s $SNAP_DATA_CURRENT/var/lib/calico /var/lib/calico; then
+    echo "/var/lib/calico linked to $SNAP_DATA_CURRENT/var/lib/calico"
+  fi
 fi
 
 # Create the certificates
