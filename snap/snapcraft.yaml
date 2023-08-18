@@ -580,7 +580,9 @@ passthrough:
     /var/log/containers:
       bind: $SNAP_COMMON/var/log/containers
     /var/lib/kubelet:
-      bind: $SNAP_DATA/kubelet
+      bind: $SNAP_COMMON/var/lib/kubelet
+    /var/lib/calico:
+      bind: $SNAP_DATA/var/lib/calico
     /var/lib/kube-proxy:
       bind: $SNAP_DATA/kube-proxy
     /etc/service/enabled:
