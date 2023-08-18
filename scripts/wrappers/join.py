@@ -163,6 +163,7 @@ def get_connection_info(
                 "port": cluster_agent_port,
                 "worker": worker,
                 "can_handle_x509_auth": True,
+                "can_handle_custom_etcd": True,
             }
 
             return join_request(conn, CLUSTER_API_V2, req_data, master_ip, verify_peer, fingerprint)
@@ -820,7 +821,24 @@ def join_dqlite_master_node(info, master_ip):
     update_kubelet_node_ip(info["kubelet_args"], hostname_override)
     update_kubelet_hostname_override(info["kubelet_args"])
     store_callback_token(info["callback_token"])
-    update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
+
+    if "etcd_servers" in info:
+        set_arg("--etcd-servers", info["etcd_servers"], "kube-apiserver")
+        if info.get("etcd_ca"):
+            store_cert("remote-etcd-ca.crt", info["etcd_ca"])
+            set_arg("etcd-cafile", "${SNAP_DATA}/certs/remote-etcd-ca.crt")
+        if info.get("etcd_cert"):
+            store_cert("remote-etcd.crt", info["etcd_cert"])
+            set_arg("etcd-certfile", "${SNAP_DATA}/certs/remote-etcd.crt")
+        if info.get("etcd_key"):
+            store_cert("remote-etcd.key", info["etcd_key"])
+            set_arg("etcd-keyfile", "${SNAP_DATA}/certs/remote-etcd.crt")
+
+        mark_no_dqlite()
+        service("restart", "k8s-dqlite")
+    else:
+        update_dqlite(info["cluster_cert"], info["cluster_key"], info["voters"], hostname_override)
+
     # We want to update the local CNI yaml but we do not want to apply it.
     # The cni is applied already in the cluster we join
     try_initialise_cni_autodetect_for_clustering(master_ip, apply_cni=False)
@@ -911,6 +929,15 @@ def unmark_join_in_progress():
     lock_file = "{}/var/lock/join-in-progress".format(snapdata_path)
     if os.path.exists(lock_file):
         os.unlink(lock_file)
+
+
+def mark_no_dqlite():
+    """
+    Mark node to not run k8s-dqlite service.
+    """
+    lock_file = "{}/var/lock/no-k8s-dqlite"
+    open(lock_file, "a").close()
+    os.chmod(lock_file, 0o700)
 
 
 @click.command(
