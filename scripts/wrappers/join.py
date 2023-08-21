@@ -937,7 +937,7 @@ def mark_no_dqlite():
     """
     Mark node to not run k8s-dqlite service.
     """
-    lock_file = "{}/var/lock/no-k8s-dqlite"
+    lock_file = "{}/var/lock/no-k8s-dqlite".format(snapdata_path)
     open(lock_file, "a").close()
     os.chmod(lock_file, 0o700)
 
