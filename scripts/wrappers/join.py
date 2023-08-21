@@ -833,7 +833,7 @@ def join_dqlite_master_node(info, master_ip):
             set_arg("--etcd-certfile", "${SNAP_DATA}/certs/remote-etcd.crt", "kube-apiserver")
         if info.get("etcd_key"):
             store_cert("remote-etcd.key", info["etcd_key"])
-            set_arg("--etcd-keyfile", "${SNAP_DATA}/certs/remote-etcd.crt", "kube-apiserver")
+            set_arg("--etcd-keyfile", "${SNAP_DATA}/certs/remote-etcd.key", "kube-apiserver")
 
         mark_no_dqlite()
         service("restart", "k8s-dqlite")
