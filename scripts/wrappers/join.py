@@ -507,9 +507,10 @@ def store_cert(filename, payload):
     :param payload: certificate payload
     """
     file_with_path = "{}/certs/{}".format(snapdata_path, filename)
-    backup_file_with_path = "{}.backup".format(file_with_path)
-    shutil.copyfile(file_with_path, backup_file_with_path)
-    try_set_file_permissions(backup_file_with_path)
+    if os.path.exists(file_with_path):
+        backup_file_with_path = "{}.backup".format(file_with_path)
+        shutil.copyfile(file_with_path, backup_file_with_path)
+        try_set_file_permissions(backup_file_with_path)
     with open(file_with_path, "w+") as fp:
         fp.write(payload)
     try_set_file_permissions(file_with_path)
