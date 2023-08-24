@@ -46,6 +46,7 @@ parts:
       - pkg-config
       - rsync
       - tcl
+      - unzip
 
   raft:
     after: [build-deps]
