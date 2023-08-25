@@ -121,12 +121,6 @@ parts:
     prime:
       - -bin/iptables-xml
 
-  migrator:
-    after: [build-deps]
-    plugin: nil
-    source: build-scripts/components/migrator
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh migrator
-
   containerd:
     after: [runc]
     plugin: nil
