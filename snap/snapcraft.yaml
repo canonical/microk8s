@@ -48,7 +48,7 @@ parts:
       - tcl
 
   k8s-dqlite:
-    after: [dqlite]
+    after: [build-deps]
     source: build-scripts/components/k8s-dqlite
     plugin: nil
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
