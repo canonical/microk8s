@@ -3,10 +3,8 @@
 INSTALL="${1}/bin"
 mkdir -p "${INSTALL}"
 
-make go.build.static
-make migrator
-make dqlite
+make static -j
 
-cp migrator "${INSTALL}/migrator"
-cp dqlite "${INSTALL}/dqlite"
-cp k8s-dqlite "${INSTALL}/k8s-dqlite"
+cp bin/static/migrator "${INSTALL}/migrator"
+cp bin/static/dqlite "${INSTALL}/dqlite"
+cp bin/static/k8s-dqlite "${INSTALL}/k8s-dqlite"
