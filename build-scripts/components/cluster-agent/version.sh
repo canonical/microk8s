@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "main"
+echo "1.28"
