@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KUBE_TRACK="${KUBE_TRACK:-}"            # example: "1.24"
+KUBE_TRACK="${KUBE_TRACK:-1.28}"            # example: "1.24"
 KUBE_VERSION="${KUBE_VERSION:-}"        # example: "v1.24.2"
 
 if [ -z "${KUBE_VERSION}" ]; then
