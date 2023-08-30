@@ -10,10 +10,7 @@ CTR = os.path.expandvars("$SNAP/microk8s-ctr.wrapper")
 SNAP = os.getenv("SNAP")
 SNAP_DATA = os.getenv("SNAP_DATA")
 SNAP_DATA_CURRENT = os.path.abspath(f"{SNAP_DATA}/../current")
-KUBECTL = [
-    "{}/kubectl".format(SNAP),
-    "--kubeconfig={}/credentials/kubelet.config".format(SNAP_DATA),
-]
+KUBECTL = [f"{SNAP}/kubectl", f"--kubeconfig={SNAP_DATA}/credentials/kubelet.config"]
 
 
 def post_filter_has_known_containers(pod, containers: list) -> bool:
