@@ -217,7 +217,7 @@ then
   cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
 fi
 
-# (1.28 -> 1.29) Install 10-restart-pods hook if missing
+# (1.28 -> 1.29) Install 10-pods-restart hook if missing
 if ! [ -e "${SNAP_COMMON}/hooks/reconcile.d/10-pods-restart" ]; then
   cp -r --preserve=mode "${SNAP}/default-hooks/reconcile.d/10-pods-restart" "${SNAP_COMMON}/hooks/reconcile.d/10-pods-restart"
 fi
