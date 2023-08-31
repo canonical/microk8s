@@ -5,6 +5,5 @@ mkdir -p "${INSTALL}"
 
 make static -j
 
-cp bin/static/migrator "${INSTALL}/migrator"
 cp bin/static/dqlite "${INSTALL}/dqlite"
 cp bin/static/k8s-dqlite "${INSTALL}/k8s-dqlite"
