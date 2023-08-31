@@ -76,8 +76,10 @@ def backup(fname=None, debug=False):
     fname_tar = "{}.tar.gz".format(fname)
 
     with tempfile.TemporaryDirectory() as tmpdirname:
-        backup_cmd = "{}/bin/migrator --endpoint {} --mode backup-dqlite --db-dir {}".format(
-            snap_path, kine_ep, "{}/{}".format(tmpdirname, fname)
+        backup_cmd = (
+            "{}/bin/k8s-dqlite migrator --endpoint {} --mode backup-dqlite --db-dir {}".format(
+                snap_path, kine_ep, "{}/{}".format(tmpdirname, fname)
+            )
         )
         if debug:
             backup_cmd = "{} {}".format(backup_cmd, "--debug")
@@ -114,8 +116,10 @@ def restore(fname_tar, debug=False):
         else:
             fname = fname_tar
         fname = os.path.basename(fname)
-        restore_cmd = "{}/bin/migrator --endpoint {} --mode restore-to-dqlite --db-dir {}".format(
-            snap_path, kine_ep, "{}/{}".format(tmpdirname, fname)
+        restore_cmd = (
+            "{}/bin/k8s-dqlite migrator --endpoint {} --mode restore-to-dqlite --db-dir {}".format(
+                snap_path, kine_ep, "{}/{}".format(tmpdirname, fname)
+            )
         )
         if debug:
             restore_cmd = "{} {}".format(restore_cmd, "--debug")

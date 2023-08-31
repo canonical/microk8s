@@ -56,7 +56,7 @@ then
   sleep 15
 
   rm -rf "$DB_DIR"
-  $SNAP/bin/migrator --mode backup --endpoint "http://127.0.0.1:12379" --db-dir "$DB_DIR" --debug
+  $SNAP/bin/k8s-dqlite migrator --mode backup --endpoint "http://127.0.0.1:12379" --db-dir "$DB_DIR" --debug
   chmod 600 "$DB_DIR"
   # Wait up to two minutes for the apiserver to come up.
   # TODO: this polling is not good enough. We should find a new way to ensure the apiserver is up.
@@ -76,7 +76,7 @@ then
   if [[ "$now" < "$(($start_timer + $timeout))" ]] ; then
     if (is_apiserver_ready)
     then
-        $SNAP/bin/migrator --mode restore --endpoint "unix://${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379" --db-dir "$DB_DIR" --debug
+        $SNAP/bin/k8s-dqlite migrator --mode restore --endpoint "unix://${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379" --db-dir "$DB_DIR" --debug
     fi
   fi
 
