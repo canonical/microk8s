@@ -49,13 +49,13 @@ function handle_calico {
 function handle_cilium {
   ${SNAP}/microk8s-helm3.wrapper repo add cilium https://helm.cilium.io
   ${SNAP}/microk8s-helm3.wrapper repo update
-  ${SNAP}/microk8s-helm3.wrapper template cilium cilium/cilium -n kube-system \
+  ${SNAP}/microk8s-helm3.wrapper template cilium --version v1.14.1 cilium/cilium -n kube-system \
     --set cni.confPath=/var/snap/microk8s/current/args/cni-network \
     --set cni.binPath=/var/snap/microk8s/current/opt/cni/bin \
     --set daemon.runPath=/var/snap/microk8s/current/var/run/cilium \
     --set operator.replicas=1 \
-    --set ipam.operator.clusterPoolIPv4PodCIDR="${IPv4_CLUSTER_CIDR}" \
-    --set ipam.operator.clusterPoolIPv6PodCIDR="${IPv6_CLUSTER_CIDR}" \
+    --set ipam.operator.clusterPoolIPv4PodCIDRList="${IPv4_CLUSTER_CIDR}" \
+    --set ipam.operator.clusterPoolIPv6PodCIDRList="${IPv6_CLUSTER_CIDR}" \
     --set nodePort.enabled=true \
     > "${CNI_YAML}"
 }
