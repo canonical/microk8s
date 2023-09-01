@@ -47,40 +47,8 @@ parts:
       - rsync
       - tcl
 
-  raft:
-    after: [build-deps]
-    source: build-scripts/components/raft
-    build-attributes: [no-patchelf]
-    plugin: nil
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh raft
-    stage-packages:
-      - libuv1
-    stage:
-      - -usr/share/doc
-      - -usr/share/man
-
-  sqlite:
-    after: [build-deps]
-    source: build-scripts/components/sqlite
-    build-attributes: [no-patchelf]
-    plugin: nil
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh sqlite
-
-  dqlite:
-    after: [sqlite, raft]
-    source: build-scripts/components/dqlite
-    build-attributes: [no-patchelf]
-    plugin: nil
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh dqlite
-
-  dqlite-client:
-    after: [dqlite]
-    plugin: nil
-    source: build-scripts/components/dqlite-client
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh dqlite-client
-
   k8s-dqlite:
-    after: [dqlite]
+    after: [build-deps]
     source: build-scripts/components/k8s-dqlite
     plugin: nil
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
@@ -152,12 +120,6 @@ parts:
       - "--enable-static"
     prime:
       - -bin/iptables-xml
-
-  migrator:
-    after: [build-deps]
-    plugin: nil
-    source: build-scripts/components/migrator
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh migrator
 
   containerd:
     after: [runc]
@@ -336,8 +298,6 @@ parts:
       - cluster-agent
       - cni
       - containerd
-      - dqlite
-      - dqlite-client
       - etcd
       - flannel-cni-plugin
       - flanneld
@@ -345,11 +305,8 @@ parts:
       - k8s-dqlite
       - kubernetes
       - microk8s-addons
-      - migrator
       - python-runtime
-      - raft
       - runc
-      - sqlite
     plugin: nil
     source: .
     build-packages:
