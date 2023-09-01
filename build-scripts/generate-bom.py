@@ -67,15 +67,20 @@ if __name__ == "__main__":
         component_dir = DIR / "components" / component
 
         try:
+            version = _parse_output([component_dir / "version.sh"])
+            patches = _parse_output([PYTHON, DIR / "print-patches-for.py", component, version])
+            clean_patches = []
+            if patches:
+                clean_patches = [p[p.find("build-scripts/") :] for p in patches.split("\n")]
+
             BOM["components"][component] = {
                 "repository": _read_file(component_dir / "repository"),
-                "version": _parse_output([component_dir / "version.sh"]),
+                "version": version,
                 "revision": _parse_output(
                     ["git", "rev-parse", "HEAD"],
                     cwd=BUILD_DIRECTORY / ".." / ".." / component / "build" / component,
                 ),
-                "patches": _listdir(component_dir / "patches"),
-                "strict-patches": _listdir(component_dir / "strict-patches"),
+                "patches": clean_patches,
             }
         except OSError as e:
             print(f"Could not get info for {component}: {e}", file=sys.stderr)
