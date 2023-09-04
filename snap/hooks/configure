@@ -217,6 +217,11 @@ then
   cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
 fi
 
+# (1.28 -> 1.29) Install 10-pods-restart hook if missing
+if ! [ -e "${SNAP_COMMON}/hooks/reconcile.d/10-pods-restart" ]; then
+  cp -r --preserve=mode "${SNAP}/default-hooks/reconcile.d/10-pods-restart" "${SNAP_COMMON}/hooks/reconcile.d/10-pods-restart"
+fi
+
 # Make sure the server certificate includes the IP we are using
 if [ "$(produce_certs)" == "1" ]
 then
@@ -545,7 +550,7 @@ fi
 # if we are refreshing in a no-flanneld we need to restart the CNI pods because they mount parts of $SNAP_DATA
 if [ -e "${SNAP_DATA}/var/lock/no-flanneld" ]
 then
-  touch "${SNAP_DATA}/var/lock/cni-needs-reload"
+  touch "${SNAP_DATA}/var/lock/snapdata-mounts-need-reload"
 fi
 
 # Restart reconfigured services
