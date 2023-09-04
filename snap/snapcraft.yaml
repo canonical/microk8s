@@ -673,6 +673,8 @@ slots:
 hooks:
   configure:
     plugs:
+      - home
+      - home-read-all
       - account-control
       - dot-kube
       - firewall-control
