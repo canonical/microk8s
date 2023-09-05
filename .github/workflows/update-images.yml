@@ -27,7 +27,7 @@ jobs:
           - { branch: 1.23-eksd, channel: 1.23-eksd }
     steps:
       - name: Checkout
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v4
         with:
           ref: ${{ matrix.branch }}
       - name: Update image list
