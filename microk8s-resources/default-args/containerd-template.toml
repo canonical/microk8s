@@ -5,7 +5,7 @@ oom_score = 0
 [grpc]
   uid = 0
   gid = 0
-  max_recv_message_size = 16777216
+  max_recv_message_size = 33554432
   max_send_message_size = 16777216
 
 [debug]
