@@ -16,6 +16,7 @@ environment:
   PYTHONPATH: $SNAP/usr/lib/python3.8:$SNAP/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages:$PYTHONPATH
   PATH: $SNAP/usr/bin:$SNAP/bin:$SNAP/usr/sbin:$SNAP/sbin:$PATH
   OPENSSL_CONF: $SNAP/etc/ssl/openssl.cnf
+  SNAPCRAFT_ARCH_TRIPLET: $SNAPCRAFT_ARCH_TRIPLET
 
 parts:
   build-deps:
