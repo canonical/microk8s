@@ -95,7 +95,8 @@ run_with_sudo() {
   if (is_strict); then
     "$@"
   else
-    LD_LIBRARY_PATH="" sudo -E PATH="${PATH}" LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}" PYTHONPATH="${PYTHONPATH:-}" "$@"
+    local SAVE_LD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
+    LD_LIBRARY_PATH="" sudo -E PATH="${PATH}" LD_LIBRARY_PATH="${SAVE_LD_LIBRARY_PATH}" PYTHONPATH="${PYTHONPATH:-}" "$@"
   fi
 }
 
