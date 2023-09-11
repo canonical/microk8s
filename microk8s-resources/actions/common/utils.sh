@@ -1130,30 +1130,6 @@ sign_certificate() {
   echo "$csr" | ${SNAP}/usr/bin/openssl x509 -req -sha256 -CA "${SNAP_DATA}/certs/ca.crt" -CAkey "${SNAP_DATA}/certs/ca.key" -CAcreateserial -days 3650 -extfile <(echo "${extensions}")
 }
 
-# check if this file is run with arguments
-if [[ "$0" == "${BASH_SOURCE}" ]] &&
-   [[ ! -z "$1" ]]
-then
-  # call help
-  if echo "$*" | $SNAP/bin/grep -q -- 'help'; then
-    echo "usage: $0 [function]"
-    echo ""
-    echo "Run a utility function and return the output."
-    echo ""
-    echo "available functions:"
-    declare -F | gawk '{print "- "$3}'
-    exit 0
-  fi
-
-  if declare -F "$1" > /dev/null
-  then
-    $1 ${@:2}
-    exit $?
-  else
-    echo "Function does not exist: $1" >&2
-    exit 1
-  fi
-fi
 
 exit_if_low_memory_guard() {
   if [ -e ${SNAP_DATA}/var/lock/low-memory-guard.lock ]
