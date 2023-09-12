@@ -14,9 +14,4 @@ fi
 
 exit_if_no_permissions
 
-if is_strict
-then
-  ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/join.py "${@}"
-else
-  sudo -E ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/join.py "${@}"
-fi
+run_with_sudo ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/join.py "${@}"

@@ -17,9 +17,5 @@ then
 fi
 
 declare -a args="($(cat $SNAP_DATA/args/ctr))"
-if is_strict
-then
-  "${SNAP}/bin/ctr" "${args[@]}" "$@"
-else
-  sudo -E "${SNAP}/bin/ctr" "${args[@]}" "$@"
-fi
+
+run_with_sudo "${SNAP}/bin/ctr" "${args[@]}" "$@"
