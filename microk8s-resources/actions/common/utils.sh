@@ -450,7 +450,7 @@ arch() {
 
 snapshotter() {
   # Determine the underlying filesystem that containerd will be running on
-  FSTYPE=$($SNAP/bin/stat -f -c %T "${SNAP_COMMON}")
+  FSTYPE=$($SNAP/usr/bin/stat -f -c %T "${SNAP_COMMON}")
   # ZFS is supported through the native snapshotter
   if [ "$FSTYPE" = "zfs" ]; then
     echo "native"
