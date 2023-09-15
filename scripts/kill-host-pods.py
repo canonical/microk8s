@@ -3,13 +3,16 @@
 import json
 import subprocess
 import os
+from pathlib import Path
 
 import click
 
 CTR = os.path.expandvars("$SNAP/microk8s-ctr.wrapper")
 SNAP = os.getenv("SNAP")
 SNAP_DATA = os.getenv("SNAP_DATA")
-SNAP_DATA_CURRENT = os.path.abspath(f"{SNAP_DATA}/../current")
+SNAP_DATA_BASE = os.path.abspath(f"{SNAP_DATA}/..")
+SNAP_DATA_CURRENT = os.path.abspath(f"{SNAP_DATA_BASE}/current")
+SNAP_COMMON = os.path.abspath(f"{SNAP_DATA_BASE}/common")
 KUBECTL = [f"{SNAP}/kubectl", f"--kubeconfig={SNAP_DATA}/credentials/kubelet.config"]
 
 
@@ -36,8 +39,21 @@ def post_filter_has_snap_data_mounts(pod) -> bool:
     """
     for volume in pod["spec"].get("volumes", []):
         hostpath_volume = volume.get("hostPath", {})
-        if hostpath_volume.get("path", "").startswith(SNAP_DATA_CURRENT):
+        host_path = hostpath_volume.get("path", "")
+        if not host_path:
+            return False
+        if host_path.startswith(SNAP_DATA_CURRENT):
             return True
+
+        # handle the case where a symlink to a SNAP_DATA path is used
+        try:
+            resolved = Path(host_path).resolve().as_posix()
+            if resolved.startswith(SNAP_DATA_BASE) and not resolved.startswith(SNAP_COMMON):
+                return True
+        except OSError:
+            pass
+
+    return False
 
 
 @click.command("kill-host-pods")
