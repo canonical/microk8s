@@ -56,11 +56,21 @@ def post_filter_has_snap_data_mounts(pod) -> bool:
     return False
 
 
+def post_filter_has_owner(pod: dict):
+    """
+    Return true if a pod definition has an ownerReference (i.e. is it managed by a
+    Deployment or a DaemonSet)
+    """
+    owner_references = pod["metadata"].get("ownerReferences") or []
+    return len(owner_references) > 0
+
+
 @click.command("kill-host-pods")
 @click.argument("selector", nargs=-1)
 @click.option("--dry-run", is_flag=True, default=False)
 @click.option("--with-snap-data-mounts", is_flag=True, default=False)
-def main(selector: list, dry_run: bool, with_snap_data_mounts: bool):
+@click.option("--with-owner", is_flag=True, default=False)
+def main(selector: list, dry_run: bool, with_snap_data_mounts: bool, with_owner: bool):
     """
     Delete pods running on the local node based on Kubernetes selectors.
 
@@ -78,6 +88,8 @@ def main(selector: list, dry_run: bool, with_snap_data_mounts: bool):
         if not post_filter_has_known_containers(pod, containers):
             continue
         if with_snap_data_mounts and not post_filter_has_snap_data_mounts(pod):
+            continue
+        if with_owner and not post_filter_has_owner(pod):
             continue
 
         meta = pod["metadata"]
