@@ -17,6 +17,14 @@ if test -L /var/lib/calico; then
   unlink /var/lib/calico || true
 fi
 
+# Try to symlink standard CNI Kubernetes directories.
+if test -L /etc/cni/net.d; then
+  unlink /etc/cni/net.d || true
+fi
+if test -L /opt/cni/bin; then
+  unlink /opt/cni/bin || true
+fi
+
 pod_cidr="$(cat $SNAP_DATA/args/kube-proxy | grep "cluster-cidr" | tr "=" " "| gawk '{print $2}')"
 if [ -z "$pod_cidr" ]
 then

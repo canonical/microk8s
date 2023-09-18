@@ -36,11 +36,24 @@ if ! [ -e /var/lib/kubelet ] && ln -s $SNAP_COMMON/var/lib/kubelet /var/lib/kube
   echo "/var/lib/kubelet linked to $SNAP_COMMON"
 fi
 
+SNAP_DATA_CURRENT=`echo "${SNAP_DATA}" | sed -e "s,${SNAP_REVISION},current,"`
+
 # Try to symlink /var/lib/calico so that the Calico CNI plugin picks up the mtu configuration.
 if ! [ -e /var/lib/calico ]; then
-  SNAP_DATA_CURRENT=`echo "${SNAP_DATA}" | sed -e "s,${SNAP_REVISION},current,"`
   if ln -s $SNAP_DATA_CURRENT/var/lib/calico /var/lib/calico; then
     echo "/var/lib/calico linked to $SNAP_DATA_CURRENT/var/lib/calico"
+  fi
+fi
+
+# Try to symlink standard CNI Kubernetes directories.
+if ! [ -e /etc/cni/net.d ]; then
+  if mkdir -p /etc/cni && ln -s $SNAP_DATA_CURRENT/args/cni-network /etc/cni/net.d; then
+    echo "/etc/cni/net.d linked to $SNAP_DATA_CURRENT/args/cni-network"
+  fi
+fi
+if ! [ -e /opt/cni/bin ]; then
+  if mkdir -p /opt/cni && ln -s $SNAP_DATA_CURRENT/opt/cni/bin /opt/cni/bin; then
+    echo "/opt/cni/bin linked to $SNAP_DATA_CURRENT/opt/cni/bin"
   fi
 fi
 
