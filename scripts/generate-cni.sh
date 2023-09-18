@@ -1,8 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -x
 
 source $SNAP/actions/common/utils.sh
+
+use_snap_env
+
 if [ -e "${SNAP_DATA}/args/cni-env" ]; then
     source "${SNAP_DATA}/args/cni-env"
 fi

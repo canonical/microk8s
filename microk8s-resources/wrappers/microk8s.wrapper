@@ -1,8 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
 source $SNAP/actions/common/utils.sh
+
+use_snap_env
 
 function help() {
     echo "Available subcommands are:"
@@ -37,9 +39,7 @@ elif [ "${APP}" == "help" ] || [ "${APP}" == "--help" ] || [ "$APP" == "-h" ]; t
     help
     readonly EXIT="0"
 elif [ -f "${SNAP_COMMON}/plugins/${APP}" ]; then
-    export ARCH="$(uname -m)"
-    export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu/ceph"
-    LD_LIBRARY_PATH="${IN_SNAP_LD_LIBRARY_PATH}" "${SNAP_COMMON}/plugins/${APP}" "$@"
+    "${SNAP_COMMON}/plugins/${APP}" "$@"
 
     readonly EXIT="$?"
 else

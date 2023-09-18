@@ -1,18 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eu
 
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-ARCH="$($SNAP/bin/uname -m)"
-export IN_SNAP_LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-export PYTHONNOUSERSITE=false
-export LC_ALL="${LC_ALL:-C.UTF-8}"
-export LANG="${LANG:-C.UTF-8}"
-
 source $SNAP/actions/common/utils.sh
 
-# avoid AppArmor denial in strict mode when running under sudo without -H
+use_snap_env
 
+# avoid AppArmor denial in strict mode when running under sudo without -H
 if is_strict
 then
   cd "$SNAP"
@@ -22,4 +16,4 @@ exit_if_not_root
 
 exit_if_no_permissions
 
-LD_LIBRARY_PATH=$IN_SNAP_LD_LIBRARY_PATH ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/enable.py "${@}"
+${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/enable.py "${@}"

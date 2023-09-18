@@ -1,10 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eu
 
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
+. $SNAP/actions/common/utils.sh
+use_snap_env
 
 if [ ! -f "${SNAP_DATA}/bin/istioctl" ]; then
   echo "Istio not available, try enabling is with 'microk8s enable istio'"

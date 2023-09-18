@@ -9,9 +9,7 @@ then
   exit 0
 fi
 
-ARCH="$(${SNAP}/bin/uname -m)"
-export LD_LIBRARY_PATH="${SNAP}/lib:${SNAP}/usr/lib:${SNAP}/lib/$ARCH-linux-gnu:${SNAP}/usr/lib/$ARCH-linux-gnu"
-export PATH="${SNAP}/usr/sbin:${SNAP}/usr/bin:${SNAP}/sbin:${SNAP}/bin:$PATH:/usr/bin:/usr/local/bin"
+use_snap_env
 
 # LXD Specific Checks
 if ! is_strict && cat /proc/1/environ | grep "container=lxc" &> /dev/null

@@ -1,8 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -ex
 
 source $SNAP/actions/common/utils.sh
+
+use_snap_env
+
 # Re-exec outside of apparmor confinement
 if ! is_strict && [ -d /sys/kernel/security/apparmor ]; then
     status_file=/proc/self/attr/apparmor/current
@@ -24,12 +27,6 @@ fi
 SNAP_CURRENT=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
 CURRENT_PATH="$SNAP_CURRENT/usr/sbin:$SNAP_CURRENT/usr/bin:$SNAP_CURRENT/sbin:$SNAP_CURRENT/bin"
 export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$CURRENT_PATH:$PATH"
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
-export LD_LIBRARY_PATH=$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH
-export XDG_RUNTIME_DIR="${SNAP_COMMON}/run"
-mkdir -p "${XDG_RUNTIME_DIR}"
-
 
 if is_strict
 then

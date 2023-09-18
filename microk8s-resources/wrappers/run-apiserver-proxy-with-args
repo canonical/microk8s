@@ -1,10 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -ex
-export PATH="$SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:$PATH"
-ARCH="$($SNAP/bin/uname -m)"
-export LD_LIBRARY_PATH="$SNAP_LIBRARY_PATH:$LD_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu"
 
 source $SNAP/actions/common/utils.sh
+use_snap_env
 
 if ! [ -e "$SNAP_DATA/var/lock/clustered.lock" ]; then
   echo "Not a worker node, exiting"
