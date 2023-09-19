@@ -195,7 +195,7 @@ jobs:
           sudo -E bash -x -c "./tests/libs/airgap.sh --distro ubuntu:20.04 --channel $PWD/build/microk8s.snap"
 
   test-spread:
-    name: Test airgap installation
+    name: Test microk8s on multi distros
     runs-on: ubuntu-20.04
     needs: build
     strategy:
