@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+yum install epel-release -y
+yum install sudo -y
+yum install fuse squashfuse -y
+yum install snapd -y
+systemctl enable --now snapd.socket
+ln -s /var/lib/snapd/snap /snap
+yum install python3-pip  -y
+yum install docker -y
+pip3 install pytest requests pyyaml sh
+
+# wait for the snapd seeding to take place!
+n=0
+until [ $n -ge 7 ]
+do
+  sudo snap install core20 && break  # substitute your command here
+  n=$[$n+1]
+  sleep 10
+done
