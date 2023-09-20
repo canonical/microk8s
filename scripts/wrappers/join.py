@@ -1007,6 +1007,7 @@ If you would still like to join the cluster as a control plane node, use:
         join_etcd(connection_parts, verify)
 
     unmark_join_in_progress()
+    print("Successfully joined the cluster.")
     sys.exit(0)
 
 
