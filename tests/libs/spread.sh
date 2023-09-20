@@ -19,7 +19,7 @@ function run_spread_tests() {
   fi
 
   lxc exec "$NAME" -- microk8s status --wait-ready
-  lxc exec "$NAME" -- microk8s kubectl wait pod --all --for=condition=Ready -A --timeout=90s
+  lxc exec "$NAME" -- microk8s kubectl wait pod --all --for=condition=Ready -A --timeout=300s
   lxc exec "$NAME" -- script -e -c "pytest -s /root/tests/test-simple.py"
 }
 
