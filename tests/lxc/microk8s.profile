@@ -4,7 +4,7 @@ config:
   linux.kernel_modules: ip_vs,ip_vs_rr,ip_vs_wrr,ip_vs_sh,ip_tables,ip6_tables,netlink_diag,nf_nat,overlay,br_netfilter
   raw.lxc: |
     lxc.apparmor.profile=unconfined
-    lxc.mount.auto=proc:rw sys:rw cgroup-full:rw:force
+    lxc.mount.auto=proc:rw sys:rw cgroup:rw
     lxc.cgroup.devices.allow=a
     lxc.cap.drop=
   security.nesting: "true"
