@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 source tests/libs/utils.sh
 
 function run_spread_tests() {
@@ -19,6 +21,7 @@ function run_spread_tests() {
   fi
 
   lxc exec "$NAME" -- /snap/bin/microk8s status --wait-ready
+  sleep 5
   lxc exec "$NAME" -- /snap/bin/microk8s kubectl wait pod --all --for=condition=Ready -A --timeout=300s
   lxc exec "$NAME" -- /snap/bin/microk8s kubectl get all -A
   lxc exec "$NAME" -- script -e -c "pytest -s /root/tests/test-simple.py"
