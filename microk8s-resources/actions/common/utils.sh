@@ -547,8 +547,7 @@ wait_for_service_shutdown() {
 
 get_default_ip() {
     # Get the IP of the default interface
-    local DEFAULT_INTERFACE="$($SNAP/sbin/ip route show default | $SNAP/usr/bin/gawk '{for(i=1; i<NF; i++) if($i=="dev") print$(i+1)}' | head -1)"
-    local IP_ADDR="$($SNAP/sbin/ip -o -4 addr list "$DEFAULT_INTERFACE" | $SNAP/usr/bin/gawk '{print $4}' | $SNAP/usr/bin/cut -d/ -f1 | head -1)"
+    local IP_ADDR="$($SNAP/sbin/ip route get 255.255.255.255 | $SNAP/usr/bin/gawk '{for(i=1; i<NF; i++) if($i=="src") print$(i+1)}' | head -1)"
     if [[ -z "$IP_ADDR" ]]
     then
         echo "none"
