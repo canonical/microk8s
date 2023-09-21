@@ -132,12 +132,12 @@ extraSANs:
             except CalledProcessError:
                 print("Will not test the metallb addon")
 
-        if is_ipv6_configured:
-            try:
-                validate_dual_stack()
-                test_matrix["dual_stack"] = validate_dual_stack
-            except CalledProcessError:
-                print("Will not test the dual stack configuration")
+            if is_ipv6_configured:
+                try:
+                    validate_dual_stack()
+                    test_matrix["dual_stack"] = validate_dual_stack
+                except CalledProcessError:
+                    print("Will not test the dual stack configuration")
 
         # Refresh the snap to the target
         if upgrade_to.endswith(".snap"):
