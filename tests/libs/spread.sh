@@ -21,10 +21,13 @@ function run_spread_tests() {
   fi
 
   lxc exec "$NAME" -- /snap/bin/microk8s status --wait-ready
-  sleep 5
+  sleep 45
   lxc exec "$NAME" -- /snap/bin/microk8s kubectl wait pod --all --for=condition=Ready -A --timeout=300s
   lxc exec "$NAME" -- /snap/bin/microk8s kubectl get all -A
+  lxc exec "$NAME" -- /snap/bin/microk8s kubectl describe po -A
   lxc exec "$NAME" -- script -e -c "pytest -s /root/tests/test-simple.py"
+  lxc exec "$NAME" -- /snap/bin/microk8s kubectl get all -A
+  lxc exec "$NAME" -- /snap/bin/microk8s kubectl describe po -A
 }
 
 TEMP=$(getopt -o "l,h" \
