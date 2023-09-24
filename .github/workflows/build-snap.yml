@@ -226,6 +226,7 @@ jobs:
           path: build
       - name: Initialize LXD
         run: |
+          sudo apt install apparmor apparmor-utils -y
           sudo lxd init --auto
           sudo lxc network set lxdbr0 ipv6.address=none
           sudo usermod --append --groups lxd $USER

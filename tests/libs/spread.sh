@@ -15,12 +15,12 @@ function run_spread_tests() {
   if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
   then
     lxc file push "${TO_CHANNEL}" "$NAME"/tmp/microk8s_latest_amd64.snap
-    lxc exec "$NAME" -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic
+    for i in {1..5}; do lxc exec "$NAME" -- snap install /tmp/microk8s_latest_amd64.snap --dangerous --classic && break || sleep 5; done
   else
     lxc exec "$NAME" -- snap install microk8s --channel="${TO_CHANNEL}" --classic
   fi
 
-  lxc exec "$NAME" -- /snap/bin/microk8s status --wait-ready
+  lxc exec "$NAME" -- /snap/bin/microk8s status --wait-ready --timeout 300
   sleep 45
   lxc exec "$NAME" -- /snap/bin/microk8s kubectl wait pod --all --for=condition=Ready -A --timeout=300s
   lxc exec "$NAME" -- /snap/bin/microk8s kubectl get all -A
