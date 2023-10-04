@@ -39,12 +39,12 @@ logger = logging.getLogger(__name__)
 
 
 _MULTIPASS_RELEASES_API_URL = "https://api.github.com/repos/canonical/multipass/releases"
-_MULTIPASS_DL_VERSION = "1.12.0"
+_MULTIPASS_DL_VERSION = "1.12.2"
 _MULTIPASS_DL_NAME = "multipass-{version}+win-win64.exe".format(version=_MULTIPASS_DL_VERSION)
 
 # Download multipass installer and calculate hash:
 #   python3 -c "from installer.common.file_utils import calculate_sha3_384; print(calculate_sha3_384('$HOME/Downloads/multipass-1.11.1+win-win64.exe'))"  # noqa: E501
-_MULTIPASS_DL_SHA3_384 = "ddba66059052a67fa6a363729b75aca374591bc5a2531c938dd70d63f683c22108d5c2ab77025b818b31f69103228eee"  # noqa: E501
+_MULTIPASS_DL_SHA3_384 = "9031c8fc98b941df1094a832c356e12f281c70d0eb10bee15b5576c61af4c8a17ef32b833f0043c8df0e04897e69c8bc"  # noqa: E501
 
 
 def windows_reload_multipass_path_env():
