@@ -60,6 +60,15 @@ function run_gpu_addon_test() {
   fi
 }
 
+function run_microceph_addon_test() {
+  if [ -f "/var/snap/microk8s/common/addons/core/tests/test-addons.py" ] &&
+   grep test_rook_ceph_integration /var/snap/microk8s/common/addons/core/tests/test-addons.py -q
+  then
+    timeout 3600 pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py -k test_rook_ceph_integration
+  fi
+}
+
+
 function post_addons_tests() {
   local NAME=$1
   lxc exec "$NAME" -- microk8s reset
@@ -114,5 +123,6 @@ then
   run_community_addons_tests "$NAME"
   run_eksd_addons_tests
   run_gpu_addon_test
+  run_microceph_addon_test
   post_addons_tests "$NAME"
 fi
