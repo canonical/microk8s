@@ -1,6 +1,6 @@
 # Contributor Guide
 
-MicroK8s is open source ([Apache License 2.0](./LICENSE)) and actively seeks any community contibutions for code, add-ons, suggestions and documentation.
+MicroK8s is open source ([Apache License 2.0](./LICENSE)) and actively seeks any community contributions for code, add-ons, suggestions and documentation.
 Many of the features currently part of MicroK8s originated in the community, and we are very keen for that to continue. This page details a few notes, 
 workflows and suggestions for how to make contributions most effective and help us all build a better MicroK8s for everyone - please give them a read before
 working on any contributions.
