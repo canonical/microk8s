@@ -91,7 +91,7 @@ jobs:
 
   test-addons-community:
     name: Test community addons
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: build
 
     steps:
@@ -110,13 +110,14 @@ jobs:
         with:
           name: microk8s.snap
           path: build
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
       - name: Running addons tests
         run: |
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
           sudo microk8s enable community
+          export UNDER_TIME_PRESSURE="True"
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/; pytest -s -ra ./tests/"
 
   test-addons-core-upgrade:
