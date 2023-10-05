@@ -110,6 +110,8 @@ jobs:
         with:
           name: microk8s.snap
           path: build
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Running addons tests
         run: |
           set -x
