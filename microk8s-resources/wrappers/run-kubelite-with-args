@@ -60,7 +60,7 @@ then
   fi
 fi
 
-# Sanatize arguments
+# Sanitize arguments
 if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ]
 then
   echo "Skipping argument sanitisation."
