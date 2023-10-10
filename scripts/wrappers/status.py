@@ -143,6 +143,7 @@ def print_yaml(isReady, enabled_addons, disabled_addons):
             print("{:>4}description: {:<1}".format("", disabled["description"]))
             print("{:>4}version: {:<1}".format("", disabled["version"]))
             print("{:>4}status: disabled".format(""))
+            print(disabled)
     else:
         print(
             "{:>2}{} {}".format(

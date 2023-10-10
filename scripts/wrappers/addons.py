@@ -95,6 +95,7 @@ def validate_addons_file(repo_dir: Path) -> None:
                                 "description": {"type": "string"},
                                 "version": {"type": "string"},
                                 "check_status": {"type": "string"},
+                                "regex_check_status": {"type": "string"},
                                 "supported_architectures": {
                                     "type": "array",
                                     "items": {
