@@ -3,6 +3,7 @@ import getpass
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import time
@@ -550,11 +551,15 @@ def unprotected_xable(action: str, addon_args: list):
         wait_for_ready(timeout=30, with_ready_node=False)
 
 
-def is_enabled(addon, item):
-    if addon in item:
+def is_enabled(addon, row):
+    check_status = addon["check_status"]
+    if "regex_check_status" in addon and addon["regex_check_status"]:
+        regex_check_status = addon["regex_check_status"]
+        return re.search(regex_check_status, row)
+    elif check_status in row:
         return True
     else:
-        filepath = os.path.expandvars(addon)
+        filepath = os.path.expandvars(check_status)
         return os.path.isfile(filepath)
 
 
@@ -569,7 +574,7 @@ def get_status(available_addons, isReady):
         for addon in available_addons:
             found = False
             for row in kube_output.split("\n"):
-                if is_enabled(addon["check_status"], row):
+                if is_enabled(addon, row):
                     enabled.append(addon)
                     found = True
                     break
