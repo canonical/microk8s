@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -x
+set -ex
 
 source tests/libs/utils.sh
 
@@ -20,14 +20,13 @@ function run_spread_tests() {
     lxc exec "$NAME" -- snap install microk8s --channel="${TO_CHANNEL}" --classic
   fi
 
+  lxc exec "$NAME" -- /snap/bin/microk8s stop
+  lxc exec "$NAME" -- sed -i '/\[plugins."io.containerd.grpc.v1.cri"\]/a \ \ disable_apparmor=true' /var/snap/microk8s/current/args/containerd-template.toml
+  lxc exec "$NAME" -- /snap/bin/microk8s start
   lxc exec "$NAME" -- /snap/bin/microk8s status --wait-ready --timeout 300
   sleep 45
   lxc exec "$NAME" -- /snap/bin/microk8s kubectl wait pod --all --for=condition=Ready -A --timeout=300s
-  lxc exec "$NAME" -- /snap/bin/microk8s kubectl get all -A
-  lxc exec "$NAME" -- /snap/bin/microk8s kubectl describe po -A
   lxc exec "$NAME" -- script -e -c "pytest -s /root/tests/test-simple.py"
-  lxc exec "$NAME" -- /snap/bin/microk8s kubectl get all -A
-  lxc exec "$NAME" -- /snap/bin/microk8s kubectl describe po -A
 }
 
 TEMP=$(getopt -o "l,h" \
