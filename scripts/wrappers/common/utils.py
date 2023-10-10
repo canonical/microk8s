@@ -553,15 +553,10 @@ def unprotected_xable(action: str, addon_args: list):
 
 def is_enabled(addon, row):
     check_status = addon["check_status"]
-    print(addon)
     if "regex_check_status" in addon and addon["regex_check_status"]:
         regex_check_status = addon["regex_check_status"]
-        print(addon["regex_check_status"])
-        print("regex_check_status in row")
-        print(bool(re.search(regex_check_status, row)))
-        return bool(re.search(regex_check_status, row))
+        return re.search(regex_check_status, row)
     elif check_status in row:
-        print("check_status in row")
         return True
     else:
         filepath = os.path.expandvars(check_status)
