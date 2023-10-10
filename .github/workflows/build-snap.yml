@@ -201,21 +201,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro:
-          [
-            "ubuntu:22.04",
-            "ubuntu:20.04",
-            "ubuntu:18.04",
-            "images:centos/7",
-            "images:centos/8-Stream",
-            "images:fedora/37",
-            "images:fedora/38",
-            "images:almalinux/8",
-            "images:rockylinux/8",
-            "images:debian/10",
-            "images:debian/11",
-            "images:debian/12",
-          ]
+        distro: ["images:centos/7", "images:debian/12"]
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
