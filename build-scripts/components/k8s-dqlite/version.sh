@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "master"
+echo "MK-1394/update-dqlite"
