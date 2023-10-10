@@ -555,7 +555,7 @@ def is_enabled(addon, row):
     check_status = addon["check_status"]
     if "regex_check_status" in addon and addon["regex_check_status"]:
         regex_check_status = addon["regex_check_status"]
-        return re.search(regex_check_status, row)
+        return bool(re.search(regex_check_status, row))
     elif check_status in row:
         return True
     else:
