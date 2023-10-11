@@ -76,11 +76,11 @@ class TestSimple(object):
                     "jsonpath={.spec.clusterIP}",
                 ]
             )
-            response = requests.get(f"http://{output.decode('utf-8')}:80")
+            response = requests.get(f"http://{output.decode('utf-8')}:80", timeout=15)
         else:
             # Wait for ingress to be ready
             time.sleep(3)
-            response = requests.get("http://127.0.0.1:80")
+            response = requests.get("http://127.0.0.1:80", timeout=15)
 
         subprocess.run(
             ["microk8s", "kubectl", "delete", "-f", "tests/templates/simple-deploy.yaml"],

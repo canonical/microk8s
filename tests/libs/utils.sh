@@ -14,6 +14,8 @@ function create_machine() {
 
   # Allow for the machine to boot and get an IP
   sleep 20
+  # CentOS 8,9 variants(rocky, alma) don't ship with tar, such a dirty hack...
+  lxc exec "$NAME" -- /bin/bash -c "yum install tar -y || true"
   tar cf - ./tests | lxc exec "$NAME" -- tar xvf - -C /root
   DISTRO_DEPS_TMP="${DISTRO//:/_}"
   DISTRO_DEPS="${DISTRO_DEPS_TMP////-}"
@@ -22,7 +24,7 @@ function create_machine() {
   sleep 20
 
   trap 'lxc delete '"${NAME}"' --force || true' EXIT
-  if [ "$#" -ne 1 ]
+  if [ ! -z "${PROXY}" ]
   then
     lxc exec "$NAME" -- /bin/bash -c "echo HTTPS_PROXY=$PROXY >> /etc/environment"
     lxc exec "$NAME" -- /bin/bash -c "echo https_proxy=$PROXY >> /etc/environment"
