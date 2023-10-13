@@ -227,8 +227,8 @@ remove_args() {
 }
 
 
-sanitize_args_kubeapi_server() {
-  # Function to sanitize arguments for API server
+sanitise_args_kubeapi_server() {
+  # Function to sanitise arguments for API server
   local args=(
     # Removed klog flags from 1.26+
     # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
@@ -262,8 +262,8 @@ sanitize_args_kubeapi_server() {
 }
 
 
-sanitize_args_kubelet() {
-  # Function to sanitize arguments for kubelet
+sanitise_args_kubelet() {
+  # Function to sanitise arguments for kubelet
   local args=(
     # Removed klog flags from 1.26+
     # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
@@ -304,8 +304,8 @@ sanitize_args_kubelet() {
 }
 
 
-sanitize_args_kube_proxy() {
-  # Function to sanitize arguments for kube-proxy
+sanitise_args_kube_proxy() {
+  # Function to sanitise arguments for kube-proxy
 
   # userspace proxy-mode is not allowed on the 1.26+ k8s
   # https://kubernetes.io/blog/2022/11/18/upcoming-changes-in-kubernetes-1-26/#removal-of-kube-proxy-userspace-modes
@@ -336,8 +336,8 @@ sanitize_args_kube_proxy() {
 }
 
 
-sanitize_args_kube_controller_manager() {
-  # Function to sanitize arguments for kube-controller-manager
+sanitise_args_kube_controller_manager() {
+  # Function to sanitise arguments for kube-controller-manager
   local args=(
     # Removed klog flags from 1.26+
     # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
@@ -365,8 +365,8 @@ sanitize_args_kube_controller_manager() {
 }
 
 
-sanitize_args_kube_scheduler() {
-  # Function to sanitize arguments for kube-scheduler
+sanitise_args_kube_scheduler() {
+  # Function to sanitise arguments for kube-scheduler
   local args=(
     # Removed klog flags from 1.26+
     # https://github.com/kubernetes/enhancements/blob/master/keps/sig-instrumentation/2845-deprecate-klog-specific-flags-in-k8s-components/README.md
