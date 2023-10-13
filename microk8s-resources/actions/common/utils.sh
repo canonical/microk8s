@@ -227,7 +227,7 @@ remove_args() {
 }
 
 
-sanatise_argskubeapi_server() {
+sanitize_args_kubeapi_server() {
   # Function to sanitize arguments for API server
   local args=(
     # Removed klog flags from 1.26+
@@ -262,7 +262,7 @@ sanatise_argskubeapi_server() {
 }
 
 
-sanatise_argskubelet() {
+sanitize_args_kubelet() {
   # Function to sanitize arguments for kubelet
   local args=(
     # Removed klog flags from 1.26+
@@ -304,7 +304,7 @@ sanatise_argskubelet() {
 }
 
 
-sanatise_argskube_proxy() {
+sanitize_args_kube_proxy() {
   # Function to sanitize arguments for kube-proxy
 
   # userspace proxy-mode is not allowed on the 1.26+ k8s
@@ -336,7 +336,7 @@ sanatise_argskube_proxy() {
 }
 
 
-sanatise_argskube_controller_manager() {
+sanitize_args_kube_controller_manager() {
   # Function to sanitize arguments for kube-controller-manager
   local args=(
     # Removed klog flags from 1.26+
@@ -365,7 +365,7 @@ sanatise_argskube_controller_manager() {
 }
 
 
-sanatise_argskube_scheduler() {
+sanitize_args_kube_scheduler() {
   # Function to sanitize arguments for kube-scheduler
   local args=(
     # Removed klog flags from 1.26+
