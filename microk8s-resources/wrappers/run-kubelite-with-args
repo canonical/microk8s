@@ -61,11 +61,11 @@ then
 fi
 
 # Sanitize arguments
-if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ]
+if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] || [ -e $SNAP_DATA/var/lock/no-arg-sanitization ]
 then
-  echo "Skipping argument sanitisation."
+  echo "Skipping argument sanitization."
 else
-  echo "Sanitise arguments."
+  echo "Sanitize arguments."
   sanitize_args_kubeapi_server
   sanitize_args_kubelet
   sanitize_args_kube_proxy
