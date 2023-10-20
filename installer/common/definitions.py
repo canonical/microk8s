@@ -28,7 +28,7 @@ DEFAULT_CORES: int = 2
 DEFAULT_MEMORY_GB: int = 4
 DEFAULT_DISK_GB: int = 50
 DEFAULT_ASSUME: bool = False
-DEFAULT_CHANNEL: str = "1.27/stable"
+DEFAULT_CHANNEL: str = "1.28/stable"
 DEFAULT_IMAGE: str = "22.04"
 
 MIN_CORES: int = 2
