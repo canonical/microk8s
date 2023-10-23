@@ -220,7 +220,7 @@ function suggest_fixes {
     printf -- 'The change can be made persistent with: sudo apt-get install iptables-persistent\n'
   fi
 
-  if ! is_strict && [ /snap/core18/current/usr/bin/which ufw &> /dev/null ]
+  if ! is_strict && [ /snap/core20/current/usr/bin/which ufw &> /dev/null ]
   then
     ufw=$(ufw status)
     if echo $ufw | grep -q "Status: active"

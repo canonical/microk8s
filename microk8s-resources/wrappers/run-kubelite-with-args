@@ -108,18 +108,14 @@ then
 fi
 
 #UFW configuration
-if ! is_strict && (ufw version &> /dev/null)
-then
-  ufw=$(ufw status)
-  if echo $ufw | grep -q "Status: active" &&
-     ! [ -e ${SNAP_DATA}/var/lock/skip.ufw ]
-  then
+if ! [ -e ${SNAP_DATA}/var/lock/skip.ufw ] && ! is_strict && (run_host ufw version &> /dev/null); then
+  if run_host ufw status | grep -q "Status: active"; then
     # These succeed regardless of whether the rule exists already or not
     echo "Found enabled UFW: adding rules to allow in/out traffic on 'cali+' and 'vxlan.calico' devices"
-    if ! ufw allow in on vxlan.calico ||
-       ! ufw allow out on vxlan.calico ||
-       ! ufw allow in on cali+ ||
-       ! ufw allow out on cali+
+    if ! run_host ufw allow in on vxlan.calico ||
+       ! run_host ufw allow out on vxlan.calico ||
+       ! run_host ufw allow in on cali+ ||
+       ! run_host ufw allow out on cali+
     then
       echo "Failed to update UFW rules. You may want to set them manually."
     fi
@@ -204,7 +200,7 @@ then
   # NOTE(neoaggelos): https://github.com/canonical/microk8s/issues/3085
   # Attempt to use modprobe from the host, otherwise fallback to the one
   # provided with the snap.
-  if /sbin/modprobe br_netfilter || modprobe br_netfilter
+  if run_host /sbin/modprobe br_netfilter || modprobe br_netfilter
   then
     echo "Successfully loaded br_netfilter module."
   else
