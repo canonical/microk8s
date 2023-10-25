@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -eu
+
+source $SNAP/actions/common/utils.sh
+
+use_snap_env
+
+export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
+
+"${SNAP}/usr/bin/openssl" "${@}"
