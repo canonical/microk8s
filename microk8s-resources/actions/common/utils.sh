@@ -613,10 +613,21 @@ create_user_kubeconfigs() {
 }
 
 create_worker_kubeconfigs() {
-  # $1: (Optional) API server IP
-  # $2: (Optional) API server port
-  apiserver="${1}"
-  port="${2}"
+  # $1: (Optional) API server IP, defaults to IP address from traefik-template.yaml (or empty)
+  # $2: (Optional) API server port, defaults to port from traefik-template.yaml
+
+  # NOTE(neoaggelos): Examples for how "${var%:*}" and ${var##*:} below behave
+  # apiserver_proxy_listen=":16443"       => apiserver_default=""           port_default="16443"
+  # apiserver_proxy_listen="1.1.1.1:6443" => apiserver_default="1.1.1.1"    port_default="6443"
+  # apiserver_proxy_listen="[::1]:16443"  => apiserver_default="[::1]"      port_default="16443"
+  # apiserver_proxy_listen=""             => apiserver_default=""           port_default=""
+
+  local apiserver_proxy_listen="$($SNAP/bin/cat $SNAP_DATA/args/traefik/traefik-template.yaml | $SNAP/bin/grep "address:" | $SNAP/usr/bin/cut -d'"' -f2)"
+  local apiserver_default="${apiserver_proxy_listen%:*}"    # drop last ':' and everything after
+  local port_default="${apiserver_proxy_listen##*:}"        # drop last ':' and everything before
+
+  local apiserver="${1:-$apiserver_default}"
+  local port="${2:-$port_default}"
 
   hostname=$($SNAP/bin/hostname | $SNAP/usr/bin/tr '[:upper:]' '[:lower:]')
   create_kubeconfig_x509 "proxy.config" "system:kube-proxy" ${SNAP_DATA}/certs/proxy.crt ${SNAP_DATA}/certs/proxy.key ${SNAP_DATA}/certs/ca.remote.crt "${apiserver}" "${port}"
