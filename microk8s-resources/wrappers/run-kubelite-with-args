@@ -67,17 +67,17 @@ then
   fi
 fi
 
-# Sanatize arguments
-if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ] 
-then 
+# Sanitise arguments
+if [ -e $SNAP_DATA/var/lock/no-arg-sanitisation ]
+then
   echo "Skipping argument sanitisation."
 else
   echo "Sanitise arguments."
-  sanatise_argskubeapi_server
-  sanatise_argskubelet
-  sanatise_argskube_proxy
-  sanatise_argskube_scheduler
-  sanatise_argskube_controller_manager
+  sanitise_args_kubeapi_server
+  sanitise_args_kubelet
+  sanitise_args_kube_proxy
+  sanitise_args_kube_scheduler
+  sanitise_args_kube_controller_manager
 fi
 
 ## Kubelet configuration
