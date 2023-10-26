@@ -26,7 +26,8 @@ jobs:
           sudo snap install snapcraft --classic
       - name: Install snapd from candidate
         run: |
-          sudo snap refresh snapd --channel=latest/beta
+          # TODO(neoaggelos): revert this after latest/beta is working again
+          sudo snap refresh snapd --channel=latest/stable
       - name: Build snap
         run: |
           sg lxd -c 'snapcraft --use-lxd'
