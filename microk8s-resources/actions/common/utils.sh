@@ -224,8 +224,8 @@ remove_args() {
 }
 
 
-sanatise_argskubeapi_server() {
-  # Function to sanitize arguments for API server
+sanitise_args_kubeapi_server() {
+  # Function to sanitise arguments for API server
   local args=(
     # Remove insecure-port from 1.24+
     "insecure-port"
@@ -242,8 +242,8 @@ sanatise_argskubeapi_server() {
 }
 
 
-sanatise_argskubelet() {
-  # Function to sanitize arguments for kubelet
+sanitise_args_kubelet() {
+  # Function to sanitise arguments for kubelet
   local args=(
     # Removed dockershim flags from 1.24+
     # https://github.com/kubernetes/enhancements/issues/2221
@@ -264,8 +264,9 @@ sanatise_argskubelet() {
 }
 
 
-sanatise_argskube_controller_manager() {
-  # Function to sanitize arguments for kube-controller-manager
+
+sanitise_args_kube_controller_manager() {
+  # Function to sanitise arguments for kube-controller-manager
   local args=(
     # Remove insecure ports from 1.24+
     # https://github.com/kubernetes/kubernetes/pull/96216/files
@@ -277,8 +278,8 @@ sanatise_argskube_controller_manager() {
 }
 
 
-sanatise_argskube_scheduler() {
-  # Function to sanitize arguments for kube-scheduler
+sanitise_args_kube_scheduler() {
+  # Function to sanitise arguments for kube-scheduler
   local args=(
     # Remove insecure ports from 1.24+
     # https://github.com/kubernetes/kubernetes/pull/96345/files
