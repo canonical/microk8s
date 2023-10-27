@@ -1,0 +1,39 @@
+name: Build custom MicroK8s flavors
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        patch: [strict, fips]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Apply patches
+        run: |
+          git config --global user.email microk8s@canonical.com
+          git config --global user.name microk8s-bot
+          git am build-scripts/patches/${{ matrix.patch }}/*.patch
+      - name: Install lxd
+        run: |
+          sudo lxd init --auto
+          sudo usermod --append --groups lxd $USER
+          sg lxd -c 'lxc version'
+      - name: Install snapcraft
+        run: |
+          sudo snap install snapcraft --classic
+      - name: Build snap
+        run: |
+          sg lxd -c 'snapcraft --use-lxd'
+          sudo mv microk8s*.snap microk8s.snap
+      - name: Uploading snap
+        uses: actions/upload-artifact@v3
+        with:
+          name: microk8s-${{ matrix.patch }}.snap
+          path: microk8s.snap

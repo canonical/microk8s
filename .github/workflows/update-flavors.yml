@@ -1,0 +1,28 @@
+name: Update custom MicroK8s flavor branches
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { patch: fips, branch: autoupdate/fips }
+          - { patch: strict, branch: autoupdate/strict }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Switch to branch
+        run: |
+          git checkout -b ${{ matrix.branch }}
+      - name: Apply patches
+        run: |
+          git config --global user.email microk8s@canonical.com
+          git config --global user.name microk8s-bot
+          git am build-scripts/patches/${{ matrix.patch }}/*.patch
+      - name: Push branch
+        run: |
+          git push origin --force ${{ matrix.branch }}
