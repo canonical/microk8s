@@ -12,4 +12,10 @@ fi
 
 exit_if_stopped
 
+set -a
+if [ -e "${SNAP_DATA}/args/fips-env" ]; then
+  . "${SNAP_DATA}/args/fips-env"
+fi
+set +a
+
 "${SNAP}/bin/helm" --kubeconfig="${SNAP_DATA}"/credentials/client.config "$@"

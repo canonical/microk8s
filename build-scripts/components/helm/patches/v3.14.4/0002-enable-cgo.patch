@@ -1,0 +1,19 @@
+From 88e5f3826d2b8343609824d0224c313f8c929853 Mon Sep 17 00:00:00 2001
+From: louiseschmidtgen <louise.schmidtgen@canonical.com>
+Date: Fri, 10 Jan 2025 12:41:56 +0100
+Subject: [PATCH] enable cgo
+
+---
+diff --git a/Makefile b/Makefile
+index c8ced67..0a32341 100644
+--- a/Makefile
++++ b/Makefile
+@@ -24,7 +24,7 @@ TESTS       := .
+ TESTFLAGS   :=
+ LDFLAGS     := -w -s
+ GOFLAGS     :=
+-CGO_ENABLED ?= 0
++CGO_ENABLED := 1
+ 
+ # Rebuild the binary if any of these files change
+ SRC := $(shell find . -type f -name '*.go' -print) go.mod go.sum

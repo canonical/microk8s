@@ -26,6 +26,12 @@ fi
 
 export DEFAULT_INTERFACE_IP_ADDR="$(get_default_ip)"
 
+set -a
+if [ -e "${SNAP_DATA}/args/fips-env" ]; then
+  . "${SNAP_DATA}/args/fips-env"
+fi
+set +a
+
 # This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/etcd))"
 exec "$SNAP/etcd" "${args[@]}"

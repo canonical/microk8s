@@ -4,8 +4,16 @@ set -eu
 
 source $SNAP/actions/common/utils.sh
 
-use_snap_env
+set -a
+if [ -e "${SNAP_DATA}/args/fips-env" ]; then
+  . "${SNAP_DATA}/args/fips-env"
+fi
+set +a
 
-export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
-
-"${SNAP}/usr/bin/openssl" "${@}"
+if [[ -v OPENSSL_EXECUTABLE ]]; then
+  exec "${OPENSSL_EXECUTABLE}" "${@}"
+else
+  use_snap_env
+  export OPENSSL_CONF="${SNAP}/etc/ssl/openssl.cnf"
+  ${SNAP}/usr/bin/openssl "$@"
+fi

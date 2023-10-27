@@ -21,6 +21,12 @@ fi
 
 sed 's@${SNAP}@'"${SNAP}"'@g;s@${SNAP_DATA}@'"${SNAP_DATA}"'@g' $SNAP_DATA/args/traefik/traefik-template.yaml > $SNAP_DATA/args/traefik/traefik.yaml
 
+set -a
+if [ -e "${SNAP_DATA}/args/fips-env" ]; then
+  . "${SNAP_DATA}/args/fips-env"
+fi
+set +a
+
 # This is really the only way I could find to get the args passed in correctly.
 declare -a args="($(cat $SNAP_DATA/args/apiserver-proxy))"
 exec "$SNAP/bin/cluster-agent" apiserver-proxy "${args[@]}"

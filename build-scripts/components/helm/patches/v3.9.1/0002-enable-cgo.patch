@@ -1,0 +1,33 @@
+From 76f154cf345ffc7f2b4b9c0e623551c744249d60 Mon Sep 17 00:00:00 2001
+From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
+Date: Fri, 27 Oct 2023 17:01:33 +0000
+Subject: [PATCH] enable cgo
+
+---
+ Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 0a7b326..39cee3f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -77,7 +77,7 @@ all: build
+ build: $(BINDIR)/$(BINNAME)
+
+ $(BINDIR)/$(BINNAME): $(SRC)
+-	GO111MODULE=on CGO_ENABLED=0 go build $(GOFLAGS) -trimpath -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o '$(BINDIR)'/$(BINNAME) ./cmd/helm
++	GO111MODULE=on CGO_ENABLED=1 go build $(GOFLAGS) -trimpath -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o '$(BINDIR)'/$(BINNAME) ./cmd/helm
+
+ # ------------------------------------------------------------------------------
+ #  install
+@@ -165,7 +165,7 @@ $(GOIMPORTS):
+ .PHONY: build-cross
+ build-cross: LDFLAGS += -extldflags "-static"
+ build-cross: $(GOX)
+-	GOFLAGS="-trimpath" GO111MODULE=on CGO_ENABLED=0 $(GOX) -parallel=3 -output="_dist/{{.OS}}-{{.Arch}}/$(BINNAME)" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' ./cmd/helm
++	GOFLAGS="-trimpath" GO111MODULE=on CGO_ENABLED=1 $(GOX) -parallel=3 -output="_dist/{{.OS}}-{{.Arch}}/$(BINNAME)" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' ./cmd/helm
+
+ .PHONY: dist
+ dist:
+--
+2.25.1
