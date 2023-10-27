@@ -28,6 +28,12 @@ then
   export EDITOR="${SNAP}/bin/nano"
 fi
 
+set -a
+if [ -e "${SNAP_DATA}/args/fips-env" ]; then
+  . "${SNAP_DATA}/args/fips-env"
+fi
+set +a
+
 declare -a args="($(cat $SNAP_DATA/args/kubectl))"
 if [ -n "${args[@]-}" ]
 then

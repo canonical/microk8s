@@ -32,6 +32,12 @@ export ETCDCTL_API=3
 # TODO get this from a file
 data="$(cat $SNAP_DATA/args/flannel-network-mgr-config)"
 
+set -a
+if [ -e "${SNAP_DATA}/args/fips-env" ]; then
+  . "${SNAP_DATA}/args/fips-env"
+fi
+set +a
+
 # Prepare etcd configuration for flannel, iff an etcd endpoint is set.
 # Skip this part if an alternate data store is used (e.g. Kubernetes).
 if [ ! -z "$etcd_endpoints" ]; then
