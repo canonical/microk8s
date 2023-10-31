@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import socket
+import time
 
 from common.cluster.utils import (
     get_callback_token,
@@ -43,12 +44,16 @@ def get_cluster_agent_endpoints(include_self=False):
         hostname = socket.gethostname()
         token = get_callback_token()
 
-        subprocess.check_call(
-            [MICROK8S_STATUS, "--wait-ready", "--timeout=60"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        stdout = subprocess.check_output([KUBECTL, "get", "node", "-o", "json"])
+        for attempt in range(10):
+            try:
+                stdout = subprocess.check_output([KUBECTL, "get", "node", "-o", "json"])
+                break
+            except subprocess.CalledProcessError as e:
+                print("Failed to list nodes (try {}): {}".format(attempt + 1, e), file=sys.stderr)
+                if attempt == 9:
+                    raise e
+                time.sleep(3)
+
         info = json.loads(stdout)
         for node_info in info["items"]:
             node_ip = get_internal_ip_from_get_node(node_info)
