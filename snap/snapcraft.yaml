@@ -176,7 +176,6 @@ parts:
     stage:
       - -etc/bash_completion.d
       - -etc/cron.d
-      - -etc/default
       - -etc/depmod.d
       - -etc/ldap
       - -etc/logrotate.d
@@ -187,8 +186,6 @@ parts:
       - -etc/perl
       - -etc/rsyslog.d
       - -etc/sudoers.d
-      - -etc/sysctl.d
-      - -etc/sysctl.conf
       - -lib/systemd/system
       - -usr/bin/perl*
       - -usr/include
