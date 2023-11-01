@@ -166,6 +166,7 @@ parts:
       - python3-rbd
       - sed
       - tar
+      - ufw
       - util-linux
       - zfsutils-linux
     stage:
@@ -174,11 +175,13 @@ parts:
       - -etc/default
       - -etc/depmod.d
       - -etc/ldap
+      - -etc/logrotate.d
       - -etc/init.d
       - -etc/modprobe.d
       - -etc/network
       - -etc/pam.d
       - -etc/perl
+      - -etc/rsyslog.d
       - -etc/sudoers.d
       - -etc/sysctl.d
       - -etc/sysctl.conf

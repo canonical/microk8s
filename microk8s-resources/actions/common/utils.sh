@@ -1374,11 +1374,6 @@ use_snap_env() {
   mkdir -p "${XDG_RUNTIME_DIR}"
 }
 
-run_host() {
-  # Run a command using the host execution environment
-  PATH="$REAL_PATH" LD_LIBRARY_PATH="$REAL_LD_LIBRARY_PATH" PYTHONPATH="$REAL_PYTHONPATH" "${@}"
-}
-
 # check if this file is run with arguments
 if [[ "$0" == "${BASH_SOURCE}" ]] &&
    [[ ! -z "$1" ]]
