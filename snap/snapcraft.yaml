@@ -160,7 +160,7 @@ parts:
       - libatm1
       - libnss-resolve
       - libnss-myhostname
-      - libnss-machines
+      - libnss-mymachines
       - members
       - nano
       - net-tools
