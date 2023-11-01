@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: nginxdualstack
-          image: rocks.canonical.com/cdk/diverdane/nginxdualstack:1.0.0
+          image: cdkbot/nginxdualstack:1.0.0
           ports:
             - containerPort: 80
 ---

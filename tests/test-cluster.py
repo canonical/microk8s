@@ -1,7 +1,6 @@
 import string
 import random
 import time
-import platform
 import pytest
 import os
 import datetime
@@ -609,11 +608,6 @@ class TestCluster(object):
         # it won't be able to create VMs with IPv6 connectivity.
         not is_ipv6_configured,
         reason="Skipping dual stack tests on VMs which are not lxc based and not dual-stack enabled",
-    )
-    @pytest.mark.skipif(
-        # We do not have IPv6 nginx image for ARM64
-        platform.machine() != "x86_64",
-        reason="Skipping dual stack tests on VMs which are not AMD64",
     )
     def test_dual_stack_cluster(self):
         vm = self.VM[0]
