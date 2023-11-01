@@ -180,9 +180,6 @@ parts:
       - -etc/ldap
       - -etc/logrotate.d
       - -etc/init.d
-      - -etc/modprobe.d
-      - -etc/network
-      - -etc/pam.d
       - -etc/perl
       - -etc/rsyslog.d
       - -etc/sudoers.d
