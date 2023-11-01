@@ -13,8 +13,9 @@ confinement: classic
 base: core20
 assumes: [snapd2.52]
 environment:
-  PYTHONPATH: $SNAP/usr/lib/python3.8:$SNAP/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages
-  PATH: $SNAP/usr/bin:$SNAP/bin:$SNAP/usr/sbin:$SNAP/sbin:$PATH
+  REAL_PATH: $PATH
+  REAL_LD_LIBRARY_PATH: $LD_LIBRARY_PATH
+  REAL_PYTHONPATH: $PYTHONPATH
   SNAPCRAFT_ARCH_TRIPLET: $SNAPCRAFT_ARCH_TRIPLET
 
 parts:
@@ -98,6 +99,8 @@ parts:
     after: [build-deps]
     plugin: autotools
     source: https://www.netfilter.org/pub/libmnl/libmnl-1.0.4.tar.bz2
+    prime:
+      - -usr/local/include
 
   libnftnl:
     after: [libmnl]
@@ -105,6 +108,8 @@ parts:
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
     build-environment:
       - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/lib
+    prime:
+      - -usr/local/include
 
   iptables:
     after: [libnftnl]
@@ -118,7 +123,9 @@ parts:
       - "--exec-prefix=/"
       - "--disable-shared"
       - "--enable-static"
-    prime:
+    stage:
+      - -usr
+      - -lib/pkgconfig
       - -bin/iptables-xml
 
   containerd:
@@ -127,18 +134,6 @@ parts:
     source: build-scripts/components/containerd
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh containerd
     build-attributes: [no-patchelf]
-    stage-packages:
-      - libnss-myhostname
-      - libnss-resolve
-      - libnss-mymachines
-      - conntrack
-      - libssl1.1
-    stage:
-      - -sbin/xtables-multi
-      - -sbin/iptables*
-      - -lib/xtables
-      - -usr/share/doc
-      - -usr/share/man
 
   runc:
     after: [iptables, build-deps]
@@ -150,7 +145,7 @@ parts:
   bash-utils:
     plugin: nil
     stage-packages:
-      - aufs-tools
+      - conntrack
       - coreutils
       - curl
       - diffutils
@@ -163,6 +158,9 @@ parts:
       - jq
       - kmod
       - libatm1
+      - libnss-resolve
+      - libnss-myhostname
+      - libnss-mymachines
       - members
       - nano
       - net-tools
@@ -171,35 +169,35 @@ parts:
       - python3-rados
       - python3-rbd
       - sed
-      - socat
-      - squashfs-tools
       - tar
+      - ufw
       - util-linux
       - zfsutils-linux
     stage:
+      - -etc/bash_completion.d
+      - -etc/cron.d
+      - -etc/depmod.d
+      - -etc/ldap
+      - -etc/logrotate.d
+      - -etc/init.d
+      - -etc/perl
+      - -etc/rsyslog.d
+      - -etc/sudoers.d
+      - -lib/systemd/system
+      - -usr/bin/perl*
+      - -usr/include
+      - -usr/lib/*/*perl*
+      - -usr/share/bash-completion
       - -usr/share/doc
-      - -usr/share/man
-    override-prime: |
-      snapcraftctl prime
-      rm -vf lib/systemd/system/zfs-import.service
-
-  ufw:
-    plugin: nil
-    stage-packages:
-      - ufw
-    stage:
-      - -usr/share/doc
-      - -usr/share/man
-      - -lib/*/*
-      - -sbin/ip*tables*
-      - -sbin/xtables-multi
-      - -usr/bin/iptables-xml
-      - -usr/sbin/ip*tables*
-      - -usr/sbin/nfnl_osf
-      - -usr/lib/*/*
       - -usr/share/doc-base
-      - -usr/share/iptables
+      - -usr/share/info
+      - -usr/share/initramfs-tools
       - -usr/share/lintian
+      - -usr/share/man
+      - -usr/share/nano
+      - -usr/share/perl
+      - -usr/share/perl5
+      - -usr/share/zsh
 
   cluster-agent:
     after: [build-deps]
@@ -290,8 +288,11 @@ parts:
       - python3-click
       - python3-dateutil
     stage:
+      - -usr/lib/python3.9
       - -usr/share/doc
+      - -usr/share/lintian
       - -usr/share/man
+      - -usr/share/python-wheels
 
   bom:
     after:

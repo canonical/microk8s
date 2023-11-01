@@ -110,8 +110,7 @@ fi
 #UFW configuration
 if ! is_strict && (ufw version &> /dev/null)
 then
-  ufw=$(ufw status)
-  if echo $ufw | grep -q "Status: active" &&
+  if ufw status | grep -q "Status: active" &&
      ! [ -e ${SNAP_DATA}/var/lock/skip.ufw ]
   then
     # These succeed regardless of whether the rule exists already or not
