@@ -145,6 +145,7 @@ parts:
   bash-utils:
     plugin: nil
     stage-packages:
+      - conntrack
       - coreutils
       - curl
       - diffutils
@@ -157,6 +158,9 @@ parts:
       - jq
       - kmod
       - libatm1
+      - libnss-resolve
+      - libnss-myhostname
+      - libnss-machines
       - members
       - nano
       - net-tools
