@@ -222,8 +222,7 @@ function suggest_fixes {
 
   if ! is_strict && [ /snap/core20/current/usr/bin/which ufw &> /dev/null ]
   then
-    ufw=$(ufw status)
-    if echo $ufw | grep -q "Status: active"
+    if ufw status | grep -q "Status: active"
     then
       header='\033[0;33m WARNING: \033[0m Firewall is enabled. Consider allowing pod traffic with: \n'
       content=''
