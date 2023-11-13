@@ -307,26 +307,12 @@ def dashboard_proxy() -> None:
             ]
             instance.run(command, hide_output=True)
 
-        command = ["microk8s.kubectl", "-n", "kube-system", "get", "secret"]
-        output = instance.run(command, hide_output=True)
-        secret_name = None
-        for line in output.split(b"\n"):
-            if line.startswith(b"microk8s-dashboard-token"):
-                secret_name = line.split()[0].decode()
-                break
-
-        if not secret_name:
-            echo.error("Cannot find the dashboard secret.")
-
-        command = ["microk8s.kubectl", "-n", "kube-system", "describe", "secret", secret_name]
-        output = instance.run(command, hide_output=True)
-        token = None
-        for line in output.split(b"\n"):
-            if line.startswith(b"token:"):
-                token = line.split()[1].decode()
+        command = ["microk8s.kubectl", "-n", "kube-system", "create", "token", "default"]
+        token = instance.run(command, hide_output=True).decode().strip()
 
         if not token:
-            echo.error("Cannot find token from secret.")
+            echo.error("Could not generate secret token to access dashboard.")
+            exit(1)
 
         ip = instance.get_instance_info().ipv4[0]
 
