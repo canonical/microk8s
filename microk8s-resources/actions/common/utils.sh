@@ -1379,10 +1379,15 @@ increase_sysctl_parameter() {
   val_max="0"
 
   if ! is_strict; then
+    if [ -f "/etc/sysctl.d/10-microk8s.conf" ]; then
+      run_with_sudo $SNAP/usr/bin/sort -u /etc/sysctl.d/10-microk8s.conf -o /etc/sysctl.d/10-microk8s.conf
+    fi
+
     for loc in "${conf_locs[@]}"
     do
-      if run_with_sudo grep -qr "^$param_key=" $loc; then
-        run_with_sudo grep -r "^$param_key=" $loc | sed 's/^.*=//' | while read -r val ; do
+      if run_with_sudo $SNAP/bin/grep -qr "^$param_key=" $loc; then
+        for val in $(run_with_sudo $SNAP/bin/grep -r "^$param_key=" $loc | $SNAP/bin/sed 's/^.*=//');
+        do
           if [ "$val" -ge "$val_max" ]; then
             val_max=$val;
           fi
@@ -1391,8 +1396,10 @@ increase_sysctl_parameter() {
     done
 
     if [ "$val_max" -lt "$new_val" ]; then
-        echo "$param_key=$new_val" | run_with_sudo tee -a /etc/sysctl.d/10-microk8s.conf
-        run_with_sudo sysctl --system
+        echo "$param_key=$new_val" | run_with_sudo $SNAP/usr/bin/tee -a /etc/sysctl.d/10-microk8s.conf
+        if ! run_with_sudo sysctl --system; then
+          echo "Could not refresh system parameters via sysctl"
+        fi
     fi
   fi
 }
