@@ -23,7 +23,17 @@ def safe_is_non_loopback_address(address: str):
     try:
         return not ipaddress.ip_address(address).is_loopback
     except ValueError:
-        return False
+        # NOTE(neoaggelos): https://github.com/canonical/microk8s/issues/4327
+        # Python 3.8 fails with scoped IPv6 address, e.g. "fe80::5054:ff:fe00:b61d%2"
+        # Try to remove the scope suffix, and accept if value is an IPv6 address
+        if "%" not in address:
+            return False
+
+        try:
+            ip = ipaddress.ip_address(address[: address.find("%")])
+            return ip.version == 6 and not ip.is_loopback
+        except (ValueError, IndexError):
+            return False
 
 
 def find_resolv_conf_with_non_loopback_address(resolv_confs: list):
