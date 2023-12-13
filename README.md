@@ -2,7 +2,7 @@
 
 [![](https://github.com/canonical/microk8s/actions/workflows/build-snap.yml/badge.svg)](https://github.com/canonical/microk8s/actions/workflows/build-snap.yml)
 [![](https://snapcraft.io/microk8s/badge.svg)](https://snapcraft.io/microk8s)
-![](https://img.shields.io/badge/Kubernetes-1.28-326de6.svg)
+![](https://img.shields.io/badge/Kubernetes-1.29-326de6.svg)
 
 <img src="/docs/images/certified_kubernetes_color-222x300.png" align="right" width="200px">
 
