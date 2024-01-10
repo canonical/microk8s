@@ -312,7 +312,7 @@ def create_kubeconfig(token, ca, master_ip, api_port, filename, user):
         try_set_file_permissions(config)
 
 
-def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
+def update_kubeproxy(token, ca, master_ip, api_port):
     """
     Configure the kube-proxy
 
@@ -320,16 +320,14 @@ def update_kubeproxy(token, ca, master_ip, api_port, hostname_override):
     :param ca: the ca
     :param master_ip: the master node IP
     :param api_port: the API server port
-    :param hostname_override: the hostname override in case the hostname is not resolvable
     """
     create_kubeconfig(token, ca, master_ip, api_port, "proxy.config", "kubeproxy")
     set_arg("--master", None, "kube-proxy")
-    if hostname_override:
-        set_arg("--hostname-override", hostname_override, "kube-proxy")
+    set_arg("--hostname-override", None, "kube-proxy")
     service("restart", "proxy")
 
 
-def update_cert_auth_kubeproxy(token, master_ip, master_port, hostname_override):
+def update_cert_auth_kubeproxy(token, master_ip, master_port):
     """
     Configure the kube-proxy
 
@@ -337,13 +335,11 @@ def update_cert_auth_kubeproxy(token, master_ip, master_port, hostname_override)
     :param ca: the ca
     :param master_ip: the master node IP
     :param master_port: the master node port where the cluster agent listens
-    :param hostname_override: the hostname override in case the hostname is not resolvable
     """
     proxy_token = "{}-proxy".format(token)
     get_client_cert(master_ip, master_port, "proxy", proxy_token, "/CN=system:kube-proxy", False)
     set_arg("--master", None, "kube-proxy")
-    if hostname_override:
-        set_arg("--hostname-override", hostname_override, "kube-proxy")
+    set_arg("--hostname-override", None, "kube-proxy")
 
 
 def update_kubeproxy_cidr(cidr):
@@ -769,7 +765,7 @@ def join_dqlite_worker_node(info, master_ip, master_port, token):
     store_base_kubelet_args(info["kubelet_args"])
     update_kubelet_node_ip(info["kubelet_args"], hostname_override)
     update_kubelet_hostname_override(info["kubelet_args"])
-    update_cert_auth_kubeproxy(token, master_ip, master_port, hostname_override)
+    update_cert_auth_kubeproxy(token, master_ip, master_port)
     update_cert_auth_kubelet(token, master_ip, master_port)
     subprocess.check_call(
         [f"{snap()}/actions/common/utils.sh", "create_worker_kubeconfigs"],
@@ -891,12 +887,10 @@ def join_etcd(connection_parts, verify=True):
     update_flannel(info["etcd"], master_ip, master_port, token)
 
     if api_authn_mode == "Token":
-        update_kubeproxy(
-            info["kubeproxy"], info["ca"], master_ip, info["apiport"], hostname_override
-        )
+        update_kubeproxy(info["kubeproxy"], info["ca"], master_ip, info["apiport"])
         update_kubelet(info["kubelet"], info["ca"], master_ip, info["apiport"])
     elif api_authn_mode == "Cert":
-        update_cert_auth_kubeproxy(info["kubeproxy"], master_ip, master_port, hostname_override)
+        update_cert_auth_kubeproxy(info["kubeproxy"], master_ip, master_port)
         update_cert_auth_kubelet(info["kubelet"], master_ip, master_port)
         subprocess.check_call(
             [
