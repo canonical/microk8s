@@ -720,15 +720,23 @@ class TestUpgradeCluster(object):
             print("Waiting for cni")
             while True:
                 ready_pods = 0
-                pods = vm_older_version.run(
-                    "/snap/bin/microk8s.kubectl get po -n kube-system -o wide"
-                )
-                for line in pods.decode().splitlines():
-                    if "calico" in line and "Running" in line:
-                        ready_pods += 1
-                if ready_pods == (len(self.VM) + 1):
-                    print(pods.decode())
-                    break
+                attempt = 0
+                try:
+                    pods = vm_older_version.run(
+                        "/snap/bin/microk8s.kubectl get po -n kube-system -o wide"
+                    )
+                    for line in pods.decode().splitlines():
+                        if "calico" in line and "Running" in line:
+                            ready_pods += 1
+                    if ready_pods == (len(self.VM) + 1):
+                        print(pods.decode())
+                        break
+                    time.sleep(5)
+                except ChildProcessError:
+                    time.sleep(10)
+                    attempt += 1
+                    if attempt == 10:
+                        raise
                 time.sleep(5)
             yield
 
