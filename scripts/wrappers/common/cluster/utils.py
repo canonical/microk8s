@@ -1,5 +1,6 @@
 import base64
 import datetime
+import ipaddress
 import json
 import os
 import random
@@ -13,6 +14,13 @@ from pathlib import Path
 from subprocess import CalledProcessError, check_output
 
 import yaml
+
+FINGERPRINT_MIN_LEN = 12
+TOKEN_ΜΙΝ_LEN = 32
+
+
+class InvalidConnectionError(Exception):
+    pass
 
 
 def is_strict():
@@ -544,3 +552,45 @@ def rebuild_x509_auth_client_configs():
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+
+
+def get_valid_connection_parts(connection):
+    """
+    Ensure that connection has a valid format <master_ip>:<master_port>/<token>[/<fingerprint>]
+
+    :param connection: the connection string
+    :return: connection parts
+    :raise:
+        InvalidConnectionError: if connection string is not valid
+    """
+    connection_parts = connection.split("/")
+
+    if len(connection_parts) not in range(2, 3):
+        raise InvalidConnectionError(
+            "Expected format: <master_IP>:<master_PORT>/<token>[/<fingerprint>]"
+        )
+
+    master_ep = connection_parts[0].split(":")
+    if len(master_ep) != 2:
+        raise InvalidConnectionError(
+            "Expected format: <master_IP>:<master_PORT>/<token>[/<fingerprint>]"
+        )
+
+    try:
+        ipaddress.ip(master_ep[0])
+    except ValueError:
+        raise InvalidConnectionError("Invalid master IP")
+
+    try:
+        if int(master_ep[1]) not in range(1, 65535):
+            raise InvalidConnectionError("Master PORT not in range 1:65535")
+    except ValueError:
+        raise InvalidConnectionError("Master PORT not a number")
+
+    if len(connection_parts[1]) < TOKEN_ΜΙΝ_LEN:
+        raise InvalidConnectionError(f"Cluster token size should be at least {TOKEN_ΜΙΝ_LEN} bytes")
+
+    if len(connection_parts) == 3 and len(connection_parts[2]) < FINGERPRINT_MIN_LEN:
+        raise InvalidConnectionError(f"Fingerprint should be at least {FINGERPRINT_MIN_LEN} bytes")
+
+    return connection_parts
