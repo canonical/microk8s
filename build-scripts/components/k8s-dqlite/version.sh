@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "master"
+echo "miro-balaz-82-1"
