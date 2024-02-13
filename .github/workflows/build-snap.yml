@@ -19,7 +19,7 @@ jobs:
           sg lxd -c 'lxc version'
       - name: Install snapcraft
         run: |
-          sudo snap install snapcraft --classic
+          sudo snap install snapcraft --classic --channel 7.x/edge
       - name: Install snapd from candidate
         run: |
           # TODO(neoaggelos): revert this after latest/beta is working again
