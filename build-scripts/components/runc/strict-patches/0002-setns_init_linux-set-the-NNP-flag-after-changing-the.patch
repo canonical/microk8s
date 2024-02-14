@@ -1,21 +1,25 @@
-From 66fd3c5129599834de8262ee90a1ab2bf6b68ff0 Mon Sep 17 00:00:00 2001
-From: Alberto Mardegan <mardy@users.sourceforge.net>
-Date: Wed, 16 Jun 2021 15:04:40 +0300
+From 5351ef6f5b592472e077512714b2516cdbae1b51 Mon Sep 17 00:00:00 2001
+From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
+Date: Thu, 1 Feb 2024 11:23:08 +0200
 Subject: [PATCH 2/3] setns_init_linux: set the NNP flag after changing the
  apparmor profile
 
 With the current version of the AppArmor kernel module, it's not
 possible to switch the AppArmor profile if the NoNewPrivileges flag is
 set. So, we invert the order of the two operations.
+
+Adjusts the previous patch for runc version v1.1.12
+
+Co-Authored-By: Alberto Mardegan <mardy@users.sourceforge.net>
 ---
  libcontainer/setns_init_linux.go | 10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/libcontainer/setns_init_linux.go b/libcontainer/setns_init_linux.go
-index 97987f1d..eec427a0 100644
+index d1bb122..00407ce 100644
 --- a/libcontainer/setns_init_linux.go
 +++ b/libcontainer/setns_init_linux.go
-@@ -57,11 +57,6 @@ func (l *linuxSetnsInit) Init() error {
+@@ -56,11 +56,6 @@ func (l *linuxSetnsInit) Init() error {
  			return err
  		}
  	}
@@ -27,7 +31,7 @@ index 97987f1d..eec427a0 100644
  	if err := selinux.SetExecLabel(l.config.ProcessLabel); err != nil {
  		return err
  	}
-@@ -80,6 +75,11 @@ func (l *linuxSetnsInit) Init() error {
+@@ -84,6 +79,11 @@ func (l *linuxSetnsInit) Init() error {
  	if err := apparmor.ApplyProfile(l.config.AppArmorProfile); err != nil {
  		return err
  	}
@@ -36,9 +40,8 @@ index 97987f1d..eec427a0 100644
 +			return err
 +		}
 +	}
- 	// Set seccomp as close to execve as possible, so as few syscalls take
- 	// place afterward (reducing the amount of syscalls that users need to
- 	// enable in their seccomp profiles).
--- 
-2.25.1
 
+ 	// Check for the arg before waiting to make sure it exists and it is
+ 	// returned as a create time error.
+--
+2.34.1
