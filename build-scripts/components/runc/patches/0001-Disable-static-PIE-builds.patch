@@ -1,0 +1,36 @@
+From 4e2546a2957d981fc526b0b49ca118ab72dba4b2 Mon Sep 17 00:00:00 2001
+From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
+Date: Tue, 20 Feb 2024 12:47:45 +0200
+Subject: [PATCH] Disable static PIE builds
+
+They are not supported by the GCC version that is found on core18
+
+---
+ Makefile | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index e3af9bc1..81c3d995 100644
+--- a/Makefile
++++ b/Makefile
+@@ -33,12 +33,12 @@ LDFLAGS_STATIC := -extldflags -static
+ # Enable static PIE executables on supported platforms.
+ # This (among the other things) requires libc support (rcrt1.o), which seems
+ # to be available only for arm64 and amd64 (Debian Bullseye).
+-ifneq (,$(filter $(GOARCH),arm64 amd64))
+-	ifeq (,$(findstring -race,$(EXTRA_FLAGS)))
+-		GO_BUILDMODE_STATIC := -buildmode=pie
+-		LDFLAGS_STATIC := -linkmode external -extldflags --static-pie
+-	endif
+-endif
++# ifneq (,$(filter $(GOARCH),arm64 amd64))
++# 	ifeq (,$(findstring -race,$(EXTRA_FLAGS)))
++# 		GO_BUILDMODE_STATIC := -buildmode=pie
++# 		LDFLAGS_STATIC := -linkmode external -extldflags --static-pie
++# 	endif
++# endif
+ # Enable static PIE binaries on supported platforms.
+ GO_BUILD_STATIC := $(GO) build -trimpath $(GO_BUILDMODE_STATIC) \
+ 	$(EXTRA_FLAGS) -tags "$(BUILDTAGS) netgo osusergo" \
+--
+2.34.1
