@@ -14,7 +14,7 @@ index 8b1483c..292cfa6 100644
 @@ -48,9 +48,9 @@ func setProcAttr(attr, value string) error {
  	return err
  }
- 
+
 -// changeOnExec reimplements aa_change_onexec from libapparmor in Go
 -func changeOnExec(name string) error {
 -	if err := setProcAttr("exec", "exec "+name); err != nil {
@@ -27,9 +27,9 @@ index 8b1483c..292cfa6 100644
 @@ -64,5 +64,5 @@ func applyProfile(name string) error {
  		return nil
  	}
- 
+
 -	return changeOnExec(name)
 +	return changeProfile(name)
  }
--- 
+--
 2.34.1
