@@ -23,6 +23,7 @@ from common.cluster.utils import (
     get_cluster_agent_port,
     get_cluster_cidr,
     get_token,
+    get_valid_connection_parts,
     is_low_memory_guard_enabled,
     is_node_running_dqlite,
     is_token_auth_enabled,
@@ -34,6 +35,8 @@ from common.cluster.utils import (
     try_set_file_permissions,
     snap,
     snap_data,
+    FINGERPRINT_MIN_LEN,
+    InvalidConnectionError,
 )
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -52,8 +55,6 @@ cluster_dir = "{}/var/kubernetes/backend".format(snapdata_path)
 cluster_backup_dir = "{}/var/kubernetes/backend.backup".format(snapdata_path)
 cluster_cert_file = "{}/cluster.crt".format(cluster_dir)
 cluster_key_file = "{}/cluster.key".format(cluster_dir)
-
-FINGERPRINT_MIN_LEN = 12
 
 
 def get_traefik_port():
@@ -969,7 +970,12 @@ def join(connection, worker, skip_verify, disable_low_memory_guard):
 
     CONNECTION: the cluster connection endpoint in format <master>:<port>/<token>
     """
-    connection_parts = connection.split("/")
+    try:
+        connection_parts = get_valid_connection_parts(connection)
+    except InvalidConnectionError as err:
+        print("Invalid connection:", err)
+        sys.exit(1)
+
     verify = not skip_verify
 
     if is_low_memory_guard_enabled() and disable_low_memory_guard:

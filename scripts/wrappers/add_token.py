@@ -6,7 +6,7 @@ import time
 import argparse
 import subprocess
 
-from common.cluster.utils import is_node_running_dqlite
+from common.cluster.utils import is_node_running_dqlite, TOKEN_ΜΙΝ_LEN
 
 try:
     from secrets import token_hex
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     else:
         token = token_hex(16)
 
-    if len(token) < 32:
+    if len(token) < TOKEN_ΜΙΝ_LEN:
         print("Invalid token size.  It must be 32 characters long.")
         exit(1)
 
