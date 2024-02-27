@@ -109,7 +109,7 @@ def _show_install_help():
     Options:
       --help     Show this message and exit.
       --cpu      Cores used by MicroK8s (default={definitions.DEFAULT_CORES}, min={definitions.MIN_CORES})
-      --mem      RAM in GB used by MicroK8s (default={definitions.DEFAULT_MEMORY_GB}, min={definitions.MIN_MEMORY_GB})
+      --memory   RAM in GB used by MicroK8s (default={definitions.DEFAULT_MEMORY_GB}, min={definitions.MIN_MEMORY_GB})
       --disk     Max volume in GB of the dynamically expandable hard disk to be used (default={definitions.DEFAULT_DISK_GB}, min={definitions.MIN_DISK_GB})
       --channel  Kubernetes version to install (default={definitions.DEFAULT_CHANNEL})
       --image    Ubuntu version to install (default={definitions.DEFAULT_IMAGE})
