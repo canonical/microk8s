@@ -577,7 +577,7 @@ def get_valid_connection_parts(connection):
         )
 
     try:
-        ipaddress.ip(master_ep[0])
+        ipaddress.ip_address(master_ep[0])
     except ValueError:
         raise InvalidConnectionError("Invalid master IP")
 
