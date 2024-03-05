@@ -565,7 +565,7 @@ def get_valid_connection_parts(connection):
     """
     connection_parts = connection.split("/")
 
-    if len(connection_parts) not in range(2, 3):
+    if len(connection_parts) not in [2, 3]:
         raise InvalidConnectionError(
             "Expected format: <master_IP>:<master_PORT>/<token>[/<fingerprint>]"
         )
@@ -582,7 +582,8 @@ def get_valid_connection_parts(connection):
         raise InvalidConnectionError("Invalid master IP")
 
     try:
-        if int(master_ep[1]) not in range(1, 65535):
+        port = int(master_ep[1])
+        if port < 1 or port > 65535:
             raise InvalidConnectionError("Master PORT not in range 1:65535")
     except ValueError:
         raise InvalidConnectionError("Master PORT not a number")
