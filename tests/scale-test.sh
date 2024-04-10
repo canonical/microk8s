@@ -7,7 +7,10 @@ set -eux
 BASE=${BASE:-"ubuntu@22.04"}
 
 # -- microk8s settings
-MK8S_CHANNEL=${MK8S_CHANNEL:-stable}
+MK8S_KW_CHANNEL=${MK8S_CHANNEL:-stable}
+MK8S_CP_CHANNEL=${MK8S_CHANNEL:-latest/edge/cluster-agent-test}
+MK8S_CP_CONSTRAINTS=${MK8S_CP_CONSTRAINTS:-'mem=16G cores=2 root-disk=20G'}
+MK8S_KW_CONSTRAINTS=${MK8S_KW_CONSTRAINTS:-'mem=2G cores=2 root-disk=10G'}
 
 # -- juju configuration
 JUJU_CONTROLLER=${JUJU_CONTROLLER:-$(juju controllers --format json | jq '.["current-controller"]' -r)}
@@ -19,8 +22,6 @@ if [[ "$JUJU_CONTROLLER" == *"vsphere"* ]]; then
     JUJU_NO_PROXY=10.246.154.0/24,127.0.0.1
     MICROK8S_NO_PROXY=10.0.0.0/8,127.0.0.1
 fi
-CP_CONSTRAINTS=${CP_CONSTRAINTS:-'mem=16G cores=2 root-disk=20G'}
-KW_CONSTRAINTS=${KW_CONSTRAINTS:-'mem=2G cores=2 root-disk=10G'}
 DEF_CONSTRAINT=${DEF_CONSTRAINT:-'mem=2G cores=1 root-disk=10G'}
 
 
@@ -133,9 +134,13 @@ EOF
 }
 
 function snap_install_application () {
-    local channel=$MK8S_CHANNEL
     if [ "${1}" == "mk8s-cp" ]; then
-        channel="latest/edge/cluster-agent-test"
+        channel=${MK8S_CP_CHANNEL}
+    elif [ "${1}" == "mk8s-kw" ]; then
+        channel=${MK8S_KW_CHANNEL}
+    elif
+        >&2 echo "Invalid channel selected for ${1}"
+        exit -1
     fi
     juju::model exec -a "${1}" -- "$(cat <<EOF
 set -eu
@@ -207,8 +212,8 @@ EOF
 juju::create_model
 docker_registry_deploy
 docker_registry_load_images
-scale_application mk8s-cp 3 "${CP_CONSTRAINTS}"
+scale_application mk8s-cp 3 "${MK8S_CP_CONSTRAINTS}"
 snap_cluster_application mk8s-cp
 snap_enable_observability
-scale_application mk8s-kw 10 "${KW_CONSTRAINTS}"
+scale_application mk8s-kw 10 "${MK8S_KW_CONSTRAINTS}"
 snap_cluster_application mk8s-kw --worker
