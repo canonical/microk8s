@@ -52,7 +52,7 @@ setup_tests "$@"
 
 #. tests/libs/addons-upgrade.sh
 
-#. tests/libs/upgrade-path.sh
+. tests/libs/upgrade-path.sh
 
 hostname
 . tests/libs/addons.sh
