@@ -55,4 +55,6 @@ setup_tests "$@"
 . tests/libs/upgrade-path.sh
 
 hostname
+df -h
+free -m
 . tests/libs/addons.sh
