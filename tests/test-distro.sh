@@ -57,4 +57,6 @@ setup_tests "$@"
 hostname
 df -h
 free -m
+lxc list
+top -b -n 1
 . tests/libs/addons.sh
