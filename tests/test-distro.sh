@@ -54,6 +54,7 @@ setup_tests "$@"
 
 . tests/libs/upgrade-path.sh
 
+snap refresh lxd --channel=5.0/stable
 hostname
 df -h
 free -m
