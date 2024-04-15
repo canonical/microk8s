@@ -52,9 +52,18 @@ setup_tests "$@"
 
 #. tests/libs/addons-upgrade.sh
 
+snap refresh lxd --channel=5.0/stable
+hostname
+df -h
+free -m
+lxc list
+top -b -n 1
+snap list
+ls -l /tmp/
+lsb_release -a
+
 . tests/libs/upgrade-path.sh
 
-snap refresh lxd --channel=5.0/stable
 hostname
 df -h
 free -m
