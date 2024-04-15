@@ -59,4 +59,8 @@ df -h
 free -m
 lxc list
 top -b -n 1
+snap list
+ls -l /tmp/
+lsb_release -a
 . tests/libs/addons.sh
+dmesg
