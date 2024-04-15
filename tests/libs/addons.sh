@@ -10,7 +10,13 @@ function setup_addons_tests() {
   then
     snap install "${TO_CHANNEL}" --dangerous --classic
   else
-    snap install microk8s --channel="${TO_CHANNEL}" --classic
+    while ! snap install microk8s --channel="${TO_CHANNEL}" --classic
+    do
+      echo "Snap install failed..."
+      dmesg
+      sleep 10
+      echo "Retrying..."
+    done
   fi
 
   microk8s status --wait-ready
