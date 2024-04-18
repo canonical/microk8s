@@ -135,8 +135,8 @@ then
 [Service]
 Delegate=yes
 EOF
-  systemctl daemon-reload
-  snap restart microk8s
+  systemctl daemon-reload || true
+  snap restart microk8s || true
 fi
 
 # wait for containerd socket
