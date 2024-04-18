@@ -55,7 +55,6 @@ then
   sysctl --system
 
   rm -rf /etc/systemd/system/snap.microk8s.daemon-kubelite.service.d || true
-  systemctl daemon-reload
 fi
 
 # Clean the container location so we do not snapshot it.

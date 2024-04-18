@@ -125,7 +125,10 @@ then
   fi
 fi
 
-if ! is_strict && (systemctl show snap.microk8s.daemon-kubelite.service -p NRestarts | grep -qv "NRestarts=0") && (grep -qv cpuset /sys/fs/cgroup/cgroup.subtree_control)
+if ! is_strict &&
+   (systemctl show snap.microk8s.daemon-kubelite.service -p NRestarts | grep -qv "NRestarts=0") &&
+   (grep -qv cpuset /sys/fs/cgroup/cgroup.subtree_control) &&
+   [ ! -e /etc/systemd/system/snap.microk8s.daemon-kubelite.service.d/delegate.conf ]
 then
   mkdir -p /etc/systemd/system/snap.microk8s.daemon-kubelite.service.d
   tee /etc/systemd/system/snap.microk8s.daemon-kubelite.service.d/delegate.conf > /dev/null <<EOF
