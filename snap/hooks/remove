@@ -53,6 +53,8 @@ then
   # remove custom sysctl parameters
   rm -f /etc/sysctl.d/10-microk8s.conf
   sysctl --system
+
+  rm -rf /etc/systemd/system/snap.microk8s.daemon-kubelite.service.d || true
 fi
 
 # Clean the container location so we do not snapshot it.
