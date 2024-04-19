@@ -125,6 +125,20 @@ then
   fi
 fi
 
+if ! is_strict &&
+   (systemctl show snap.microk8s.daemon-kubelite.service -p NRestarts | grep -qv "NRestarts=0") &&
+   (grep -qv cpuset /sys/fs/cgroup/cgroup.subtree_control) &&
+   [ ! -e /etc/systemd/system/snap.microk8s.daemon-kubelite.service.d/delegate.conf ]
+then
+  mkdir -p /etc/systemd/system/snap.microk8s.daemon-kubelite.service.d
+  tee /etc/systemd/system/snap.microk8s.daemon-kubelite.service.d/delegate.conf > /dev/null <<EOF
+[Service]
+Delegate=yes
+EOF
+  systemctl daemon-reload || true
+  snap restart microk8s || true
+fi
+
 # wait for containerd socket
 if grep -e "--address " $SNAP_DATA/args/containerd &> /dev/null
 then
