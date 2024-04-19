@@ -72,5 +72,8 @@ top -b -n 1
 snap list
 ls -l /tmp/
 lsb_release -a
+uname
+cat /proc/1/environ
+cat /proc/cpuinfo
 . tests/libs/addons.sh
 dmesg
