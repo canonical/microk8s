@@ -14,17 +14,15 @@ jobs:
           # Latest branches
           - { branch: master, channel: latest/edge }
           # Stable branches
-          - { branch: 1.26, channel: 1.26 }
-          - { branch: 1.25, channel: 1.25 }
-          - { branch: 1.24, channel: 1.24 }
-          - { branch: 1.23, channel: 1.23 }
-          - { branch: 1.22, channel: 1.22 }
+          - { branch: 1.30, channel: 1.30 }
+          - { branch: 1.29, channel: 1.29 }
+          - { branch: 1.28, channel: 1.28 }
+          - { branch: 1.27, channel: 1.27 }
           # Stable strict branches
-          - { branch: 1.26-strict, channel: 1.26-strict }
-          - { branch: 1.25-strict, channel: 1.25-strict }
-          # EKSD branches
-          - { branch: 1.24-eksd, channel: 1.24-eksd }
-          - { branch: 1.23-eksd, channel: 1.23-eksd }
+          - { branch: 1.30-strict, channel: 1.30-strict }
+          - { branch: 1.29-strict, channel: 1.29-strict }
+          - { branch: 1.28-strict, channel: 1.28-strict }
+          - { branch: 1.27-strict, channel: 1.27-strict }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
