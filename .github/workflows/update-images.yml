@@ -14,10 +14,10 @@ jobs:
           # Latest branches
           - { branch: master, channel: latest/edge }
           # Stable branches
-          - { branch: 1.30, channel: 1.30 }
-          - { branch: 1.29, channel: 1.29 }
-          - { branch: 1.28, channel: 1.28 }
-          - { branch: 1.27, channel: 1.27 }
+          - { branch: "1.30", channel: "1.30" }
+          - { branch: "1.29", channel: "1.29" }
+          - { branch: "1.28", channel: "1.28" }
+          - { branch: "1.27", channel: "1.27" }
           # Stable strict branches
           - { branch: 1.30-strict, channel: 1.30-strict }
           - { branch: 1.29-strict, channel: 1.29-strict }
