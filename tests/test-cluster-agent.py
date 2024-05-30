@@ -8,7 +8,7 @@ class TestClusterAgent(object):
 
     def test_cluster_agent_health(self):
         """
-        Query the cluster agent health endpoint to verify it is up and healty.
+        Query the cluster agent health endpoint to verify it is up and healthy.
 
         """
         response = requests.get(
