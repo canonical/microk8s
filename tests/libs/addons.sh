@@ -120,7 +120,10 @@ then
   setup_addons_tests "$NAME" "$DISTRO" "$PROXY" "$TO_CHANNEL"
   run_smoke_test "$NAME"
   run_core_addons_tests "$NAME"
-  run_community_addons_tests "$NAME"
+  DISABLE_COMMUNITY_TESTS="${DISABLE_COMMUNITY_TESTS:-0}"
+  if [ "x${DISABLE_COMMUNITY_TESTS}" != "x1" ]; then
+    run_community_addons_tests "$NAME"
+  fi
   run_eksd_addons_tests
   run_gpu_addon_test
   run_microceph_addon_test
