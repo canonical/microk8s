@@ -67,7 +67,6 @@ microk8s-addons:
         - s390x
 """
 
-
 @pytest.mark.parametrize(
     "confinement, result", [(True, ["dns", "rbac"]), (False, ["dns", "dashboard"])]
 )

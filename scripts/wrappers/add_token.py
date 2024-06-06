@@ -120,15 +120,16 @@ def print_yaml(token, check):
 
 def print_short(token, check):
     default_ip, all_ips, port = get_network_info()
-    default_addr = default_ip+":"+port+"/"+token+"/"+check
+    default_addr = str(default_ip) + ":" + str(port) + "/" + str(token) + "/" + str(check)
     addr_set = set()
     addr_set.add(default_addr)
     print(f"microk8s join {default_ip}:{port}/{token}/{check}")
     for ip in all_ips:
-        addr = ip+":"+port+"/"+token+"/"+check
+        addr = str(ip) + ":" + str(port) + "/" + str(token) + "/" + str(check)
         if addr not in addr_set:
             print(f"microk8s join {ip}:{port}/{token}/{check}")
             addr_set.add(addr)
+    # return len(addr_set)
 
 
 if __name__ == "__main__":
