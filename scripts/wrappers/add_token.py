@@ -129,7 +129,6 @@ def print_short(token, check):
         if addr not in addr_set:
             print(f"microk8s join {ip}:{port}/{token}/{check}")
             addr_set.add(addr)
-    # return len(addr_set)
 
 
 if __name__ == "__main__":
