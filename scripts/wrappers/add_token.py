@@ -120,10 +120,10 @@ def print_yaml(token, check):
 
 def print_short(token, check):
     default_ip, all_ips, port = get_network_info()
-
     print(f"microk8s join {default_ip}:{port}/{token}/{check}")
     for ip in all_ips:
-        print(f"microk8s join {ip}:{port}/{token}/{check}")
+        if ip != default_ip:
+            print(f"microk8s join {ip}:{port}/{token}/{check}")
 
 
 if __name__ == "__main__":
