@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "master"
+echo "v1.1.9"
