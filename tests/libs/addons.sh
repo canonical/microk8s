@@ -125,6 +125,11 @@ then
 #    run_community_addons_tests "$NAME"
 #  fi
 #  run_eksd_addons_tests
+  lspci
+  free -m
+  cat /proc/cpuinfo
+  snap list
+  snap info microk8s
   run_gpu_addon_test
 #  run_microceph_addon_test
   post_addons_tests "$NAME"
