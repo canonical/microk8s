@@ -43,12 +43,12 @@ set -uex
 
 setup_tests "$@"
 
-DISABLE_AIRGAP_TESTS="${DISABLE_AIRGAP_TESTS:-0}"
-if [ "x${DISABLE_AIRGAP_TESTS}" != "x1" ]; then
-  . tests/libs/airgap.sh
-fi
+#DISABLE_AIRGAP_TESTS="${DISABLE_AIRGAP_TESTS:-0}"
+#if [ "x${DISABLE_AIRGAP_TESTS}" != "x1" ]; then
+#  . tests/libs/airgap.sh
+#fi
 
-#. tests/libs/clustering.sh
+. tests/libs/clustering.sh
 
 #. tests/libs/addons-upgrade.sh
 
