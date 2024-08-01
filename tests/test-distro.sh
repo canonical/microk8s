@@ -54,4 +54,6 @@ fi
 
 #. tests/libs/upgrade-path.sh
 
+sudo lxc list
+snap list
 . tests/libs/addons.sh
