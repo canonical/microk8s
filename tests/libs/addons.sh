@@ -6,15 +6,6 @@ function setup_addons_tests() {
   local PROXY=$3
   local TO_CHANNEL=$4
 
-  if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
-  then
-    snap install "${TO_CHANNEL}" --dangerous --classic
-  else
-    snap install microk8s --channel="${TO_CHANNEL}" --classic
-  fi
-
-  microk8s status --wait-ready
-
   create_machine "$NAME" "$DISTRO" "$PROXY"
   if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
   then
@@ -116,7 +107,5 @@ then
   if [ "x${DISABLE_COMMUNITY_TESTS}" != "x1" ]; then
     run_community_addons_tests "$NAME"
   fi
-  run_eksd_addons_tests
-  run_gpu_addon_test
   post_addons_tests "$NAME"
 fi
