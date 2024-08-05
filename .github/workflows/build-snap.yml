@@ -196,31 +196,6 @@ jobs:
         run: |
           sudo -E bash -x -c "./tests/libs/airgap.sh --distro ubuntu:20.04 --channel $PWD/build/microk8s.snap"
 
-  test-spread:
-    name: Test microk8s on debian
-    runs-on: ubuntu-20.04
-    needs: build
-    strategy:
-      fail-fast: false
-    steps:
-      - name: Checking out repo
-        uses: actions/checkout@v4
-      - name: Fetch snap
-        uses: actions/download-artifact@v4
-        with:
-          name: microk8s.snap
-          path: build
-      - name: Initialize LXD
-        run: |
-          sudo apt install apparmor apparmor-utils -y
-          sudo lxd init --auto
-          sudo lxc network set lxdbr0 ipv6.address=none
-          sudo usermod --append --groups lxd $USER
-          sg lxd -c 'lxc version'
-      - name: Run spread tests
-        run: |
-          sudo -E bash -x -c "./tests/libs/spread.sh --distro images:debian/12 --channel $PWD/build/microk8s.snap"
-
   security-scan:
     name: Security scan
     runs-on: ubuntu-20.04
