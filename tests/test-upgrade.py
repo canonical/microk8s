@@ -142,9 +142,14 @@ extraSANs:
         # Refresh the snap to the target
         if upgrade_to.endswith(".snap"):
             cmd = "sudo snap install {} --classic --dangerous".format(upgrade_to)
+            run_until_success(cmd)
+            cmd = "/snap/microk8s/current/connect-all-interfaces.sh"
+            run_until_success(cmd)
+            time.sleep(20)
         else:
             cmd = "sudo snap refresh microk8s --channel={}".format(upgrade_to)
-        run_until_success(cmd)
+            run_until_success(cmd)
+
         # Allow for the refresh to be processed
         time.sleep(10)
         wait_for_installation()
