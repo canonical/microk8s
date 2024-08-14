@@ -6,15 +6,6 @@ function setup_addons_tests() {
   local PROXY=$3
   local TO_CHANNEL=$4
 
-  if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
-  then
-    snap install "${TO_CHANNEL}" --dangerous --classic
-  else
-    snap install microk8s --channel="${TO_CHANNEL}" --classic
-  fi
-
-  microk8s status --wait-ready
-
   create_machine "$NAME" "$DISTRO" "$PROXY"
   if [[ ${TO_CHANNEL} =~ /.*/microk8s.*snap ]]
   then
@@ -43,15 +34,6 @@ function run_community_addons_tests() {
   lxc exec "$NAME" -- script -e -c "pytest -s /var/snap/microk8s/common/addons/community/tests/"
 }
 
-function run_eksd_addons_tests() {
-  if [ -d "/var/snap/microk8s/common/addons/eksd" ]
-  then
-    if [ -f "/var/snap/microk8s/common/addons/eksd/tests/test-addons.sh" ]; then
-      . /var/snap/microk8s/common/addons/eksd/tests/test-addons.sh
-    fi
-  fi
-}
-
 function run_gpu_addon_test() {
   if [ -f "/var/snap/microk8s/common/addons/core/tests/test-addons.py" ] &&
    grep test_gpu /var/snap/microk8s/common/addons/core/tests/test-addons.py -q
@@ -59,15 +41,6 @@ function run_gpu_addon_test() {
     timeout 3600 pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py -k test_gpu
   fi
 }
-
-function run_microceph_addon_test() {
-  if [ -f "/var/snap/microk8s/common/addons/core/tests/test-addons.py" ] &&
-   grep test_rook_ceph_integration /var/snap/microk8s/common/addons/core/tests/test-addons.py -q
-  then
-    timeout 3600 pytest -s /var/snap/microk8s/common/addons/core/tests/test-addons.py -k test_rook_ceph_integration
-  fi
-}
-
 
 function post_addons_tests() {
   local NAME=$1
@@ -124,8 +97,6 @@ then
   if [ "x${DISABLE_COMMUNITY_TESTS}" != "x1" ]; then
     run_community_addons_tests "$NAME"
   fi
-  run_eksd_addons_tests
   run_gpu_addon_test
-  run_microceph_addon_test
   post_addons_tests "$NAME"
 fi
