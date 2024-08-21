@@ -163,12 +163,11 @@ tox -e lint
 
 Then, use the "Building the snap from source" instructions to build the snap and install it locally. The tests check this locally installed MicroK8s instance.
 
-Finally, run the tests themselves. The `test-addons.py` and `test-upgrade.py` files under the `tests` directory are the two main files of our test suite. Running the tests is done with pytest:
+Finally, run the tests themselves. The `test-simple.py` and `test-upgrade.py` files under the `tests` directory are the two main files of our test suite. Running the tests is done with pytest:
 
 ```shell
-cd tests/
-pytest -s test-addons.py
-pytest -s test-upgrade.py
+pytest -s tests/test-simple.py
+pytest -s tests/test-upgrade.py
 ```
 
 Note: the `ingress` and `dashboard-ingress` tests make use of nip.io for wildcard ingress domains on localhost. [DNS rebinding protection](https://en.wikipedia.org/wiki/DNS_rebinding) may prevent the resolution of the domains used in the tests.
