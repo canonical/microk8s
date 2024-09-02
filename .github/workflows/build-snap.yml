@@ -203,7 +203,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro: ["images:centos/7", "images:debian/12"]
+        distro: ["images:centos/9", "images:debian/12"]
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
