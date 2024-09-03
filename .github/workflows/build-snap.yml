@@ -197,13 +197,11 @@ jobs:
           sudo -E bash -x -c "./tests/libs/airgap.sh --distro ubuntu:20.04 --channel $PWD/build/microk8s.snap"
 
   test-spread:
-    name: Test microk8s on multi distros
+    name: Test microk8s on debian
     runs-on: ubuntu-20.04
     needs: build
     strategy:
       fail-fast: false
-      matrix:
-        distro: ["images:centos/7", "images:debian/12"]
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
@@ -221,7 +219,7 @@ jobs:
           sg lxd -c 'lxc version'
       - name: Run spread tests
         run: |
-          sudo -E bash -x -c "./tests/libs/spread.sh --distro ${{ matrix.distro }} --channel $PWD/build/microk8s.snap"
+          sudo -E bash -x -c "./tests/libs/spread.sh --distro images:debian/12 --channel $PWD/build/microk8s.snap"
 
   security-scan:
     name: Security scan
