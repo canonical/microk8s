@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "watchers"
+echo "v1.1.11"
