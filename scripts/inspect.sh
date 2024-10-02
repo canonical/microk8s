@@ -77,7 +77,7 @@ function store_network {
   printf -- '  Copy network configuration to the final report tarball\n'
   mkdir -p $INSPECT_DUMP/network
   ip addr &> $INSPECT_DUMP/network/ip-addr
-  ip route &> $INSPECT_DUMP/network/ip-addr
+  ip route &> $INSPECT_DUMP/network/ip-route
   iptables -t nat -L -n -v &> $INSPECT_DUMP/network/iptables
   iptables -S &> $INSPECT_DUMP/network/iptables-S
   iptables -L &> $INSPECT_DUMP/network/iptables-L
