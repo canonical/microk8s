@@ -996,11 +996,6 @@ get_container_shim_pids() {
     $SNAP/bin/ps -e -o pid= -o args= | $SNAP/bin/grep -v 'grep' | $SNAP/bin/sed -e 's/^ *//; s/\s\s*/\t/;' | $SNAP/bin/grep -w '/snap/microk8s/.*/bin/containerd-shim' | $SNAP/usr/bin/cut -f1
 }
 
-kill_all_container_shims() {
-  run_with_sudo systemctl kill snap.microk8s.daemon-kubelite.service --signal=SIGKILL &>/dev/null || true
-  run_with_sudo systemctl kill snap.microk8s.daemon-containerd.service --signal=SIGKILL &>/dev/null || true
-}
-
 is_first_boot() {
   # Return 0 if this is the first start after the host booted.
   # The argument $1 is a directory that may contain a last-start-date file
