@@ -204,6 +204,19 @@ then
   fi
 fi
 
+# kube-proxy reads some values related to the 'nf_conntrack' kernel
+# module from procfs on startup, so we must ensure it is loaded:
+if ! [ -f /proc/sys/net/netfilter/nf_conntrack_max ]
+then
+  if /sbin/modprobe nf_conntrack || modprobe nf_conntrack
+  then
+    echo "Successfully loaded nf_conntrack module."
+  else
+    echo -n "Failed to load nf_conntrack kernel module. "
+    echo "ProxyServer will fail to start until it's loaded."
+  fi
+fi
+
 # on lxc containers do not try to change the conntrack configuration
 # see https://github.com/canonical/microk8s/issues/1438
 if grep -E lxc /proc/1/environ &&
