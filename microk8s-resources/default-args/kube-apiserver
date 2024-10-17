@@ -9,12 +9,16 @@
 --kubelet-client-certificate=${SNAP_DATA}/certs/apiserver-kubelet-client.crt
 --kubelet-client-key=${SNAP_DATA}/certs/apiserver-kubelet-client.key
 --secure-port=16443
---etcd-servers="unix://${SNAP_DATA}/var/kubernetes/backend/kine.sock:12379"
 --allow-privileged=true
 --service-account-issuer='https://kubernetes.default.svc'
 --service-account-signing-key-file=${SNAP_DATA}/certs/serviceaccount.key
 --event-ttl=5m
 --profiling=false
+
+--etcd-servers=https://127.0.0.1:12379
+--etcd-cafile=${SNAP_DATA}/certs/ca.crt
+--etcd-certfile=${SNAP_DATA}/certs/server.crt
+--etcd-keyfile=${SNAP_DATA}/certs/server.key
 
 # Enable the aggregation layer
 --requestheader-client-ca-file=${SNAP_DATA}/certs/front-proxy-ca.crt
