@@ -231,5 +231,9 @@ then
   echo "1" > /proc/sys/net/bridge/bridge-nf-call-iptables
 fi
 
+# K8s runs with a lot of go routines. This stops go routine stealing while scheduling
+# idle routines.
+export GOMAXPROCS=1
+
 declare -a args="($(cat $SNAP_DATA/args/$app))"
 exec "$SNAP/$app" "${args[@]}"
