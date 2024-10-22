@@ -1,9 +1,7 @@
 name: Build and test MicroK8s snap
 
 on:
-  pull_request:
-    branches:
-      - master
+  - push
 
 jobs:
   build:
@@ -58,7 +56,7 @@ jobs:
           path: build
       - name: Running upgrade path test
         run: |
-          sudo -E UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade-path.py
+          sudo -E STRICT=yes UPGRADE_MICROK8S_FROM=latest/edge/strict UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade-path.py
 
   test-addons-core:
     name: Test core addons
@@ -81,13 +79,15 @@ jobs:
         with:
           name: microk8s.snap
           path: build
-      - name: Running addons tests
+      - name: Running addons tests in strict mode
         run: |
           set -x
-          sudo snap install build/microk8s.snap --classic --dangerous
+          sudo snap install build/microk8s.snap --dangerous
+          sudo /snap/microk8s/current/connect-all-interfaces.sh
+          sudo microk8s status --wait-ready --timeout 300
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
-          export SKIP_PROMETHEUS="False"
+          export STRICT="yes"
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/core/tests; pytest -s -ra test-addons.py"
 
   test-addons-community:
@@ -117,8 +117,11 @@ jobs:
         run: |
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
+          sudo /snap/microk8s/current/connect-all-interfaces.sh
+          sudo microk8s status --wait-ready --timeout 300
           sudo microk8s enable community
           export UNDER_TIME_PRESSURE="True"
+          export STRICT="yes"
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/; pytest -s -ra ./tests/"
 
   test-addons-core-upgrade:
@@ -148,7 +151,8 @@ jobs:
         run: |
           set -x
           export UNDER_TIME_PRESSURE="True"
-          sudo -E bash -c "UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade.py"
+          export STRICT="yes"
+          sudo -E bash -c "UPGRADE_MICROK8S_FROM=latest/edge/strict UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade.py"
 
   test-cluster-agent:
     name: Cluster agent health check
@@ -173,6 +177,7 @@ jobs:
         run: |
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
+          sudo /snap/microk8s/current/connect-all-interfaces.sh
           sudo -E bash -c "pytest -s ./tests/test-cluster-agent.py"
 
   test-airgap:
