@@ -10,22 +10,25 @@ use_snap_env
 if is_strict
 then
   cd "$SNAP"
-else
-  export GIT_DIR=/tmp/config-$(cat /proc/sys/kernel/random/uuid)
-  mkdir -p ${GIT_DIR}
-  cat > ${GIT_DIR}.gitconfig << EOF
-[safe]
-        directory = *
-EOF
 fi
 
 exit_if_not_root
 
 exit_if_no_permissions
 
+if [ "$EUID" -ne 0 ]
+then
+  export GIT_DIR=/tmp/config-$(cat /proc/sys/kernel/random/uuid)
+  mkdir -p ${GIT_DIR}
+  cat > ${GIT_DIR}/.gitconfig << EOF
+[safe]
+        directory = *
+EOF
+fi
+
 ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/enable.py "${@}"
 
-if ! is_strict
+if [ "$EUID" -ne 0 ]
 then
   rm -rf ${GIT_DIR}
   unset GIT_DIR
