@@ -22,7 +22,7 @@ then
   mkdir -p ${GIT_DIR}
   cat > ${GIT_DIR}/.gitconfig << EOF
 [safe]
-        directory = *
+        directory = $SNAP/addons/community/*
 EOF
 fi
 
