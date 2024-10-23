@@ -28,5 +28,5 @@ ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/enable.py "${@}"
 if ! is_strict
 then
   rm -rf ${GIT_DIR}
-  unset ${GIT_DIR}
+  unset GIT_DIR
 fi
