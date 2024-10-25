@@ -148,4 +148,12 @@ then
   touch ${SNAP_DATA}/var/lock/low-memory-guard.lock
 fi
 
+SNAP_CURRENT=`echo "${SNAP}" | sed -e "s,${SNAP_REVISION},current,"`
+# create git config file
+cat > ${SNAP_COMMON}/.gitconfig << EOF
+[safe]
+        directory = ${SNAP_CURRENT}/addons/community/.git
+
+EOF
+
 touch "${SNAP_DATA}/var/lock/installed.lock"

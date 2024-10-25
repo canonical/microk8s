@@ -16,20 +16,4 @@ exit_if_not_root
 
 exit_if_no_permissions
 
-if [ "$EUID" -ne 0 ] && [[ "${@}" == "community" ]]
-then
-  export GIT_DIR=/tmp/config-$(cat /proc/sys/kernel/random/uuid)
-  mkdir -p ${GIT_DIR}
-  cat > ${GIT_DIR}/.gitconfig << EOF
-[safe]
-        directory = $SNAP/addons/community
-EOF
-fi
-
 ${SNAP}/usr/bin/python3 ${SNAP}/scripts/wrappers/enable.py "${@}"
-
-if [ "$EUID" -ne 0 ] && [[ "${@}" == "community" ]]
-then
-  rm -rf ${GIT_DIR}
-  unset GIT_DIR
-fi
