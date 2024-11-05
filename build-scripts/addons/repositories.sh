@@ -31,9 +31,3 @@ done
 echo "${ADDONS_REPOS_ENABLED}" > addons/.auto-add
 
 cp -r "addons" "${INSTALL}/addons"
-
-cat > ${INSTALL}/gitconfig << EOF
-[safe]
-        directory = /snap/microk8s/current/addons/community/.git
-
-EOF
