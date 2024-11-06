@@ -149,6 +149,7 @@ then
 fi
 
 # copy git config
-cp ${SNAP}/gitconfig  ${SNAP_COMMON}/.gitconfig
+mkdir -p ${SNAP_DATA}/args/git
+cp ${SNAP}/default-args/git/.gitconfig  ${SNAP_DATA}/args/git/.gitconfig
 
 touch "${SNAP_DATA}/var/lock/installed.lock"

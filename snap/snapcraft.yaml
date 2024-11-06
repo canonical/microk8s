@@ -250,7 +250,6 @@ parts:
       cp client.config.template "${SNAPCRAFT_PART_INSTALL}/client.config.template"
       cp kubelet.config.template "${SNAPCRAFT_PART_INSTALL}/kubelet.config.template"
       cp client-x509.config.template "${SNAPCRAFT_PART_INSTALL}/client-x509.config.template"
-      cp gitconfig "${SNAPCRAFT_PART_INSTALL}/gitconfig"
 
       cp -r wrappers/* "${SNAPCRAFT_PART_INSTALL}/"
       cp -r actions/ "${SNAPCRAFT_PART_INSTALL}/actions"

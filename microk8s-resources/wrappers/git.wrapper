@@ -8,6 +8,6 @@ export GIT_EXEC_PATH="$SNAP/usr/lib/git-core"
 export GIT_TEMPLATE_DIR="$SNAP/usr/share/git-core/templates"
 export GIT_CONFIG_NOSYSTEM=1
 
-HOME="${SNAP_COMMON}"
+HOME="${SNAP_DATA}/args/git"
 
 "$SNAP/usr/bin/git" "${@}"
