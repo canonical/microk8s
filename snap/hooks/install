@@ -148,4 +148,8 @@ then
   touch ${SNAP_DATA}/var/lock/low-memory-guard.lock
 fi
 
+# copy git config
+mkdir -p ${SNAP_DATA}/args/git
+cp ${SNAP}/default-args/git/.gitconfig  ${SNAP_DATA}/args/git/.gitconfig
+
 touch "${SNAP_DATA}/var/lock/installed.lock"

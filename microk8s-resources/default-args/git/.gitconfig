@@ -1,0 +1,3 @@
+[safe]
+        directory = /snap/microk8s/current/addons/community/.git
+        directory = /snap/microk8s/current/addons/core/.git
