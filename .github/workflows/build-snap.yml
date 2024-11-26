@@ -244,6 +244,8 @@ jobs:
             trivy image $i --format sarif > sarifs/$name.sarif
             jq empty sarifs/$name.sarif
           done
+          cat ./build-scripts/images.txt
+          ls -la sarifs
 #      - name: Run Trivy vulnerability scanner on the snap
 #        run: |
 #          cp build/microk8s.snap .
