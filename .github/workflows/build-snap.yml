@@ -212,7 +212,7 @@ jobs:
 #          path: build
       - name: create sarifs directory
         run: |
-          mkdir -p sarifs
+          #mkdir -p sarifs
           
           mkdir build
           snap download microk8s --basename microk8s
@@ -223,8 +223,12 @@ jobs:
           scan-type: "fs"
           ignore-unfixed: true
           format: "sarif"
-          output: "sarifs/trivy-microk8s-repo-scan--results.sarif"
+          output: "trivy-microk8s-repo-scan--results.sarif"
           severity: "CRITICAL"
+      - name: Gather Trivy repo scan results
+        run: |
+          mkdir -p sarifs
+          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
       - name: Setup Trivy vulnerability scanner
         run: |
           VER=$(curl --silent -qI https://github.com/aquasecurity/trivy/releases/latest | awk -F '/' '/^location/ {print  substr($NF, 1, length($NF)-1)}');
