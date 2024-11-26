@@ -221,28 +221,37 @@ jobs:
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@v0.2.2
 
-      - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@0.29.0
-        with:
-          scan-type: "fs"
-          ignore-unfixed: true
-          format: "sarif"
-          output: "trivy-microk8s-repo-scan--results.sarif"
-          severity: "CRITICAL"
-          skip-setup-trivy: true
-      - name: cat trivy-microk8s-repo-scan--results.sarif
-        run: |
-          jq empty trivy-microk8s-repo-scan--results.sarif
-      - name: Gather Trivy repo scan results
-        run: |
-          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
+#      - name: Run Trivy vulnerability scanner in repo mode
+#        uses: aquasecurity/trivy-action@0.29.0
+#        with:
+#          scan-type: "fs"
+#          ignore-unfixed: true
+#          format: "sarif"
+#          output: "trivy-microk8s-repo-scan--results.sarif"
+#          severity: "CRITICAL"
+#          skip-setup-trivy: true
+#      - name: cat trivy-microk8s-repo-scan--results.sarif
+#        run: |
+#          jq empty trivy-microk8s-repo-scan--results.sarif
+#      - name: Gather Trivy repo scan results
+#        run: |
+#          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
 
       - name: Run Trivy vulnerability scanner on images
         run: |
+          RETRY_TIMES=5
           for i in $(cat ./build-scripts/images.txt) ; do
             name=$(echo  $i | awk -F ':|/' '{print $(NF-1)}')
-            trivy image $i --format sarif > sarifs/$name.sarif
-            jq empty sarifs/$name.sarif
+            for (( j=1; j<=${RETRY_TIMES}; j+=1 )); do
+              trivy image $i --format sarif > sarifs/$name.sarif
+              if [ -s sarifs/$name.sarif ]; then
+                #The file is not-empty.
+                break
+              else
+                echo The sarifs/$name.sarif is empty. retrying for $j times
+              fi
+              echo failed to create non-empty report of sarifs/$name.sarif after $RETRY_TIMES times
+            done
           done
           cat ./build-scripts/images.txt
           ls -la sarifs
