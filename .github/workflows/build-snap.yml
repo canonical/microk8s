@@ -230,12 +230,12 @@ jobs:
           output: "trivy-microk8s-repo-scan--results.sarif"
           severity: "CRITICAL"
           skip-setup-trivy: true
-      - name: cat trivy-microk8s-repo-scan--results.sarif
-        run: |
-          cat trivy-microk8s-repo-scan--results.sarif | jq empty
-      - name: Gather Trivy repo scan results
-        run: |
-          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
+#      - name: cat trivy-microk8s-repo-scan--results.sarif
+#        run: |
+#          cat trivy-microk8s-repo-scan--results.sarif | jq empty
+#      - name: Gather Trivy repo scan results
+#        run: |
+#          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
 
       - name: Run Trivy vulnerability scanner on images
         run: |
