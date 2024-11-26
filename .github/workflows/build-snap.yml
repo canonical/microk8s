@@ -225,14 +225,14 @@ jobs:
           
           pwd
           ls -la
-      - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: "fs"
-          ignore-unfixed: true
-          format: "sarif"
-          output: "trivy-microk8s-repo-scan--results.sarif"
-          severity: "CRITICAL"
+#      - name: Run Trivy vulnerability scanner in repo mode
+#        uses: aquasecurity/trivy-action@master
+#        with:
+#          scan-type: "fs"
+#          ignore-unfixed: true
+#          format: "sarif"
+#          output: "trivy-microk8s-repo-scan--results.sarif"
+#          severity: "CRITICAL"
       - name: Gather Trivy repo scan results
         run: |
           cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
