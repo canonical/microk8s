@@ -212,28 +212,27 @@ jobs:
 #          path: build
       - name: create sarifs directory
         run: |
-          #mkdir -p sarifs
+          mkdir -p sarifs
           
           mkdir build
           snap download microk8s --basename microk8s
           mv microk8s.snap ./build
+
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.2
+
       - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.29.0
         with:
           scan-type: "fs"
           ignore-unfixed: true
           format: "sarif"
           output: "trivy-microk8s-repo-scan--results.sarif"
           severity: "CRITICAL"
+          skip-setup-trivy: true
       - name: Gather Trivy repo scan results
         run: |
-          mkdir -p sarifs
           cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
-      - name: Setup Trivy vulnerability scanner
-        run: |
-          VER=$(curl --silent -qI https://github.com/aquasecurity/trivy/releases/latest | awk -F '/' '/^location/ {print  substr($NF, 1, length($NF)-1)}');
-          wget https://github.com/aquasecurity/trivy/releases/download/${VER}/trivy_${VER#v}_Linux-64bit.tar.gz
-          tar -zxvf ./trivy_${VER#v}_Linux-64bit.tar.gz
       - name: Run Trivy vulnerability scanner on images
         run: |
           for i in $(cat ./build-scripts/images.txt) ; do
