@@ -257,6 +257,7 @@ jobs:
           ls -la sarifs
       - name: Run Trivy vulnerability scanner on the snap
         run: |
+          RETRY_TIMES=5
           cp build/microk8s.snap .
           unsquashfs microk8s.snap
           for (( j=1; j<=${RETRY_TIMES}; j+=1 )); do
