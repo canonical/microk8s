@@ -210,46 +210,37 @@ jobs:
 #        with:
 #          name: microk8s.snap
 #          path: build
-#      - name: download snap for test purposes
-#        run: |
-#          mkdir build
-#          snap download microk8s --basename microk8s
-#          mv microk8s.snap ./build
-
-      - name: Setup Trivy vulnerability scanner
+      - name: create sarifs directory
         run: |
           mkdir -p sarifs
+          
+          mkdir build
+          snap download microk8s --basename microk8s
+          mv microk8s.snap ./build
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          ignore-unfixed: true
+          format: "sarif"
+          output: "./sarifs/trivy-microk8s-repo-scan--results.sarif"
+          severity: "CRITICAL"
+      - name: Setup Trivy vulnerability scanner
+        run: |
           VER=$(curl --silent -qI https://github.com/aquasecurity/trivy/releases/latest | awk -F '/' '/^location/ {print  substr($NF, 1, length($NF)-1)}');
           wget https://github.com/aquasecurity/trivy/releases/download/${VER}/trivy_${VER#v}_Linux-64bit.tar.gz
           tar -zxvf ./trivy_${VER#v}_Linux-64bit.tar.gz
-          
-          pwd
-          ls -la
-#      - name: Run Trivy vulnerability scanner in repo mode
-#        uses: aquasecurity/trivy-action@master
-#        with:
-#          scan-type: "fs"
-#          ignore-unfixed: true
-#          format: "sarif"
-#          output: "trivy-microk8s-repo-scan--results.sarif"
-#          severity: "CRITICAL"
-#      - name: Gather Trivy repo scan results
-#        run: |
-#          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
       - name: Run Trivy vulnerability scanner on images
         run: |
-          set -x
-          pwd
-          ls -la
           for i in $(cat ./build-scripts/images.txt) ; do
             name=$(echo  $i | awk -F ':|/' '{print $(NF-1)}')
             ./trivy image $i --format sarif > sarifs/$name.sarif
           done
-#      - name: Run Trivy vulnerability scanner on the snap
-#        run: |
-#          cp build/microk8s.snap .
-#          unsquashfs microk8s.snap
-#          ./trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
+      - name: Run Trivy vulnerability scanner on the snap
+        run: |
+          cp build/microk8s.snap .
+          unsquashfs microk8s.snap
+          ./trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         with:
