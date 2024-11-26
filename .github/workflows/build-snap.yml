@@ -221,21 +221,21 @@ jobs:
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@v0.2.2
 
-#      - name: Run Trivy vulnerability scanner in repo mode
-#        uses: aquasecurity/trivy-action@0.29.0
-#        with:
-#          scan-type: "fs"
-#          ignore-unfixed: true
-#          format: "sarif"
-#          output: "trivy-microk8s-repo-scan--results.sarif"
-#          severity: "CRITICAL"
-#          skip-setup-trivy: true
-#      - name: cat trivy-microk8s-repo-scan--results.sarif
-#        run: |
-#          jq empty trivy-microk8s-repo-scan--results.sarif
-#      - name: Gather Trivy repo scan results
-#        run: |
-#          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@0.29.0
+        with:
+          scan-type: "fs"
+          ignore-unfixed: true
+          format: "sarif"
+          output: "trivy-microk8s-repo-scan--results.sarif"
+          severity: "CRITICAL"
+          skip-setup-trivy: true
+      - name: cat trivy-microk8s-repo-scan--results.sarif
+        run: |
+          jq empty trivy-microk8s-repo-scan--results.sarif
+      - name: Gather Trivy repo scan results
+        run: |
+          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
 
       - name: Run Trivy vulnerability scanner on images
         run: |
@@ -255,11 +255,20 @@ jobs:
           done
           cat ./build-scripts/images.txt
           ls -la sarifs
-#      - name: Run Trivy vulnerability scanner on the snap
-#        run: |
-#          cp build/microk8s.snap .
-#          unsquashfs microk8s.snap
-#          trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
+      - name: Run Trivy vulnerability scanner on the snap
+        run: |
+          cp build/microk8s.snap .
+          unsquashfs microk8s.snap
+          for (( j=1; j<=${RETRY_TIMES}; j+=1 )); do
+            trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
+            if [ -s sarifs/snap.sarif ]; then
+              #The file is not-empty.
+              break
+            else
+              echo The sarifs/snap.sarif is empty. retrying for $j times
+            fi
+          echo failed to create non-empty report of sarifs/snap.sarif after $RETRY_TIMES times
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: "sarifs"
