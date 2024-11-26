@@ -6,34 +6,34 @@ on:
       - master
 
 jobs:
-  build:
-    name: Create snap package
-    runs-on: ubuntu-20.04
-
-    steps:
-      - name: Checking out repo
-        uses: actions/checkout@v4
-      - name: Install lxd
-        run: |
-          sudo lxd init --auto
-          sudo usermod --append --groups lxd $USER
-          sg lxd -c 'lxc version'
-      - name: Install snapcraft
-        run: |
-          sudo snap install snapcraft --classic
-      - name: Install snapd from candidate
-        run: |
-          # TODO(neoaggelos): revert this after latest/beta is working again
-          sudo snap refresh snapd --channel=latest/stable
-      - name: Build snap
-        run: |
-          sg lxd -c 'snapcraft --use-lxd'
-          sudo mv microk8s*.snap microk8s.snap
-      - name: Uploading snap
-        uses: actions/upload-artifact@v3
-        with:
-          name: microk8s.snap
-          path: microk8s.snap
+#  build:
+#    name: Create snap package
+#    runs-on: ubuntu-20.04
+#
+#    steps:
+#      - name: Checking out repo
+#        uses: actions/checkout@v4
+#      - name: Install lxd
+#        run: |
+#          sudo lxd init --auto
+#          sudo usermod --append --groups lxd $USER
+#          sg lxd -c 'lxc version'
+#      - name: Install snapcraft
+#        run: |
+#          sudo snap install snapcraft --classic
+#      - name: Install snapd from candidate
+#        run: |
+#          # TODO(neoaggelos): revert this after latest/beta is working again
+#          sudo snap refresh snapd --channel=latest/stable
+#      - name: Build snap
+#        run: |
+#          sg lxd -c 'snapcraft --use-lxd'
+#          sudo mv microk8s*.snap microk8s.snap
+#      - name: Uploading snap
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: microk8s.snap
+#          path: microk8s.snap
 
 #  test-upgrade:
 #    name: Upgrade path test
@@ -201,15 +201,21 @@ jobs:
   security-scan:
     name: Security scan
     runs-on: ubuntu-20.04
-    needs: build
+#    needs: build
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
-        with:
-          name: microk8s.snap
-          path: build
+#      - name: Fetch snap
+#        uses: actions/download-artifact@v3.0.2
+#        with:
+#          name: microk8s.snap
+#          path: build
+      - name: Setup Trivy vulnerability scanner
+        run: |
+          mkdir build
+          snap download microk8s --basename microk8s
+          mv microk8s.snap ./build
+
       - name: Setup Trivy vulnerability scanner
         run: |
           mkdir -p sarifs
@@ -232,6 +238,7 @@ jobs:
           cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
       - name: Run Trivy vulnerability scanner on images
         run: |
+          set -x
           pwd
           ls -la
           for i in $(cat ./build-scripts/images.txt) ; do
