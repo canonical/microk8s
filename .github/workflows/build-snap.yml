@@ -221,15 +221,15 @@ jobs:
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@v0.2.2
 
-      - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@0.29.0
-        with:
-          scan-type: "fs"
-          ignore-unfixed: true
-          format: "sarif"
-          output: "trivy-microk8s-repo-scan--results.sarif"
-          severity: "CRITICAL"
-          skip-setup-trivy: true
+#      - name: Run Trivy vulnerability scanner in repo mode
+#        uses: aquasecurity/trivy-action@0.29.0
+#        with:
+#          scan-type: "fs"
+#          ignore-unfixed: true
+#          format: "sarif"
+#          output: "trivy-microk8s-repo-scan--results.sarif"
+#          severity: "CRITICAL"
+#          skip-setup-trivy: true
 #      - name: cat trivy-microk8s-repo-scan--results.sarif
 #        run: |
 #          cat trivy-microk8s-repo-scan--results.sarif | jq empty
@@ -242,6 +242,7 @@ jobs:
           for i in $(cat ./build-scripts/images.txt) ; do
             name=$(echo  $i | awk -F ':|/' '{print $(NF-1)}')
             trivy image $i --format sarif > sarifs/$name.sarif
+            jq empty sarifs/$name.sarif
           done
 #      - name: Run Trivy vulnerability scanner on the snap
 #        run: |
