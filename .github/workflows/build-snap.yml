@@ -233,9 +233,9 @@ jobs:
 #          format: "sarif"
 #          output: "trivy-microk8s-repo-scan--results.sarif"
 #          severity: "CRITICAL"
-      - name: Gather Trivy repo scan results
-        run: |
-          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
+#      - name: Gather Trivy repo scan results
+#        run: |
+#          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
       - name: Run Trivy vulnerability scanner on images
         run: |
           set -x
