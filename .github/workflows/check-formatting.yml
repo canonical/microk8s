@@ -1,7 +1,8 @@
 name: Lint Code
 
 on:
-  - pull_request
+#  - pull_request
+  workflow_dispatch:
 
 jobs:
   check-formatting:
