@@ -243,11 +243,11 @@ jobs:
 #            name=$(echo  $i | awk -F ':|/' '{print $(NF-1)}')
 #            trivy image $i --format sarif > sarifs/$name.sarif
 #          done
-#      - name: Run Trivy vulnerability scanner on the snap
-#        run: |
-#          cp build/microk8s.snap .
-#          unsquashfs microk8s.snap
-#          trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
+      - name: Run Trivy vulnerability scanner on the snap
+        run: |
+          cp build/microk8s.snap .
+          unsquashfs microk8s.snap
+          trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         with:
