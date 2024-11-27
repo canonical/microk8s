@@ -232,8 +232,6 @@ jobs:
           skip-setup-trivy: true
       - name: cat trivy-microk8s-repo-scan--results.sarif
         run: |
-          trivy clean --scan-cache
-          df -h
           ls -la trivy-microk8s-repo-scan--results.sarif
       - name: Gather Trivy repo scan results
         run: |
@@ -241,6 +239,8 @@ jobs:
 
       - name: Run Trivy vulnerability scanner on images
         run: |
+          unset TRIVY_SEVERITY
+          unset TRIVY_IGNORE_UNFIXED
           cat ./build-scripts/images.txt
           ls -la sarifs
           RETRY_TIMES=5
