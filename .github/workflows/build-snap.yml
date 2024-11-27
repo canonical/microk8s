@@ -233,6 +233,7 @@ jobs:
       - name: cat trivy-microk8s-repo-scan--results.sarif
         run: |
           trivy clean --scan-cache
+          df -h
           ls -la trivy-microk8s-repo-scan--results.sarif
       - name: Gather Trivy repo scan results
         run: |
