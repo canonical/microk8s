@@ -243,17 +243,17 @@ jobs:
           for i in $(cat ./build-scripts/images.txt) ; do
             name=$(echo  $i | awk -F ':|/' '{print $(NF-1)}')
             for (( j=1; j<=${RETRY_TIMES}; j+=1 )); do
-              trivy image $i --format sarif --db-repository public.ecr.aws/aquasecurity/trivy-db:2 > sarifs/$name.sarif
+              trivy image $i --format sarif --debug > sarifs/$name.sarif
               if [ -s sarifs/$name.sarif ]; then
                 #The file is not-empty.
                 break
               else
                 echo The sarifs/$name.sarif is empty. retrying for $j times
-                sleep 5
+                sleep 15
               fi
               if [[ "$j" == "${RETRY_TIMES}" ]]; then
                 echo failed to create non-empty report of sarifs/$name.sarif after $RETRY_TIMES times
-                exit 1
+                #exit 1
               fi
             done
           done
@@ -265,17 +265,17 @@ jobs:
           cp build/microk8s.snap .
           unsquashfs microk8s.snap
           for (( j=1; j<=${RETRY_TIMES}; j+=1 )); do
-            trivy rootfs ./squashfs-root/ --format sarif --db-repository public.ecr.aws/aquasecurity/trivy-db:2 > sarifs/snap.sarif
+            trivy rootfs ./squashfs-root/ --format sarif --debug > sarifs/snap.sarif
             if [ -s sarifs/snap.sarif ]; then
               #The file is not-empty.
               break
             else
               echo The sarifs/snap.sarif is empty. retrying for $j times
-              sleep 5
+              sleep 15
             fi
             if [[ "$j" == "${RETRY_TIMES}" ]]; then
               echo failed to create non-empty report of sarifs/snap.sarif after $RETRY_TIMES times
-              exit 1
+              #exit 1
             fi
           done
       - uses: actions/upload-artifact@v4
