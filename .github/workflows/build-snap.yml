@@ -253,6 +253,7 @@ jobs:
               fi
               if [[ "$j" == "${RETRY_TIMES}" ]]; then
                 echo failed to create non-empty report of sarifs/$name.sarif after $RETRY_TIMES times
+                exit 1
               fi
             done
           done
@@ -274,6 +275,7 @@ jobs:
             fi
             if [[ "$j" == "${RETRY_TIMES}" ]]; then
               echo failed to create non-empty report of sarifs/snap.sarif after $RETRY_TIMES times
+              exit 1
             fi
           done
       - uses: actions/upload-artifact@v4
