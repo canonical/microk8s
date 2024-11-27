@@ -1,4 +1,4 @@
-From fbf1b2eea978e05e8273cf22cc593a677f0ef823 Mon Sep 17 00:00:00 2001
+From 819b718ecfee8c4f6fb503d0dea80a43e86cdb6f Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
 Subject: [PATCH] Kubelite integration
@@ -19,34 +19,30 @@ Subject: [PATCH] Kubelite integration
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index b78c8cefe6b..58c771609ee 100644
+index 8aa05a4d8f8..75b982aaff9 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
-@@ -63,7 +63,7 @@ func init() {
+@@ -63,11 +63,16 @@ func init() {
  }
  
  // NewAPIServerCommand creates a *cobra.Command object with default parameters
 -func NewAPIServerCommand() *cobra.Command {
-+func NewAPIServerCommand(ctx ...context.Context) *cobra.Command {
++func NewAPIServerCommand(ctxs ...context.Context) *cobra.Command {
  	_, featureGate := featuregate.DefaultComponentGlobalsRegistry.ComponentGlobalsOrRegister(
  		featuregate.DefaultKubeComponent, utilversion.DefaultBuildEffectiveVersion(), utilfeature.DefaultMutableFeatureGate)
  	s := options.NewServerRunOptions()
-@@ -119,7 +119,12 @@ cluster's shared state through which all other components interact.`,
- 			return nil
- 		},
- 	}
--	cmd.SetContext(genericapiserver.SetupSignalContext())
-+
-+	if len(ctx) == 0 {
-+		cmd.SetContext(genericapiserver.SetupSignalContext())
+-	ctx := genericapiserver.SetupSignalContext()
++	ctx := context.Background()
++	if len(ctxs) == 0 {
++		ctx = genericapiserver.SetupSignalContext()
 +	} else {
-+		cmd.SetContext(ctx[0])
++		ctx = ctxs[0]
 +	}
  
- 	fs := cmd.Flags()
- 	namedFlagSets := s.Flags()
+ 	cmd := &cobra.Command{
+ 		Use: "kube-apiserver",
 diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
-index 30c8fca17c8..bf107a779a4 100644
+index 1785bbdcc91..64f01ba5c93 100644
 --- a/cmd/kube-scheduler/app/server.go
 +++ b/cmd/kube-scheduler/app/server.go
 @@ -144,7 +144,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
@@ -63,7 +59,7 @@ index 30c8fca17c8..bf107a779a4 100644
  		cancel()
  	}()
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 9cff6743de5..4ed5c12a51d 100644
+index cfcf6e7d5cd..9c3853173ff 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
 @@ -138,7 +138,7 @@ const (
@@ -396,10 +392,10 @@ index 00000000000..30ab604f480
 +	println("Stopping kubelite")
 +}
 diff --git a/pkg/volume/csi/csi_plugin.go b/pkg/volume/csi/csi_plugin.go
-index 9afcd8cde20..a5d7ef73140 100644
+index 59fa6245b7f..6443dffd695 100644
 --- a/pkg/volume/csi/csi_plugin.go
 +++ b/pkg/volume/csi/csi_plugin.go
-@@ -253,18 +253,22 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
+@@ -256,18 +256,22 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
  	}
  
  	// Initializing the label management channels
