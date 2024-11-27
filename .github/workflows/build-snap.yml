@@ -221,70 +221,24 @@ jobs:
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@v0.2.2
 
-      - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@0.29.0
-        with:
-          scan-type: "fs"
-          ignore-unfixed: true
-          format: "sarif"
-          output: "trivy-microk8s-repo-scan--results.sarif"
-          severity: "CRITICAL"
-          skip-setup-trivy: true
-      - name: cat trivy-microk8s-repo-scan--results.sarif
+      - name: Run Trivy vulnerability scanner on codebase
         run: |
-          ls -la trivy-microk8s-repo-scan--results.sarif
+          trivy fs . --format sarif --severity CRITICAL > sarifs/trivy-microk8s-repo-scan--results.sarif
       - name: Gather Trivy repo scan results
         run: |
           cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
 
       - name: Run Trivy vulnerability scanner on images
         run: |
-          unset TRIVY_OUTPUT
-          cat ./build-scripts/images.txt
-          ls -la sarifs
-          RETRY_TIMES=5
           for i in $(cat ./build-scripts/images.txt) ; do
             name=$(echo  $i | awk -F ':|/' '{print $(NF-1)}')
-            for (( j=1; j<=${RETRY_TIMES}; j+=1 )); do
-              trivy image $i --format sarif --debug > sarifs/$name.sarif
-              if [ -s sarifs/$name.sarif ]; then
-                #The file is not-empty.
-                break
-              else
-                echo The sarifs/$name.sarif is empty. retrying for $j times
-                sleep 15
-              fi
-              if [[ "$j" == "${RETRY_TIMES}" ]]; then
-                echo failed to create non-empty report of sarifs/$name.sarif after $RETRY_TIMES times
-                #exit 1
-              fi
-            done
+            trivy image $i --format sarif > sarifs/$name.sarif
           done
-          cat ./build-scripts/images.txt
-          ls -la sarifs
       - name: Run Trivy vulnerability scanner on the snap
         run: |
-          RETRY_TIMES=5
           cp build/microk8s.snap .
           unsquashfs microk8s.snap
-          for (( j=1; j<=${RETRY_TIMES}; j+=1 )); do
-            trivy rootfs ./squashfs-root/ --format sarif --debug > sarifs/snap.sarif
-            if [ -s sarifs/snap.sarif ]; then
-              #The file is not-empty.
-              break
-            else
-              echo The sarifs/snap.sarif is empty. retrying for $j times
-              sleep 15
-            fi
-            if [[ "$j" == "${RETRY_TIMES}" ]]; then
-              echo failed to create non-empty report of sarifs/snap.sarif after $RETRY_TIMES times
-              #exit 1
-            fi
-          done
-      - uses: actions/upload-artifact@v4
-        with:
-          name: "sarifs"
-          path: "sarifs"
+          trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
