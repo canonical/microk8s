@@ -7,7 +7,7 @@ requests_unixsocket==0.1.5
 pysha3==1.0.2; python_version < '3.6'
 simplejson==3.8.2
 toml==0.10.0
-certifi==2023.7.22
+certifi==2024.7.4
 chardet==3.0.4
 idna==2.7
 pyinstaller
