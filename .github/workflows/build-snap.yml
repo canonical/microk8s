@@ -239,8 +239,7 @@ jobs:
 
       - name: Run Trivy vulnerability scanner on images
         run: |
-          unset TRIVY_SEVERITY
-          unset TRIVY_IGNORE_UNFIXED
+          unset TRIVY_OUTPUT
           cat ./build-scripts/images.txt
           ls -la sarifs
           RETRY_TIMES=5
