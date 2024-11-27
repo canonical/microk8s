@@ -232,13 +232,15 @@ jobs:
           skip-setup-trivy: true
       - name: cat trivy-microk8s-repo-scan--results.sarif
         run: |
-          jq empty trivy-microk8s-repo-scan--results.sarif
+          ls -la trivy-microk8s-repo-scan--results.sarif
       - name: Gather Trivy repo scan results
         run: |
           cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
 
       - name: Run Trivy vulnerability scanner on images
         run: |
+          cat ./build-scripts/images.txt
+          ls -la sarifs
           RETRY_TIMES=5
           for i in $(cat ./build-scripts/images.txt) ; do
             name=$(echo  $i | awk -F ':|/' '{print $(NF-1)}')
