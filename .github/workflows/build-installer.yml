@@ -52,7 +52,7 @@ jobs:
       - name: Create installer
         run: makensis.exe ${{ github.workspace }}/installer/windows/microk8s.nsi
       - name: Upload installer
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Windows installer
           path: ${{ github.workspace }}/installer/windows/microk8s-installer.exe
