@@ -3,6 +3,7 @@ import datetime
 import time
 import yaml
 import platform
+import psutil
 from subprocess import check_output, CalledProcessError, check_call
 
 
@@ -270,3 +271,7 @@ def is_ipv6_configured():
         return b"inet6" in output
     except CalledProcessError:
         return False
+
+
+def _get_process(name):
+    return [p for p in psutil.process_iter() if name == p.name()]
