@@ -20,6 +20,7 @@ from utils import (
     is_container,
     is_ipv6_configured,
     kubectl,
+    _get_process,
 )
 
 upgrade_from = os.environ.get("UPGRADE_MICROK8S_FROM", "beta")
@@ -162,3 +163,5 @@ extraSANs:
         if not is_container():
             # On lxc umount docker overlay is not permitted.
             check_call("sudo snap remove microk8s".split())
+            coredns_procs = _get_process("coredns")
+            assert len(coredns_procs) == 0, "Expected to have 0 coredns processes running."
