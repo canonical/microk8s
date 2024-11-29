@@ -988,7 +988,7 @@ remove_all_containers() {
 
     for container in $("${SNAP}/microk8s-ctr.wrapper" containers ls | $SNAP/bin/sed -n '1!p' | $SNAP/usr/bin/gawk '{print $1}')
     do
-        "${SNAP}/microk8s-ctr.wrapper" container delete --force $container &>/dev/null || true
+        "${SNAP}/microk8s-ctr.wrapper" container delete $container &>/dev/null || true
     done
 }
 
