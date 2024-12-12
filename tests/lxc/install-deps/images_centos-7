@@ -7,7 +7,7 @@ systemctl enable --now snapd.socket
 ln -s /var/lib/snapd/snap /snap
 yum install python3-pip  -y
 yum install docker -y
-pip3 install pytest requests pyyaml sh
+pip3 install pytest requests pyyaml sh psutil
 
 # wait for the snapd seeding to take place!
 n=0
