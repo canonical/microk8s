@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 10 * * *"
-  push:
-    branches:
-      - "KU-2335/workflow-reviewers" # TODO rm me
 
 permissions:
   contents: write
