@@ -46,7 +46,7 @@ jobs:
           commit-message: update list of images used by ${{ matrix.channel }}
           title: "[${{ matrix.channel }}] Update MicroK8s images"
           body: update list of images used by ${{ matrix.channel }}
-          team-reviewers: canonical/kubernetes
+          team-reviewers: canonical/kubernetes-admins
           branch: auto-update-images/${{ matrix.branch }}
           delete-branch: true
           base: ${{ matrix.branch }}
