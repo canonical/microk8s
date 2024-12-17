@@ -4,6 +4,12 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 10 * * *"
+  push:
+    branches:
+      - "KU-2335/workflow-reviewers" # TODO rm me
+
+permissions:
+  contents: read
 
 jobs:
   update:
@@ -14,11 +20,15 @@ jobs:
           # Latest branches
           - { branch: master, channel: latest/edge }
           # Stable branches
+          - { branch: "1.32", channel: "1.32" }
+          - { branch: "1.31", channel: "1.31" }
           - { branch: "1.30", channel: "1.30" }
           - { branch: "1.29", channel: "1.29" }
           - { branch: "1.28", channel: "1.28" }
           - { branch: "1.27", channel: "1.27" }
           # Stable strict branches
+          - { branch: 1.32-strict, channel: 1.32-strict }
+          - { branch: 1.31-strict, channel: 1.31-strict }
           - { branch: 1.30-strict, channel: 1.30-strict }
           - { branch: 1.29-strict, channel: 1.29-strict }
           - { branch: 1.28-strict, channel: 1.28-strict }
@@ -37,7 +47,7 @@ jobs:
           commit-message: update list of images used by ${{ matrix.channel }}
           title: "[${{ matrix.channel }}] Update MicroK8s images"
           body: update list of images used by ${{ matrix.channel }}
-          reviewers: neoaggelos,ktsakalozos
+          reviewers: canonical/kubernetes
           branch: auto-update-images/${{ matrix.branch }}
           delete-branch: true
           base: ${{ matrix.branch }}
