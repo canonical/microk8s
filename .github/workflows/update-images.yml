@@ -38,7 +38,7 @@ jobs:
         run: |
           ./build-scripts/update-images.sh ${{ matrix.channel }} build-scripts/images.txt
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v7
         with:
           commit-message: update list of images used by ${{ matrix.channel }}
           title: "[${{ matrix.channel }}] Update MicroK8s images"
