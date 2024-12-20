@@ -30,7 +30,7 @@ jobs:
           sg lxd -c 'snapcraft --use-lxd'
           sudo mv microk8s*.snap microk8s.snap
       - name: Uploading snap
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: microk8s.snap
           path: microk8s.snap
