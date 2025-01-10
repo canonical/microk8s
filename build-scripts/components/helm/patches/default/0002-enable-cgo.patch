@@ -1,6 +1,6 @@
-From 76f154cf345ffc7f2b4b9c0e623551c744249d60 Mon Sep 17 00:00:00 2001
-From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
-Date: Fri, 27 Oct 2023 17:01:33 +0000
+From 88e5f3826d2b8343609824d0224c313f8c929853 Mon Sep 17 00:00:00 2001
+From: louiseschmidtgen <louise.schmidtgen@canonical.com>
+Date: Fri, 10 Jan 2025 12:41:56 +0100
 Subject: [PATCH] enable cgo
 
 ---
