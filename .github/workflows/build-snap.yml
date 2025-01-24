@@ -220,6 +220,7 @@ jobs:
           trivy fs . --format sarif --severity CRITICAL > sarifs/trivy-microk8s-repo-scan--results.sarif
       - name: Run Trivy vulnerability scanner on images
         run: |
+          ls
           for i in $(cat ./build-scripts/images.txt) ; do
             name=$(echo  $i | awk -F ':|/' '{print $(NF-1)}')
             trivy image $i --format sarif > sarifs/$name.sarif
