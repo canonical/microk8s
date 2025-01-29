@@ -41,7 +41,7 @@ def post_filter_has_snap_data_mounts(pod) -> bool:
         hostpath_volume = volume.get("hostPath", {})
         host_path = hostpath_volume.get("path", "")
         if not host_path:
-            return False
+            continue
         if host_path.startswith(SNAP_DATA_CURRENT):
             return True
 
