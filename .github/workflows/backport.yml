@@ -31,4 +31,24 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create backport pull requests
-        uses: korthout/backport-action@v2
+        uses: korthout/backport-action@v3
+        with:
+          # Set (default) action parameters explicitly.
+          branch_name: backport-${pull_number}-to-${target_branch}
+          cherry_picking: auto
+          copy_assignees: false
+          copy_milestone: false
+          copy_requested_reviewers: false
+          experimental: >
+            {
+              "conflict_resolution": "fail"
+            }
+          github_token: ${{ github.token }}
+          github_workspace: ${{ github.workspace }}
+          label_pattern: ^backport ([^ ]+)$
+          merge_commits: fail
+          pull_description: |-
+            # Description
+            Backport of #${pull_number} to `${target_branch}`.
+          pull_title: >-
+            [Backport ${target_branch}] ${pull_title}
