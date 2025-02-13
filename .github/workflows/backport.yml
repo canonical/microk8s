@@ -16,6 +16,7 @@ jobs:
     # or when a comment containing `/backport` is created by someone other than the
     # https://github.com/backport-action bot user (user id: 97796249). Note that if you use your
     # own PAT as `github_token`, that you should replace this id with yours.
+    # cdkbot's user ID is 99445902.
     if: >
       (
         github.event_name == 'pull_request_target' &&
@@ -23,7 +24,7 @@ jobs:
       ) || (
         github.event_name == 'issue_comment' &&
         github.event.issue.pull_request &&
-        github.event.comment.user.id != 97796249 &&
+        github.event.comment.user.id != 99445902 &&
         contains(github.event.comment.body, '/backport')
       )
     steps:
@@ -43,7 +44,7 @@ jobs:
             {
               "conflict_resolution": "fail"
             }
-          github_token: ${{ github.token }}
+          github_token: ${{ secrets.BOT_TOKEN }}
           github_workspace: ${{ github.workspace }}
           label_pattern: ^backport ([^ ]+)$
           merge_commits: fail
