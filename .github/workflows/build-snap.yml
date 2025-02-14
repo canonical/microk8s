@@ -28,7 +28,7 @@ jobs:
           sg lxd -c 'snapcraft --use-lxd'
           sudo mv microk8s*.snap microk8s.snap
       - name: Uploading snap
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: microk8s.snap
           path: microk8s.snap
@@ -50,7 +50,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -75,7 +75,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -105,7 +105,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -114,6 +114,7 @@ jobs:
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
           sudo microk8s enable community
+          export UNDER_TIME_PRESSURE="True"
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/; pytest -s -ra ./tests/"
 
   test-addons-core-upgrade:
@@ -135,7 +136,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -160,7 +161,7 @@ jobs:
           sudo pip3 install --upgrade pip
           sudo pip3 install -U pytest sh requests
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -179,7 +180,7 @@ jobs:
       - name: Checking out repo
         uses: actions/checkout@v3.3.0
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -201,39 +202,30 @@ jobs:
       - name: Checking out repo
         uses: actions/checkout@v3.3.0
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
-      - name: Setup Trivy vulnerability scanner
+      - name: Create sarifs directory
         run: |
           mkdir -p sarifs
-          VER=$(curl --silent -qI https://github.com/aquasecurity/trivy/releases/latest | awk -F '/' '/^location/ {print  substr($NF, 1, length($NF)-1)}');
-          wget https://github.com/aquasecurity/trivy/releases/download/${VER}/trivy_${VER#v}_Linux-64bit.tar.gz
-          tar -zxvf ./trivy_${VER#v}_Linux-64bit.tar.gz
-      - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: "fs"
-          ignore-unfixed: true
-          format: "sarif"
-          output: "trivy-microk8s-repo-scan--results.sarif"
-          severity: "CRITICAL"
-      - name: Gather Trivy repo scan results
+      - name: Install Trivy vulnerability scanner
+        uses: aquasecurity/setup-trivy@v0.2.2
+      - name: Run Trivy vulnerability scanner on codebase
         run: |
-          cp trivy-microk8s-repo-scan--results.sarif ./sarifs/
+          trivy fs . --format sarif --severity CRITICAL > sarifs/trivy-microk8s-repo-scan--results.sarif
       - name: Run Trivy vulnerability scanner on images
         run: |
           for i in $(cat ./build-scripts/images.txt) ; do
             name=$(echo  $i | awk -F ':|/' '{print $(NF-1)}')
-            ./trivy image $i --format sarif > sarifs/$name.sarif
+            trivy image $i --format sarif > sarifs/$name.sarif
           done
       - name: Run Trivy vulnerability scanner on the snap
         run: |
           cp build/microk8s.snap .
           unsquashfs microk8s.snap
-          ./trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
+          trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: "sarifs"
