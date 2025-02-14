@@ -114,6 +114,7 @@ jobs:
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
           sudo microk8s enable community
+          export UNDER_TIME_PRESSURE="True"
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/; pytest -s -ra ./tests/"
 
   test-addons-core-upgrade:
