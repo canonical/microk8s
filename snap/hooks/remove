@@ -7,6 +7,15 @@ use_snap_env
 
 snapctl stop ${SNAP_NAME}.daemon-kubelite 2>&1 || true
 
+# Temporarily start containerd so we can stop and kill all the microk8s containers.
+snapctl start ${SNAP_NAME}.daemon-containerd 2>&1 || true
+# wait for containerd to start.
+sleep 5
+
+# Remove any lingering containers and shims.
+remove_all_containers
+kill_all_container_shims
+
 # Try to symlink /var/lib/kubelet so that most kubelet device plugins work out of the box.
 if test -L /var/lib/kubelet; then
   unlink /var/lib/kubelet || true

@@ -41,7 +41,7 @@ function setup_tests() {
 
   export DEBIAN_FRONTEND=noninteractive
   apt-get install python3-pip -y
-  pip3 install -U pytest requests pyyaml sh
+  pip3 install -U pytest requests pyyaml sh psutil
   apt-get install jq -y
   snap install kubectl --classic
   export ARCH=$(uname -m)
