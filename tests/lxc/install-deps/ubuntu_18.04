@@ -6,7 +6,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get install python3-pip docker.io -y
 # In Ubuntu 18.04 for arm64 on LXC, "pip3 install -U pyyaml" breaks netplan
-pip3 install pytest requests pyyaml sh
+pip3 install pytest requests pyyaml sh psutil
 # Attempting to address https://forum.snapcraft.io/t/lxd-refresh-cause-container-socket-error/8698
 # if core is to be installed by microk8s it fails
 snap install core20 | true
