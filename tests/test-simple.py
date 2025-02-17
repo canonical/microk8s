@@ -3,6 +3,8 @@ import time
 import requests
 import os.path
 
+import utils
+
 
 class TestSimple(object):
     def test_microk8s_nodes_ready(self):
@@ -132,3 +134,17 @@ class TestSimple(object):
 
         # Verify that all node services are running
         assert running_node_services == set(node_services), "Not all node services are running"
+
+    def test_microk8s_stop_start(self):
+        coredns_procs = utils._get_process("coredns")
+        assert len(coredns_procs) > 0, "Expected to find a coredns process running."
+
+        utils.run_until_success("/snap/bin/microk8s.stop", timeout_insec=180)
+
+        new_coredns_procs = utils._get_process("coredns")
+        assert len(new_coredns_procs) == 0, "coredns found still running after microk8s stop."
+
+        utils.run_until_success("/snap/bin/microk8s.start", timeout_insec=180)
+
+        new_coredns_procs = utils._get_process("coredns")
+        assert len(new_coredns_procs) > 0, "Expected to find a new coredns process running."
