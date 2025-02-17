@@ -40,13 +40,13 @@ while true; do
     esac
 done
 
-stopcmd="run_with_sudo snap stop ${SNAP_NAME} --disable"
+prefix_cmd="run_with_sudo snap"
 if is_strict
 then
-  stopcmd="snapctl stop microk8s.daemon-kubelite --disable"
+  prefix_cmd="snapctl"
 fi
 
-$stopcmd
+$prefix_cmd stop microk8s.daemon-kubelite --disable
 stop_status=$?
 
 if ! [ $stop_status -eq 0 ]
@@ -54,12 +54,8 @@ then
     echo 'Failed to stop microk8s services. Check snapd logs with "journalctl -u snapd.service"'
     exit 1
 else
-    if is_strict
-    then
-      remove_all_containers
-      snapctl stop microk8s --disable
-    else
-      kill_all_container_shims
-    fi
+    remove_all_containers
+    kill_all_container_shims
+    $prefix_cmd stop microk8s --disable
     run_with_sudo touch ${SNAP_DATA}/var/lock/stopped.lock
 fi

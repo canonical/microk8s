@@ -5,7 +5,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
 apt-get install python3-pip docker.io libsquashfuse0 squashfuse fuse snapd -y
-pip3 install pytest requests pyyaml sh --break-system-packages
+pip3 install pytest requests pyyaml sh psutil --break-system-packages
 # Attempting to address https://forum.snapcraft.io/t/lxd-refresh-cause-container-socket-error/8698
 # if core is to be installed by microk8s it fails
 
