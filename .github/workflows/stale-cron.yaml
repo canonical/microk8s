@@ -1,0 +1,30 @@
+name: Close inactive issues or PRs
+on:
+  schedule:
+    - cron: "0 0 * * *" # Runs every midnight
+  pull_request:
+    paths:
+      - .github/workflows/stale-cron.yaml
+
+jobs:
+  close-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-stale: 330
+          days-before-close: 30
+          stale-issue-label: inactive
+          stale-issue-message: >
+            This issue has been automatically marked as stale because it has
+            not had recent activity. It will be closed if no further activity
+            occurs. Thank you for your contributions.
+          close-issue-message: >
+            This issue was closed because it has been inactive for 30 days
+            since being marked as stale.
+          exempt-pr-labels: pinned,security
+          exempt-issue-labels: pinned,security
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
