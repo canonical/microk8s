@@ -40,7 +40,6 @@ function setup_tests() {
   PROXY="${4-$PROXY}"
 
   export DEBIAN_FRONTEND=noninteractive
-  snap list snapd &>/dev/null || snap install snapd
   apt-get install python3-pip -y
   pip3 install -U pytest requests pyyaml sh psutil
   apt-get install jq -y
