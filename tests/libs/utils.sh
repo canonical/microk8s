@@ -31,6 +31,7 @@ function create_machine() {
     lxc exec "$NAME" -- reboot
     sleep 20
   fi
+  lxc exec "$NAME" -- /bin/bash -c "snap refresh snapd"
 }
 
 function setup_tests() {
