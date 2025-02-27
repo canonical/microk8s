@@ -129,18 +129,10 @@ def clean_cluster():
             subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         remove_extra_resources(ns_name)
 
-    print("Removing CRDs")
-    cmd = [
-        KUBECTL,
-        "delete",
-        "--all",
-        "customresourcedefinitions.apiextensions.k8s.io",
-        "--timeout=60s",
-    ]
-    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
+    remove_crds()
     remove_priority_classes()
     remove_storage_classes()
+    remove_non_namespaced_resources()
 
     for ns in nss:
         ns_name = ns.split("/")[-1]
@@ -169,6 +161,33 @@ def remove_storage_classes():
         if "microk8s-hostpath" in cs:
             continue
         cmd = [KUBECTL, "delete", cs, "--timeout=60s"]
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def remove_crds():
+    print("Removing CRDs")
+    cmd = [
+        KUBECTL,
+        "delete",
+        "--all",
+        "customresourcedefinitions.apiextensions.k8s.io",
+        "--timeout=60s",
+    ]
+    subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def remove_non_namespaced_resources():
+    resources = [
+        "MutatingWebhookConfigurations",
+        "ValidatingAdmissionPolicies",
+        "ValidatingAdmissionPolicyBindings",
+        "ValidatingWebhookConfigurations",
+        "CertificateSigningRequests",
+    ]
+
+    for r in resources:
+        print(f"Removing {r}")
+        cmd = [KUBECTL, "delete", "--all", r, "--timeout=60s"]
         subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
@@ -267,7 +286,7 @@ def preflight_check():
     is_flag=True,
     required=False,
     default=True,
-    help="Also destroy storage. (default: false)",
+    help="Also destroy storage. (default: true)",
 )
 def reset(destroy_storage):
     """
