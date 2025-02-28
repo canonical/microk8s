@@ -31,6 +31,7 @@ function create_machine() {
     lxc exec "$NAME" -- reboot
     sleep 20
   fi
+  snap list snapd &>/dev/null || snap install snapd
 }
 
 function setup_tests() {
