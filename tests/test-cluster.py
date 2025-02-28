@@ -80,6 +80,7 @@ extraSANs:
             raise Exception("Need to install multipass or lxc")
 
     def _setup_lxc(self, channel_or_snap):
+        self.run("snap list snapd &>/dev/null || snap install snapd")
         if not self.attached:
             profiles = subprocess.check_output("/snap/bin/lxc profile list".split())
             if "microk8s" not in profiles.decode():
@@ -297,6 +298,7 @@ class TestCluster(object):
                 for i in range(0, size):
                     print("Creating machine {}".format(i))
                     vm = VM(backend)
+                    vm.run("snap list snapd &>/dev/null || snap install snapd")
                     vm.setup(channel_to_test)
                     print("Waiting for machine {}".format(i))
                     vm.run("/snap/bin/microk8s.status --wait-ready --timeout 120")
