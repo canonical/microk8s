@@ -25,6 +25,7 @@ channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/stable")
 backend = os.environ.get("BACKEND", None)
 profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
 snap_data = os.environ.get("SNAP_DATA", "/var/snap/microk8s/current")
+distro = os.environ.get("DISTRO", "ubuntu:20.04")
 
 TEMPLATES = Path(__file__).absolute().parent / "templates"
 
@@ -95,8 +96,8 @@ extraSANs:
                     process.stdin.close()
 
             subprocess.check_call(
-                "/snap/bin/lxc launch -p default -p microk8s ubuntu:18.04 {}".format(
-                    self.vm_name
+                "/snap/bin/lxc launch -p default -p microk8s {} {}".format(
+                    distro, self.vm_name
                 ).split()
             )
             time.sleep(20)
@@ -165,8 +166,9 @@ extraSANs:
 
     def _setup_multipass(self, channel_or_snap):
         if not self.attached:
+            version = distro.split(":")
             subprocess.check_call(
-                "/snap/bin/multipass launch 18.04 -n {} -m 2G".format(self.vm_name).split()
+                "/snap/bin/multipass launch {} -n {} -m 2G".format(version[1], self.vm_name).split()
             )
             if is_ipv6_configured():
                 self._load_launch_configuration_multipass()
