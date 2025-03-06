@@ -14,10 +14,7 @@ jobs:
       - name: Checking out repo
         uses: actions/checkout@v4
       - name: Install lxd
-        run: |
-          sudo lxd init --auto
-          sudo usermod --append --groups lxd $USER
-          sg lxd -c 'lxc version'
+        uses: canonical/k8s-snap/.github/actions/install-lxd@main
       - name: Install snapcraft
         run: |
           sudo snap install snapcraft --classic
