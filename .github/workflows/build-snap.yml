@@ -8,16 +8,13 @@ on:
 jobs:
   build:
     name: Create snap package
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
       - name: Install lxd
-        run: |
-          sudo lxd init --auto
-          sudo usermod --append --groups lxd $USER
-          sg lxd -c 'lxc version'
+        uses: canonical/k8s-snap/.github/actions/install-lxd@main
       - name: Install snapcraft
         run: |
           sudo snap install snapcraft --classic
@@ -37,7 +34,7 @@ jobs:
 
   test-upgrade:
     name: Upgrade path test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
 
     steps:
@@ -62,7 +59,7 @@ jobs:
 
   test-addons-core:
     name: Test core addons
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
 
     steps:
@@ -92,7 +89,7 @@ jobs:
 
   test-addons-community:
     name: Test community addons
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
 
     steps:
@@ -123,7 +120,7 @@ jobs:
 
   test-addons-core-upgrade:
     name: Test core addons upgrade
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
 
     steps:
@@ -152,7 +149,7 @@ jobs:
 
   test-cluster-agent:
     name: Cluster agent health check
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
 
     steps:
@@ -177,7 +174,7 @@ jobs:
 
   test-airgap:
     name: Test airgap installation
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
 
     steps:
@@ -200,7 +197,7 @@ jobs:
 
   security-scan:
     name: Security scan
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
     steps:
       - name: Checking out repo
