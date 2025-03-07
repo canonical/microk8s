@@ -3,7 +3,7 @@
 pacman -S --noconfirm --needed base-devel
 pacman -S --noconfirm --needed git
 useradd user
-echo "user ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+echo "user ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 mkdir /home/user
 chown user:user /home/user
 cd /tmp
@@ -14,19 +14,18 @@ sudo ln -s /var/lib/snapd/snap /snap
 su user -c "git clone https://aur.archlinux.org/squashfuse-git.git"
 su user -c "cd squashfuse-git; makepkg -si --noconfirm"
 pacman -S --noconfirm --needed fuse3
-echo "PATH=$PATH:/snap/bin" >> /etc/profile
+echo "PATH=$PATH:/snap/bin" >>/etc/profile
 pacman -S --noconfirm python-pip
 pacman -S --noconfirm python
 pacman -S --noconfirm docker
 sudo systemctl enable --now docker.service
 echo "127.0.0.1       localhost" | sudo tee -a /etc/hosts
-pip3 install pytest requests pyyaml
+pip3 install pytest==8.3.4 requests pyyaml
 
 # wait for the snapd seeding to take place!
 n=0
-until [ $n -ge 7 ]
-do
-  sudo snap install core18 && break  # substitute your command here
-  n=$[$n+1]
+until [ $n -ge 7 ]; do
+  sudo snap install core18 && break # substitute your command here
+  n=$(($n + 1))
   sleep 10
 done
