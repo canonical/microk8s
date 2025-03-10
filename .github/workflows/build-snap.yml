@@ -71,7 +71,7 @@ jobs:
           set -x
           sudo apt-get install python3-setuptools
           sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest sh psutil
+          sudo pip3 install -U pytest==8.3.4 sh psutil
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
