@@ -390,6 +390,7 @@ if ! grep -e "WatchList" ${SNAP_DATA}/args/kube-apiserver
 then
   if ! grep -e "--feature-gates=" ${SNAP_DATA}/args/kube-apiserver
   then
+    echo "" >> ${SNAP_DATA}/args/kube-apiserver
     echo '--feature-gates=WatchList=false' >> ${SNAP_DATA}/args/kube-apiserver
   else
     # Find the line starting with --feature-gates= and append ,WatchList=false
