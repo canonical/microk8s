@@ -13,8 +13,6 @@ function create_machine() {
 
   # Allow for the machine to boot and get an IP
   sleep 20
-  # CentOS 8,9 variants(rocky, alma) don't ship with tar, such a dirty hack...
-  lxc exec "$NAME" -- /bin/bash -c "yum install tar -y || true"
   tar cf - ./tests | lxc exec "$NAME" -- tar xvf - -C /root
   DISTRO_DEPS_TMP="${DISTRO//:/_}"
   DISTRO_DEPS="${DISTRO_DEPS_TMP////-}"
