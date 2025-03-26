@@ -145,7 +145,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--token",
         "-t",
-        help="Specify the bootstrap token to add, must be 32 characters long. "
+        help="Specify the bootstrap token to add, must be 32 bytes long. "
         "Auto generates when empty.",
     )
     parser.add_argument(
@@ -163,10 +163,10 @@ if __name__ == "__main__":
     if args.token is not None:
         token = args.token
     else:
-        token = token_hex(16)
+        token = token_hex(32)
 
     if len(token) < TOKEN_ΜΙΝ_LEN:
-        print("Invalid token size.  It must be 32 characters long.")
+        print("Invalid token size.  It must be 32 bytes long.")
         exit(1)
 
     add_token_with_expiry(token, cluster_tokens_file, ttl)
