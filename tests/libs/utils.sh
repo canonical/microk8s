@@ -4,11 +4,10 @@ function create_machine() {
   local NAME=$1
   local DISTRO=$2
   local PROXY=$3
-  if ! lxc profile show microk8s
-  then
+  if ! lxc profile show microk8s; then
     lxc profile copy default microk8s
   fi
-  lxc profile edit microk8s < tests/lxc/microk8s.profile
+  lxc profile edit microk8s <tests/lxc/microk8s.profile
 
   lxc launch -p default -p microk8s "$DISTRO" "$NAME"
 
@@ -22,8 +21,7 @@ function create_machine() {
   sleep 20
 
   trap 'lxc delete '"${NAME}"' --force || true' EXIT
-  if [ "$#" -ne 1 ]
-  then
+  if [ ! -z "${PROXY}" ]; then
     lxc exec "$NAME" -- /bin/bash -c "echo HTTPS_PROXY=$PROXY >> /etc/environment"
     lxc exec "$NAME" -- /bin/bash -c "echo https_proxy=$PROXY >> /etc/environment"
     lxc exec "$NAME" -- reboot
