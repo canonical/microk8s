@@ -4,6 +4,7 @@ export $(grep -v '^#' /etc/environment | xargs)
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
+apt-get install xdelta3 -y
 apt-get install python3-pip docker.io -y
 pip3 install pytest requests pyyaml sh psutil
 # Attempting to address https://forum.snapcraft.io/t/lxd-refresh-cause-container-socket-error/8698
