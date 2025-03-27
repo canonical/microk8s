@@ -990,6 +990,8 @@ remove_all_containers() {
     do
         "${SNAP}/microk8s-ctr.wrapper" container delete $container &>/dev/null || true
     done
+
+    iptables-legacy -t nat -F CNI-HOSTPORT-DNAT || true
 }
 
 get_container_shim_pids() {
