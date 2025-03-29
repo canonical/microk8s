@@ -1,6 +1,6 @@
-From bcf130f097781d162c0461105a12f4c9f412d3e8 Mon Sep 17 00:00:00 2001
-From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
-Date: Tue, 20 Feb 2024 12:32:27 +0200
+From 7b7171f0f5048225e0d914cbffd47295af1fbfc5 Mon Sep 17 00:00:00 2001
+From: Lucian Petrut <lpetrut@cloudbasesolutions.com>
+Date: Fri, 28 Mar 2025 13:14:34 +0000
 Subject: [PATCH] Disable static PIE on arm64
 
 Ubuntu does not currently have the rcrt1.o file on arm64
@@ -9,10 +9,10 @@ Ubuntu does not currently have the rcrt1.o file on arm64
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index e3af9bc1..b2b07720 100644
+index 0a15fd90..d7e6209a 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -33,7 +33,7 @@ LDFLAGS_STATIC := -extldflags -static
+@@ -45,7 +45,7 @@ LDFLAGS_STATIC := -extldflags -static
  # Enable static PIE executables on supported platforms.
  # This (among the other things) requires libc support (rcrt1.o), which seems
  # to be available only for arm64 and amd64 (Debian Bullseye).
@@ -20,6 +20,7 @@ index e3af9bc1..b2b07720 100644
 +ifneq (,$(filter $(GOARCH),amd64))
  	ifeq (,$(findstring -race,$(EXTRA_FLAGS)))
  		GO_BUILDMODE_STATIC := -buildmode=pie
- 		LDFLAGS_STATIC := -linkmode external -extldflags --static-pie
---
-2.34.1
+ 		LDFLAGS_STATIC := -linkmode external -extldflags -static-pie
+-- 
+2.43.0
+
