@@ -28,7 +28,7 @@ jobs:
           sg lxd -c 'snapcraft --use-lxd'
           sudo mv microk8s*.snap microk8s.snap
       - name: Uploading snap
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: microk8s.snap
           path: microk8s.snap
@@ -50,7 +50,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -75,7 +75,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -105,7 +105,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -138,7 +138,7 @@ jobs:
           sudo apt-get -y install open-iscsi
           sudo systemctl enable iscsid
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -163,7 +163,7 @@ jobs:
           sudo pip3 install --upgrade pip
           sudo pip3 install -U pytest sh requests
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -182,7 +182,7 @@ jobs:
       - name: Checking out repo
         uses: actions/checkout@v4
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
@@ -204,7 +204,7 @@ jobs:
       - name: Checking out repo
         uses: actions/checkout@v4
       - name: Fetch snap
-        uses: actions/download-artifact@v3.0.2
+        uses: actions/download-artifact@v4
         with:
           name: microk8s.snap
           path: build
