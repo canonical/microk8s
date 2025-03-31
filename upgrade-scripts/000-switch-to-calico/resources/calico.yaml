@@ -47,7 +47,8 @@ data:
   # Typha is disabled.
   typha_service_name: "none"
   # Configure the backend to use.
-  calico_backend: "bird"
+  # calico_backend: "bird"
+  calico_backend: "vxlan"
 
   # Configure the MTU to use for workload interfaces and tunnels.
   # By default, MTU is auto-detected, and explicitly setting this field should not be required.
@@ -64,9 +65,10 @@ data:
         {
           "type": "calico",
           "log_level": "info",
-          "log_file_path": "/var/log/calico/cni/cni.log",
+          "log_file_path": "/var/snap/microk8s/common/var/log/calico/cni/cni.log",
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
+          "nodename_file": "/var/snap/microk8s/current/var/lib/calico/nodename",
           "mtu": __CNI_MTU__,
           "ipam": {
               "type": "calico-ipam"
@@ -6190,6 +6192,8 @@ spec:
             # Prevents the container from sleeping forever.
             - name: SLEEP
               value: "false"
+            - name: CNI_NET_DIR
+              value: "/var/snap/microk8s/current/args/cni-network"
           volumeMounts:
             - mountPath: /host/opt/cni/bin
               name: cni-bin-dir
@@ -6197,31 +6201,31 @@ spec:
               name: cni-net-dir
           securityContext:
             privileged: true
-        # This init container mounts the necessary filesystems needed by the BPF data plane
-        # i.e. bpf at /sys/fs/bpf and cgroup2 at /run/calico/cgroup. Calico-node initialisation is executed
-        # in best effort fashion, i.e. no failure for errors, to not disrupt pod creation in iptable mode.
-        - name: "mount-bpffs"
-          image: docker.io/calico/node:v3.29.3
-          imagePullPolicy: IfNotPresent
-          command: ["calico-node", "-init", "-best-effort"]
-          volumeMounts:
-            - mountPath: /sys/fs
-              name: sys-fs
-              # Bidirectional is required to ensure that the new mount we make at /sys/fs/bpf propagates to the host
-              # so that it outlives the init container.
-              mountPropagation: Bidirectional
-            - mountPath: /var/run/calico
-              name: var-run-calico
-              # Bidirectional is required to ensure that the new mount we make at /run/calico/cgroup propagates to the host
-              # so that it outlives the init container.
-              mountPropagation: Bidirectional
-            # Mount /proc/ from host which usually is an init program at /nodeproc. It's needed by mountns binary,
-            # executed by calico-node, to mount root cgroup2 fs at /run/calico/cgroup to attach CTLB programs correctly.
-            - mountPath: /nodeproc
-              name: nodeproc
-              readOnly: true
-          securityContext:
-            privileged: true
+        # # This init container mounts the necessary filesystems needed by the BPF data plane
+        # # i.e. bpf at /sys/fs/bpf and cgroup2 at /run/calico/cgroup. Calico-node initialisation is executed
+        # # in best effort fashion, i.e. no failure for errors, to not disrupt pod creation in iptable mode.
+        # - name: "mount-bpffs"
+        #   image: docker.io/calico/node:v3.29.3
+        #   imagePullPolicy: IfNotPresent
+        #   command: ["calico-node", "-init", "-best-effort"]
+        #   volumeMounts:
+        #     - mountPath: /sys/fs
+        #       name: sys-fs
+        #       # Bidirectional is required to ensure that the new mount we make at /sys/fs/bpf propagates to the host
+        #       # so that it outlives the init container.
+        #       mountPropagation: Bidirectional
+        #     - mountPath: /var/run/calico
+        #       name: var-run-calico
+        #       # Bidirectional is required to ensure that the new mount we make at /run/calico/cgroup propagates to the host
+        #       # so that it outlives the init container.
+        #       mountPropagation: Bidirectional
+        #     # Mount /proc/ from host which usually is an init program at /nodeproc. It's needed by mountns binary,
+        #     # executed by calico-node, to mount root cgroup2 fs at /run/calico/cgroup to attach CTLB programs correctly.
+        #     - mountPath: /nodeproc
+        #       name: nodeproc
+        #       readOnly: true
+        #   securityContext:
+        #     privileged: true
       containers:
         # Runs calico-node container on each Kubernetes node. This
         # container programs network policy and routes on each
@@ -6258,12 +6262,14 @@ spec:
             # Auto-detect the BGP IP address.
             - name: IP
               value: "autodetect"
+            - name: IP_AUTODETECTION_METHOD
+              value: "first-found"
             # Enable IPIP
-            - name: CALICO_IPV4POOL_IPIP
-              value: "Always"
+            # - name: CALICO_IPV4POOL_IPIP
+            #   value: "Always"
             # Enable or Disable VXLAN on the default IP pool.
             - name: CALICO_IPV4POOL_VXLAN
-              value: "Never"
+              value: "Always"
             # Enable or Disable VXLAN on the default IPv6 IP pool.
             - name: CALICO_IPV6POOL_VXLAN
               value: "Never"
@@ -6288,8 +6294,8 @@ spec:
             # The default IPv4 pool to create on startup if none exists. Pod IPs will be
             # chosen from this range. Changing this value after installation will have
             # no effect. This should fall within `--cluster-cidr`.
-            # - name: CALICO_IPV4POOL_CIDR
-            #   value: "192.168.0.0/16"
+            - name: CALICO_IPV4POOL_CIDR
+              value: "10.1.0.0/16"
             # Disable file logging so `kubectl logs` works.
             - name: CALICO_DISABLE_FILE_LOGGING
               value: "true"
@@ -6301,6 +6307,8 @@ spec:
               value: "false"
             - name: FELIX_HEALTHENABLED
               value: "true"
+            - name: FELIX_FEATUREDETECTOVERRIDE
+              value: ChecksumOffloadBroken=true
           securityContext:
             privileged: true
           resources:
@@ -6317,7 +6325,7 @@ spec:
               command:
               - /bin/calico-node
               - -felix-live
-              - -bird-live
+              # - -bird-live
             periodSeconds: 10
             initialDelaySeconds: 10
             failureThreshold: 6
@@ -6327,7 +6335,7 @@ spec:
               command:
               - /bin/calico-node
               - -felix-ready
-              - -bird-ready
+              # - -bird-ready
             periodSeconds: 10
             timeoutSeconds: 10
           volumeMounts:
@@ -6351,8 +6359,8 @@ spec:
               mountPath: /var/run/nodeagent
             # For eBPF mode, we need to be able to mount the BPF filesystem at /sys/fs/bpf so we mount in the
             # parent directory.
-            - name: bpffs
-              mountPath: /sys/fs/bpf
+            # - name: bpffs
+            #   mountPath: /sys/fs/bpf
             - name: cni-log-dir
               mountPath: /var/log/calico/cni
               readOnly: true
@@ -6363,12 +6371,10 @@ spec:
             path: /lib/modules
         - name: var-run-calico
           hostPath:
-            path: /var/run/calico
-            type: DirectoryOrCreate
+            path: /var/snap/microk8s/current/var/run/calico
         - name: var-lib-calico
           hostPath:
-            path: /var/lib/calico
-            type: DirectoryOrCreate
+            path: /var/snap/microk8s/current/var/lib/calico
         - name: xtables-lock
           hostPath:
             path: /run/xtables.lock
@@ -6377,37 +6383,37 @@ spec:
           hostPath:
             path: /sys/fs/
             type: DirectoryOrCreate
-        - name: bpffs
-          hostPath:
-            path: /sys/fs/bpf
-            type: Directory
-        # mount /proc at /nodeproc to be used by mount-bpffs initContainer to mount root cgroup2 fs.
-        - name: nodeproc
-          hostPath:
-            path: /proc
+        # - name: bpffs
+        #   hostPath:
+        #     path: /sys/fs/bpf
+        #     type: Directory
+        # # mount /proc at /nodeproc to be used by mount-bpffs initContainer to mount root cgroup2 fs.
+        # - name: nodeproc
+        #   hostPath:
+        #     path: /proc
         # Used to install CNI.
         - name: cni-bin-dir
           hostPath:
-            path: /opt/cni/bin
+            path: /var/snap/microk8s/current/opt/cni/bin
             type: DirectoryOrCreate
         - name: cni-net-dir
           hostPath:
-            path: /etc/cni/net.d
+            path: /var/snap/microk8s/current/args/cni-network
         # Used to access CNI logs.
         - name: cni-log-dir
           hostPath:
-            path: /var/log/calico/cni
+            path: /var/snap/microk8s/common/var/log/calico/cni
         # Mount in the directory for host-local IPAM allocations. This is
         # used when upgrading from host-local to calico-ipam, and can be removed
         # if not using the upgrade-ipam init container.
         - name: host-local-net-dir
           hostPath:
-            path: /var/lib/cni/networks
+            path: /var/snap/microk8s/current/var/lib/cni/networks
         # Used to create per-pod Unix Domain Sockets
         - name: policysync
           hostPath:
             type: DirectoryOrCreate
-            path: /var/run/nodeagent
+            path: /var/snap/microk8s/current/var/run/nodeagent
 ---
 # Source: calico/templates/calico-kube-controllers.yaml
 # See https://github.com/projectcalico/kube-controllers
