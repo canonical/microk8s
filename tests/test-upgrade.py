@@ -26,7 +26,7 @@ from utils import (
 upgrade_from = os.environ.get("UPGRADE_MICROK8S_FROM", "beta")
 # Have UPGRADE_MICROK8S_TO point to a file to upgrade to that file
 upgrade_to = os.environ.get("UPGRADE_MICROK8S_TO", "edge")
-under_time_pressure = os.environ.get("UNDER_TIME_PRESSURE", "False")
+under_time_pressure = os.environ.get("UNDER_TIME_PRESSURE", "false").lower()
 
 
 class TestUpgrade(object):
@@ -121,7 +121,7 @@ extraSANs:
             print("Will not test the metrics server")
 
         # AMD64 only tests
-        if platform.machine() == "x86_64" and under_time_pressure == "False":
+        if platform.machine() == "x86_64" and under_time_pressure == "false":
             try:
                 ip_ranges = (
                     "192.168.0.105-192.168.0.105,192.168.0.110-192.168.0.111,192.168.1.240/28"

@@ -19,7 +19,7 @@ class TestUpgradePath(object):
     """
 
     @pytest.mark.skipif(
-        os.environ.get("UNDER_TIME_PRESSURE") == "True",
+        os.environ.get("UNDER_TIME_PRESSURE", "").lower() == "true",
         reason="Skipping refresh path test as we are under time pressure",
     )
     def test_refresh_path(self):
