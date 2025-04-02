@@ -3,12 +3,14 @@ name: Prepare test prerequisites
 runs:
   using: "composite"
   steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
     - name: Install test dependencies
       shell: bash
       run: |
         set -x
-        sudo apt-get install python3-setuptools
-        sudo pip3 install --upgrade pip
         sudo pip3 install -U pytest==8.3.4 sh psutil requests
         sudo apt-get -y install open-iscsi
         sudo systemctl enable iscsid
