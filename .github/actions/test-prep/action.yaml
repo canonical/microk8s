@@ -11,7 +11,7 @@ runs:
       shell: bash
       run: |
         set -x
-        sudo pip3 install -U pytest==8.3.4 sh psutil requests
+        sudo pip3 install -R ./tests/requirements.txt
         sudo apt-get -y install open-iscsi
         sudo systemctl enable iscsid
     # Docker sets iptables rules that interfere with LXD and K8s.
@@ -24,5 +24,3 @@ runs:
       with:
         name: microk8s.snap
         path: build
-    # - name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
