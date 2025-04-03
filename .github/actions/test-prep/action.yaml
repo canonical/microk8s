@@ -12,8 +12,6 @@ runs:
       run: |
         set -x
         sudo pip3 install -R ./tests/requirements.txt
-        sudo apt-get -y install open-iscsi
-        sudo systemctl enable iscsid
     # Docker sets iptables rules that interfere with LXD and K8s.
     # https://documentation.ubuntu.com/lxd/en/latest/howto/network_bridge_firewalld/#prevent-connectivity-issues-with-lxd-and-docker
     - name: Apply Docker iptables workaround
