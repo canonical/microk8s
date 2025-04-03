@@ -1,7 +1,7 @@
 kubernetes
 jinja2
 pylxd
-pytest
+pytest==8.3.4
 pytest-xdist
 pyyaml
 sh
