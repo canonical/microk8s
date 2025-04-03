@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     name: Create snap package
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checking out repo
@@ -16,6 +16,11 @@ jobs:
           sudo lxd init --auto
           sudo usermod --append --groups lxd $USER
           sg lxd -c 'lxc version'
+      # Docker sets iptables rules that interfere with LXD or K8s.
+      # https://documentation.ubuntu.com/lxd/en/latest/howto/network_bridge_firewalld/#prevent-connectivity-issues-with-lxd-and-docker
+      - name: Apply Docker iptables workaround
+        shell: bash
+        run: sudo iptables -I DOCKER-USER -j ACCEPT
       - name: Install snapcraft
         run: |
           sudo snap install snapcraft --classic
@@ -35,138 +40,84 @@ jobs:
 
   test-upgrade:
     name: Upgrade path test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
-
+    timeout-minutes: 30
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      - name: Install test dependencies
-        run: |
-          set -x
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest sh psutil
-          sudo apt-get -y install open-iscsi
-          sudo systemctl enable iscsid
-      - name: Fetch snap
-        uses: actions/download-artifact@v4
-        with:
-          name: microk8s.snap
-          path: build
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/test-prep
       - name: Running upgrade path test
         run: |
           sudo -E UPGRADE_MICROK8S_FROM=1.31/edge UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade-path.py
 
   test-addons-core:
     name: Test core addons
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
-
+    timeout-minutes: 30
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      - name: Install test dependencies
-        run: |
-          set -x
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest==8.3.4 sh psutil
-          sudo apt-get -y install open-iscsi
-          sudo systemctl enable iscsid
-      - name: Fetch snap
-        uses: actions/download-artifact@v4
-        with:
-          name: microk8s.snap
-          path: build
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/test-prep
       - name: Running addons tests
+        env:
+          UNDER_TIME_PRESSURE: ${{ !contains(github.event.pull_request.labels.*.name, 'run-all-tests') }}
         run: |
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
           ./tests/smoke-test.sh
-          export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/core/tests; pytest -s -ra test-addons.py"
 
   test-addons-community:
     name: Test community addons
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
-
+    timeout-minutes: 30
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      - name: Install test dependencies
-        run: |
-          set -x
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest sh
-          sudo apt-get -y install open-iscsi
-          sudo systemctl enable iscsid
-      - name: Fetch snap
-        uses: actions/download-artifact@v4
-        with:
-          name: microk8s.snap
-          path: build
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v4
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/test-prep
       - name: Running addons tests
+        env:
+          UNDER_TIME_PRESSURE: ${{ !contains(github.event.pull_request.labels.*.name, 'run-all-tests') }}
         run: |
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
           sudo microk8s enable community
-          export UNDER_TIME_PRESSURE="True"
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/; pytest -s -ra ./tests/"
 
   test-addons-core-upgrade:
     name: Test core addons upgrade
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
-
+    timeout-minutes: 30
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v4
-      - name: Install test dependencies
-        run: |
-          set -x
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest sh psutil
-          sudo apt-get -y install open-iscsi
-          sudo systemctl enable iscsid
-      - name: Fetch snap
-        uses: actions/download-artifact@v4
-        with:
-          name: microk8s.snap
-          path: build
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/test-prep
       - name: Running upgrade tests
+        env:
+          UNDER_TIME_PRESSURE: ${{ !contains(github.event.pull_request.labels.*.name, 'run-all-tests') }}
         run: |
           set -x
-          export UNDER_TIME_PRESSURE="True"
           sudo -E bash -c "UPGRADE_MICROK8S_FROM=1.31/edge UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade.py"
 
   test-cluster-agent:
     name: Cluster agent health check
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
-
+    timeout-minutes: 30
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      - name: Install test dependencies
-        run: |
-          set -x
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest sh requests
-      - name: Fetch snap
-        uses: actions/download-artifact@v4
-        with:
-          name: microk8s.snap
-          path: build
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/test-prep
       - name: Running cluster agent health check
         run: |
           set -x
@@ -175,17 +126,14 @@ jobs:
 
   test-airgap:
     name: Test airgap installation
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
-
+    timeout-minutes: 30
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      - name: Fetch snap
-        uses: actions/download-artifact@v4
-        with:
-          name: microk8s.snap
-          path: build
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/test-prep
       - name: Initialize LXD
         run: |
           sudo lxd init --auto
@@ -194,12 +142,13 @@ jobs:
           sg lxd -c 'lxc version'
       - name: Run airgap tests
         run: |
-          sudo -E bash -x -c "./tests/libs/airgap.sh --distro ubuntu:20.04 --channel $PWD/build/microk8s.snap"
+          sudo -E bash -x -c "./tests/libs/airgap.sh --distro ubuntu:22.04 --channel $PWD/build/microk8s.snap"
 
   security-scan:
     name: Security scan
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
+    timeout-minutes: 30
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
