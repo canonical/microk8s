@@ -224,6 +224,10 @@ fi
 if ! [ -d "${SNAP_COMMON}/hooks" ]
 then
   cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
+else
+  # https://github.com/canonical/microk8s/pull/4819#issuecomment-2676378060
+  mkdir -p ${SNAP_COMMON}/hooks/reconcile.d
+  cp --preserve=mode ${SNAP}/default-hooks/reconcile.d/10-pods-restart ${SNAP_COMMON}/hooks/reconcile.d/
 fi
 
 # (1.28 -> 1.29) Install 10-pods-restart hook if missing
