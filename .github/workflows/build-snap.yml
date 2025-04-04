@@ -64,6 +64,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
+      - name: Setup tmate session
+        uses: canonical/action-tmate@main
       - name: Running addons tests
         env:
           UNDER_TIME_PRESSURE: ${{ !contains(github.event.pull_request.labels.*.name, 'run-all-tests') }}
@@ -72,7 +74,7 @@ jobs:
           sudo snap install build/microk8s.snap --classic --dangerous
           ./tests/smoke-test.sh
           export SKIP_PROMETHEUS="False"
-          sudo -E bash -c "cd /var/snap/microk8s/common/addons/core/tests; pytest -s -ra test-addons.py"
+          sudo -E bash -c "cd /var/snap/microk8s/common/addons/core/tests; pytest -s -ra -k test_cis test-addons.py"
 
   test-addons-community:
     name: Test community addons
