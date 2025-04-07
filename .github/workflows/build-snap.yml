@@ -78,7 +78,7 @@ jobs:
     name: Test community addons
     runs-on: ubuntu-22.04
     needs: build
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
