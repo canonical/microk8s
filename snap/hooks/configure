@@ -220,20 +220,13 @@ then
 
 fi
 
-# Install default-hooks
-if ! [ -d "${SNAP_COMMON}/hooks" ]
-then
-  cp -r --preserve=mode ${SNAP}/default-hooks ${SNAP_COMMON}/hooks
-else
-  # https://github.com/canonical/microk8s/pull/4819#issuecomment-2676378060
-  mkdir -p ${SNAP_COMMON}/hooks/reconcile.d
-  cp --preserve=mode ${SNAP}/default-hooks/reconcile.d/10-pods-restart ${SNAP_COMMON}/hooks/reconcile.d/
-fi
-
-# (1.28 -> 1.29) Install 10-pods-restart hook if missing
-if ! [ -e "${SNAP_COMMON}/hooks/reconcile.d/10-pods-restart" ]; then
-  cp -r --preserve=mode "${SNAP}/default-hooks/reconcile.d/10-pods-restart" "${SNAP_COMMON}/hooks/reconcile.d/10-pods-restart"
-fi
+# Install default-hooks.
+#
+# Updated hooks may contain fixes, so we'll always replace existing files.
+# Custom hooks are expected to use separate files so that they won't get
+# overwritten during upgrades.
+mkdir -p ${SNAP_COMMON}/hooks
+cp -r --preserve=mode ${SNAP}/default-hooks/* ${SNAP_COMMON}/hooks/
 
 # Make sure the server certificate includes the IP we are using
 if [ "$(produce_certs)" == "1" ]
