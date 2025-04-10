@@ -17,7 +17,9 @@ jobs:
         run: |
           sudo lxd init --auto
           sudo usermod --append --groups lxd $USER
-          sg lxd -c 'lxc version'
+          # `newgrp` does not work in GitHub Actions; use `sudo --user` instead
+          # See https://github.com/actions/runner-images/issues/9932#issuecomment-2573170305
+          sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- lxc version
       # Docker sets iptables rules that interfere with LXD or K8s.
       # https://documentation.ubuntu.com/lxd/en/latest/howto/network_bridge_firewalld/#prevent-connectivity-issues-with-lxd-and-docker
       - name: Apply Docker iptables workaround
@@ -32,7 +34,7 @@ jobs:
           sudo snap refresh snapd --channel=latest/stable
       - name: Build snap
         run: |
-          sg lxd -c 'snapcraft --use-lxd'
+          sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- snapcraft --use-lxd
           sudo mv microk8s*.snap microk8s.snap
       - name: Uploading snap
         uses: actions/upload-artifact@v4
@@ -141,7 +143,9 @@ jobs:
           sudo lxd init --auto
           sudo lxc network set lxdbr0 ipv6.address=none
           sudo usermod --append --groups lxd $USER
-          sg lxd -c 'lxc version'
+          # `newgrp` does not work in GitHub Actions; use `sudo --user` instead
+          # See https://github.com/actions/runner-images/issues/9932#issuecomment-2573170305
+          sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- lxc version
       - name: Run airgap tests
         run: |
           sudo -E bash -x -c "./tests/libs/airgap.sh --distro ubuntu:22.04 --channel $PWD/build/microk8s.snap"
