@@ -100,9 +100,12 @@ def wait_for_pod_state(
     deadline = datetime.datetime.now() + datetime.timedelta(seconds=timeout_insec)
     while True:
         if datetime.datetime.now() > deadline:
-            raise TimeoutError(
-                "Pod {} not in {} after {} seconds.".format(pod, desired_state, timeout_insec)
-            )
+            all_res = kubectl("get all -A")
+            err_msg = f"Pod {pod} not in {desired_state} after {timeout_insec} seconds, "
+            err_msg += f"label: {label}, desired_reason: {desired_reason}.\n"
+            print(err_msg)
+            print(f"kubectl get all -A\n{all_res}\n")
+            raise TimeoutError(err_msg)
         cmd = "po {} -n {}".format(pod, namespace)
         if label:
             cmd += " -l {}".format(label)
