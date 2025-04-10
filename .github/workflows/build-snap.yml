@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Create snap package
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checking out repo
@@ -17,7 +17,14 @@ jobs:
         run: |
           sudo lxd init --auto
           sudo usermod --append --groups lxd $USER
-          sg lxd -c 'lxc version'
+          # `newgrp` does not work in GitHub Actions; use `sudo --user` instead
+          # See https://github.com/actions/runner-images/issues/9932#issuecomment-2573170305
+          sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- lxc version
+      # Docker sets iptables rules that interfere with LXD or K8s.
+      # https://documentation.ubuntu.com/lxd/en/latest/howto/network_bridge_firewalld/#prevent-connectivity-issues-with-lxd-and-docker
+      - name: Apply Docker iptables workaround
+        shell: bash
+        run: sudo iptables -I DOCKER-USER -j ACCEPT
       - name: Install snapcraft
         run: |
           sudo snap install snapcraft --classic
@@ -27,7 +34,7 @@ jobs:
           sudo snap refresh snapd --channel=latest/stable
       - name: Build snap
         run: |
-          sg lxd -c 'snapcraft --use-lxd'
+          sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- snapcraft --use-lxd
           sudo mv microk8s*.snap microk8s.snap
       - name: Uploading snap
         uses: actions/upload-artifact@v3
@@ -37,7 +44,7 @@ jobs:
 
   test-upgrade:
     name: Upgrade path test
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
 
     steps:
@@ -62,7 +69,7 @@ jobs:
 
   test-addons-core:
     name: Test core addons
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
 
     steps:
@@ -96,9 +103,9 @@ jobs:
 
   test-addons-community:
     name: Test community addons
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
-
+    timeout-minutes: 60
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
@@ -127,7 +134,7 @@ jobs:
 
   test-addons-core-upgrade:
     name: Test core addons upgrade
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
 
     steps:
@@ -156,7 +163,7 @@ jobs:
 
   test-cluster-agent:
     name: Cluster agent health check
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
 
     steps:
@@ -181,7 +188,7 @@ jobs:
 
   test-airgap:
     name: Test airgap installation
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
 
     steps:
@@ -197,14 +204,16 @@ jobs:
           sudo lxd init --auto
           sudo lxc network set lxdbr0 ipv6.address=none
           sudo usermod --append --groups lxd $USER
-          sg lxd -c 'lxc version'
+          # `newgrp` does not work in GitHub Actions; use `sudo --user` instead
+          # See https://github.com/actions/runner-images/issues/9932#issuecomment-2573170305
+          sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- lxc version
       - name: Run airgap tests
         run: |
           sudo -E bash -x -c "./tests/libs/airgap.sh --distro ubuntu:20.04 --channel $PWD/build/microk8s.snap"
 
   security-scan:
     name: Security scan
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checking out repo
