@@ -23,15 +23,20 @@ def validate_dns_dashboard():
     Validate the dashboard addon by trying to access the kubernetes dashboard.
     The dashboard will return an HTML indicating that it is up and running.
     """
-    wait_for_pod_state("", "kube-system", "running", label="k8s-app=kubernetes-dashboard")
-    wait_for_pod_state("", "kube-system", "running", label="k8s-app=dashboard-metrics-scraper")
+    ns = "kubernetes-dashboard"
+    components = ["api", "auth", "metrics-scraper", "web"]
+    app_names = [f"kubernetes-dashboard-{app}" for app in components]
+    app_names.append("kong")
+
+    for app_name in app_names:
+        wait_for_pod_state("", ns, "running", label=f"app.kubernetes.io/name={app_name}")
+
+    service = "kubernetes-dashboard-kong-proxy"
     attempt = 30
     while attempt > 0:
         try:
             output = kubectl(
-                "get "
-                "--raw "
-                "/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/"
+                f"get --raw /api/v1/namespaces/{ns}/services/https:{service}:443/proxy/"
             )
             if "Kubernetes Dashboard" in output:
                 break
