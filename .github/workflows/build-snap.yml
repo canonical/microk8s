@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Create snap package
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checking out repo
@@ -44,7 +44,7 @@ jobs:
 
   test-upgrade:
     name: Upgrade path test
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 30
     steps:
@@ -58,7 +58,7 @@ jobs:
 
   test-addons-core:
     name: Test core addons
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 30
     steps:
@@ -78,7 +78,7 @@ jobs:
 
   test-addons-community:
     name: Test community addons
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 60
     steps:
@@ -97,7 +97,7 @@ jobs:
 
   test-addons-core-upgrade:
     name: Test core addons upgrade
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 30
     steps:
@@ -114,7 +114,7 @@ jobs:
 
   test-cluster-agent:
     name: Cluster agent health check
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 30
     steps:
@@ -130,7 +130,7 @@ jobs:
 
   test-airgap:
     name: Test airgap installation
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 30
     steps:
@@ -152,7 +152,7 @@ jobs:
 
   security-scan:
     name: Security scan
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 30
     steps:
