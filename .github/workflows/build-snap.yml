@@ -77,6 +77,10 @@ jobs:
           sudo microk8s status --wait-ready --timeout 300
           ./tests/smoke-test.sh
           export STRICT="yes"
+          # The GitHub runner is using the 10.1.0.0/16 CIDR, which would conflict with
+          # kube-ovn's default POD_CIDR. They have to be different.
+          export POD_CIDR="10.200.0.0/16"
+          export POD_GATEWAY="10.200.0.1"
           export SKIP_PROMETHEUS="False"
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/core/tests; pytest -s -ra test-addons.py"
 
