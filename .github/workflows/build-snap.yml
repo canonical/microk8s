@@ -52,7 +52,7 @@ jobs:
         uses: ./.github/actions/test-prep
       - name: Running upgrade path test
         run: |
-          sudo -E STRICT=yes UPGRADE_MICROK8S_FROM=latest/edge/strict UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade-path.py
+          sudo -E STRICT=yes UPGRADE_MICROK8S_FROM=1.32-strict/edge UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade-path.py
 
   test-addons-core:
     name: Test core addons
@@ -122,7 +122,7 @@ jobs:
         run: |
           set -x
           export STRICT="yes"
-          sudo -E bash -c "UPGRADE_MICROK8S_FROM=latest/edge/strict UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade.py"
+          sudo -E bash -c "UPGRADE_MICROK8S_FROM=1.32-strict/edge UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade.py"
 
   test-cluster-agent:
     name: Cluster agent health check
