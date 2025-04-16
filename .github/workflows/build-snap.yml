@@ -79,6 +79,7 @@ jobs:
           export POD_CIDR="10.200.0.0/16"
           export POD_GATEWAY="10.200.0.1"
           export SKIP_PROMETHEUS="False"
+          export UNDER_TIME_PRESSURE=${UNDER_TIME_PRESSURE@u}
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/core/tests; pytest -s -ra test-addons.py"
 
   test-addons-community:
@@ -98,6 +99,7 @@ jobs:
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
           sudo microk8s enable community
+          export UNDER_TIME_PRESSURE=${UNDER_TIME_PRESSURE@u}
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/; pytest -s -ra ./tests/"
 
   test-addons-core-upgrade:
@@ -115,6 +117,7 @@ jobs:
           UNDER_TIME_PRESSURE: ${{ !contains(github.event.pull_request.labels.*.name, 'run-all-tests') }}
         run: |
           set -x
+          export UNDER_TIME_PRESSURE=${UNDER_TIME_PRESSURE@u}
           sudo -E bash -c "UPGRADE_MICROK8S_FROM=1.32/edge UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade.py"
 
   test-cluster-agent:
