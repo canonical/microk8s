@@ -22,7 +22,7 @@ parts:
   build-deps:
     plugin: nil
     build-snaps:
-      - go/1.23/stable
+      - go/1.24/stable
     build-packages:
       - autoconf
       - automake
