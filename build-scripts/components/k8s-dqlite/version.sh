@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "v1.3.1"
+echo "KU-3191/theid-issue"
