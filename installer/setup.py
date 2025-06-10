@@ -12,7 +12,7 @@ setup(
     install_requires=[
         "click~=7.0",
         "progressbar33==2.4",
-        "requests==2.32.2",
+        "requests==2.32.4",
         "requests_unixsocket==0.1.5",
         "simplejson==3.8.2",
         "toml==0.10.0",
