@@ -382,21 +382,6 @@ then
   need_api_restart=true
 fi
 
-# Disable the watchlist feature until k8s-dqlite can handle it
-if ! grep -e "WatchList" ${SNAP_DATA}/args/kube-apiserver
-then
-  if ! grep -e "--feature-gates=" ${SNAP_DATA}/args/kube-apiserver
-  then
-    echo "" >> ${SNAP_DATA}/args/kube-apiserver
-    echo '--feature-gates=WatchList=false' >> ${SNAP_DATA}/args/kube-apiserver
-  else
-    # Find the line starting with --feature-gates= and append ,WatchList=false
-    "${SNAP}/bin/sed" -i '/^--feature-gates=/ s/$/,WatchList=false/' "$SNAP_DATA/args/kube-apiserver"
-  fi
-
-  need_api_restart=true
-fi
-
 # RemoveSelfLink feature flag is removed after 1.24
 if grep -e "feature-gates=RemoveSelfLink" ${SNAP_DATA}/args/kube-apiserver
 then
