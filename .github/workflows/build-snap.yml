@@ -168,6 +168,8 @@ jobs:
 
   security-scan:
     name: Security scan
+    outputs:
+      sarif_files: ${{ steps.get_sarif_files.outputs.sarif-files }}
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 30
@@ -198,7 +200,41 @@ jobs:
           cp build/microk8s.snap .
           unsquashfs microk8s.snap
           trivy rootfs ./squashfs-root/ --format sarif > sarifs/snap.sarif
-      - name: Upload Trivy scan results to GitHub Security tab
+      - name: Generate list of SARIF files
+        id: get_sarif_files
+        run: |
+          sarif_files=$(find sarifs -name "*.sarif" -printf "%P\n" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "sarif-files=$sarif_files" >> "$GITHUB_OUTPUT"
+      - name: Upload SARIF files artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sarifs
+          path: sarifs
+          retention-days: 1
+
+  upload_sarifs_matrix:
+    needs: security-scan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        sarif_file_path: ${{ fromJson(needs.security-scan.outputs.sarif_files) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Download SARIF files artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sarifs
+          path: sarifs
+      - name: Prepare SARIF category
+        id: prepare_category
+        run: |
+          sarif_file="${{ matrix.sarif_file_path }}"
+          base_name=$(basename "$sarif_file" .sarif)
+          echo "category=$base_name" >> "$GITHUB_OUTPUT"
+      - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: "sarifs"
+          sarif_file: sarifs/${{ matrix.sarif_file_path }}
+          category: ${{ steps.prepare_category.outputs.category }}
