@@ -1,4 +1,4 @@
-urllib3==1.26.19
+urllib3==2.5.0
 click==7.1.2
 progressbar33==2.4
 psutil==5.9.0
