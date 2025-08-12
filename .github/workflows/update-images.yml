@@ -33,7 +33,7 @@ jobs:
           - { branch: 1.27-strict, channel: 1.27-strict }
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ matrix.branch }}
       - name: Update image list
