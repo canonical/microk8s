@@ -4,6 +4,4 @@ docker.io/calico/node:v3.25.1
 docker.io/cdkbot/hostpath-provisioner:1.4.2
 docker.io/coredns/coredns:1.10.1
 docker.io/library/busybox:1.28.4
-registry.k8s.io/ingress-nginx/controller:v1.11.5
-registry.k8s.io/metrics-server/metrics-server:v0.6.3
 registry.k8s.io/pause:3.7
