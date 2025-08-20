@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "v1.8.0"
+echo "KU-3963/fix-sqlite-lib"
