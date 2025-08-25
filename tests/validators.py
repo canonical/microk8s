@@ -42,9 +42,7 @@ def validate_dns_dashboard():
     attempt = 30
     while attempt > 0:
         try:
-            output = kubectl(
-                f"get --raw /api/v1/namespaces/{ns}/services/https:{service}/proxy/"
-            )
+            output = kubectl(f"get --raw /api/v1/namespaces/{ns}/services/https:{service}/proxy/")
             if "Kubernetes Dashboard" in output:
                 break
         except subprocess.CalledProcessError:
