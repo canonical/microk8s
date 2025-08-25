@@ -23,21 +23,26 @@ def validate_dns_dashboard():
     Validate the dashboard addon by trying to access the kubernetes dashboard.
     The dashboard will return an HTML indicating that it is up and running.
     """
-    ns = "kubernetes-dashboard"
-    components = ["api", "auth", "metrics-scraper", "web"]
-    app_names = [f"kubernetes-dashboard-{app}" for app in components]
-    app_names.append("kong")
+    service = "kubernetes-dashboard:"
+    ns = "kube-system"
+    app_names = ["k8s-app=kubernetes-dashboard", "k8s-app=dashboard-metrics-scraper"]
+
+    output = kubectl("get ns")
+    if "kubernetes-dashboard" in output:
+        # we are running a newer version of the dashboard introduced in 1.33
+        service = "kubernetes-dashboard-kong-proxy:443"
+        ns = "kubernetes-dashboard"
+        components = ["api", "auth", "metrics-scraper", "web"]
+        app_names = [f"app.kubernetes.io/name=kubernetes-dashboard-{app}" for app in components]
+        app_names.append("app.kubernetes.io/name=kong")
 
     for app_name in app_names:
-        wait_for_pod_state("", ns, "running", label=f"app.kubernetes.io/name={app_name}")
+        wait_for_pod_state("", ns, "running", label=f"{app_name}")
 
-    service = "kubernetes-dashboard-kong-proxy"
     attempt = 30
     while attempt > 0:
         try:
-            output = kubectl(
-                f"get --raw /api/v1/namespaces/{ns}/services/https:{service}:443/proxy/"
-            )
+            output = kubectl(f"get --raw /api/v1/namespaces/{ns}/services/https:{service}/proxy/")
             if "Kubernetes Dashboard" in output:
                 break
         except subprocess.CalledProcessError:
