@@ -1194,7 +1194,7 @@ fetch_as() {
     ARCH="$($SNAP/bin/uname -m)"
     LD_LIBRARY_PATH="$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$ARCH-linux-gnu:$SNAP/usr/lib/$ARCH-linux-gnu" "${SNAP}/usr/bin/curl" -L $1 -o $2
   else
-    CA_CERT=/snap/core20/current/etc/ssl/certs/ca-certificates.crt
+    CA_CERT=/snap/core22/current/etc/ssl/certs/ca-certificates.crt
     run_with_sudo "${SNAP}/usr/bin/curl" --cacert $CA_CERT -L $1 -o $2
   fi
 }
@@ -1371,7 +1371,7 @@ use_snap_env() {
   # Configure PATH, LD_LIBRARY_PATH and PYTHONPATH
   export PATH="$SNAP/usr/bin:$SNAP/bin:$SNAP/usr/sbin:$SNAP/sbin:$REAL_PATH"
   export LD_LIBRARY_PATH="$SNAP_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/ceph:${REAL_LD_LIBRARY_PATH:-}"
-  export PYTHONPATH="$SNAP/usr/lib/python3.8:$SNAP/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages"
+  export PYTHONPATH="$SNAP/usr/lib/python3.10:$SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages"
 
   # Python configuration
   export PYTHONNOUSERSITE=false

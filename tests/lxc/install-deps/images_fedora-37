@@ -14,7 +14,7 @@ pip3 install pytest==8.3.4 requests pyyaml sh psutil
 n=0
 until [ $n -ge 7 ]
 do
-  sudo snap install core20 && break  # substitute your command here
+  sudo snap install core22 && break  # substitute your command here
   n=$[$n+1]
   sleep 10
 done

@@ -21,7 +21,7 @@ done
 n=0
 until [ $n -ge 7 ]
 do
-  sudo snap install core20 && break  # substitute your command here
+  sudo snap install core22 && break  # substitute your command here
   n=$[$n+1]
   sleep 10
 done
