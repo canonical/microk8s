@@ -1,17 +1,20 @@
-From f154f915fe39d6b929dbe1e513011fd271fcd12c Mon Sep 17 00:00:00 2001
-From: Angelos Kolaitis <neoaggelos@gmail.com>
-Date: Fri, 15 Jul 2022 15:07:18 +0300
+From fcf13fcd6085be9bd15c4db8d4d7261e9b866a4d Mon Sep 17 00:00:00 2001
+From: Homayoon Alimohammadi <homayoonalimohammadi@gmail.com>
+Date: Fri, 22 Aug 2025 15:25:12 +0400
 Subject: [PATCH] microk8s autocompleter script
 
+Signed-off-by: Homayoon Alimohammadi <homayoonalimohammadi@gmail.com>
 ---
  cmd/helm/hack_microk8s_autocompleter.go | 51 +++++++++++++++++++++++++
  cmd/helm/helm.go                        |  2 +-
- 2 files changed, 52 insertions(+), 1 deletion(-)
+ go.mod                                  |  6 +++
+ go.sum                                  | 12 ++++++
+ 4 files changed, 70 insertions(+), 1 deletion(-)
  create mode 100644 cmd/helm/hack_microk8s_autocompleter.go
 
 diff --git a/cmd/helm/hack_microk8s_autocompleter.go b/cmd/helm/hack_microk8s_autocompleter.go
 new file mode 100644
-index 00000000..e819f44b
+index 000000000..e819f44be
 --- /dev/null
 +++ b/cmd/helm/hack_microk8s_autocompleter.go
 @@ -0,0 +1,51 @@
@@ -67,11 +70,11 @@ index 00000000..e819f44b
 +	os.WriteFile("microk8s.bash", []byte(completionScript), 0644)
 +}
 diff --git a/cmd/helm/helm.go b/cmd/helm/helm.go
-index 15b0d5c7..6499d4ca 100644
+index 7bca93358..2008c1b08 100644
 --- a/cmd/helm/helm.go
 +++ b/cmd/helm/helm.go
-@@ -55,7 +55,7 @@ func warning(format string, v ...interface{}) {
- 	fmt.Fprintf(os.Stderr, format, v...)
+@@ -62,7 +62,7 @@ func hookOutputWriter(_, _, _ string) io.Writer {
+ 	return log.Writer()
  }
  
 -func main() {
@@ -79,6 +82,103 @@ index 15b0d5c7..6499d4ca 100644
  	// Setting the name of the app for managedFields in the Kubernetes client.
  	// It is set here to the full name of "helm" so that renaming of helm to
  	// another name (e.g., helm2 or helm3) does not change the name of the
+diff --git a/go.mod b/go.mod
+index bc36c0a6b..3afa92eab 100644
+--- a/go.mod
++++ b/go.mod
+@@ -73,6 +73,7 @@ require (
+ 	github.com/docker/go-metrics v0.0.1 // indirect
+ 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
+ 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
++	github.com/fatih/camelcase v1.0.0 // indirect
+ 	github.com/fatih/color v1.13.0 // indirect
+ 	github.com/felixge/httpsnoop v1.0.4 // indirect
+ 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
+@@ -99,12 +100,14 @@ require (
+ 	github.com/hashicorp/golang-lru/v2 v2.0.5 // indirect
+ 	github.com/huandu/xstrings v1.5.0 // indirect
+ 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
++	github.com/jonboulle/clockwork v0.4.0 // indirect
+ 	github.com/josharian/intern v1.0.0 // indirect
+ 	github.com/json-iterator/go v1.1.12 // indirect
+ 	github.com/klauspost/compress v1.18.0 // indirect
+ 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
+ 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+ 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
++	github.com/lithammer/dedent v1.1.0 // indirect
+ 	github.com/mailru/easyjson v0.7.7 // indirect
+ 	github.com/mattn/go-colorable v0.1.13 // indirect
+ 	github.com/mattn/go-isatty v0.0.17 // indirect
+@@ -174,10 +177,13 @@ require (
+ 	gopkg.in/inf.v0 v0.9.1 // indirect
+ 	gopkg.in/yaml.v2 v2.4.0 // indirect
+ 	k8s.io/component-base v0.33.3 // indirect
++	k8s.io/component-helpers v0.33.3 // indirect
+ 	k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff // indirect
++	k8s.io/metrics v0.33.3 // indirect
+ 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 // indirect
+ 	sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 // indirect
+ 	sigs.k8s.io/kustomize/api v0.19.0 // indirect
++	sigs.k8s.io/kustomize/kustomize/v5 v5.6.0 // indirect
+ 	sigs.k8s.io/kustomize/kyaml v0.19.0 // indirect
+ 	sigs.k8s.io/randfill v1.0.0 // indirect
+ 	sigs.k8s.io/structured-merge-diff/v4 v4.6.0 // indirect
+diff --git a/go.sum b/go.sum
+index 31d5f8ae2..218931bb0 100644
+--- a/go.sum
++++ b/go.sum
+@@ -90,6 +90,8 @@ github.com/evanphx/json-patch v5.9.11+incompatible h1:ixHHqfcGvxhWkniF1tWxBHA0yb
+ github.com/evanphx/json-patch v5.9.11+incompatible/go.mod h1:50XU6AFN0ol/bzJsmQLiYLvXMP4fmwYFNcr97nuDLSk=
+ github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f h1:Wl78ApPPB2Wvf/TIe2xdyJxTlb6obmF18d8QdkxNDu4=
+ github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f/go.mod h1:OSYXu++VVOHnXeitef/D8n/6y4QV8uLHSFXX4NeXMGc=
++github.com/fatih/camelcase v1.0.0 h1:hxNvNX/xYBp0ovncs8WyWZrOrpBNub/JfaMvbURyft8=
++github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
+ github.com/fatih/color v1.13.0 h1:8LOYc1KYPPmyKMuN8QV2DNRWNbLo6LZ0iLs8+mlH53w=
+ github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
+ github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
+@@ -180,6 +182,8 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
+ github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
+ github.com/jmoiron/sqlx v1.4.0 h1:1PLqN7S1UYp5t4SrVVnt4nUVNemrDAtxlulVe+Qgm3o=
+ github.com/jmoiron/sqlx v1.4.0/go.mod h1:ZrZ7UsYB/weZdl2Bxg6jCRO9c3YHl8r3ahlKmRT4JLY=
++github.com/jonboulle/clockwork v0.4.0 h1:p4Cf1aMWXnXAUh8lVfewRBx1zaTSYKrKMF2g3ST4RZ4=
++github.com/jonboulle/clockwork v0.4.0/go.mod h1:xgRqUGwRcjKCO1vbZUEtSLrqKoPSsUpK7fnezOII0kc=
+ github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
+ github.com/josharian/intern v1.0.0/go.mod h1:5DoeVV0s6jJacbCEi61lwdGj/aVlrQvzHFFd8Hwg//Y=
+ github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
+@@ -211,6 +215,8 @@ github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
+ github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
+ github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de h1:9TO3cAIGXtEhnIaL+V+BEER86oLrvS+kWobKpbJuye0=
+ github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de/go.mod h1:zAbeS9B/r2mtpb6U+EI2rYA5OAXxsYw6wTamcNW+zcE=
++github.com/lithammer/dedent v1.1.0 h1:VNzHMVCBNG1j0fh3OrsFRkVUwStdDArbgBWoPAffktY=
++github.com/lithammer/dedent v1.1.0/go.mod h1:jrXYCQtgg0nJiN+StA2KgR7w6CiQNv9Fd/Z9BP0jIOc=
+ github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=
+ github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
+ github.com/mattn/go-colorable v0.1.9/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
+@@ -535,12 +541,16 @@ k8s.io/client-go v0.33.3 h1:M5AfDnKfYmVJif92ngN532gFqakcGi6RvaOF16efrpA=
+ k8s.io/client-go v0.33.3/go.mod h1:luqKBQggEf3shbxHY4uVENAxrDISLOarxpTKMiUuujg=
+ k8s.io/component-base v0.33.3 h1:mlAuyJqyPlKZM7FyaoM/LcunZaaY353RXiOd2+B5tGA=
+ k8s.io/component-base v0.33.3/go.mod h1:ktBVsBzkI3imDuxYXmVxZ2zxJnYTZ4HAsVj9iF09qp4=
++k8s.io/component-helpers v0.33.3 h1:fjWVORSQfI0WKzPeIFSju/gMD9sybwXBJ7oPbqQu6eM=
++k8s.io/component-helpers v0.33.3/go.mod h1:7iwv+Y9Guw6X4RrnNQOyQlXcvJrVjPveHVqUA5dm31c=
+ k8s.io/klog/v2 v2.130.1 h1:n9Xl7H1Xvksem4KFG4PYbdQCQxqc/tTUyrgXaOhHSzk=
+ k8s.io/klog/v2 v2.130.1/go.mod h1:3Jpz1GvMt720eyJH1ckRHK1EDfpxISzJ7I9OYgaDtPE=
+ k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff h1:/usPimJzUKKu+m+TE36gUyGcf03XZEP0ZIKgKj35LS4=
+ k8s.io/kube-openapi v0.0.0-20250318190949-c8a335a9a2ff/go.mod h1:5jIi+8yX4RIb8wk3XwBo5Pq2ccx4FP10ohkbSKCZoK8=
+ k8s.io/kubectl v0.33.3 h1:r/phHvH1iU7gO/l7tTjQk2K01ER7/OAJi8uFHHyWSac=
+ k8s.io/kubectl v0.33.3/go.mod h1:euj2bG56L6kUGOE/ckZbCoudPwuj4Kud7BR0GzyNiT0=
++k8s.io/metrics v0.33.3 h1:9CcqBz15JZfISqwca33gdHS8I6XfsK1vA8WUdEnG70g=
++k8s.io/metrics v0.33.3/go.mod h1:Aw+cdg4AYHw0HvUY+lCyq40FOO84awrqvJRTw0cmXDs=
+ k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738 h1:M3sRQVHv7vB20Xc2ybTt7ODCeFj6JSWYFzOFnYeS6Ro=
+ k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
+ oras.land/oras-go/v2 v2.6.0 h1:X4ELRsiGkrbeox69+9tzTu492FMUu7zJQW6eJU+I2oc=
+@@ -549,6 +559,8 @@ sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3 h1:/Rv+M11QRah1itp8VhT6HoVx1
+ sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3/go.mod h1:18nIHnGi6636UCz6m8i4DhaJ65T6EruyzmoQqI2BVDo=
+ sigs.k8s.io/kustomize/api v0.19.0 h1:F+2HB2mU1MSiR9Hp1NEgoU2q9ItNOaBJl0I4Dlus5SQ=
+ sigs.k8s.io/kustomize/api v0.19.0/go.mod h1:/BbwnivGVcBh1r+8m3tH1VNxJmHSk1PzP5fkP6lbL1o=
++sigs.k8s.io/kustomize/kustomize/v5 v5.6.0 h1:MWtRRDWCwQEeW2rnJTqJMuV6Agy56P53SkbVoJpN7wA=
++sigs.k8s.io/kustomize/kustomize/v5 v5.6.0/go.mod h1:XuuZiQF7WdcvZzEYyNww9A0p3LazCKeJmCjeycN8e1I=
+ sigs.k8s.io/kustomize/kyaml v0.19.0 h1:RFge5qsO1uHhwJsu3ipV7RNolC7Uozc0jUBC/61XSlA=
+ sigs.k8s.io/kustomize/kyaml v0.19.0/go.mod h1:FeKD5jEOH+FbZPpqUghBP8mrLjJ3+zD3/rf9NNu1cwY=
+ sigs.k8s.io/randfill v0.0.0-20250304075658-069ef1bbf016/go.mod h1:XeLlZ/jmk4i1HRopwe7/aU3H5n1zNUcX6TM94b3QxOY=
 -- 
-2.25.1
-
+2.48.1
