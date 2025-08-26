@@ -16,7 +16,7 @@ environment:
   REAL_PATH: $PATH
   REAL_LD_LIBRARY_PATH: $LD_LIBRARY_PATH
   REAL_PYTHONPATH: $PYTHONPATH
-  SNAPCRAFT_ARCH_TRIPLET: $SNAPCRAFT_ARCH_TRIPLET
+  SNAPCRAFT_ARCH_TRIPLET: $CRAFT_ARCH_TRIPLET
 
 parts:
   build-deps:
@@ -54,42 +54,42 @@ parts:
     source: build-scripts/components/k8s-dqlite
     build-attributes: [enable-patchelf]
     plugin: nil
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
 
   etcd:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/etcd
     build-attributes: [enable-patchelf]
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh etcd
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh etcd
 
   cni:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/cni
     build-attributes: [enable-patchelf]
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cni
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh cni
 
   flannel-cni-plugin:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/flannel-cni-plugin
     build-attributes: [enable-patchelf]
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flannel-cni-plugin
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh flannel-cni-plugin
 
   flanneld:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/flanneld
     build-attributes: [enable-patchelf]
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flanneld
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh flanneld
 
   kubernetes:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/kubernetes
     build-attributes: [enable-patchelf]
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
 
   kubernetes-version:
     plugin: nil
@@ -100,7 +100,7 @@ parts:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/helm
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh helm
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh helm
 
   libmnl:
     after: [build-deps]
@@ -116,7 +116,7 @@ parts:
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
     build-attributes: [enable-patchelf]
     build-environment:
-      - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/lib
+      - LIBMNL_LIBS: $CRAFT_STAGE/usr/lib
     prime:
       - -usr/local/include
 
@@ -126,8 +126,8 @@ parts:
     build-attributes: [enable-patchelf]
     plugin: autotools
     build-environment:
-      - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/lib
-      - LIBNFTNL_LIBS: $SNAPCRAFT_STAGE/usr/lib
+      - LIBMNL_LIBS: $CRAFT_STAGE/usr/lib
+      - LIBNFTNL_LIBS: $CRAFT_STAGE/usr/lib
     autotools-configure-parameters:
       - "--prefix=/usr"
       - "--exec-prefix=/"
@@ -142,7 +142,7 @@ parts:
     after: [runc]
     plugin: nil
     source: build-scripts/components/containerd
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh containerd
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh containerd
     build-attributes: [no-patchelf]
 
   runc:
@@ -150,7 +150,7 @@ parts:
     source: build-scripts/components/runc
     build-attributes: [no-patchelf]
     plugin: nil
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh runc
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh runc
 
   bash-utils:
     plugin: nil
@@ -215,63 +215,63 @@ parts:
     plugin: nil
     source: build-scripts/components/cluster-agent
     build-attributes: [enable-patchelf]
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cluster-agent
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh cluster-agent
 
   microk8s-addons:
     plugin: nil
     source: build-scripts/addons
-    override-build: ./repositories.sh "${SNAPCRAFT_PART_INSTALL}"
+    override-build: ./repositories.sh "${CRAFT_PART_INSTALL}"
 
   microk8s-scripts:
     plugin: nil
     source: scripts/
     override-build: |
-      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
-        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      if [ -d "${CRAFT_PART_INSTALL}" ]; then
+        rm -rf "${CRAFT_PART_INSTALL}/*"
       fi
 
-      cp -r . "${SNAPCRAFT_PART_INSTALL}/scripts"
-      cp inspect.sh "${SNAPCRAFT_PART_INSTALL}/inspect.sh"
+      cp -r . "${CRAFT_PART_INSTALL}/scripts"
+      cp inspect.sh "${CRAFT_PART_INSTALL}/inspect.sh"
 
   microk8s-upgrade-scripts:
     plugin: nil
     source: upgrade-scripts/
     override-build: |
-      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
-        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      if [ -d "${CRAFT_PART_INSTALL}" ]; then
+        rm -rf "${CRAFT_PART_INSTALL}/*"
       fi
 
-      cp -r . "${SNAPCRAFT_PART_INSTALL}/upgrade-scripts"
+      cp -r . "${CRAFT_PART_INSTALL}/upgrade-scripts"
 
   microk8s:
     plugin: nil
     source: microk8s-resources/
     override-build: |
-      if [ -d "${SNAPCRAFT_PART_INSTALL}" ]; then
-        rm -rf "${SNAPCRAFT_PART_INSTALL}/*"
+      if [ -d "${CRAFT_PART_INSTALL}" ]; then
+        rm -rf "${CRAFT_PART_INSTALL}/*"
       fi
 
-      cp microk8s.default.yaml "${SNAPCRAFT_PART_INSTALL}/microk8s.default.yaml"
+      cp microk8s.default.yaml "${CRAFT_PART_INSTALL}/microk8s.default.yaml"
 
-      cp -r default-args "${SNAPCRAFT_PART_INSTALL}/default-args"
-      cp -r default-hooks "${SNAPCRAFT_PART_INSTALL}/default-hooks"
-      cp -r certs "${SNAPCRAFT_PART_INSTALL}/certs"
+      cp -r default-args "${CRAFT_PART_INSTALL}/default-args"
+      cp -r default-hooks "${CRAFT_PART_INSTALL}/default-hooks"
+      cp -r certs "${CRAFT_PART_INSTALL}/certs"
 
-      cp containerd-profile "${SNAPCRAFT_PART_INSTALL}/containerd-profile"
+      cp containerd-profile "${CRAFT_PART_INSTALL}/containerd-profile"
 
-      cp client.config "${SNAPCRAFT_PART_INSTALL}/client.config"
-      cp client.config.template "${SNAPCRAFT_PART_INSTALL}/client.config.template"
-      cp kubelet.config.template "${SNAPCRAFT_PART_INSTALL}/kubelet.config.template"
-      cp client-x509.config.template "${SNAPCRAFT_PART_INSTALL}/client-x509.config.template"
+      cp client.config "${CRAFT_PART_INSTALL}/client.config"
+      cp client.config.template "${CRAFT_PART_INSTALL}/client.config.template"
+      cp kubelet.config.template "${CRAFT_PART_INSTALL}/kubelet.config.template"
+      cp client-x509.config.template "${CRAFT_PART_INSTALL}/client-x509.config.template"
 
-      cp -r wrappers/* "${SNAPCRAFT_PART_INSTALL}/"
-      cp -r actions/ "${SNAPCRAFT_PART_INSTALL}/actions"
+      cp -r wrappers/* "${CRAFT_PART_INSTALL}/"
+      cp -r actions/ "${CRAFT_PART_INSTALL}/actions"
 
   microk8s-completion:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/microk8s-completion
-    override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh microk8s-completion
+    override-build: $CRAFT_PROJECT_DIR/build-scripts/build-component.sh microk8s-completion
 
   python-runtime:
     after: [build-deps]
@@ -326,7 +326,7 @@ parts:
     build-packages:
       - python3-yaml
     override-build: |
-      ./build-scripts/generate-bom.py > "${SNAPCRAFT_PART_INSTALL}/bom.json"
+      ./build-scripts/generate-bom.py > "${CRAFT_PART_INSTALL}/bom.json"
 
 apps:
   microk8s:
