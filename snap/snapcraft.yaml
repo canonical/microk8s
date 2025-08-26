@@ -283,11 +283,11 @@ parts:
     build-packages:
       - python3-dev
     build-environment:
-      - C_INCLUDE_PATH: /usr/include/python3.8
+      - C_INCLUDE_PATH: /usr/include/python3.10
     stage-packages:
       - libpython3-stdlib
-      - libpython3.8-stdlib
-      - libpython3.8-minimal
+      - libpython3.10-stdlib
+      - libpython3.10-minimal
       - python3-pip
       - python3-setuptools
       - python3-wheel
@@ -295,7 +295,7 @@ parts:
       - python3-minimal
       - python3-distutils
       - python3-pkg-resources
-      - python3.8-minimal
+      - python3.10-minimal
       - python3-openssl
       - python3-requests
       - python3-click

@@ -1371,7 +1371,7 @@ use_snap_env() {
   # Configure PATH, LD_LIBRARY_PATH and PYTHONPATH
   export PATH="$SNAP/usr/bin:$SNAP/bin:$SNAP/usr/sbin:$SNAP/sbin:$REAL_PATH"
   export LD_LIBRARY_PATH="$SNAP_LIBRARY_PATH:$SNAP/lib:$SNAP/usr/lib:$SNAP/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/ceph:${REAL_LD_LIBRARY_PATH:-}"
-  export PYTHONPATH="$SNAP/usr/lib/python3.8:$SNAP/lib/python3.8/site-packages:$SNAP/usr/lib/python3/dist-packages"
+  export PYTHONPATH="$SNAP/usr/lib/python3.10:$SNAP/lib/python3.10/site-packages:$SNAP/usr/lib/python3/dist-packages"
 
   # Python configuration
   export PYTHONNOUSERSITE=false
