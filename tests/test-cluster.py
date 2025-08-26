@@ -25,7 +25,7 @@ channel_to_test = os.environ.get("CHANNEL_TO_TEST", "latest/stable")
 backend = os.environ.get("BACKEND", None)
 profile = os.environ.get("LXC_PROFILE", "lxc/microk8s.profile")
 snap_data = os.environ.get("SNAP_DATA", "/var/snap/microk8s/current")
-distro = os.environ.get("DISTRO", "ubuntu:20.04")
+distro = os.environ.get("DISTRO", "ubuntu:22.04")
 
 TEMPLATES = Path(__file__).absolute().parent / "templates"
 

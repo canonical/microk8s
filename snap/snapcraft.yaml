@@ -10,7 +10,7 @@ description: |-
 license: Apache-2.0
 grade: stable
 confinement: classic
-base: core20
+base: core22
 assumes: [snapd2.52]
 environment:
   REAL_PATH: $PATH
@@ -23,7 +23,9 @@ parts:
     plugin: nil
     build-snaps:
       - go/1.24/stable
+    build-attributes: [enable-patchelf]
     build-packages:
+      - sudo
       - autoconf
       - automake
       - autopoint
@@ -50,6 +52,7 @@ parts:
   k8s-dqlite:
     after: [build-deps]
     source: build-scripts/components/k8s-dqlite
+    build-attributes: [enable-patchelf]
     plugin: nil
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh k8s-dqlite
 
@@ -57,30 +60,35 @@ parts:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/etcd
+    build-attributes: [enable-patchelf]
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh etcd
 
   cni:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/cni
+    build-attributes: [enable-patchelf]
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cni
 
   flannel-cni-plugin:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/flannel-cni-plugin
+    build-attributes: [enable-patchelf]
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flannel-cni-plugin
 
   flanneld:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/flanneld
+    build-attributes: [enable-patchelf]
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh flanneld
 
   kubernetes:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/kubernetes
+    build-attributes: [enable-patchelf]
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh kubernetes
 
   kubernetes-version:
@@ -98,6 +106,7 @@ parts:
     after: [build-deps]
     plugin: autotools
     source: https://www.netfilter.org/pub/libmnl/libmnl-1.0.5.tar.bz2
+    build-attributes: [enable-patchelf]
     prime:
       - -usr/local/include
 
@@ -105,6 +114,7 @@ parts:
     after: [libmnl]
     plugin: autotools
     source: https://www.netfilter.org/projects/libnftnl/files/libnftnl-1.1.8.tar.bz2
+    build-attributes: [enable-patchelf]
     build-environment:
       - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/lib
     prime:
@@ -113,6 +123,7 @@ parts:
   iptables:
     after: [libnftnl]
     source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
+    build-attributes: [enable-patchelf]
     plugin: autotools
     build-environment:
       - LIBMNL_LIBS: $SNAPCRAFT_STAGE/usr/lib
@@ -143,6 +154,7 @@ parts:
 
   bash-utils:
     plugin: nil
+    build-attributes: [enable-patchelf]
     stage-packages:
       - conntrack
       - coreutils
@@ -202,6 +214,7 @@ parts:
     after: [build-deps]
     plugin: nil
     source: build-scripts/components/cluster-agent
+    build-attributes: [enable-patchelf]
     override-build: $SNAPCRAFT_PROJECT_DIR/build-scripts/build-component.sh cluster-agent
 
   microk8s-addons:
@@ -262,6 +275,7 @@ parts:
 
   python-runtime:
     after: [build-deps]
+    build-attributes: [enable-patchelf]
     plugin: nil
     source: build-scripts/components/python
     override-build: |
@@ -287,7 +301,7 @@ parts:
       - python3-click
       - python3-dateutil
     stage:
-      - -usr/lib/python3.9
+      - -usr/lib/python3.11
       - -usr/share/doc
       - -usr/share/lintian
       - -usr/share/man

@@ -54,8 +54,8 @@ addons:
       echo retry install snapd
       sleep 1
     done
-    while ! lxc exec "$NAME" -- bash -c "snap install core20"; do
-      echo retry install core20
+    while ! lxc exec "$NAME" -- bash -c "snap install core22"; do
+      echo retry install core22
       sleep 1
     done
     while ! lxc exec "$NAME" -- bash -c "snap install /var/tmp/microk8s_latest_amd64.snap --dangerous --classic"; do
@@ -106,8 +106,8 @@ function setup_airgapped_microk8s() {
     echo retry install snapd
     sleep 1
   done
-  while ! lxc exec "$NAME" -- bash -c "snap install core20"; do
-    echo retry install core20
+  while ! lxc exec "$NAME" -- bash -c "snap install core22"; do
+    echo retry install core22
     sleep 1
   done
 
