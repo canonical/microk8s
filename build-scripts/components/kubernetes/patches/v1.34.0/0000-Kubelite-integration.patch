@@ -1,28 +1,29 @@
-From 3f3c59ff2c32ec2c9a74bcbc4312854d5aff1fee Mon Sep 17 00:00:00 2001
+From 241fc2a00be6fde3f7059ae61842cba44dff82a5 Mon Sep 17 00:00:00 2001
 From: Konstantinos Tsakalozos <kos.tsakalozos@canonical.com>
 Date: Wed, 3 Mar 2021 18:19:37 +0200
-Subject: [PATCH 1/2] Kubelite integration
+Subject: [PATCH] Kubelite integration
 
 ---
- cmd/kube-apiserver/app/server.go    |  9 ++-
- cmd/kube-scheduler/app/server.go    |  6 +-
- cmd/kubelet/app/server.go           | 13 +++--
- cmd/kubelite/app/daemons/daemon.go  | 85 +++++++++++++++++++++++++++++
- cmd/kubelite/app/options/options.go | 79 +++++++++++++++++++++++++++
- cmd/kubelite/app/server.go          | 80 +++++++++++++++++++++++++++
- cmd/kubelite/kubelite.go            | 25 +++++++++
- pkg/volume/csi/csi_plugin.go        | 11 +++-
- 8 files changed, 297 insertions(+), 11 deletions(-)
+ cmd/kube-apiserver/app/server.go              |  9 +-
+ .../app/options/options.go                    | 10 --
+ cmd/kube-scheduler/app/server.go              |  6 +-
+ cmd/kubelet/app/server.go                     |  4 -
+ cmd/kubelite/app/daemons/daemon.go            | 85 +++++++++++++++++
+ cmd/kubelite/app/options/options.go           | 79 ++++++++++++++++
+ cmd/kubelite/app/server.go                    | 91 +++++++++++++++++++
+ cmd/kubelite/kubelite.go                      | 25 +++++
+ pkg/volume/csi/csi_plugin.go                  | 11 ++-
+ 9 files changed, 300 insertions(+), 20 deletions(-)
  create mode 100644 cmd/kubelite/app/daemons/daemon.go
  create mode 100644 cmd/kubelite/app/options/options.go
  create mode 100644 cmd/kubelite/app/server.go
  create mode 100644 cmd/kubelite/kubelite.go
 
 diff --git a/cmd/kube-apiserver/app/server.go b/cmd/kube-apiserver/app/server.go
-index 4dc9d1f3e89..86a599996db 100644
+index 71ebb317461..86dc50ce671 100644
 --- a/cmd/kube-apiserver/app/server.go
 +++ b/cmd/kube-apiserver/app/server.go
-@@ -65,9 +65,14 @@ func init() {
+@@ -67,9 +67,14 @@ func init() {
  }
  
  // NewAPIServerCommand creates a *cobra.Command object with default parameters
@@ -39,11 +40,49 @@ index 4dc9d1f3e89..86a599996db 100644
  	featureGate := s.GenericServerRunOptions.ComponentGlobalsRegistry.FeatureGateFor(basecompatibility.DefaultKubeComponent)
  
  	cmd := &cobra.Command{
+diff --git a/cmd/kube-controller-manager/app/options/options.go b/cmd/kube-controller-manager/app/options/options.go
+index 176b2a14bc1..5048b04014e 100644
+--- a/cmd/kube-controller-manager/app/options/options.go
++++ b/cmd/kube-controller-manager/app/options/options.go
+@@ -25,11 +25,9 @@ import (
+ 	v1 "k8s.io/api/core/v1"
+ 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
+ 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+-	"k8s.io/apimachinery/pkg/util/version"
+ 	apiserveroptions "k8s.io/apiserver/pkg/server/options"
+ 	"k8s.io/apiserver/pkg/util/compatibility"
+ 	utilfeature "k8s.io/apiserver/pkg/util/feature"
+-	clientgofeaturegate "k8s.io/client-go/features"
+ 	clientset "k8s.io/client-go/kubernetes"
+ 	clientgokubescheme "k8s.io/client-go/kubernetes/scheme"
+ 	restclient "k8s.io/client-go/rest"
+@@ -40,7 +38,6 @@ import (
+ 	cpoptions "k8s.io/cloud-provider/options"
+ 	cliflag "k8s.io/component-base/cli/flag"
+ 	basecompatibility "k8s.io/component-base/compatibility"
+-	"k8s.io/component-base/featuregate"
+ 	"k8s.io/component-base/logs"
+ 	logsapi "k8s.io/component-base/logs/api/v1"
+ 	"k8s.io/component-base/metrics"
+@@ -298,13 +295,6 @@ func (s *KubeControllerManagerOptions) Flags(allControllers []string, disabledBy
+ 	fs.StringVar(&s.Master, "master", s.Master, "The address of the Kubernetes API server (overrides any value in kubeconfig).")
+ 	fs.StringVar(&s.Generic.ClientConnection.Kubeconfig, "kubeconfig", s.Generic.ClientConnection.Kubeconfig, "Path to kubeconfig file with authorization and master location information (the master location can be overridden by the master flag).")
+ 
+-	if !utilfeature.DefaultFeatureGate.Enabled(featuregate.Feature(clientgofeaturegate.WatchListClient)) {
+-		ver := version.MustParse("1.34")
+-		if err := utilfeature.DefaultMutableFeatureGate.OverrideDefaultAtVersion(featuregate.Feature(clientgofeaturegate.WatchListClient), true, ver); err != nil {
+-			panic(fmt.Sprintf("unable to set %s feature gate, err: %v", clientgofeaturegate.WatchListClient, err))
+-		}
+-	}
+-
+ 	s.ComponentGlobalsRegistry.AddFlags(fss.FlagSet("generic"))
+ 
+ 	return fss
 diff --git a/cmd/kube-scheduler/app/server.go b/cmd/kube-scheduler/app/server.go
-index bf5a3077552..6f2abd5616f 100644
+index 803e0c37861..5b58d437d30 100644
 --- a/cmd/kube-scheduler/app/server.go
 +++ b/cmd/kube-scheduler/app/server.go
-@@ -149,7 +149,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
+@@ -150,7 +150,11 @@ func runCommand(cmd *cobra.Command, opts *options.Options, registryOptions ...Op
  	ctx, cancel := context.WithCancel(context.Background())
  	defer cancel()
  	go func() {
@@ -57,45 +96,27 @@ index bf5a3077552..6f2abd5616f 100644
  		cancel()
  	}()
 diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
-index 3a2256f098a..044e55996c9 100644
+index f069f6b08b9..62f3ca58dc7 100644
 --- a/cmd/kubelet/app/server.go
 +++ b/cmd/kubelet/app/server.go
-@@ -135,7 +135,7 @@ func init() {
- }
- 
- // NewKubeletCommand creates a *cobra.Command object with default parameters
--func NewKubeletCommand() *cobra.Command {
-+func NewKubeletCommand(ctx ...context.Context) *cobra.Command {
- 	cleanFlagSet := pflag.NewFlagSet(server.ComponentKubelet, pflag.ContinueOnError)
- 	cleanFlagSet.SetNormalizeFunc(cliflag.WordSepNormalizeFunc)
- 	kubeletFlags := options.NewKubeletFlags()
-@@ -279,6 +279,12 @@ is checked every 20 seconds (also configurable with a flag).`,
- 			if err := checkPermissions(); err != nil {
- 				klog.ErrorS(err, "kubelet running with insufficient permissions")
- 			}
-+			runctx := context.Background()
-+			if len(ctx) == 0 {
-+				runctx = genericapiserver.SetupSignalContext()
-+			} else {
-+				runctx = ctx[0]
-+			}
- 
- 			// make the kubelet's config safe for logging
- 			config := kubeletServer.KubeletConfiguration.DeepCopy()
-@@ -288,12 +294,9 @@ is checked every 20 seconds (also configurable with a flag).`,
+@@ -63,7 +63,6 @@ import (
+ 	"k8s.io/apimachinery/pkg/util/sets"
+ 	"k8s.io/apimachinery/pkg/util/validation/field"
+ 	"k8s.io/apimachinery/pkg/util/wait"
+-	genericapiserver "k8s.io/apiserver/pkg/server"
+ 	"k8s.io/apiserver/pkg/server/healthz"
+ 	utilfeature "k8s.io/apiserver/pkg/util/feature"
+ 	clientset "k8s.io/client-go/kubernetes"
+@@ -291,9 +290,6 @@ is checked every 20 seconds (also configurable with a flag).`,
  			// log the kubelet's config for inspection
- 			klog.V(5).InfoS("KubeletConfiguration", "configuration", klog.Format(config))
+ 			logger.V(5).Info("KubeletConfiguration", "configuration", klog.Format(config))
  
 -			// set up signal context for kubelet shutdown
 -			ctx := genericapiserver.SetupSignalContext()
 -
  			utilfeature.DefaultMutableFeatureGate.AddMetrics()
  			// run the kubelet
--			return Run(ctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate)
-+			return Run(runctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate)
- 		},
- 	}
- 
+ 			return Run(ctx, kubeletServer, kubeletDeps, utilfeature.DefaultFeatureGate)
 diff --git a/cmd/kubelite/app/daemons/daemon.go b/cmd/kubelite/app/daemons/daemon.go
 new file mode 100644
 index 00000000000..46c1af7fdb9
@@ -274,10 +295,10 @@ index 00000000000..80f1d8b09fc
 +}
 diff --git a/cmd/kubelite/app/server.go b/cmd/kubelite/app/server.go
 new file mode 100644
-index 00000000000..4ff36cd6432
+index 00000000000..858a7c1094c
 --- /dev/null
 +++ b/cmd/kubelite/app/server.go
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,91 @@
 +/*
 +Copyright © 2020 NAME HERE <EMAIL ADDRESS>
 +
@@ -301,7 +322,11 @@ index 00000000000..4ff36cd6432
 +	"time"
 +
 +	"github.com/spf13/cobra"
++	"k8s.io/apimachinery/pkg/util/version"
 +	genericapiserver "k8s.io/apiserver/pkg/server"
++	utilfeature "k8s.io/apiserver/pkg/util/feature"
++	clientgofeaturegate "k8s.io/client-go/features"
++	"k8s.io/component-base/featuregate"
 +	daemon "k8s.io/kubernetes/cmd/kubelite/app/daemons"
 +	"k8s.io/kubernetes/cmd/kubelite/app/options"
 +)
@@ -319,6 +344,13 @@ index 00000000000..4ff36cd6432
 +		ctx := genericapiserver.SetupSignalContext()
 +
 +		if opts.StartControlPlane {
++			if !utilfeature.DefaultFeatureGate.Enabled(featuregate.Feature(clientgofeaturegate.WatchListClient)) {
++				ver := version.MustParse("1.34")
++				if err := utilfeature.DefaultMutableFeatureGate.OverrideDefaultAtVersion(featuregate.Feature(clientgofeaturegate.WatchListClient), true, ver); err != nil {
++					panic(fmt.Sprintf("unable to set %s feature gate, err: %v", clientgofeaturegate.WatchListClient, err))
++				}
++			}
++
 +			apiserverArgs := options.ReadArgsFromFile(opts.APIServerArgsFile)
 +			go daemon.StartAPIServer(apiserverArgs, ctx)
 +			daemon.WaitForAPIServer(opts.KubeconfigFile, 360*time.Second)
@@ -390,10 +422,10 @@ index 00000000000..30ab604f480
 +	println("Stopping kubelite")
 +}
 diff --git a/pkg/volume/csi/csi_plugin.go b/pkg/volume/csi/csi_plugin.go
-index d09950bb45a..248022ef45d 100644
+index d2d830376da..fa6dbc91fef 100644
 --- a/pkg/volume/csi/csi_plugin.go
 +++ b/pkg/volume/csi/csi_plugin.go
-@@ -345,18 +345,23 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
+@@ -347,18 +347,23 @@ func (p *csiPlugin) Init(host volume.VolumeHost) error {
  	}
  
  	// Initializing the label management channels
