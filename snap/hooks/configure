@@ -526,6 +526,24 @@ then
   snapctl restart ${SNAP_NAME}.daemon-k8s-dqlite
 fi
 
+# Disable the features misbehaving with dqlite
+if grep -e '^\-\-etcd\-servers=.*kine.sock:12379' ${SNAP_DATA}/args/kube-apiserver
+then
+  if grep -e '^\-\-feature\-gates' ${SNAP_DATA}/args/kube-apiserver
+  then
+    for feature in ListFromCacheSnapshot SizeBasedListCostEstimate DetectCacheInconsistency
+    do
+      if ! grep -e "$feature" "$SNAP_DATA/args/kube-apiserver"
+      then
+        "${SNAP}/bin/sed" -i '/^--feature-gates=/ s/$/,'$feature'=false/' "$SNAP_DATA/args/kube-apiserver"
+      fi
+    done
+  else
+    echo '--feature-gates=ListFromCacheSnapshot=false,SizeBasedListCostEstimate=false,DetectCacheInconsistency=false' >> ${SNAP_DATA}/args/kube-apiserver
+  fi
+  need_api_restart=true
+fi
+
 # Fix hard-coded snap revision numbers in worker node services of existing clusters
 # https://github.com/canonical/microk8s/pull/3554
 for svc in kubelet proxy; do
