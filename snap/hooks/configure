@@ -531,7 +531,13 @@ if grep -e '^\-\-etcd\-servers=.*kine.sock:12379' ${SNAP_DATA}/args/kube-apiserv
 then
   if grep -e '^\-\-feature\-gates' ${SNAP_DATA}/args/kube-apiserver
   then
-    "${SNAP}/bin/sed" -i '/^--feature-gates=/ s/$/,ListFromCacheSnapshot=false,SizeBasedListCostEstimate=false,DetectCacheInconsistency=false/' "$SNAP_DATA/args/kube-apiserver"
+    for feature in ListFromCacheSnapshot SizeBasedListCostEstimate DetectCacheInconsistency
+    do
+      if ! grep -e "$feature" "$SNAP_DATA/args/kube-apiserver"
+      then
+        "${SNAP}/bin/sed" -i '/^--feature-gates=/ s/$/,'$feature'=false/' "$SNAP_DATA/args/kube-apiserver"
+      fi
+    done
   else
     echo '--feature-gates=ListFromCacheSnapshot=false,SizeBasedListCostEstimate=false,DetectCacheInconsistency=false' >> ${SNAP_DATA}/args/kube-apiserver
   fi
