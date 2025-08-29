@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install lxd
         run: |
           sudo lxd init --auto
@@ -49,7 +49,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Running upgrade path test
@@ -66,7 +66,7 @@ jobs:
       COLUMNS: 2048
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Running addons tests
@@ -91,7 +91,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Running addons tests
@@ -111,7 +111,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Running upgrade tests
@@ -129,7 +129,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Running cluster agent health check
@@ -145,7 +145,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Initialize LXD
@@ -169,7 +169,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Fetch snap
         uses: actions/download-artifact@v4
         with:
@@ -215,7 +215,7 @@ jobs:
         sarif_file_path: ${{ fromJson(needs.security-scan.outputs.sarif_files) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Download SARIF files artifact
         uses: actions/download-artifact@v4
         with:
