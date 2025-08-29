@@ -1,9 +1,7 @@
 name: Build and test MicroK8s snap
 
 on:
-  pull_request:
-    branches:
-      - master
+  - push
 
 jobs:
   build:
@@ -54,7 +52,7 @@ jobs:
         uses: ./.github/actions/test-prep
       - name: Running upgrade path test
         run: |
-          sudo -E UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade-path.py
+          sudo -E STRICT=yes UPGRADE_MICROK8S_FROM=latest/edge/strict UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade-path.py
 
   test-addons-core:
     name: Test core addons
@@ -69,18 +67,20 @@ jobs:
         uses: actions/checkout@v4
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
-      - name: Running addons tests
+      - name: Running addons tests in strict mode
         env:
           UNDER_TIME_PRESSURE: ${{ !contains(github.event.pull_request.labels.*.name, 'run-all-tests') }}
         run: |
           set -x
-          sudo snap install build/microk8s.snap --classic --dangerous
+          sudo snap install build/microk8s.snap --dangerous
+          sudo /snap/microk8s/current/connect-all-interfaces.sh
+          sudo microk8s status --wait-ready --timeout 300
           ./tests/smoke-test.sh
           # The GitHub runner is using the 10.1.0.0/16 CIDR, which would conflict with
           # kube-ovn's default POD_CIDR. They have to be different.
+          export STRICT="yes"
           export POD_CIDR="10.200.0.0/16"
           export POD_GATEWAY="10.200.0.1"
-          export SKIP_PROMETHEUS="False"
           export UNDER_TIME_PRESSURE=${UNDER_TIME_PRESSURE@u}
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/core/tests; pytest -s -ra test-addons.py"
 
@@ -100,8 +100,11 @@ jobs:
         run: |
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
+          sudo /snap/microk8s/current/connect-all-interfaces.sh
+          sudo microk8s status --wait-ready --timeout 300
           sudo microk8s enable community
           export UNDER_TIME_PRESSURE=${UNDER_TIME_PRESSURE@u}
+          export STRICT="yes"
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/community/; pytest -s -ra ./tests/"
 
   test-addons-core-upgrade:
@@ -120,7 +123,8 @@ jobs:
         run: |
           set -x
           export UNDER_TIME_PRESSURE=${UNDER_TIME_PRESSURE@u}
-          sudo -E bash -c "UPGRADE_MICROK8S_FROM=latest/edge UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade.py"
+          export STRICT="yes"
+          sudo -E bash -c "UPGRADE_MICROK8S_FROM=latest/edge/strict UPGRADE_MICROK8S_TO=$PWD/build/microk8s.snap pytest -s ./tests/test-upgrade.py"
 
   test-cluster-agent:
     name: Cluster agent health check
@@ -136,6 +140,7 @@ jobs:
         run: |
           set -x
           sudo snap install build/microk8s.snap --classic --dangerous
+          sudo /snap/microk8s/current/connect-all-interfaces.sh
           sudo -E bash -c "pytest -s ./tests/test-cluster-agent.py"
 
   test-airgap:
