@@ -1,0 +1,48 @@
+From 259ebdf71e84433f55c1b28efb206ccc3a1b2736 Mon Sep 17 00:00:00 2001
+From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
+Date: Thu, 1 Feb 2024 11:23:08 +0200
+Subject: [PATCH 2/3] setns_init_linux: set the NNP flag after changing the
+ apparmor profile
+
+With the current version of the AppArmor kernel module, it's not
+possible to switch the AppArmor profile if the NoNewPrivileges flag is
+set. So, we invert the order of the two operations.
+
+Adjusts the previous patch for runc version v1.1.12
+
+Co-Authored-By: Alberto Mardegan <mardy@users.sourceforge.net>
+---
+ libcontainer/setns_init_linux.go | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/libcontainer/setns_init_linux.go b/libcontainer/setns_init_linux.go
+index 92c6ef77..e9a55e31 100644
+--- a/libcontainer/setns_init_linux.go
++++ b/libcontainer/setns_init_linux.go
+@@ -62,11 +62,6 @@ func (l *linuxSetnsInit) Init() error {
+ 			return fmt.Errorf("failed to setup pidfd: %w", err)
+ 		}
+ 	}
+-	if l.config.NoNewPrivileges {
+-		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+-			return err
+-		}
+-	}
+ 	if l.config.Config.Umask != nil {
+ 		unix.Umask(int(*l.config.Config.Umask))
+ 	}
+@@ -106,6 +101,11 @@ func (l *linuxSetnsInit) Init() error {
+ 	if err := apparmor.ApplyProfile(l.config.AppArmorProfile); err != nil {
+ 		return err
+ 	}
++	if l.config.NoNewPrivileges {
++		if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
++			return err
++		}
++	}
+ 	if l.config.Config.Personality != nil {
+ 		if err := setupPersonality(l.config.Config); err != nil {
+ 			return err
+-- 
+2.49.0
+
