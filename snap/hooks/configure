@@ -407,9 +407,10 @@ then
   need_api_restart=true
 fi
 
-if ! grep '\-\-enable\-v2' ${SNAP_DATA}/args/etcd
+# etcd --enable-v2 flag is removed after 3.6
+if grep -e "--enable-v2=" ${SNAP_DATA}/args/etcd
 then
-  refresh_opt_in_config enable-v2 true etcd
+  "${SNAP}/bin/sed" -i '/--enable-v2=/d' "$SNAP_DATA/args/etcd"
   snapctl restart ${SNAP_NAME}.daemon-etcd
 fi
 
