@@ -10,6 +10,7 @@ profile cri-containerd.apparmor.d flags=(attach_disconnected,mediate_deleted) {
   network inet6,
   network unix,
   network netlink,
+  network raw,
 
   capability,
   file,
