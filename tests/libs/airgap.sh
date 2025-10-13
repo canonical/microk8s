@@ -62,6 +62,7 @@ addons:
       echo retry snap install
       sleep 1
     done
+    lxc exec "$NAME" -- bash -c "/snap/microk8s/current/connect-all-interfaces.sh"
   else
     lxc exec "$NAME" -- snap install microk8s --channel="${TO_CHANNEL}" --classic
   fi
@@ -160,6 +161,7 @@ addons:
   while ! snap install /var/tmp/microk8s.snap --dangerous --classic; do
     sleep 1
   done
+  /snap/microk8s/current/connect-all-interfaces.sh
   '
 }
 
