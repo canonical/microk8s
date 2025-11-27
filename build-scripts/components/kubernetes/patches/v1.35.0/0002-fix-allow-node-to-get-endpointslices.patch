@@ -1,0 +1,24 @@
+From dea2abd80878be1eff519216c0bad5a0e35462ec Mon Sep 17 00:00:00 2001
+From: Mateo Florido <mateo.florido@canonical.com>
+Date: Thu, 11 Sep 2025 17:36:10 -0500
+Subject: [PATCH] fix: allow node to get endpointslices
+
+---
+ plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go b/plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go
+index 447b0bc2e99..daa3bde6b1c 100644
+--- a/plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go
++++ b/plugin/pkg/auth/authorizer/rbac/bootstrappolicy/policy.go
+@@ -228,6 +228,7 @@ func NodeRules() []rbacv1.PolicyRule {
+ 		// TODO: add to the Node authorizer and restrict to endpoints referenced by pods or PVs bound to the node
+ 		// Needed for glusterfs volumes
+ 		rbacv1helpers.NewRule("get").Groups(legacyGroup).Resources("endpoints").RuleOrDie(),
++		rbacv1helpers.NewRule("get", "list", "watch").Groups(discoveryGroup).Resources("endpointslices").RuleOrDie(),
+ 		// Used to create a certificatesigningrequest for a node-specific client certificate, and watch
+ 		// for it to be signed. This allows the kubelet to rotate it's own certificate.
+ 		rbacv1helpers.NewRule("create", "get", "list", "watch").Groups(certificatesGroup).Resources("certificatesigningrequests").RuleOrDie(),
+-- 
+2.48.1
+
