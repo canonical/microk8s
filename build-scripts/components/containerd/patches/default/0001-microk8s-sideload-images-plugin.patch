@@ -1,18 +1,18 @@
-From d703811ab64963a6d52e6ac98b6a33b26b13e020 Mon Sep 17 00:00:00 2001
+From 0a7487656fce16fde43e73accdcca2e220f489b5 Mon Sep 17 00:00:00 2001
 From: Angelos Kolaitis <angelos.kolaitis@canonical.com>
 Date: Mon, 10 Jul 2023 12:15:34 +0300
 Subject: [PATCH] microk8s sideload images plugin
 
 ---
  cmd/containerd/builtins_microk8s.go |   6 ++
- microk8s_plugins/sideload.go        | 132 ++++++++++++++++++++++++++++
- 2 files changed, 138 insertions(+)
+ microk8s_plugins/sideload.go        | 140 ++++++++++++++++++++++++++++
+ 2 files changed, 146 insertions(+)
  create mode 100644 cmd/containerd/builtins_microk8s.go
  create mode 100644 microk8s_plugins/sideload.go
 
 diff --git a/cmd/containerd/builtins_microk8s.go b/cmd/containerd/builtins_microk8s.go
 new file mode 100644
-index 0000000..d9afc6f
+index 000000000..c215987fa
 --- /dev/null
 +++ b/cmd/containerd/builtins_microk8s.go
 @@ -0,0 +1,6 @@
@@ -20,14 +20,14 @@ index 0000000..d9afc6f
 +
 +// register containerd microk8s plugins here
 +import (
-+	_ "github.com/containerd/containerd/microk8s_plugins"
++	_ "github.com/containerd/containerd/v2/microk8s_plugins"
 +)
 diff --git a/microk8s_plugins/sideload.go b/microk8s_plugins/sideload.go
 new file mode 100644
-index 0000000..3ac632e
+index 000000000..17a1892cd
 --- /dev/null
 +++ b/microk8s_plugins/sideload.go
-@@ -0,0 +1,132 @@
+@@ -0,0 +1,140 @@
 +package microk8s
 +
 +import (
@@ -36,10 +36,12 @@ index 0000000..3ac632e
 +	"path/filepath"
 +	"time"
 +
-+	"github.com/containerd/containerd"
-+	"github.com/containerd/containerd/log"
-+	"github.com/containerd/containerd/platforms"
-+	"github.com/containerd/containerd/plugin"
++	containerd "github.com/containerd/containerd/v2/client"
++	"github.com/containerd/containerd/v2/plugins"
++	"github.com/containerd/log"
++	"github.com/containerd/platforms"
++	"github.com/containerd/plugin"
++	"github.com/containerd/plugin/registry"
 +)
 +
 +const pluginName = "sideload-images"
@@ -78,8 +80,8 @@ index 0000000..3ac632e
 +
 +func init() {
 +	c := &Config{}
-+	plugin.Register(&plugin.Registration{
-+		Type:   plugin.ServicePlugin,
++	registry.Register(&plugin.Registration{
++		Type:   plugins.ServicePlugin,
 +		ID:     pluginName,
 +		Config: c,
 +		InitFn: func(ic *plugin.InitContext) (interface{}, error) {
@@ -105,7 +107,13 @@ index 0000000..3ac632e
 +					default:
 +					}
 +
-+					cl, err = containerd.New(ic.Address, containerd.WithDefaultNamespace(config.Namespace), containerd.WithTimeout(2*time.Second))
++					cl, err = containerd.New(
++						"",
++						containerd.WithDefaultNamespace(config.Namespace),
++						containerd.WithDefaultPlatform(platforms.Default()),
++						containerd.WithInMemoryServices(ic),
++						containerd.WithTimeout(2*time.Second),
++					)
 +					if err != nil {
 +						logger.Info("Failed to create containerd client")
 +					}
@@ -160,5 +168,5 @@ index 0000000..3ac632e
 +		},
 +	})
 +}
---
-2.34.1
+-- 
+2.43.0
