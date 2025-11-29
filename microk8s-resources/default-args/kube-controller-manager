@@ -7,3 +7,5 @@
 --leader-elect-lease-duration=60s
 --leader-elect-renew-deadline=30s
 --profiling=false
+--node-monitor-grace-period=40s
+--pod-eviction-timeout=5m0s
