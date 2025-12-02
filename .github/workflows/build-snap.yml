@@ -45,14 +45,8 @@ jobs:
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      - name: Install test dependencies
-        run: |
-          set -x
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest sh
-          sudo apt-get -y install open-iscsi
-          sudo systemctl enable iscsid
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/prepare-tests
       - name: Fetch snap
         uses: actions/download-artifact@v4
         with:
@@ -70,14 +64,8 @@ jobs:
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      - name: Install test dependencies
-        run: |
-          set -x
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest==8.3.4 sh
-          sudo apt-get -y install open-iscsi
-          sudo systemctl enable iscsid
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/prepare-tests
       - name: Fetch snap
         uses: actions/download-artifact@v4
         with:
@@ -100,14 +88,8 @@ jobs:
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      - name: Install test dependencies
-        run: |
-          set -x
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest sh
-          sudo apt-get -y install open-iscsi
-          sudo systemctl enable iscsid
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/prepare-tests
       - name: Fetch snap
         uses: actions/download-artifact@v4
         with:
@@ -133,14 +115,8 @@ jobs:
         uses: actions/checkout@v4
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
-      - name: Install test dependencies
-        run: |
-          set -x
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest sh
-          sudo apt-get -y install open-iscsi
-          sudo systemctl enable iscsid
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/prepare-tests
       - name: Fetch snap
         uses: actions/download-artifact@v4
         with:
@@ -160,12 +136,8 @@ jobs:
     steps:
       - name: Checking out repo
         uses: actions/checkout@v4
-      - name: Install test dependencies
-        run: |
-          set -x
-          sudo apt-get install python3-setuptools
-          sudo pip3 install --upgrade pip
-          sudo pip3 install -U pytest sh requests
+      - name: Prepare test prerequisites
+        uses: ./.github/actions/prepare-tests
       - name: Fetch snap
         uses: actions/download-artifact@v4
         with:
