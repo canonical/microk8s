@@ -3531,7 +3531,6 @@ status:
   storedVersions: []
 
 ---
-
 ---
 # Source: calico/templates/calico-kube-controllers-rbac.yaml
 
@@ -3618,7 +3617,6 @@ subjects:
     name: calico-kube-controllers
     namespace: kube-system
 ---
-
 ---
 # Source: calico/templates/calico-node-rbac.yaml
 # Include a clusterrole for the calico-node DaemonSet,
