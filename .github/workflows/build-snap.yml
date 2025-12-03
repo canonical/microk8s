@@ -64,7 +64,7 @@ jobs:
       - name: Running addons tests
         run: |
           set -x
-          sudo snap install build/microk8s.snap --classic --channel=1.29/edge
+          sudo snap install build/microk8s.snap --classic --dangerous
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
