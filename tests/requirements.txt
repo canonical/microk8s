@@ -1,11 +1,11 @@
 kubernetes
 jinja2
 pylxd
-pytest
+pytest==8.3.4
 pytest-xdist
 pyyaml
 sh
-jsonschema>=4.0.0
+jsonschema==4.0.0
 pdbpp
 netifaces
 requests
