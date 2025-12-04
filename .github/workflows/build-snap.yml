@@ -68,8 +68,6 @@ jobs:
           ./tests/smoke-test.sh
           export UNDER_TIME_PRESSURE="True"
           export SKIP_PROMETHEUS="False"
-          sudo sed -i 's/assert "41 checks WARN" in output/assert "43 checks WARN" in output/g' /var/snap/microk8s/common/addons/core/tests/validators.py
-          sudo sed -i 's/assert "83 checks PASS" in output/assert "81 checks PASS" in output/g' /var/snap/microk8s/common/addons/core/tests/validators.py
           sudo -E bash -c "cd /var/snap/microk8s/common/addons/core/tests; pytest -s -ra test-addons.py"
 
   test-addons-community:
