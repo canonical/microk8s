@@ -85,7 +85,7 @@ function push_images_to_registry() {
     for image in $(microk8s ctr image ls -q | grep -v "sha256:"); do
       mirror=$(echo $image | sed '"'s,\(docker.io\|k8s.gcr.io\|registry.k8s.io\|quay.io\|public.ecr.aws\),${NAME}:32000,g'"')
       sudo microk8s ctr image convert ${image} ${mirror}
-      sudo microk8s ctr image push ${mirror} --plain-http
+      sudo microk8s ctr image push --plain-http ${mirror}
     done
   '
 }
