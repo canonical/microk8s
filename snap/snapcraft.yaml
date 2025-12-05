@@ -184,6 +184,7 @@ parts:
       - ufw
       - util-linux
       - zfsutils-linux
+      - erofs-utils
     stage:
       - -etc/bash_completion.d
       - -etc/cron.d
