@@ -88,6 +88,10 @@ remove_vxlan_interfaces() {
   done
 }
 
+list_env_vars() {
+  env | awk -F= '{print $1}' | paste -sd,
+}
+
 run_with_sudo() {
   if [ "$1" == "preserve_env" ]; then
     shift
@@ -96,7 +100,7 @@ run_with_sudo() {
     "$@"
   else
     local SAVE_LD_LIBRARY_PATH="${LD_LIBRARY_PATH}"
-    LD_LIBRARY_PATH="" sudo -E PATH="${PATH}" LD_LIBRARY_PATH="${SAVE_LD_LIBRARY_PATH}" PYTHONPATH="${PYTHONPATH:-}" "$@"
+    LD_LIBRARY_PATH="" sudo --preserve-env="$(list_env_vars)" PATH="${PATH}" LD_LIBRARY_PATH="${SAVE_LD_LIBRARY_PATH}" PYTHONPATH="${PYTHONPATH:-}" "$@"
   fi
 }
 
