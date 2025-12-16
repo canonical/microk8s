@@ -148,7 +148,7 @@ class TestSimple(object):
         assert len(new_coredns_procs) == 0, "coredns found still running after microk8s stop."
 
         utils.run_until_success("/snap/bin/microk8s.start", timeout_insec=180)
-        
+
         # Wait for cluster to be ready after restart
         utils.run_until_success("/snap/bin/microk8s.status --wait-ready", timeout_insec=300)
 
