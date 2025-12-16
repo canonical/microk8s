@@ -301,7 +301,7 @@ class TestCluster(object):
                     vm = VM(backend)
                     vm.setup(channel_to_test)
                     print("Waiting for machine {}".format(i))
-                    vm.run("/snap/bin/microk8s.status --wait-ready --timeout 120")
+                    vm.run("/snap/bin/microk8s.status --wait-ready --timeout 600")
                     self.VM.append(vm)
             else:
                 for vm_name in reuse_vms:
