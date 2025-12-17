@@ -125,12 +125,12 @@ def validate_ingress():
     """
     Validate ingress by creating a ingress rule.
     """
-    daemonset = kubectl("get ds")
-    if "nginx-ingress-microk8s-controller" in daemonset:
-        wait_for_pod_state("", "default", "running", label="app=default-http-backend")
-        wait_for_pod_state("", "default", "running", label="name=nginx-ingress-microk8s")
-    else:
+    ds = kubectl("get ds -n ingress")
+    if "nginx-ingress-microk8s-controller" in ds:
         wait_for_pod_state("", "ingress", "running", label="name=nginx-ingress-microk8s")
+    else:
+        # Support migration to Traefik ingress controller
+        wait_for_pod_state("", "ingress", "running", label="app.kubernetes.io/name=traefik")
 
     manifest = TEMPLATES / "ingress.yaml"
     update_yaml_with_arch(manifest)
