@@ -63,16 +63,27 @@ def dashboard_proxy():
     print("Checking if Dashboard is running.")
     command = [MICROK8S_ENABLE, "dashboard"]
     output = check_output(command)
+
+    ns = "kubernetes-dashboard"
+    deploy = "kubernetes-dashboard-kong"
+    service = "kubernetes-dashboard-kong-proxy"
+    namespaces = check_output([KUBECTL, "get", "ns"])
+    if b"kubernetes-dashboard" not in namespaces:
+        # NOTE(Hue): Backwards compatibility for installs in kube-system ns
+        ns = "kube-system"
+        deploy = "kubernetes-dashboard"
+        service = "kubernetes-dashboard"
+
     if b"Addon dashboard is already enabled." not in output:
         print("Waiting for Dashboard to come up.")
         command = [
             KUBECTL,
             "-n",
-            "kube-system",
+            ns,
             "wait",
             "--timeout=240s",
             "deployment",
-            "kubernetes-dashboard",
+            deploy,
             "--for",
             "condition=available",
         ]
@@ -94,8 +105,8 @@ def dashboard_proxy():
         KUBECTL,
         "port-forward",
         "-n",
-        "kube-system",
-        "service/kubernetes-dashboard",
+        ns,
+        f"service/{service}",
         "10443:443",
         "--address",
         "0.0.0.0",
