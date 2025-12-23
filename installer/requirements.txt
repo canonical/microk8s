@@ -2,7 +2,7 @@ urllib3==1.26.19
 click==7.1.2
 progressbar33==2.4
 psutil==5.9.0
-requests==2.32.2
+requests==2.32.4
 requests_unixsocket==0.1.5
 pysha3==1.0.2; python_version < '3.6'
 simplejson==3.8.2
