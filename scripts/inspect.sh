@@ -181,7 +181,6 @@ function store_dqlite_info {
   printf -- '  Inspect dqlite\n'
   mkdir -p $INSPECT_DUMP/dqlite
   run_with_sudo preserve_env cp ${SNAP_DATA}/var/kubernetes/backend/cluster.yaml $INSPECT_DUMP/dqlite/
-  run_with_sudo preserve_env cp ${SNAP_DATA}/var/kubernetes/backend/localnode.yaml $INSPECT_DUMP/dqlite/
   run_with_sudo preserve_env cp ${SNAP_DATA}/var/kubernetes/backend/info.yaml $INSPECT_DUMP/dqlite/
   run_with_sudo preserve_env ls -lh ${SNAP_DATA}/var/kubernetes/backend/ 2>&1 >  $INSPECT_DUMP/dqlite/list.out
 }
