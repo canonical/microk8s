@@ -176,7 +176,7 @@ jobs:
       - name: Checking out repo
         uses: actions/checkout@v4
       - name: Fetch snap
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: microk8s.snap
           path: build
@@ -222,7 +222,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Download SARIF files artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: sarifs
           path: sarifs
