@@ -35,7 +35,7 @@ jobs:
           sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- snapcraft --use-lxd
           sudo mv microk8s*.snap microk8s.snap
       - name: Uploading snap
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: microk8s.snap
           path: microk8s.snap
@@ -205,7 +205,7 @@ jobs:
           sarif_files=$(find sarifs -name "*.sarif" -printf "%P\n" | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "sarif-files=$sarif_files" >> "$GITHUB_OUTPUT"
       - name: Upload SARIF files artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sarifs
           path: sarifs
