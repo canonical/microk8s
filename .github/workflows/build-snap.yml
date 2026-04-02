@@ -228,7 +228,7 @@ jobs:
           base_name=$(basename "$sarif_file" .sarif)
           echo "category=$base_name" >> "$GITHUB_OUTPUT"
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: sarifs/${{ matrix.sarif_file_path }}
           category: ${{ steps.prepare_category.outputs.category }}
