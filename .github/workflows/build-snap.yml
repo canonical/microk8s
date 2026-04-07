@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Install lxd
         run: |
           sudo lxd init --auto
@@ -37,7 +37,7 @@ jobs:
           sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- snapcraft --use-lxd
           sudo mv microk8s*.snap microk8s.snap
       - name: Uploading snap
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: microk8s.snap
           path: microk8s.snap
@@ -49,7 +49,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Running upgrade path test
@@ -66,7 +66,7 @@ jobs:
       COLUMNS: 2048
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Running addons tests
@@ -91,7 +91,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Running addons tests
@@ -111,7 +111,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Running upgrade tests
@@ -129,7 +129,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Running cluster agent health check
@@ -145,7 +145,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Prepare test prerequisites
         uses: ./.github/actions/test-prep
       - name: Initialize LXD
@@ -169,9 +169,9 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Fetch snap
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: microk8s.snap
           path: build
@@ -200,7 +200,7 @@ jobs:
           sarif_files=$(find sarifs -name "*.sarif" -printf "%P\n" | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "sarif-files=$sarif_files" >> "$GITHUB_OUTPUT"
       - name: Upload SARIF files artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: sarifs
           path: sarifs
@@ -215,9 +215,9 @@ jobs:
         sarif_file_path: ${{ fromJson(needs.security-scan.outputs.sarif_files) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       - name: Download SARIF files artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: sarifs
           path: sarifs
@@ -228,7 +228,7 @@ jobs:
           base_name=$(basename "$sarif_file" .sarif)
           echo "category=$base_name" >> "$GITHUB_OUTPUT"
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@d4b3ca9fa7f69d38bfcd667bdc45bc373d16277e # v4
         with:
           sarif_file: sarifs/${{ matrix.sarif_file_path }}
           category: ${{ steps.prepare_category.outputs.category }}
