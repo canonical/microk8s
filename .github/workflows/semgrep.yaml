@@ -1,0 +1,50 @@
+name: Semgrep SAST
+
+on:
+    push:
+        paths-ignore:
+            - "docs/**"
+        branches:
+            - main
+            - master
+            - "release-[0-9]+.[0-9]+"
+
+    pull_request:
+        paths-ignore:
+            - "docs/**"
+
+permissions:
+    contents: read
+
+jobs:
+    semgrep:
+        name: Semgrep scan
+        runs-on: ubuntu-latest
+        permissions:
+            security-events: write
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+            - name: Setup Python
+              uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install Semgrep
+              run: pip install --require-hashes -r ci/requirements-semgrep.txt
+
+            - name: Run Semgrep scan
+              run: |
+                  semgrep scan \
+                    --config p/python \
+                    --config p/github-actions \
+                    --sarif \
+                    --output semgrep-results.sarif \
+                    .
+
+            - name: Upload SARIF results
+              uses: github/codeql-action/upload-sarif@c10b8064de6f491fea524254123dbe5e09572f13 # v4
+              if: always()
+              with:
+                  sarif_file: semgrep-results.sarif

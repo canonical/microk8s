@@ -1,0 +1,38 @@
+name: Bandit Security Scan
+
+on:
+    schedule:
+        - cron: "0 9 * * 1" # Weekly on Monday at 09:00 UTC
+    push:
+        paths-ignore:
+            - "docs/**"
+        branches:
+            - main
+            - master
+            - "release-[0-9]+.[0-9]+"
+
+    pull_request:
+        paths-ignore:
+            - "docs/**"
+
+permissions:
+    contents: read
+
+jobs:
+    bandit:
+        name: Bandit scan
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+            - name: Setup Python
+              uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install Bandit
+              run: pip install --require-hashes -r ci/requirements-bandit.txt
+
+            - name: Run Bandit scan
+              run: bandit -r . -c pyproject.toml -lll
