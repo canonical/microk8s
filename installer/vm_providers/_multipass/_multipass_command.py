@@ -139,7 +139,7 @@ class MultipassCommand:
         mem: str = None,
         disk: str = None,
         remote: str = None,
-        cloud_init: str = None
+        cloud_init: str = None,
     ) -> None:
         """Passthrough for running multipass launch.
 
@@ -259,7 +259,7 @@ class MultipassCommand:
         source: str,
         target: str,
         uid_map: Dict[str, str] = None,
-        gid_map: Dict[str, str] = None
+        gid_map: Dict[str, str] = None,
     ) -> None:
         """Passthrough for running multipass mount.
 

@@ -27,7 +27,7 @@ if sys.version_info < (3, 6):
 logger = logging.getLogger(__name__)
 
 
-def _file_reader_iter(path: str, block_size=2 ** 20):
+def _file_reader_iter(path: str, block_size=2**20):
     with open(path, "rb") as f:
         block = f.read(block_size)
         while len(block) > 0:

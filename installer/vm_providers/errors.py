@@ -80,7 +80,7 @@ class _GenericProviderError(ProviderBaseError):
         provider_name: str,
         action: str,
         error_message: Optional[str] = None,
-        exit_code: Optional[int] = None
+        exit_code: Optional[int] = None,
     ) -> None:
         if exit_code is not None and error_message is not None:
             fmt = self._FMT_ERROR_MESSAGE_AND_EXIT_CODE
@@ -118,7 +118,7 @@ class ProviderLaunchError(_GenericProviderError):
         *,
         provider_name: str,
         error_message: Optional[str] = None,
-        exit_code: Optional[int] = None
+        exit_code: Optional[int] = None,
     ) -> None:
         super().__init__(
             action="launch",
@@ -134,7 +134,7 @@ class ProviderStartError(_GenericProviderError):
         *,
         provider_name: str,
         error_message: Optional[str] = None,
-        exit_code: Optional[int] = None
+        exit_code: Optional[int] = None,
     ) -> None:
         super().__init__(
             action="start",
@@ -150,7 +150,7 @@ class ProviderStopError(_GenericProviderError):
         *,
         provider_name: str,
         error_message: Optional[str] = None,
-        exit_code: Optional[int] = None
+        exit_code: Optional[int] = None,
     ) -> None:
         super().__init__(
             action="stop",
@@ -166,7 +166,7 @@ class ProviderDeleteError(_GenericProviderError):
         *,
         provider_name: str,
         error_message: Optional[str] = None,
-        exit_code: Optional[int] = None
+        exit_code: Optional[int] = None,
     ) -> None:
         super().__init__(
             action="delete",
@@ -199,7 +199,7 @@ class ProviderShellError(_GenericProviderError):
         *,
         provider_name: str,
         error_message: Optional[str] = None,
-        exit_code: Optional[int] = None
+        exit_code: Optional[int] = None,
     ) -> None:
         super().__init__(
             action="shell",
@@ -215,7 +215,7 @@ class ProviderMountError(_GenericProviderError):
         *,
         provider_name: str,
         error_message: Optional[str] = None,
-        exit_code: Optional[int] = None
+        exit_code: Optional[int] = None,
     ) -> None:
         super().__init__(
             action="mount",
@@ -231,7 +231,7 @@ class ProviderUnMountError(_GenericProviderError):
         *,
         provider_name: str,
         error_message: Optional[str] = None,
-        exit_code: Optional[int] = None
+        exit_code: Optional[int] = None,
     ) -> None:
         super().__init__(
             action="unmount",
@@ -247,7 +247,7 @@ class ProviderFileCopyError(_GenericProviderError):
         *,
         provider_name: str,
         error_message: Optional[str] = None,
-        exit_code: Optional[int] = None
+        exit_code: Optional[int] = None,
     ) -> None:
         super().__init__(
             action="copy files",
