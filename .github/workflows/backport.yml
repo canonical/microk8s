@@ -35,7 +35,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Create backport pull requests
-        uses: korthout/backport-action@3c06f323a58619da1e8522229ebc8d5de2633e46 # v4
+        uses: korthout/backport-action@ad30f01dbe543be4a24431001c38f3617af8c745 # v4
         with:
           # Set (default) action parameters explicitly.
           branch_name: backport-${pull_number}-to-${target_branch}
