@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo "v1.8.0-flannel2"
+echo "v1.9.1-flannel1"
