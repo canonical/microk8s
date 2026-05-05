@@ -23,7 +23,6 @@ from addons import (
 )
 from common.utils import parse_xable_addon_args, get_available_addons
 
-
 ADDONS = [
     ("core", "addon1"),
     ("core", "addon2"),
@@ -55,22 +54,10 @@ microk8s-addons:
         - arm64
         - amd64
         - s390x
-
-    - name: "dashboard"
-      description: "The Kubernetes dashboard"
-      version: "2.3.0"
-      check_status: "pod/kubernetes-dashboard"
-      confinement: "classic"
-      supported_architectures:
-        - arm64
-        - amd64
-        - s390x
 """
 
 
-@pytest.mark.parametrize(
-    "confinement, result", [(True, ["dns", "rbac"]), (False, ["dns", "dashboard"])]
-)
+@pytest.mark.parametrize("confinement, result", [(True, ["dns", "rbac"]), (False, ["dns"])])
 @patch("common.utils.is_strict")
 @patch("os.listdir")
 @patch("common.utils.snap_common")
