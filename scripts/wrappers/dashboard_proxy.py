@@ -60,6 +60,8 @@ def dashboard_proxy():
     Enable the dashboard add-on and configures port-forwarding
     to allow accessing the dashboard from the local machine.
     """
+    print("DEPRECATION WARNING: 'dashboard-proxy' is deprecated and will be removed in 1.36.")
+    print("")
     print("Checking if Dashboard is running.")
     command = [MICROK8S_ENABLE, "dashboard"]
     output = check_output(command)
