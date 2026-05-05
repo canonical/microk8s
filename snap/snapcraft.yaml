@@ -444,17 +444,6 @@ apps:
       - firewall-control
       - k8s-journald
       - network-control
-  dashboard-proxy:
-    command: microk8s-dashboard-proxy.wrapper
-    plugs:
-      - network-bind
-      - network-control
-      - network-observe
-      - firewall-control
-      - k8s-kubeproxy
-      - kernel-module-observe
-      - mount-observe
-      - system-observe
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
