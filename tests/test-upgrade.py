@@ -2,7 +2,6 @@ import os
 import platform
 import time
 from validators import (
-    validate_dns_dashboard,
     validate_storage,
     validate_ingress,
     validate_registry,
@@ -75,12 +74,8 @@ extraSANs:
             enable = microk8s_enable("dns")
             wait_for_pod_state("", "kube-system", "running", label="k8s-app=kube-dns")
             assert "Nothing to do for" not in enable
-            enable = microk8s_enable("dashboard")
-            assert "Nothing to do for" not in enable
-            validate_dns_dashboard()
-            test_matrix["dns_dashboard"] = validate_dns_dashboard
         except CalledProcessError:
-            print("Will not test dns-dashboard")
+            print("Will not test dns")
 
         try:
             enable = microk8s_enable("storage")

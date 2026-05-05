@@ -5,7 +5,6 @@ command_descriptions = {
     "cilium": "The cilium client",
     "config": "Print the kubeconfig",
     "ctr": "The containerd client",
-    "dashboard-proxy": "Enable the Kubernetes dashboard and proxy to host",
     "dbctl": "Backup and restore the Kubernetes datastore",
     "disable": "Disables running add-ons",
     "enable": "Enables useful add-ons",

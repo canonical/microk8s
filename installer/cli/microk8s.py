@@ -54,9 +54,6 @@ def cli(ctx, help):
             exit(0)
         elif ctx.args[0] == "kubectl":
             exit(kubectl(ctx.args[1:]))
-        elif ctx.args[0] == "dashboard-proxy":
-            dashboard_proxy()
-            exit(0)
         elif ctx.args[0] == "inspect":
             inspect()
             exit(0)
@@ -280,66 +277,6 @@ def inspect() -> None:
         return 1
 
 
-def dashboard_proxy() -> None:
-    vm_provider_name = "multipass"
-    vm_provider_class = get_provider_for(vm_provider_name)
-    echo = Echo()
-    try:
-        vm_provider_class.ensure_provider()
-        instance = vm_provider_class(echoer=echo)
-        instance.get_instance_info()
-
-        echo.info("Checking if Dashboard is running.")
-        command = ["microk8s.enable", "dashboard"]
-        output = instance.run(command, hide_output=True)
-        if b"Addon dashboard is already enabled." not in output:
-            echo.info("Waiting for Dashboard to come up.")
-            command = [
-                "microk8s.kubectl",
-                "-n",
-                "kube-system",
-                "wait",
-                "--timeout=240s",
-                "deployment",
-                "kubernetes-dashboard",
-                "--for",
-                "condition=available",
-            ]
-            instance.run(command, hide_output=True)
-
-        command = ["microk8s.kubectl", "-n", "kube-system", "create", "token", "default"]
-        token = instance.run(command, hide_output=True).decode().strip()
-
-        if not token:
-            echo.error("Could not generate secret token to access dashboard.")
-            exit(1)
-
-        ip = instance.get_instance_info().ipv4[0]
-
-        echo.info("Dashboard will be available at https://{}:10443".format(ip))
-        echo.info("Use the following token to login:")
-        echo.info(token)
-
-        command = [
-            "microk8s.kubectl",
-            "port-forward",
-            "-n",
-            "kube-system",
-            "service/kubernetes-dashboard",
-            "10443:443",
-            "--address",
-            "0.0.0.0",
-        ]
-
-        try:
-            instance.run(command)
-        except KeyboardInterrupt:
-            return
-    except ProviderInstanceNotFoundError:
-        _not_installed(echo)
-        return 1
-
-
 def start() -> None:
     vm_provider_name = "multipass"
     vm_provider_class = get_provider_for(vm_provider_name)
@@ -401,8 +338,6 @@ def _get_microk8s_commands() -> List:
                 if c.decode().startswith("microk8s.")
             ]
             complete = mk8s
-            if "dashboard-proxy" not in mk8s:
-                complete += ["dashboard-proxy"]
             complete.sort()
             return complete
         else:
