@@ -363,8 +363,6 @@ apps:
   daemon-k8s-dqlite:
     command: run-k8s-dqlite-with-args
     daemon: simple
-  dashboard-proxy:
-    command: microk8s-dashboard-proxy.wrapper
   kubectl:
     command: microk8s-kubectl.wrapper
     completer: kubectl.bash
