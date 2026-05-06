@@ -4,7 +4,6 @@ Date: Wed, 6 May 2026 14:44:12 +0200
 Subject: [PATCH 3/3] standard_init_linux: change AppArmor profile as late as
  possible
 
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 ---
  libcontainer/standard_init_linux.go | 17 ++++++++---------
  1 file changed, 8 insertions(+), 9 deletions(-)
@@ -53,4 +52,3 @@ index 570472b..1d54a02 100644
  			return fmt.Errorf("can't set process label: %w", err)
 -- 
 2.41.0
-

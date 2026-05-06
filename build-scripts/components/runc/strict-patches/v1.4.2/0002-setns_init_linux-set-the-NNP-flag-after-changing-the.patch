@@ -10,7 +10,6 @@ Adjusts the previous patch for runc version v1.4.2
 
 Co-Authored-By: Alberto Mardegan <mardy@users.sourceforge.net>
 
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 ---
  libcontainer/setns_init_linux.go | 10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
@@ -45,4 +44,3 @@ index 7f7c077..b96ddae 100644
  	if err != nil {
 -- 
 2.41.0
-
