@@ -239,7 +239,10 @@ extraSANs:
         elif self.backend == "lxc":
             cmd_prefix = "/snap/bin/lxc exec {}  -- ".format(self.vm_name)
             with subprocess.Popen(
-                cmd_prefix + cmd, shell=True, stdout=subprocess.PIPE, preexec_fn=os.setsid
+                cmd_prefix + cmd,
+                shell=True,
+                stdout=subprocess.PIPE,
+                preexec_fn=os.setsid,  # nosec B602
             ) as process:
                 try:
                     output = process.communicate(timeout=300)[0]
