@@ -123,7 +123,7 @@ parts:
   iptables:
     after: [libnftnl]
     source: https://www.netfilter.org/projects/iptables/files/iptables-1.8.6.tar.bz2
-    build-attributes: [enable-patchelf]
+    build-attributes: [no-patchelf]
     plugin: autotools
     build-environment:
       - LIBMNL_LIBS: $CRAFT_STAGE/usr/lib
@@ -154,7 +154,7 @@ parts:
 
   bash-utils:
     plugin: nil
-    build-attributes: [enable-patchelf]
+    build-attributes: [no-patchelf]
     stage-packages:
       - conntrack
       - coreutils
@@ -277,7 +277,7 @@ parts:
 
   python-runtime:
     after: [build-deps]
-    build-attributes: [enable-patchelf]
+    build-attributes: [no-patchelf]
     plugin: nil
     source: build-scripts/components/python
     override-build: |
