@@ -376,7 +376,6 @@ apps:
     start-timeout: 5m
     install-mode: disable
     plugs:
-      - k8s-journald
       - network-bind
       - docker-privileged
       - firewall-control
@@ -415,7 +414,6 @@ apps:
       - network-bind
       - network-observe
       - network-control
-      - k8s-journald
       - kubernetes-support
   daemon-apiserver-proxy:
     command: run-apiserver-proxy-with-args
