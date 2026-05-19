@@ -423,6 +423,7 @@ apps:
       - network-bind
       - network-observe
       - network-control
+      - k8s-kubeproxy
   daemon-cluster-agent:
     command: run-cluster-agent-with-args
     daemon: simple
