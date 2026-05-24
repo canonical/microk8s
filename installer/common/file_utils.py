@@ -75,7 +75,9 @@ def get_kubectl_directory() -> str:
     else:
         full_path = shutil.which("kubectl")
         if full_path is None:
-            return "/usr/local/bin"
+            raise FileNotFoundError(
+                "kubectl not found in PATH. Please install kubectl or ensure it is available on your system PATH."
+            )
         return os.path.dirname(full_path)
 
 
