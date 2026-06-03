@@ -1316,6 +1316,25 @@ wait_for_default_route() {
   done
 }
 
+is_kernel_module_available() {
+  # Return 0 if the given kernel module is loaded, built-in, or loadable.
+  local mod="$1"
+  # Loaded or built-in modules show up under /sys/module (no binary required).
+  if [ -d "/sys/module/${mod}" ]
+  then
+    return 0
+  fi
+  # Otherwise check whether modprobe can find it, using a dry-run so that we do
+  # not actually insert the module. Prefer the host modprobe, fall back to the
+  # one shipped with the snap (see the br_netfilter handling in
+  # run-kubelite-with-args for the same pattern).
+  if /sbin/modprobe -nq "${mod}" 2>/dev/null || modprobe -nq "${mod}" 2>/dev/null
+  then
+    return 0
+  fi
+  return 1
+}
+
 is_ec2_instance() {
   if [ -f "/sys/hypervisor/uuid" ]
   then
