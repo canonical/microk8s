@@ -204,6 +204,22 @@ then
   fi
 fi
 
+# kube-proxy defaults to the 'iptables' proxy mode, which requires the
+# 'ip_tables' kernel module. On nftables-only kernels this module is absent,
+# so kube-proxy fails to start ("modprobe: FATAL: Module ip_tables not found")
+# and the node enters a crash-restart loop. If the user has not explicitly
+# selected a proxy mode and 'ip_tables' is unavailable, fall back to the
+# nftables proxy mode when 'nf_tables' can be used.
+# See https://github.com/canonical/microk8s/issues/5525
+if ! grep -qE -- "--proxy-mode" "$SNAP_DATA/args/kube-proxy"
+then
+  if ! is_kernel_module_available ip_tables && is_kernel_module_available nf_tables
+  then
+    echo "The 'ip_tables' kernel module is unavailable; falling back to the nftables proxy mode for kube-proxy."
+    refresh_opt_in_local_config "proxy-mode" "nftables" kube-proxy
+  fi
+fi
+
 # kube-proxy reads some values related to the 'nf_conntrack' kernel
 # module from procfs on startup, so we must ensure it is loaded:
 if ! [ -f /proc/sys/net/netfilter/nf_conntrack_max ]

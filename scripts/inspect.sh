@@ -357,6 +357,19 @@ function suggest_fixes {
     printf -- "\033[0;33mWARNING: \033[0m Please ensure br_netfilter kernel module is loaded on the host. \n"
   fi
 
+  # kube-proxy runs in iptables mode by default, which needs the 'ip_tables'
+  # kernel module. On nftables-only kernels it is absent and kube-proxy enters
+  # a crash-restart loop. See https://github.com/canonical/microk8s/issues/5525
+  if ! is_kernel_module_available ip_tables &&
+     ! grep -qE -- "--proxy-mode=nftables" "${SNAP_DATA}/args/kube-proxy" 2>/dev/null
+  then
+    printf -- "\033[0;33mWARNING: \033[0m The ip_tables kernel module is not available on this host. \n"
+    printf -- "\t  kube-proxy defaults to iptables mode and will fail to start (crash-restart loop). \n"
+    printf -- "\t  Switch kube-proxy to nftables mode with: \n"
+    printf -- "\t  \t echo '--proxy-mode=nftables' | sudo tee -a ${SNAP_DATA}/args/kube-proxy \n"
+    printf -- "\t  \t sudo snap restart microk8s \n"
+  fi
+
   if ! ( ip route; ip -6 route ) | grep "^default" &>/dev/null
   then
     printf -- "
