@@ -1,13 +1,13 @@
-urllib3==1.26.19
+urllib3==2.7.0
 click==7.1.2
 progressbar33==2.4
 psutil==5.9.0
-requests==2.32.2
+requests==2.33.0
 requests_unixsocket==0.1.5
 simplejson==3.8.2
 toml==0.10.0
 certifi==2024.7.4
-chardet==3.0.4
-idna==3.7
+charset-normalizer==3.4.7
+idna==3.15
 pyinstaller
 PyYAML==6.0.2; sys_platform == 'win32'
