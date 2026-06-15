@@ -4,6 +4,7 @@ import time
 import yaml
 import platform
 import psutil
+import subprocess
 from subprocess import check_output, CalledProcessError, check_call
 
 
@@ -88,6 +89,31 @@ def kubectl_get(target, timeout_insec=300):
     cmd = "get -o yaml " + target
     output = kubectl(cmd, timeout_insec)
     return yaml.safe_load(output)
+
+
+def is_coredns_running():
+    cmd = [
+        "/snap/bin/microk8s",
+        "kubectl",
+        "get",
+        "pods",
+        "-n",
+        "kube-system",
+        "-l",
+        "k8s-app=kube-dns",
+        "--no-headers",
+    ]
+
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+    if result.returncode != 0:
+        return False
+
+    for line in result.stdout.splitlines():
+        if "Running" in line:
+            return True
+
+    return False
 
 
 def wait_for_pod_state(
