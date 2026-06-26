@@ -210,9 +210,9 @@ jobs:
     needs: security-scan
     runs-on: ubuntu-latest
     permissions:
-      contents: read          # for actions/checkout
-      actions: read           # for download-artifact (same-run Artifacts API)
-      security-events: write  # for codeql-action/upload-sarif
+      contents: read # for actions/checkout
+      actions: read # for download-artifact (same-run Artifacts API)
+      security-events: write # for codeql-action/upload-sarif
     strategy:
       fail-fast: true
       matrix:
