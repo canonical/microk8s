@@ -146,5 +146,10 @@ class TestSimple(object):
 
         utils.run_until_success("/snap/bin/microk8s.start", timeout_insec=180)
 
+        # microk8s.start returns once snap services are up, but coredns (a pod
+        # scheduled by kubelite) takes a few more seconds.  Wait for the cluster
+        # to be fully Ready before asserting coredns is running.
+        utils.wait_for_installation()
+
         new_coredns_procs = utils._get_process("coredns")
         assert len(new_coredns_procs) > 0, "Expected to find a new coredns process running."
