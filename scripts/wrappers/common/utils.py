@@ -285,6 +285,11 @@ def is_community_addon(arch, addon_name):
 
 
 def get_available_addons(arch):
+    """Get available addons from file in ${SNAP_COMMON}/addons/core/addons.yaml file.
+
+    :param arch: current architecture
+    
+    """
     available = []
     strict = is_strict()
     for dir in os.listdir(snap_common() / "addons"):
@@ -558,7 +563,15 @@ def is_enabled(addon, item):
         return os.path.isfile(filepath)
 
 
-def get_status(available_addons, isReady):
+def get_status(available_addons :list, isReady :bool):
+    """
+    Get status for all available_addons based on the 'check_status' value in addons.yaml file.
+
+    :param available_addons: list of available addons
+    :param isReady: cluster ready status
+
+    
+    """
     enabled = []
     disabled = []
     if isReady:
