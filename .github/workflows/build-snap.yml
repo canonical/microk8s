@@ -179,7 +179,7 @@ jobs:
         run: |
           mkdir -p sarifs
       - name: Install Trivy vulnerability scanner
-        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
       - name: Run Trivy vulnerability scanner on codebase
         run: |
           trivy fs . --format sarif --severity CRITICAL > sarifs/trivy-microk8s-repo-scan--results.sarif
