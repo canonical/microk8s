@@ -1,15 +1,29 @@
-From 5007ab516cb619db9e75218f9739c555762e26da Mon Sep 17 00:00:00 2001
+From 8b06d0fcf51fbaee145b8108c83a03b6dd8cdeb6 Mon Sep 17 00:00:00 2001
 From: Alberto Mardegan <mardy@users.sourceforge.net>
-Date: Wed, 6 May 2026 14:44:12 +0200
-Subject: [PATCH 3/3] standard_init_linux: change AppArmor profile as late as
+Date: Thu, 18 Jun 2026 10:41:03 +0300
+Subject: [PATCH] standard_init_linux: change AppArmor profile as late as
  possible
 
+Apply the AppArmor profile (and set NoNewPrivileges) after
+finalizeNamespace rather than before it, mirroring the ordering already
+used in setns_init_linux.
+
+With runc's immediate profile change (aa_change_profile instead of
+aa_change_onexec), relabelling the calling thread before finalizeNamespace
+runs setuid(2) leaves the Go runtime's sibling threads under the old
+profile. glibc's NPTL setxid broadcast (SIGRTMIN+1) then crosses two
+AppArmor profiles and is denied by AppArmor 4.x, breaking container
+creation for pods with allowPrivilegeEscalation: false (NoNewPrivileges).
+
+Performing setuid(2) while all threads still share a single profile keeps
+the broadcast intra-profile. NoNewPrivileges must still be set after the
+profile change, as the kernel forbids switching profile once it is set.
 ---
- libcontainer/standard_init_linux.go | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
+ libcontainer/standard_init_linux.go | 24 +++++++++++++++---------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
 
 diff --git a/libcontainer/standard_init_linux.go b/libcontainer/standard_init_linux.go
-index 570472b..1d54a02 100644
+index 570472b..9ec98af 100644
 --- a/libcontainer/standard_init_linux.go
 +++ b/libcontainer/standard_init_linux.go
 @@ -129,10 +129,6 @@ func (l *linuxStandardInit) Init() error {
@@ -35,10 +49,17 @@ index 570472b..1d54a02 100644
  
  	if err := setupScheduler(l.config); err != nil {
  		return err
-@@ -180,6 +171,14 @@ func (l *linuxStandardInit) Init() error {
- 	if err := syncParentReady(l.pipe); err != nil {
- 		return fmt.Errorf("sync ready: %w", err)
+@@ -207,6 +198,21 @@ func (l *linuxStandardInit) Init() error {
+ 	if err := pdeath.Restore(); err != nil {
+ 		return fmt.Errorf("can't restore pdeath signal: %w", err)
  	}
++	// Apply the AppArmor profile and set NoNewPrivileges as late as possible,
++	// after finalizeNamespace has changed the user/group. Doing the setuid(2)
++	// while all of the Go runtime's threads still share a single AppArmor
++	// profile keeps glibc's NPTL setxid broadcast (SIGRTMIN+1) intra-profile;
++	// relabelling earlier splits the threads across two profiles and the
++	// broadcast is then denied by AppArmor. NNP must follow the profile
++	// change, as the kernel forbids switching profile once NNP is set.
 +	if err := apparmor.ApplyProfile(l.config.AppArmorProfile); err != nil {
 +		return fmt.Errorf("apply apparmor profile: %w", err)
 +	}
@@ -47,8 +68,9 @@ index 570472b..1d54a02 100644
 +			return fmt.Errorf("set nonewprivileges: %w", err)
 +		}
 +	}
- 	if l.config.ProcessLabel != "" {
- 		if err := selinux.SetExecLabel(l.config.ProcessLabel); err != nil {
- 			return fmt.Errorf("can't set process label: %w", err)
+ 
+ 	// In case we have any StartContainer hooks to run, and they don't
+ 	// have environment configured explicitly, make sure they will be run
 -- 
-2.41.0
+2.43.0
+
