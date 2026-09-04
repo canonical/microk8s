@@ -186,6 +186,51 @@ function store_dqlite_info {
 }
 
 
+function check_dqlite {
+  # Surface k8s-dqlite datastore problems that otherwise fail silently. When the
+  # datastore cannot start the daemon wrapper exits before the binary can log a
+  # fatal error, so neither 'microk8s status' nor the rest of this report points
+  # at the cause (issue #5524).
+  local backend="${SNAP_DATA}/var/kubernetes/backend"
+
+  # The dqlite TLS keypair lives in the backend directory. If it is missing (for
+  # example the backend directory was wiped) the binary aborts on start with
+  # "failed to load keypair from cluster.crt and cluster.key" and never runs.
+  if [ ! -e "${backend}/cluster.crt" ] || [ ! -e "${backend}/cluster.key" ]
+  then
+    printf -- '\033[31m FAIL: \033[0m The k8s-dqlite TLS certificate or key is missing from %s.\n' "${backend}"
+    printf -- '\t  The datastore cannot start without them, so MicroK8s will not come up.\n'
+    printf -- '\t  Restore the backend directory from a backup, or redeploy/rejoin the node.\n'
+    RETURN_CODE=1
+  fi
+
+  # After a hostname change the address stored in the raft state can still point
+  # at the old name, so dqlite never confirms quorum with itself and loops with
+  # "no available dqlite leader server found".
+  if [ -e "${backend}/info.yaml" ]
+  then
+    local stored_addr stored_host current_host
+    stored_addr="$(awk '/^Address:/ {print $2; exit}' "${backend}/info.yaml" 2>/dev/null)"
+    stored_addr="${stored_addr//\"/}"   # strip surrounding quotes if any
+    stored_host="${stored_addr%:*}"     # drop the :port suffix
+    stored_host="${stored_host#\[}"     # drop the IPv6 opening bracket
+    stored_host="${stored_host%\]}"     # drop the IPv6 closing bracket
+    current_host="$(hostname)"
+    # Only warn when the stored address is a hostname (not an IPv4/IPv6 literal)
+    # that no longer matches the current hostname.
+    if [ -n "${stored_host}" ] &&
+       [[ "${stored_host}" != *:* ]] &&
+       ! [[ "${stored_host}" =~ ^[0-9.]+$ ]] &&
+       [ "${stored_host}" != "${current_host}" ]
+    then
+      printf -- "\033[0;33mWARNING: \033[0m The k8s-dqlite node address '%s' does not match the current hostname '%s'.\n" "${stored_host}" "${current_host}"
+      printf -- '\t  If the hostname was changed, dqlite may fail to elect a leader\n'
+      printf -- '\t  ("no available dqlite leader server found") and MicroK8s will not start.\n'
+    fi
+  fi
+}
+
+
 function suggest_fixes {
   # Propose fixes
   printf '\n'
@@ -554,6 +599,11 @@ if [ -e "${SNAP_DATA}/var/lock/ha-cluster" ]
 then
   printf -- 'Inspecting dqlite\n'
   store_dqlite_info
+  if ! [ -e "${SNAP_DATA}/var/lock/no-k8s-dqlite" ]
+  then
+    # workers do not run dqlite, so only check the datastore on control-plane nodes
+    check_dqlite
+  fi
 fi
 
 suggest_fixes
