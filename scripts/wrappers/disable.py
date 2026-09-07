@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import sys
+
 import click
 
 from common.utils import (
@@ -35,7 +37,12 @@ def disable(addons):
     is_cluster_locked()
     exit_if_no_permission()
     ensure_started()
-    wait_for_ready(timeout=30, with_ready_node=False)
+    if not wait_for_ready(timeout=30, with_ready_node=False):
+        click.echo(
+            "MicroK8s is not ready. Please see 'microk8s status' or wait until the cluster is ready.",
+            err=True,
+        )
+        sys.exit(1)
 
     xable("disable", addons)
 
