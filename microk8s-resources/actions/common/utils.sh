@@ -766,6 +766,64 @@ ensure_server_ca() {
     fi
 }
 
+certificate_is_x509_v3() {
+    # Description:
+    #   Check whether a certificate is X.509 v3. Arguments are:
+    #   1. The path of the certificate, e.g. "${SNAP_DATA}/certs/client.crt"
+    #
+    # Returns
+    #   0 if the file exists and holds an X.509 v3 certificate
+    #   1 otherwise
+
+    [ -f "$1" ] || return 1
+    "${SNAP}/openssl.wrapper" x509 -in "$1" -noout -text 2>/dev/null |
+        $SNAP/bin/grep -qE "^ +Version: 3 "
+}
+
+ensure_client_certs_v3() {
+    # Description:
+    #   Reissue the component certificates signed by sign_certificate() if any of them is
+    #   an X.509 v1 certificate.
+    #
+    #   These certificates used to be signed without any X.509 extension, and openssl 3
+    #   encodes an extension-less certificate as v1. Strict TLS implementations such as
+    #   rustls refuse to parse v1 certificates, which makes the kubeconfig printed by
+    #   `microk8s config` unusable with the clients built on top of them.
+    #   See https://github.com/canonical/microk8s/issues/5447
+    #
+    #   The certificates are only created at install time, so an existing installation
+    #   keeps its v1 certificates across refreshes unless they are reissued here. The
+    #   private keys are reused, only the certificates are signed again.
+    #
+    # Notes:
+    #   - Skipped on worker nodes: their certificates are signed by the CA of the node
+    #     they joined, and are refreshed by the join process instead.
+    #
+    # Returns
+    #   0 if no change
+    #   1 otherwise
+
+    if [ -e "${SNAP_DATA}/var/lock/clustered.lock" ]
+    then
+        echo "0"
+        return
+    fi
+
+    local cert
+    for cert in kubelet client proxy scheduler controller apiserver-kubelet-client
+    do
+        if ! certificate_is_x509_v3 "${SNAP_DATA}/certs/${cert}.crt"
+        then
+            # keep stdout clean, this function communicates through its echoed result
+            create_user_certs_and_configs 1>&2
+            echo "1"
+            return
+        fi
+    done
+
+    echo "0"
+}
+
 check_csr_conf() {
     # if no argument is given, default csr.conf will be checked
     csr_conf="${1:-${SNAP_DATA}/certs/csr.conf}"
@@ -1150,6 +1208,10 @@ sign_certificate() {
   # Notes:
   #   - Read from stdin and write to stdout, so no temporary files are required.
   #   - Any SubjectAlternateNames that are included in the CSR are added to the certificate.
+  #   - X.509 extensions are always set, so that the certificate is issued as v3. openssl 3
+  #     encodes a certificate that carries no extension at all as v1, and strict TLS
+  #     implementations such as rustls refuse to parse v1 certificates.
+  #     See https://github.com/canonical/microk8s/issues/5447
   #
   # Example usage:
   #   cat component.csr | sign_certificate > component.crt
@@ -1157,11 +1219,21 @@ sign_certificate() {
   # We need to use the request more than once, use this trick to grab stdin and save it in '$csr'
   csr="$($SNAP/bin/cat)"
 
+  # The extensions below match the [ v3_ext ] section of certs/csr.conf.template. The
+  # certificates signed here are used both as client credentials (in the kubeconfig files
+  # under ${SNAP_DATA}/credentials) and, in the case of kubelet.crt, as a serving
+  # certificate, so both extended key usages are required.
+  extensions="basicConstraints = critical, CA:FALSE
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid, issuer"
+
   # Parse SANs from the CSR and add them to the certificate extensions (if any)
-  extensions=""
   alt_names="$(echo "$csr" | "${SNAP}/openssl.wrapper" req -text | $SNAP/bin/grep "X509v3 Subject Alternative Name:" -A1 | $SNAP/usr/bin/tail -n 1 | $SNAP/bin/sed 's,IP Address:,IP:,g')"
   if test "x$alt_names" != "x"; then
-    extensions="subjectAltName = $alt_names"
+    extensions="${extensions}
+subjectAltName = $alt_names"
   fi
 
   # Sign certificate and print to stdout

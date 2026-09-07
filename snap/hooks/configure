@@ -237,6 +237,16 @@ then
     need_cluster_agent_restart=true
 fi
 
+# Reissue the client certificates of existing installations that were signed without any
+# X.509 extension, and are therefore v1 certificates that rustls-based clients reject.
+# https://github.com/canonical/microk8s/issues/5447
+if [ "$(ensure_client_certs_v3)" == "1" ]
+then
+    need_api_restart=true
+    need_proxy_restart=true
+    need_kubelet_restart=true
+fi
+
 # Make containerd stream server listen to localhost
 if [ -e ${SNAP_DATA}/args/containerd-template.toml ] && grep -e "stream_server_address = \"\"" ${SNAP_DATA}/args/containerd-template.toml
 then
