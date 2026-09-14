@@ -1,0 +1,44 @@
+name: run-conformance-suite
+
+on:
+  pull_request
+  # when complete
+  # workflow_dispatch:
+  #   inputs:
+  #     channel:
+  #       description: 'Channel to use for MicroK8s'
+  #       required: true
+  #       default: '1.30/stable'
+
+
+jobs:
+  run-conformance-suite:
+    name: Run Conformance Suite
+    runs-on: ubuntu-latest
+
+    env:
+      CHANNEL: 1.30/stable
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo snap install go --classic
+          go install github.com/vmware-tanzu/sonobuoy@v0.57.1
+          sudo snap install microk8s --classic --channel $CHANNEL
+          sudo microk8s status --wait-ready
+          sudo snap install multipass
+          sudo multipass start
+
+      - name: Generate Join Token
+        id: get_token
+        run: echo "WORKER_TOKEN=$(microk8s add-node | grep '^microk8s join .* --worker\$' | awk '{print $3}')" >> "$GITHUB_OUTPUT"
+
+      - name: Launch VM and Join Cluster
+        env:
+          TOKEN: ${{ steps.get_token.outputs.WORKER_TOKEN }}
+        run: |
+          sudo multipass launch --name microk8s-worker-vm
+          sudo multipass exec microk8s-worker-vm -- bash -c "sudo snap install microk8s --classic --channel $CHANNEL; sudo microk8s join $TOKEN"
