@@ -12,6 +12,8 @@ runs:
       run: |
         set -x
         sudo apt-get remove -y python3-yaml
+        # Debian's cryptography has no RECORD file, so pip cannot upgrade it in place.
+        sudo pip3 install --ignore-installed cryptography
         sudo pip3 install -r ./tests/requirements.txt
     # Docker sets iptables rules that interfere with LXD and K8s.
     # https://documentation.ubuntu.com/lxd/en/latest/howto/network_bridge_firewalld/#prevent-connectivity-issues-with-lxd-and-docker
