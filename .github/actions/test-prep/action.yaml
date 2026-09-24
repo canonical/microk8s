@@ -10,9 +10,13 @@ runs:
     - name: Install test dependencies
       shell: bash
       run: |
-        set -x
-        sudo apt-get remove -y python3-yaml
-        sudo pip3 install -r ./tests/requirements.txt
+        set -eux
+        python -m venv "$RUNNER_TEMP/microk8s-test-venv"
+        "$RUNNER_TEMP/microk8s-test-venv/bin/python" -m pip install --upgrade pip
+        "$RUNNER_TEMP/microk8s-test-venv/bin/python" -m pip install \
+          -r ./tests/requirements.txt
+        echo "MICROK8S_TEST_VENV=$RUNNER_TEMP/microk8s-test-venv" >> "$GITHUB_ENV"
+        echo "$RUNNER_TEMP/microk8s-test-venv/bin" >> "$GITHUB_PATH"
     # Docker sets iptables rules that interfere with LXD and K8s.
     # https://documentation.ubuntu.com/lxd/en/latest/howto/network_bridge_firewalld/#prevent-connectivity-issues-with-lxd-and-docker
     - name: Apply Docker iptables workaround
