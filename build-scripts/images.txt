@@ -1,5 +1,4 @@
 docker.io/calico/cni:v3.25.1
-docker.io/calico/kube-controllers:v3.25.1
 docker.io/calico/node:v3.25.1
 docker.io/cdkbot/hostpath-provisioner:1.5.0
 docker.io/coredns/coredns:1.10.1
