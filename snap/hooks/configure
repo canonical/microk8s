@@ -257,6 +257,14 @@ then
     need_kubelet_restart=true
 fi
 
+# Kubernetes 1.37 removed the --containerd kubelet flag.
+if grep -qE '^[[:space:]]*--containerd([=[:space:]])' "${SNAP_DATA}/args/kubelet"
+then
+  echo "Removing obsolete kubelet --containerd argument"
+  skip_opt_in_config containerd kubelet
+  need_kubelet_restart=true
+fi
+
 # Add option to support kata containers
 if [ -e "${SNAP_DATA}/args/containerd-env" ] &&
    ! grep -e "KATA_PATH" ${SNAP_DATA}/args/containerd-env
