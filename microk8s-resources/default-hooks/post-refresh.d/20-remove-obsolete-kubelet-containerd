@@ -1,0 +1,11 @@
+#!/bin/bash
+
+. "${SNAP}/actions/common/utils.sh"
+
+# Kubernetes 1.37 removed the --containerd kubelet flag.
+if grep -qE '^[[:space:]]*--containerd([=[:space:]])' "${SNAP_DATA}/args/kubelet"
+then
+  echo "Removing obsolete kubelet --containerd argument"
+  skip_opt_in_config containerd kubelet
+  snapctl restart "${SNAP_NAME}.daemon-kubelite"
+fi
