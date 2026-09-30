@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set -eux
+
+cp "$SNAP/content-interface/launcher/configuration/"*.yaml "$SNAP_COMMON/etc/launcher/" || true
+cp "$SNAP/content-interface/launcher/sideload/"*.tar "$SNAP_COMMON/etc/sideload/" || true
