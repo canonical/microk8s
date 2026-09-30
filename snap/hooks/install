@@ -25,7 +25,8 @@ if ! is_strict && cat /proc/1/environ | grep "container=lxc" &> /dev/null
   fi
 fi
 
-cp -r --preserve=mode ${SNAP}/default-args ${SNAP_DATA}/args
+mkdir -p ${SNAP_DATA}/args
+cp -r --preserve=mode ${SNAP}/default-args/* ${SNAP_DATA}/args
 mv ${SNAP_DATA}/args/certs.d/localhost__32000 ${SNAP_DATA}/args/certs.d/localhost:32000
 
 SNAP_DATA_CURRENT=`echo "${SNAP_DATA}" | sed -e "s,${SNAP_REVISION},current,"`
