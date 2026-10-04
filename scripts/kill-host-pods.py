@@ -21,7 +21,7 @@ def post_filter_has_known_containers(pod, containers: list) -> bool:
     Return true if any of the container IDs on the pod match the list of
     containers passed on the second argument.
     """
-    for container in pod["status"]["containerStatuses"] or []:
+    for container in pod["status"].get("containerStatuses") or []:
         try:
             _, container_id = container["containerID"].split("containerd://", 2)
             if container_id in containers:
