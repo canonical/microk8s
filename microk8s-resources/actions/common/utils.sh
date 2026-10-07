@@ -732,11 +732,23 @@ produce_certs() {
         force=false
     fi
 
-    if $force; then
+    local cert_expired=false
+    if [ ! -f "${SNAP_DATA}/certs/server.crt" ] ||
+       ! "${SNAP}/openssl.wrapper" x509 -checkend 0 -noout -in "${SNAP_DATA}/certs/server.crt" &>/dev/null; then
+        cert_expired=true
+    fi
+
+    local proxy_cert_expired=false
+    if [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ] ||
+       ! "${SNAP}/openssl.wrapper" x509 -checkend 0 -noout -in "${SNAP_DATA}/certs/front-proxy-client.crt" &>/dev/null; then
+        proxy_cert_expired=true
+    fi
+
+    if $force || $cert_expired; then
         gen_server_cert
         gen_proxy_client_cert
         echo "1"
-    elif [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ] ||
+    elif $proxy_cert_expired ||
          [ "$("${SNAP}/openssl.wrapper" < ${SNAP_DATA}/certs/front-proxy-client.crt x509 -noout -issuer)" == "issuer=CN = 127.0.0.1" ]; then
         gen_proxy_client_cert
         echo "1"
@@ -746,20 +758,36 @@ produce_certs() {
 }
 
 ensure_server_ca() {
-    # ensure the server.crt is issued by ca.crt
+    # ensure the server.crt is issued by ca.crt and not expired
     # in a ca chain it is only verified that the server.crt is issued by the intermediate ca
-    # if current csr.conf is invalid, regenerate front-proxy-client certificates as well
+    # if current csr.conf is invalid or certs are expired, regenerate front-proxy-client certificates as well
 
-    if ! "${SNAP}/openssl.wrapper" verify -no-CAfile -no-CApath -partial_chain -trusted ${SNAP_DATA}/certs/ca.crt ${SNAP_DATA}/certs/server.crt &>/dev/null
+    local server_expired=false
+    if [ ! -f "${SNAP_DATA}/certs/server.crt" ] ||
+       ! "${SNAP}/openssl.wrapper" x509 -checkend 0 -noout -in "${SNAP_DATA}/certs/server.crt" &>/dev/null; then
+        server_expired=true
+    fi
+
+    local proxy_expired=false
+    if [ ! -f "${SNAP_DATA}/certs/front-proxy-client.crt" ] ||
+       ! "${SNAP}/openssl.wrapper" x509 -checkend 0 -noout -in "${SNAP_DATA}/certs/front-proxy-client.crt" &>/dev/null; then
+        proxy_expired=true
+    fi
+
+    if $server_expired || ! "${SNAP}/openssl.wrapper" verify -no-CAfile -no-CApath -partial_chain -trusted ${SNAP_DATA}/certs/ca.crt ${SNAP_DATA}/certs/server.crt &>/dev/null
     then
         csr_modified="$(ensure_csr_conf_conservative)"
         gen_server_cert
 
-        if [[ "$csr_modified" -eq  "1" ]]
+        if [[ "$csr_modified" -eq  "1" ]] || $proxy_expired
         then
             gen_proxy_client_cert
         fi
 
+        echo "1"
+    elif $proxy_expired
+    then
+        gen_proxy_client_cert
         echo "1"
     else
         echo "0"
