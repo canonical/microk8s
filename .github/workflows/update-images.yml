@@ -18,6 +18,10 @@ jobs:
           # Latest branches
           - { branch: master, channel: latest/edge }
           # Stable branches
+          - { branch: "1.36", channel: "1.36" }
+          - { branch: "1.35", channel: "1.35" }
+          - { branch: "1.34", channel: "1.34" }
+          - { branch: "1.33", channel: "1.33" }
           - { branch: "1.32", channel: "1.32" }
           - { branch: "1.31", channel: "1.31" }
           - { branch: "1.30", channel: "1.30" }
@@ -25,6 +29,9 @@ jobs:
           - { branch: "1.28", channel: "1.28" }
           - { branch: "1.27", channel: "1.27" }
           # Stable strict branches
+          - { branch: 1.35-strict, channel: 1.35-strict }
+          - { branch: 1.34-strict, channel: 1.34-strict }
+          - { branch: 1.33-strict, channel: 1.33-strict }
           - { branch: 1.32-strict, channel: 1.32-strict }
           - { branch: 1.31-strict, channel: 1.31-strict }
           - { branch: 1.30-strict, channel: 1.30-strict }
