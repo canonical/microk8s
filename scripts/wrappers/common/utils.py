@@ -510,6 +510,13 @@ def unprotected_xable(action: str, addon_args: list):
     :param addons: List of addons to enable. Each addon may be prefixed with `repository/`
                    to specify which addon repository it will be sourced from.
     """
+    if not wait_for_ready(timeout=30, with_ready_node=False):
+        click.echo(
+            "MicroK8s is not ready. Please see 'microk8s status' or wait until the cluster is ready.",
+            err=True,
+        )
+        sys.exit(1)
+
     available_addons_info = get_available_addons(get_current_arch())
     enabled_addons_info, disabled_addons_info = get_status(available_addons_info, True)
     if action == "enable":
@@ -541,13 +548,23 @@ def unprotected_xable(action: str, addon_args: list):
             click.echo("Addon {}/{} is already {}d".format(repo_name, addon_name, action))
             continue
 
-        wait_for_ready(timeout=30, with_ready_node=False)
+        if not wait_for_ready(timeout=30, with_ready_node=False):
+            click.echo(
+                "MicroK8s is not ready. Please see 'microk8s status' or wait until the cluster is ready.",
+                err=True,
+            )
+            sys.exit(1)
         p = subprocess.run(
             [snap_common() / "addons" / repo_name / "addons" / addon_name / action, *args]
         )
         if p.returncode:
             sys.exit(p.returncode)
-        wait_for_ready(timeout=30, with_ready_node=False)
+        if not wait_for_ready(timeout=30, with_ready_node=False):
+            click.echo(
+                "MicroK8s is not ready. Please see 'microk8s status' or wait until the cluster is ready.",
+                err=True,
+            )
+            sys.exit(1)
 
 
 def is_enabled(addon, item):
@@ -562,10 +579,15 @@ def get_status(available_addons, isReady):
     enabled = []
     disabled = []
     if isReady:
-        # 'all' does not include ingress
-        kube_output = kubectl_get("all,ingress,ingressclass")
-        cluster_output = kubectl_get_clusterroles()
-        kube_output = kube_output + cluster_output
+        try:
+            # 'all' does not include ingress
+            kube_output = kubectl_get("all,ingress,ingressclass")
+            cluster_output = kubectl_get_clusterroles()
+            kube_output = kube_output + cluster_output
+        except (subprocess.CalledProcessError, Exception) as e:
+            LOG.error(f"Failed to query cluster resources: {e}")
+            return enabled, disabled
+
         for addon in available_addons:
             found = False
             for row in kube_output.split("\n"):
