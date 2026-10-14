@@ -39,5 +39,5 @@ The workflow for contributing code is as follows:
 Docs for MicroK8s are published online at [https://microk8s.io/docs](https://microk8s.io/docs). You can make suggestions and edit the pages themselves by joining 
 the Kubernetes discourse at [discuss.kubernetes.io](https://discuss.kubernetes.io/t/introduction-to-microk8s/11243) or follow the link at
 the bottom of any of the pages published at [https://microk8s.io/docs](https://microk8s.io/docs)
-There is a documentation page which describes how to write and edit docs, [published as part of the documentation](https://microk8s.io/docs/docs).
+There is a documentation page which describes how to write and edit docs, [published as part of the documentation](https://microk8s.io/docs/docs/docs).
 
