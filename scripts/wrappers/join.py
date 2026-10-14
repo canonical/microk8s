@@ -210,7 +210,7 @@ def get_etcd_client_cert(master_ip, master_port, token):
         signed = requests.post(
             "https://{}:{}/{}/sign-cert".format(master_ip, master_port, CLUSTER_API),
             json=req_data,
-            verify=False,
+            verify=False,  # nosec B501
         )
         if signed.status_code != 200:
             print("Failed to sign certificate. {}".format(signed.json()["error"]))
@@ -250,7 +250,7 @@ def get_client_cert(master_ip, master_port, fname: str, token: str, subject: str
     signed = requests.post(
         "https://{}:{}/{}/sign-cert".format(master_ip, master_port, CLUSTER_API),
         json=req_data,
-        verify=False,
+        verify=False,  # nosec B501
     )
     if signed.status_code != 200:
         error = "Failed to sign {} certificate ({}).".format(fname, signed.status_code)

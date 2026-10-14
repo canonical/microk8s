@@ -46,7 +46,9 @@ def node_upgrade(upgrade, phase, node_ep, token):
             remote_op = {"callback": token, "phase": phase, "upgrade": upgrade}
             # TODO: handle ssl verification
             res = requests.post(
-                "https://{}/{}/upgrade".format(node_ep, CLUSTER_API), json=remote_op, verify=False
+                "https://{}/{}/upgrade".format(node_ep, CLUSTER_API),
+                json=remote_op,
+                verify=False,  # nosec B501
             )
             if res.status_code != 200:
                 print("Failed to perform a {} on node {}".format(remote_op["upgrade"], node_ep))
