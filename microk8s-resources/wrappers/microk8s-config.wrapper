@@ -12,14 +12,28 @@ then
   exit 0
 fi
 
+# Persistent config file path
+CONFIG_SERVER_FILE="${SNAP_DATA}/args/config-server"
+
 USE_LOOPBACK=false
-PARSED=$(getopt --options=lho: --longoptions=use-loopback,help,output: --name "$@" -- "$@")
+CUSTOM_SERVER=""
+CUSTOM_PORT=""
+IS_IPV6=false
+
+if ! PARSED=$(getopt --options=lhs: --longoptions=use-loopback,help,server: --name "microk8s config" -- "$@"); then
+    echo "Try 'microk8s config --help' for more information." >&2
+    exit 1
+fi
 eval set -- "$PARSED"
 while true; do
     case "$1" in
         -l|--use-loopback)
             USE_LOOPBACK=true
             shift
+            ;;
+        -s|--server)
+            CUSTOM_SERVER="$2"
+            shift 2
             ;;
         -h|--help)
             echo "Usage: microk8s config [OPTIONS]"
@@ -30,6 +44,11 @@ while true; do
             echo " -h, --help          Show this help"
             echo " -l, --use-loopback  Report the cluster address using the loopback address"
             echo "                     (127.0.0.1) rather than the default interface address"
+            echo " -s, --server HOST   Report the cluster address using the specified hostname"
+            echo "                     or IP address (e.g., --server k8s.example.com)"
+            echo "                     You can also specify a custom port (e.g., --server k8s.example.com:6443)"
+            echo
+            echo "To set a persistent default server, create ${SNAP_DATA}/args/config-server with the hostname."
             exit 0
             ;;
         --)
@@ -42,13 +61,122 @@ while true; do
     esac
 done
 
+# Conflict detection: -l and -s cannot be used together
+if [[ "$USE_LOOPBACK" == "true" ]] && [[ -n "$CUSTOM_SERVER" ]]; then
+    echo "microk8s config: --use-loopback and --server cannot be used together" >&2
+    exit 1
+fi
+
+# If no CLI server specified, check for persistent config file
+if [[ -z "$CUSTOM_SERVER" ]] && [[ "$USE_LOOPBACK" == "false" ]]; then
+    if [[ -f "$CONFIG_SERVER_FILE" ]] && [[ -r "$CONFIG_SERVER_FILE" ]]; then
+        # Read only the first non-empty, non-comment line
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            # Skip empty lines and comments
+            line="${line%%#*}"  # Remove comments
+            line="${line#"${line%%[![:space:]]*}"}"  # Trim leading whitespace
+            line="${line%"${line##*[![:space:]]}"}"  # Trim trailing whitespace
+            if [[ -n "$line" ]]; then
+                CUSTOM_SERVER="$line"
+                break
+            fi
+        done < "$CONFIG_SERVER_FILE"
+    fi
+fi
+
+# Parse and validate server address
+if [[ -n "$CUSTOM_SERVER" ]]; then
+    # Check for common mistake: including URL scheme
+    if [[ "$CUSTOM_SERVER" =~ ^https?:// ]]; then
+        echo "microk8s config: do not include the URL scheme (https://)" >&2
+        echo "microk8s config: use just the hostname, e.g., --server k8s.example.com" >&2
+        exit 1
+    fi
+
+    # Validate: reject obviously invalid characters (allow alphanumeric, dots, hyphens, colons, brackets)
+    if [[ ! "$CUSTOM_SERVER" =~ ^[a-zA-Z0-9.:_\[\]-]+$ ]]; then
+        echo "microk8s config: invalid server address '$CUSTOM_SERVER'" >&2
+        exit 1
+    fi
+
+    # Parse host:port - handle IPv6 [address]:port format
+    if [[ "$CUSTOM_SERVER" =~ ^\[([^\]]+)\]:([0-9]+)$ ]]; then
+        # IPv6 with port: [::1]:6443
+        CUSTOM_SERVER="${BASH_REMATCH[1]}"
+        CUSTOM_PORT="${BASH_REMATCH[2]}"
+        IS_IPV6=true
+    elif [[ "$CUSTOM_SERVER" =~ ^\[([^\]]+)\]$ ]]; then
+        # IPv6 without port: [::1]
+        CUSTOM_SERVER="${BASH_REMATCH[1]}"
+        IS_IPV6=true
+    elif [[ "$CUSTOM_SERVER" =~ ^([a-zA-Z0-9._-]+):([0-9]+)$ ]]; then
+        # IPv4/hostname with port: example.com:6443 (hostname cannot contain colons)
+        CUSTOM_SERVER="${BASH_REMATCH[1]}"
+        CUSTOM_PORT="${BASH_REMATCH[2]}"
+    elif [[ "$CUSTOM_SERVER" =~ : ]]; then
+        # Contains colon but doesn't match valid patterns - likely bare IPv6 or invalid format
+        # Check if it looks like IPv6 (multiple colons or starts with colon)
+        if [[ "$CUSTOM_SERVER" =~ ^[0-9a-fA-F:]+$ ]]; then
+            echo "microk8s config: IPv6 addresses must be enclosed in brackets (e.g., [::1] or [::1]:6443)" >&2
+            exit 1
+        else
+            echo "microk8s config: invalid server address format '$CUSTOM_SERVER'" >&2
+            exit 1
+        fi
+    fi
+    # else: plain hostname or IPv4 without port, use as-is
+
+    # Final validation: ensure we have a non-empty server after parsing
+    if [[ -z "$CUSTOM_SERVER" ]]; then
+        echo "microk8s config: server address cannot be empty" >&2
+        exit 1
+    fi
+
+    # Validate port range if specified
+    if [[ -n "$CUSTOM_PORT" ]]; then
+        if [[ "$CUSTOM_PORT" -lt 1 ]] || [[ "$CUSTOM_PORT" -gt 65535 ]]; then
+            echo "microk8s config: port must be between 1 and 65535, got '$CUSTOM_PORT'" >&2
+            exit 1
+        fi
+    fi
+fi
+
 exit_if_no_permissions
 
-if [[ "$USE_LOOPBACK" == "true" ]]; then
+# Function to safely replace server address using sed with @ delimiter
+# This avoids issues with / in the replacement string
+replace_server() {
+    local host="$1"
+    local port="$2"
+    local is_ipv6="$3"
+    local config_file="$SNAP_DATA/credentials/client.config"
+
+    # IPv6 addresses must be enclosed in brackets in URLs
+    if [[ "$is_ipv6" == "true" ]]; then
+        host="[${host}]"
+    fi
+
+    if [[ -n "$port" ]]; then
+        # Replace both host and port
+        "$SNAP/bin/sed" -e "s@127\.0\.0\.1:16443@${host}:${port}@g" "$config_file"
+    else
+        # Replace only host, keep default port
+        "$SNAP/bin/sed" -e "s@127\.0\.0\.1@${host}@g" "$config_file"
+    fi
+    "$SNAP/bin/echo"
+}
+
+if [[ -n "$CUSTOM_SERVER" ]]; then
+    replace_server "$CUSTOM_SERVER" "$CUSTOM_PORT" "$IS_IPV6"
+elif [[ "$USE_LOOPBACK" == "true" ]]; then
     cat "$SNAP_DATA/credentials/client.config"
     "$SNAP/bin/echo"
 else
     IP_ADDR="$(get_default_ip)"
-    "$SNAP/bin/sed" -e "s/127.0.0.1/$IP_ADDR/" "$SNAP_DATA/credentials/client.config"
-    "$SNAP/bin/echo"
+    if [[ "$IP_ADDR" == "none" ]] || [[ -z "$IP_ADDR" ]]; then
+        echo "microk8s config: unable to determine default IP address" >&2
+        echo "microk8s config: use --use-loopback or --server to specify an address" >&2
+        exit 1
+    fi
+    replace_server "$IP_ADDR" "" "false"
 fi
