@@ -48,4 +48,5 @@ function setup_tests() {
   export LXC_PROFILE="tests/lxc/microk8s.profile"
   export BACKEND="lxc"
   export CHANNEL_TO_TEST=${TO_CHANNEL}
+  export STRICT="yes"
 }
