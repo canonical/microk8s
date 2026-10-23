@@ -654,6 +654,86 @@ class TestCluster(object):
             attempt -= 1
             time.sleep(2)
 
+    def test_worker_node_runs_node_reconcile(self):
+        """
+        Regression test: a clustered (worker) node must run the node-local
+        reconcile loop (daemon-node-reconcile). apiservice-kicker exits on
+        clustered nodes, so without this the worker never consumes
+        snapdata-mounts-need-reload after a refresh and its calico-node stays
+        pinned to the old snap revision (leading to CNI token Unauthorized).
+        """
+        print("Setting up a worker node for the node-reconcile test")
+        vm = VM(backend)
+        vm.setup(channel_to_test)
+        self.VM.append(vm)
+
+        vm_master = self.VM[0]
+        print("Adding machine {} to cluster".format(vm.vm_name))
+        add_node = vm_master.run("/snap/bin/microk8s.add-node")
+        endpoint = [ep for ep in add_node.decode().split() if ":25000/" in ep]
+        vm.run("/snap/bin/microk8s.join {} --worker".format(endpoint[0]))
+
+        # Wait for the worker to register and be Ready
+        print("Waiting for node to register")
+        attempt = 0
+        while attempt < 10:
+            try:
+                nodes = vm_master.run("/snap/bin/microk8s.kubectl get no")
+                if "NotReady" in nodes.decode() or vm.vm_name not in nodes.decode():
+                    time.sleep(5)
+                    attempt += 1
+                    continue
+                print(nodes.decode())
+                break
+            except ChildProcessError:
+                time.sleep(10)
+                attempt += 1
+                if attempt == 10:
+                    raise
+
+        # The node-local reconcile daemon must be active on the clustered node.
+        print("Checking daemon-node-reconcile is active on the worker")
+        active = False
+        for _ in range(12):
+            try:
+                out = vm.run("systemctl is-active snap.microk8s.daemon-node-reconcile.service")
+                if "active" in out.decode():
+                    active = True
+                    break
+            except ChildProcessError:
+                pass
+            time.sleep(5)
+        assert active, "daemon-node-reconcile is not active on the worker"
+
+        # The node-local reconcile hook must be installed on the worker.
+        try:
+            vm.run("test -e /var/snap/microk8s/common/hooks/reconcile-node.d/10-pods-restart")
+            hook_present = True
+        except ChildProcessError:
+            hook_present = False
+        assert hook_present, "reconcile-node.d/10-pods-restart missing on worker"
+
+        # A refresh drops snapdata-mounts-need-reload; the worker must consume it.
+        print("Confirming the worker consumes snapdata-mounts-need-reload")
+        lock = "/var/snap/microk8s/current/var/lock/snapdata-mounts-need-reload"
+        vm.run("touch {}".format(lock))
+        cleared = False
+        for _ in range(18):
+            time.sleep(5)
+            try:
+                vm.run("test -e {}".format(lock))
+            except ChildProcessError:
+                cleared = True
+                break
+        assert cleared, "worker did not clear snapdata-mounts-need-reload"
+
+        # Cleanup: leave the cluster and drop the VM (mirrors test_worker_node).
+        print("Leaving and removing worker node {}".format(vm.vm_name))
+        vm.run("/snap/bin/microk8s.leave")
+        vm_master.run("/snap/bin/microk8s.remove-node {}".format(vm.vm_name))
+        self.VM.remove(vm)
+        vm.release()
+
 
 class TestUpgradeCluster(object):
     @pytest.fixture(autouse=True, scope="module")

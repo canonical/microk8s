@@ -354,6 +354,9 @@ apps:
   daemon-apiserver-kicker:
     command: apiservice-kicker
     daemon: simple
+  daemon-node-reconcile:
+    command: node-reconcile
+    daemon: simple
   daemon-apiserver-proxy:
     command: run-apiserver-proxy-with-args
     daemon: simple
