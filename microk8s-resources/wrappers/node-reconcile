@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -eu
+
+source $SNAP/actions/common/utils.sh
+
+use_snap_env
+
+# Counterpart of apiservice-kicker for clustered nodes (workers and secondary
+# control-plane nodes)
+if [ ! -e ${SNAP_DATA}/var/lock/clustered.lock ]
+then
+  echo "node reconcile loop runs only on clustered nodes"
+  exit 0
+fi
+
+while true
+do
+  # every 5 seconds
+  sleep 5
+  $SNAP/usr/bin/python3 $SNAP/scripts/run-lifecycle-hooks.py reconcile-node || true
+done

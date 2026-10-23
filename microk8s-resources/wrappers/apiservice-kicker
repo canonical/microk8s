@@ -76,7 +76,9 @@ do
       fi
     fi
 
-    # Run reconcile hooks
+    # Run reconcile hooks: node-local (reconcile-node.d) and cluster-wide
+    # (reconcile.d)
+    $SNAP/usr/bin/python3 $SNAP/scripts/run-lifecycle-hooks.py reconcile-node || true
     $SNAP/usr/bin/python3 $SNAP/scripts/run-lifecycle-hooks.py reconcile || true
 
     # If no local-registry-hosting documentation has been installed,
