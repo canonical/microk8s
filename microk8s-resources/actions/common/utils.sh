@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+IPTABLES_LEGACY_BIN="/snap/microk8s/current/sbin/iptables-legacy"
+
 get_microk8s_group() {
   if is_strict
   then
@@ -1009,7 +1011,7 @@ remove_all_containers() {
         "${SNAP}/microk8s-ctr.wrapper" container delete $container &>/dev/null || true
     done
 
-    run_with_sudo iptables-legacy -t nat -F CNI-HOSTPORT-DNAT &>/dev/null || true
+    run_with_sudo "$IPTABLES_LEGACY_BIN" -t nat -F CNI-HOSTPORT-DNAT &>/dev/null || true
 }
 
 get_container_shim_pids() {
