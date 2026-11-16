@@ -598,8 +598,22 @@ gen_proxy_client_cert() (
 )
 
 create_user_certs_and_configs() {
+  validate_hostname || return 1
   create_user_certificates
   create_user_kubeconfigs
+}
+
+validate_hostname() {
+  local hostname cn
+  hostname=$($SNAP/bin/hostname)
+  cn="system:node:${hostname}"
+
+  if [ "${#cn}" -gt 64 ]; then
+    echo "Hostname '${hostname}' is too long: certificate CN '${cn}' is ${#cn} characters, max is 64." >&2
+    echo "Shorten the hostname to at most $((64 - ${#cn} + ${#hostname})) characters." >&2
+    return 1
+  fi
+  return 0
 }
 
 create_user_certificates() {
