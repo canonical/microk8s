@@ -1,5 +1,4 @@
 import os
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -10,11 +9,6 @@ UTILS_SH = Path(__file__).resolve().parents[2] / "microk8s-resources" / "actions
 # The kubelet certificate CN is "system:node:<hostname>" and X.509 limits CN to 64 characters,
 # so the longest hostname we can accept is 64 - len("system:node:") = 52.
 MAX_HOSTNAME_LENGTH = 64 - len("system:node:")
-
-# Resolve the full path: on Windows, a bare "bash" may resolve to WSL's System32 launcher.
-BASH = shutil.which("bash")
-
-pytestmark = pytest.mark.skipif(BASH is None, reason="bash is required")
 
 
 @pytest.fixture
@@ -37,7 +31,7 @@ def run_utils(snap, hostname, script):
         UTILS_SH=UTILS_SH.as_posix(),
     )
     return subprocess.run(
-        [BASH, "-c", f'source "$UTILS_SH"\n{script}'],
+        ["bash", "-c", f'source "$UTILS_SH"\n{script}'],
         env=env,
         capture_output=True,
         text=True,
@@ -64,7 +58,7 @@ def test_validate_hostname_accepts_valid_length(snap, hostname):
     [
         "a" * (MAX_HOSTNAME_LENGTH + 1),
         "a" * 63,
-        "ip-10-0-0-1.very-long-subdomain.us-west-2.compute.internal",
+        "worker-node-01.k8s-production-cluster.datacenter.example.com",
     ],
 )
 def test_validate_hostname_rejects_too_long(snap, hostname):
