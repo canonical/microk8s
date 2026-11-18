@@ -107,7 +107,7 @@ jobs:
           sudo snap install build/microk8s.snap --classic --dangerous
           sudo microk8s enable community
           export UNDER_TIME_PRESSURE=${UNDER_TIME_PRESSURE@u}
-          sudo -E bash -c \
+          sudo --preserve-env=UNDER_TIME_PRESSURE bash -c \
             "cd /var/snap/microk8s/common/addons/community && \
              exec \"$MICROK8S_TEST_VENV/bin/pytest\" -s -ra ./tests/"
 
