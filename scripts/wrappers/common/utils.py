@@ -580,18 +580,39 @@ def get_status(available_addons, isReady):
 
 
 def is_within_directory(directory, target):
-    abs_directory = os.path.abspath(directory)
-    abs_target = os.path.abspath(target)
+    abs_directory = os.path.realpath(directory)
+    abs_target = os.path.realpath(target)
 
-    prefix = os.path.commonprefix([abs_directory, abs_target])
-
-    return prefix == abs_directory
+    try:
+        return os.path.commonpath([abs_directory, abs_target]) == abs_directory
+    except ValueError:
+        # The paths are on different drives (e.g. on Windows).
+        return False
 
 
 def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
-    for member in tar.getmembers():
+    """
+    Extract the members of a tar archive without allowing any entry to
+    escape the destination directory.
+
+    Database backups produced by ``microk8s dbctl backup`` only contain
+    regular files, so links and device files are rejected instead of being
+    resolved, which would make it possible to write outside ``path``.
+    """
+    # Materialize the selection: it can be any iterable accepted by
+    # extractall(), and consuming a caller-supplied iterator here would
+    # leave extractall() with nothing to extract.
+    members = tar.getmembers() if members is None else list(members)
+
+    for member in members:
         member_path = os.path.join(path, member.name)
         if not is_within_directory(path, member_path):
             raise Exception("Attempted Path Traversal in Tar File")
+
+        if member.issym() or member.islnk():
+            raise Exception("Attempted to extract a link from Tar File")
+
+        if member.isdev():
+            raise Exception("Attempted to extract a device file from Tar File")
 
     tar.extractall(path, members, numeric_owner=numeric_owner)
