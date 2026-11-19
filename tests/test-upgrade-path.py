@@ -27,9 +27,7 @@ class TestUpgradePath(object):
         Deploy an old snap and try to refresh until the current one.
 
         """
-        start_channel = 24
-        if is_strict():
-            start_channel = 25
+        start_channel = 30
         last_stable_minor = None
         if upgrade_from.startswith("latest") or "/" not in upgrade_from:
             attempt = 0
