@@ -1,6 +1,7 @@
 import os
 import stat
 import shutil
+import subprocess
 from contextlib import contextmanager
 from copy import deepcopy
 from pathlib import Path
@@ -21,7 +22,7 @@ from addons import (
     validate_addons_file,
     validate_addons_repo,
 )
-from common.utils import parse_xable_addon_args, get_available_addons
+from common.utils import parse_xable_addon_args, get_available_addons, get_status, unprotected_xable
 
 ADDONS = [
     ("core", "addon1"),
@@ -320,3 +321,27 @@ def test_update_rollbacks_repo_on_validation_error(
         validate_addons_repo_mock.assert_called_once_with(repo_dir)
         git_current_commit_mock.assert_called_once_with(repo_dir)
         git_rollback_mock.assert_called_once_with(git_current_commit_mock.return_value, repo_dir)
+
+
+@patch("common.utils.kubectl_get", side_effect=subprocess.CalledProcessError(1, "kubectl"))
+def test_get_status_handles_called_process_error(mock_kubectl):
+    addons = [{"repository": "core", "name": "dns", "check_status": "pod/coredns"}]
+    enabled, disabled = get_status(addons, isReady=True)
+    assert enabled == []
+    assert disabled == []
+
+
+@patch("common.utils.kubectl_get", return_value="pod/coredns-abc 1/1 Running")
+@patch("common.utils.kubectl_get_clusterroles", return_value="")
+def test_get_status_success(mock_clusterroles, mock_kubectl):
+    addon = {"repository": "core", "name": "dns", "check_status": "pod/coredns"}
+    enabled, disabled = get_status([addon], isReady=True)
+    assert enabled == [addon]
+    assert disabled == []
+
+
+@patch("common.utils.wait_for_ready", return_value=False)
+def test_unprotected_xable_fails_cleanly_when_cluster_not_ready(mock_wait):
+    with pytest.raises(SystemExit) as exc_info:
+        unprotected_xable("enable", ["dns"])
+    assert exc_info.value.code == 1
