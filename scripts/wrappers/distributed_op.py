@@ -106,7 +106,7 @@ def do_configure_op(remote_op):
             res = requests.post(
                 "https://{}/{}/configure".format(node_ep, CLUSTER_API_V1),
                 json=remote_op,
-                verify=False,
+                verify=False,  # nosec B501
             )
             if res.status_code != 200:
                 print(
@@ -141,7 +141,7 @@ def do_image_import(image_data):
                 headers={
                     "x-microk8s-callback-token": token,
                 },
-                verify=False,
+                verify=False,  # nosec B501
             )
 
             if res.status_code != 200:
