@@ -1,0 +1,16 @@
+#!/bin/bash
+
+. "${SNAP}/actions/common/utils.sh"
+
+# Node-local hook: restart pods on current node that bind-mount snap data (e.g.
+# calico-node) so they follow the `current` symlink after a snap refresh. Runs on
+# all nodes including workers; is_node_apiserver_ready covers the worker case that
+# is_apiserver_ready (control-plane only) does not.
+if ! [ -e "${SNAP_DATA}/var/lock/no-cni-reload" ] &&
+  [ -e "${SNAP_DATA}/var/lock/snapdata-mounts-need-reload" ]; then
+  if (is_apiserver_ready || is_node_apiserver_ready) && "${SNAP}/scripts/kill-host-pods.py" \
+      --with-snap-data-mounts --with-owner \
+      -- -A --field-selector spec.nodeName=$(hostname) ; then
+    rm "${SNAP_DATA}/var/lock/snapdata-mounts-need-reload"
+  fi
+fi
