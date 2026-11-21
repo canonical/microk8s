@@ -212,6 +212,13 @@ function suggest_fixes {
     fi
   fi
 
+  if journalctl -n 50 -u snap.microk8s.daemon-kubelite 2>/dev/null | grep -q 'Module ip_tables not found'
+  then
+    printf -- '\033[0;33m WARNING: \033[0m Your kernel does not provide the ip_tables module.\n'
+    printf -- 'MicroK8s will auto-switch kube-proxy to nftables mode on startup.\n'
+    printf -- 'If the cluster still fails to start, inspect the kube-proxy args under /var/snap/microk8s/current/args/kube-proxy.\n'
+  fi
+
   if iptables -L 2>&1 | grep FORWARD | grep DROP &> /dev/null
   then
     printf -- '\033[0;33m WARNING: \033[0m IPtables FORWARD policy is DROP. '

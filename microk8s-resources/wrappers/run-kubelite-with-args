@@ -73,6 +73,16 @@ else
   sanitise_args_kube_controller_manager
 fi
 
+# Fall back to kube-proxy nftables mode on kernels that do not ship the
+# ip_tables module. This avoids a silent crash loop on nftables-only hosts
+# (see canonical/microk8s#5525) while preserving any user-selected proxy-mode.
+if ! grep -qE '^--proxy-mode[= ]' "$SNAP_DATA/args/kube-proxy" &&
+   ! (/sbin/modprobe -n -q ip_tables &> /dev/null || modprobe -n -q ip_tables &> /dev/null)
+then
+  echo "ip_tables kernel module is unavailable; configuring kube-proxy to use nftables mode."
+  refresh_opt_in_local_config "proxy-mode" "nftables" kube-proxy
+fi
+
 ## Kubelet configuration
 pod_cidr="$(cat $SNAP_DATA/args/kube-proxy | grep "cluster-cidr" | tr "=" " "| gawk '{print $2}')"
 if [ -z "$pod_cidr" ]
