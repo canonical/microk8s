@@ -86,7 +86,7 @@ jobs:
           export POD_CIDR="10.200.0.0/16"
           export POD_GATEWAY="10.200.0.1"
           export UNDER_TIME_PRESSURE=${UNDER_TIME_PRESSURE@u}
-          sudo --preserve-env=UNDER_TIME_PRESSURE,POD_CIDR,POD_GATEWAY,SKIP_PROMETHEUS,COLUMNS bash -c \
+          sudo --preserve-env=UNDER_TIME_PRESSURE,STRICT,POD_CIDR,POD_GATEWAY,SKIP_PROMETHEUS,COLUMNS bash -c \
             "cd /var/snap/microk8s/common/addons/core/tests && \
              exec \"$MICROK8S_TEST_VENV/bin/pytest\" -s -ra test-addons.py"
 
@@ -111,7 +111,7 @@ jobs:
           sudo microk8s enable community
           export UNDER_TIME_PRESSURE=${UNDER_TIME_PRESSURE@u}
           export STRICT="yes"
-          sudo --preserve-env=UNDER_TIME_PRESSURE bash -c \
+          sudo --preserve-env=UNDER_TIME_PRESSURE,STRICT bash -c \
             "cd /var/snap/microk8s/common/addons/community && \
              exec \"$MICROK8S_TEST_VENV/bin/pytest\" -s -ra ./tests/"
 
