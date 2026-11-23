@@ -982,6 +982,19 @@ is_apiserver_ready() {
   fi
 }
 
+is_node_apiserver_ready() {
+  # Readiness check usable from any node: query the apiserver through
+  # kubelet.config, which targets the local apiserver on a control-plane node and
+  # the apiserver-proxy on a worker. Complements is_apiserver_ready, which only
+  # works on a control-plane node.
+  if ${SNAP}/kubectl --kubeconfig=${SNAP_DATA}/credentials/kubelet.config get --raw='/readyz' &> /dev/null
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
 start_all_containers() {
     for task in $("${SNAP}/microk8s-ctr.wrapper" task ls | $SNAP/bin/sed -n '1!p' | $SNAP/usr/bin/gawk '{print $1}')
     do

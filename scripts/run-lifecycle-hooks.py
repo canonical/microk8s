@@ -13,6 +13,8 @@ TIMEOUT = 120
 @click.argument("hook")
 def main(hook: str):
     hooks_dir = SNAP_COMMON / "hooks" / f"{hook}.d"
+    if not hooks_dir.is_dir():
+        return
     hooks = os.listdir(hooks_dir)
     for hook in sorted(hooks):
         try:

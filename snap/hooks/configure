@@ -228,6 +228,9 @@ fi
 mkdir -p ${SNAP_COMMON}/hooks
 cp -r --preserve=mode ${SNAP}/default-hooks/* ${SNAP_COMMON}/hooks/
 
+# 10-pods-restart moved from reconcile.d to reconcile-node.d; drop stale copy on upgrade
+rm -f ${SNAP_COMMON}/hooks/reconcile.d/10-pods-restart
+
 # Make sure the server certificate includes the IP we are using
 if [ "$(produce_certs)" == "1" ]
 then
